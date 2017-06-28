@@ -637,15 +637,6 @@ if __name__ == '__main__':
 		#LCDM_z0_256Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_256Periodic_dir + 'Plots/', nPart=256)
 		#LCDM_z0_256Peri.Solve(LCDM_256Periodic_dir+'SkelconvOutput_LCDM256Periodic.a.NDskl', ndim=3)
 		
-		"""
-		LCDM_64NonPeriodic_dir = 'lcdm_z0_testing/LCDM64_NonPeriodic/'
-		LCDM_z0_64NonPeri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_64NonPeriodic_dir + 'Plots/', nPart=64)
-		LCDM_z0_64NonPeri.Solve(LCDM_64NonPeriodic_dir+'lcdm_z0_DownSized64.solve.NDnet_s3.up.NDskl.a.NDskl', ndim=3
-
-		LCDM_128NonPeriodic_dir = 'lcdm_z0_testing/LCDM128_NonPeriodic/'
-		LCDM_z0_128NonPeri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128NonPeriodic_dir + 'Plots/', nPart=128)
-		LCDM_z0_128NonPeri.Solve(LCDM_128NonPeriodic_dir+'SkelLCDM_z0_128.a.NDskl', ndim=3)
-		"""
 		Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
 		if Comparison == 1:
 			NumConnections_list = [NConnections_64Peri, NConnections_128Peri]
