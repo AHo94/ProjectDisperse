@@ -136,34 +136,7 @@ class Disperse_Plotter():
 					self.CritPointZpos.append(float(self.CritPointInfo[i][3]))
 			
 		self.FilamentPos = []
-		"""
-		for i in range(1, len(self.Filaments)-1):
-			Filstuff = self.Filaments[i]
-			if len(Filstuff) > 2:
-				TempPositions = []
-				for j in range(1, int(Filstuff[-1])+1):
-					xPos = float(self.Filaments[i+j][0])
-					yPos = float(self.Filaments[i+j][1])
-					TempPositions.append([xPos, yPos])
-					if self.xmin > xPos:
-						self.xmin = xPos
-					if self.xmax < xPos:
-						self.xmax = xPos
-					if self.ymin > yPos:
-						self.ymin = yPos
-					if self.ymax < yPos:
-						self.ymax = yPos
-				self.FilamentPos.append(TempPositions)
-		"""
-		"""
-		self.xmin = 0
-		self.ymin = 0
-		self.zmin = 0
-		self.xmax = 0
-		self.ymax = 0
-		self.zmax = 0
-		"""
-		k = 1
+			k = 1
 		self.FilID = []
 		self.xdimPos = []
 		self.ydimPos = []
@@ -180,16 +153,6 @@ class Disperse_Plotter():
 					TempPositions.append([xPos, yPos])
 					xtemp.append(xPos)
 					ytemp.append(yPos)
-					"""
-					if self.xmin > xPos:
-						self.xmin = xPos
-					if self.xmax < xPos:
-						self.xmax = xPos
-					if self.ymin > yPos:
-						self.ymin = yPos
-					if self.ymax < yPos:
-						self.ymax = yPos
-					"""
 				self.FilamentPos.append(TempPositions)
 				self.xdimPos.append(xtemp)
 				self.ydimPos.append(ytemp)
@@ -211,20 +174,6 @@ class Disperse_Plotter():
 					xtemp.append(xPos)
 					ytemp.append(yPos)
 					ztemp.append(zPos)
-					"""
-					if self.xmin > xPos:
-						self.xmin = xPos
-					if self.xmax < xPos:
-						self.xmax = xPos
-					if self.ymin > yPos:
-						self.ymin = yPos
-					if self.ymax < yPos:
-						self.ymax = yPos
-					if self.zmin > zPos:
-						self.zmin = zPos
-					if self.zmax < zPos:
-						self.zmax = zPos
-					"""
 				self.FilamentPos.append(TempPositions)
 				self.xdimPos.append(xtemp)
 				self.ydimPos.append(ytemp)
