@@ -99,3 +99,13 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# NDskl
+.NDskl
+
+# Latex
+.aux
+.dvi
+.out
+.gz
+.tex
