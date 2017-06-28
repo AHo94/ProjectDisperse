@@ -101,11 +101,11 @@ ENV/
 .mypy_cache/
 
 # NDskl
-.NDskl
+*.NDskl
 
 # Latex
-.aux
-.dvi
-.out
-.gz
-.tex
+*.aux
+*.dvi
+*.out
+*.gz
+*.tex
