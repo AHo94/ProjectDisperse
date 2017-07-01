@@ -37,12 +37,10 @@ class Disperse_Plotter():
 		datafiles = open(os.path.join(file_directory, filename), 'r')
 		self.CriticalPoints = []
 		self.Filaments = []
-		SETLIMIT = 0
 
 		for line in datafiles:
 			data_set = line.split()
 			if 'BBOX' in line:
-				
 				BoxSize = line.split()
 				BoxMin = BoxSize[1]
 				BoxMax = BoxSize[2]
@@ -59,6 +57,7 @@ class Disperse_Plotter():
 					continue
 				
 			if '[CRITICAL POINTS]' in line:
+				SETLIMIT = 0
 				for lineCrit in datafiles:
 					dataCritpts = lineCrit.split()
 					if '[FILAMENTS]' in lineCrit:
@@ -66,7 +65,9 @@ class Disperse_Plotter():
 						break
 					else:
 						self.CriticalPoints.append(dataCritpts)
+
 			if '[FILAMENTS]' in line:
+				SETLIMIT = 0
 				for lineFil in datafiles:
 					dataFil = lineFil.split()
 					if '[CRITICAL POINTS DATA]' in lineFil:
@@ -74,22 +75,29 @@ class Disperse_Plotter():
 						break
 					else:
 						self.Filaments.append(dataFil)
+					if FilamentLimit != 0:
+						if SETLIMIT == FilamentLimit+1:
+							break
+						SETLIMIT += 1
+
 			if '[CRITICAL POINTS DATA]' in line:
 				break
-			#if SETLIMIT == 80000:
-			#	break
-			#SETLIMIT += 1
+
 		datafiles.close()
 
 	def Sort_arrays(self, dimensions):
 		""" Sorts data to their respective arrays """
 		print 'Sorting data ...'
 		self.NcritPts = int(self.CriticalPoints[0][0])
-		self.NFils = int(self.Filaments[0][0])
+		if FilamentLimit == 0:
+			self.NFils = int(self.Filaments[0][0])
+		else:
+			self.NFils = FilamentLimit
 
 		self.NumFilamentConnections = []
 		self.IDFilamentConnected = []
 		self.CritPointInfo = []
+		
 		for i in range(1, len(self.CriticalPoints)-1):
 			stuff = self.CriticalPoints[i]
 			if len(stuff) == 1:
@@ -116,6 +124,7 @@ class Disperse_Plotter():
 		self.CritPointXposNOTCON = []
 		self.CritPointYposNOTCON = []
 		self.CritPointZposNOTCON = []
+		
 		if dimensions == 2:
 			for i in range(self.NcritPts):
 				if int(self.CritPointInfo[i][0]) == 0:
@@ -136,13 +145,13 @@ class Disperse_Plotter():
 					self.CritPointZpos.append(float(self.CritPointInfo[i][3]))
 			
 		self.FilamentPos = []
-			k = 1
 		self.FilID = []
 		self.xdimPos = []
 		self.ydimPos = []
+		k = 1
 		if dimensions == 2:
 			for i in range(1, self.NFils):
-				Filstuff = self.Filaments[k]
+				Filstuff = self.Filaments[k]	# Contains info on filament ID, num crit pts etc.
 				TempPositions = []
 				xtemp = []
 				ytemp = []
@@ -157,6 +166,9 @@ class Disperse_Plotter():
 				self.xdimPos.append(xtemp)
 				self.ydimPos.append(ytemp)
 				k += int(Filstuff[-1])+1
+				if FilamentLimit != 0:
+					if k > FilamentLimit:
+						break
 		elif dimensions == 3:
 			self.zdimPos = []
 			for i in range(1, self.NFils):
@@ -167,6 +179,8 @@ class Disperse_Plotter():
 				ztemp = []
 				self.FilID.append(float(Filstuff[0]))
 				for j in range(1, int(Filstuff[-1])+1):
+					if k+j >= len(self.Filaments):
+						break
 					xPos = float(self.Filaments[k+j][0])
 					yPos = float(self.Filaments[k+j][1])
 					zPos = float(self.Filaments[k+j][2])
@@ -178,7 +192,12 @@ class Disperse_Plotter():
 				self.xdimPos.append(xtemp)
 				self.ydimPos.append(ytemp)
 				self.zdimPos.append(ztemp)
-				k += int(Filstuff[-1])+1			
+				k += int(Filstuff[-1])+1
+
+				if FilamentLimit != 0:
+					if k >= FilamentLimit:
+						self.NFils = len(self.xdimPos)
+						break
 
 	def Check_Boundaries(self):
 		""" Checks the boundaries. Assuming periodic bondary. Will split segment if change is larger than 10000 """
@@ -458,8 +477,8 @@ class Disperse_Plotter():
 		plt.title('Histogram of filament lengths with ' + self.nPart_text + '$\mathregular{^3}$ particles.')
 		plt.xlim([LenMin, LenMax])
 
-		if PlotFilaments == 1:
-			if ndim == 2:
+		if ndim == 2:
+			if PlotFilaments == 1:
 				FilPositions = plt.figure()
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.ymax)
@@ -469,7 +488,7 @@ class Disperse_Plotter():
 				plt.xlabel('$\mathregular{x}$ - Mpc')
 				plt.ylabel('$\mathregular{y}$ - Mpc')
 				plt.title('Positions of the filaments with '+ self.nPart_text+ '$^3$ particles')
-
+			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts = plt.figure()
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.ymax)
@@ -482,8 +501,8 @@ class Disperse_Plotter():
 				plt.xlabel('$\mathregular{x}$ - Mpc')
 				plt.ylabel('$\mathregular{y}$ - Mpc')
 				plt.title('Position of the filaments with critical points shown')
-
-			elif ndim == 3:
+		if ndim == 3:
+			if PlotFilaments == 1:
 				FilPositions = plt.figure()
 				ax = FilPositions.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.ymax)
@@ -497,7 +516,7 @@ class Disperse_Plotter():
 				ax.set_ylabel('$\mathregular{y}$ - Mpc')
 				ax.set_zlabel('$\mathregular{z}$ - Mpc')
 				plt.title('3D Position of the filaments with '+ self.nPart_text+ '$^3$ particles.')
-				
+			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts = plt.figure()
 				ax = FilPositions_WCritPts.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.ymax)
@@ -518,8 +537,6 @@ class Disperse_Plotter():
 			if PlotFilaments == 1:
 				FilPositions.savefig(self.results_dir + 'FilamentPositions' + Filenamedimension)
 				FilPositions_WCritPts.savefig(self.results_dir + 'FilamentPositionsWithCritPts' + Filenamedimension)
-		elif self.savefile == 2:
-			print 'Done! No files saved.'
 		else:
 			plt.show()
 
@@ -530,7 +547,10 @@ class Disperse_Plotter():
 		#if ndim == 3:
 		#	self.Check_Boundaries()
 		if Comparison == 0:
-			self.Plot_Figures(filename, ndim)
+			if self.savefile == 2:
+				print 'Done! No files saved.'
+			else:
+				self.Plot_Figures(filename, ndim)
 		
 		return self.NumFilamentConnections, self.FilLengths
 
@@ -542,7 +562,6 @@ class Histogram_Comparison():
 		self.results_dir = os.path.join(script_dir, savefigDirectory)
 		if not os.path.isdir(self.results_dir):
 			os.makedirs(self.results_dir)
-
 
 		if type(NumberConnections) != list:
 			raise ValueError('Argument NumberConnections must be a list!')
@@ -614,9 +633,11 @@ class Histogram_Comparison():
 
 
 if __name__ == '__main__':
-	HOMEPC = 0			# Set 1 if working in UiO terminal
-	PlotFilaments = 0	# Set 1 to plot actual filaments
-	Comparison = 1		# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	HOMEPC = 0					# Set 1 if working in UiO terminal
+	PlotFilaments = 1			# Set 1 to plot actual filaments
+	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	FilamentLimit = 100			# Limits the number of filament read from file. Reads all if 0
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
@@ -625,7 +646,7 @@ if __name__ == '__main__':
 		#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 		
 		LCDM_64Periodic_dir = 'lcdm_z0_testing/LCDM64_Periodic/'
-		LCDM_z0_64Peri = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
+		LCDM_z0_64Peri = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
 		NConnections_64Peri, FilLengths_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
 		
 		LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
