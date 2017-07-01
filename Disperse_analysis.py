@@ -26,8 +26,8 @@ class Disperse_Plotter():
 			raise ValueError('Argument savefigDirectory must be a string!')
 
 		# Creates folder when saving figure
-		script_dir = os.path.dirname(__file__)
-		self.results_dir = os.path.join(script_dir, savefigDirectory)
+		#script_dir = os.path.dirname(__file__) 	# Script running directory
+		self.results_dir = os.path.join(file_directory, savefigDirectory)
 		if not os.path.isdir(self.results_dir):
 			os.makedirs(self.results_dir)
 
@@ -530,12 +530,13 @@ class Disperse_Plotter():
 				ax.set_ylabel('$\mathregular{y}$ - Mpc')
 				ax.set_zlabel('$\mathregular{z}$ - Mpc')
 				plt.title('3D Position of the filaments with critical points')
-				
+
 		if self.savefile == 1:
 			ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + Filenamedimension)
 			FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + Filenamedimension)
 			if PlotFilaments == 1:
 				FilPositions.savefig(self.results_dir + 'FilamentPositions' + Filenamedimension)
+			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts.savefig(self.results_dir + 'FilamentPositionsWithCritPts' + Filenamedimension)
 		else:
 			plt.show()
@@ -558,8 +559,8 @@ class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, ndim, NumberConnections, FilamentLengths):
 		self.savefile = savefile
 		self.ndim = ndim
-		script_dir = os.path.dirname(__file__)
-		self.results_dir = os.path.join(script_dir, savefigDirectory)
+		
+		self.results_dir = os.path.join(file_directory, savefigDirectory)
 		if not os.path.isdir(self.results_dir):
 			os.makedirs(self.results_dir)
 
@@ -636,8 +637,8 @@ if __name__ == '__main__':
 	HOMEPC = 0					# Set 1 if working in UiO terminal
 	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	FilamentLimit = 100			# Limits the number of filament read from file. Reads all if 0
+	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	FilamentLimit = 0			# Limits the number of filament read from file. Reads all if 0
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
@@ -646,11 +647,11 @@ if __name__ == '__main__':
 		#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 		
 		LCDM_64Periodic_dir = 'lcdm_z0_testing/LCDM64_Periodic/'
-		LCDM_z0_64Peri = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
+		LCDM_z0_64Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
 		NConnections_64Peri, FilLengths_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
 		
 		LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
-		LCDM_z0_128Peri = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
+		LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
 		NConnections_128Peri, FilLengths_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
 		
 		# Lots of memory usage for 256^3.
@@ -662,7 +663,7 @@ if __name__ == '__main__':
 		if Comparison == 1:
 			NumConnections_list = [NConnections_64Peri, NConnections_128Peri]
 			FilLengths_list = [FilLengths_64Peri, FilLengths_128Peri]
-			Histogram_Comparison(savefile=0, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
+			Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
 	
 	if HOMEPC == 1:
 		file_directory = '/mn/stornext/d5/aleh'
