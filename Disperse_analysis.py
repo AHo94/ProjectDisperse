@@ -5,10 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.collections import PolyCollection
-from matplotlib.colors import colorConverter
+#from matplotlib.collections import PolyCollection
+#from matplotlib.colors import colorConverter
 import os
 import scipy.stats as stats
+from matplotlib import colors as mcolors
+
 class Disperse_Plotter():
 	def __init__(self, savefile, savefigDirectory, nPart):
 		self.savefile = savefile
@@ -462,6 +464,12 @@ class Disperse_Plotter():
 			NormedArgument = True
 		else:
 			NormedArgument = False
+
+		if FilamentColors == 1:
+			ColorArray = np.linspace(0,10,110)
+		else:
+			ColorArray = np.linspace(0,10,1)
+
 		# Histogram of number of filament connections
 		NumMin = min(self.NumFilamentConnections)
 		NumMax = max(self.NumFilamentConnections)
@@ -511,7 +519,7 @@ class Disperse_Plotter():
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.ymax)
 				ax.set_ylim(self.ymin, self.ymax)
-				line_segments = LineCollection(self.FilamentPos, linestyle='solid')
+				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection(line_segments)
 				plt.xlabel('$\mathregular{x}$ - Mpc')
 				plt.ylabel('$\mathregular{y}$ - Mpc')
@@ -521,7 +529,7 @@ class Disperse_Plotter():
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.ymax)
 				ax.set_ylim(self.ymin, self.ymax)
-				line_segments = LineCollection(self.FilamentPos, linestyle='solid')
+				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection(line_segments)
 				plt.hold("on")
 				plt.plot(self.CritPointXpos, self.CritPointYpos, 'ro', alpha=0.7, markersize=3)
@@ -537,7 +545,7 @@ class Disperse_Plotter():
 				ax.set_ylim(self.ymin, self.ymax)
 				ax.set_zlim(self.zmin, self.zmax)
 				#line_segments = LineCollection(self.FilXYPositionsBoundary, linestyle='solid')
-				line_segments = LineCollection(self.FilamentPos, linestyle='solid')
+				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				#ax.add_collection3d(line_segments, self.FilZPositionsBoundary, zdir='z')
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
 				ax.set_xlabel('$\mathregular{x}$ - Mpc')
@@ -550,7 +558,7 @@ class Disperse_Plotter():
 				ax.set_xlim(self.xmin, self.ymax)
 				ax.set_ylim(self.ymin, self.ymax)
 				ax.set_zlim(self.zmin, self.zmax)
-				line_segments = LineCollection(self.FilamentPos, linestyle='solid')
+				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
 				plt.hold("on")
 				ax.plot(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos, 'ro', alpha=0.7, markersize=3)
@@ -558,6 +566,18 @@ class Disperse_Plotter():
 				ax.set_ylabel('$\mathregular{y}$ - Mpc')
 				ax.set_zlabel('$\mathregular{z}$ - Mpc')
 				plt.title('3D Position of the filaments with critical points')
+			if Projection2D == 1:
+				FilPositions_2DProjection = plt.figure()
+				ax = plt.axes()
+				ax.set_xlim(self.xmin, self.ymax)
+				ax.set_ylim(self.ymin, self.ymax)
+				line_segments = LineCollection(self.FilamentPos, array=ColorArray, cmap=plt.cm.gist_ncar)
+				#plt.gca().add_collection(line_segments)
+				ax.autoscale()
+				ax.add_collection(line_segments)
+				ax.set_xlabel('$\mathregular{x}$ - Mpc')
+				ax.set_ylabel('$\mathregular{y}$ - Mpc')
+				plt.title('2D Position projection of the filaments')				
 
 		if self.savefile == 1:
 			ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + Filenamedimension)
@@ -567,6 +587,8 @@ class Disperse_Plotter():
 				FilPositions.savefig(self.results_dir + 'FilamentPositions' + Filenamedimension)
 			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts.savefig(self.results_dir + 'FilamentPositionsWithCritPts' + Filenamedimension)
+			if Projection2D == 1:
+				FilPositions_2DProjection.savefig(self.results_dir + '2DProjectedFilamentPosition' + Filenamedimension)
 		else:
 			plt.show()
 
@@ -762,9 +784,11 @@ class Histogram_Comparison2():
 
 if __name__ == '__main__':
 	HOMEPC = 1					# Set 1 if working in UiO terminal
-	PlotFilaments = 0			# Set 1 to plot actual filaments
+	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
+	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	FilamentLimit = 0			# Limits the number of filament read from file. Reads all if 0
 
 	if HOMEPC == 0:
@@ -801,10 +825,11 @@ if __name__ == '__main__':
 		LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64Periodic/'
 		LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64)
 		NConnections_64, FilLengths_64, FilPoints_64 = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
-		
+		"""
 		LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128Periodic/'
 		LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128)
 		NConnections_128, FilLengths_128, FilPoints_128 = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
+		"""
 		"""
 		LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256Periodic/'
 		LCDM_z0_256Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256)
@@ -813,6 +838,11 @@ if __name__ == '__main__':
 		LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512Periodic/'
 		LCDM_z0_512Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512)
 		NConnections_512, FilLengths_512, FilPoints_512 = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDM512Periodic.a.NDskl', ndim=3)
+		"""
+		"""
+		LCDM_z0_64_rockstar_dir = 'lcdm_rockstar/LCDM_z0_64/'
+		LCDM_z0_64rockstarInstance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_rockstar_dir+'Plots/', nPart=64)
+		NN, FF, FP = LCDM_z0_64rockstarInstance.Solve(LCDM_z0_64_rockstar_dir+'SkelconvOutput_LCDMz0_64.a.NDskl', ndim=3)
 		"""
 		Comparison_dir = 'lcdm_testing/Comparison_plots/'
 		if Comparison == 1:
