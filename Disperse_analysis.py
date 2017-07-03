@@ -8,6 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.collections import PolyCollection
 from matplotlib.colors import colorConverter
 import os
+import scipy.stats as stats
 class Disperse_Plotter():
 	def __init__(self, savefile, savefigDirectory, nPart):
 		self.savefile = savefile
@@ -467,7 +468,7 @@ class Disperse_Plotter():
 		BinSize = (NumMax - NumMin)/(0.5) + 1
 		Bin_list = np.linspace(NumMin, NumMax, BinSize)
 		ConnectedHist = plt.figure()
-		plt.hist(self.NumFilamentConnections, align='mid', rwidth=1, bins=50, normed=NormedArgument)
+		plt.hist(self.NumFilamentConnections, align='left', rwidth=1, bins=Bin_list, normed=NormedArgument)
 		plt.xlabel('Number of connected filaments')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram of number connections between the critical points \n with %.2f critical points. ' \
@@ -477,10 +478,17 @@ class Disperse_Plotter():
 		# Histogram of filament lengths
 		LenMin = min(self.FilLengths)
 		LenMax = max(self.FilLengths)
-		BinSize_FilLengths = (LenMax - LenMin)/(0.5) + 1
-		BinList_FilLengths = np.linspace(LenMin, LenMax, BinSize_FilLengths)
+		hist = np.histogram(self.FilLengths)
+		BinList_FilLengths = np.linspace(LenMin, LenMax, len(hist[0])/0.0002 + 1)
+		#BinSize_FilLengths = (LenMax - LenMin)/(0.5) + 1
+		#BinList_FilLengths = np.linspace(LenMin, LenMax, BinSize_FilLengths)
+		#self.SortedLengths = sorted(self.FilLengths)
+		self.FilLengths.sort()
+		fit = stats.norm.pdf(self.FilLengths, np.mean(self.FilLengths), np.std(self.FilLengths))
 		FilamentLengthsHist = plt.figure()
-		plt.hist(self.FilLengths, align='left', rwidth=1, bins=300, normed=NormedArgument)#, bins=BinList_FilLengths)
+		#plt.hist(self.FilLengths, align='left', rwidth=1, bins=BinList_FilLengths, normed=NormedArgument)#, bins=BinList_FilLengths)
+		plt.hold("on")
+		plt.plot(self.FilLengths, fit)
 		plt.xlabel('Length of filaments - [Mpc]')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram of filament lengths with ' + self.nPart_text + '$\mathregular{^3}$ particles.')
@@ -574,7 +582,7 @@ class Disperse_Plotter():
 			else:
 				self.Plot_Figures(filename, ndim)
 		
-		return self.NumFilamentConnections, self.FilLengths, self.NFilamentPoints
+		return self.NumFilamentConnections, sorted(self.FilLengths), self.NFilamentPoints
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, ndim, NumberConnections, FilamentLengths):
@@ -710,7 +718,9 @@ class Histogram_Comparison2():
 		LengthHistComparison = plt.figure()
 		plt.hold("on")
 		for i in range(len(histograms)):
-			plt.hist(histograms[i], align='mid', rwidth=1, bins=300, normed=True, alpha=self.alphas[i])
+			fit = stats.norm.pdf(histograms[i], np.mean(histograms[i]), np.std(histograms[i]))
+			#plt.hist(histograms[i], align='mid', rwidth=1, bins=300, normed=True, alpha=self.alphas[i])
+			plt.plot(histograms[i], fit)
 		plt.xlabel('Filament lengths -[Mpc]')
 		plt.legend(self.LegendText)
 		plt.title('Comparison of filament lengths for the model: ' + self.model)
@@ -752,7 +762,7 @@ class Histogram_Comparison2():
 
 if __name__ == '__main__':
 	HOMEPC = 1					# Set 1 if working in UiO terminal
-	PlotFilaments = 1			# Set 1 to plot actual filaments
+	PlotFilaments = 0			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
 	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	FilamentLimit = 0			# Limits the number of filament read from file. Reads all if 0
@@ -789,11 +799,11 @@ if __name__ == '__main__':
 		savefile_directory = '/uio/hume/student-u70/aleh/Masters_project/disperse_results'
 		
 		LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64Periodic/'
-		LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64)
+		LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64)
 		NConnections_64, FilLengths_64, FilPoints_64 = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
 		
 		LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128Periodic/'
-		LCDM_z0_128Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128)
+		LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128)
 		NConnections_128, FilLengths_128, FilPoints_128 = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
 		"""
 		LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256Periodic/'
@@ -810,7 +820,7 @@ if __name__ == '__main__':
 			FilLengths_list = [FilLengths_64, FilLengths_128]
 			FilPoints_list = [FilPoints_64, FilPoints_128]
 			#Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
-			ComparisonInstance = Histogram_Comparison2(savefile=0, savefigDirectory=Comparison_dir, ndim = 3, model='$\mathregular{\Lambda}$CDM', Nparticles=[64, 128])
+			ComparisonInstance = Histogram_Comparison2(savefile=0, savefigDirectory=Comparison_dir, ndim=3, model='$\mathregular{\Lambda}$CDM', Nparticles=[64, 128])
 			ComparisonInstance.Solve('Connections', NumConnections_list)
 			ComparisonInstance.Solve('Lengths', FilLengths_list)
 			ComparisonInstance.Solve('FilamentPoints', FilPoints_list)
