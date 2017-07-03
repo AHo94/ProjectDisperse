@@ -148,6 +148,7 @@ class Disperse_Plotter():
 		self.FilID = []
 		self.xdimPos = []
 		self.ydimPos = []
+		self.NFilamentPoints = []
 		k = 1
 		if dimensions == 2:
 			for i in range(1, self.NFils):
@@ -187,7 +188,8 @@ class Disperse_Plotter():
 					TempPositions.append([xPos, yPos])
 					xtemp.append(xPos)
 					ytemp.append(yPos)
-					ztemp.append(zPos)
+					ztemp.append(zPos)		
+				self.NFilamentPoints.append(int(Filstuff[-1]))
 				self.FilamentPos.append(TempPositions)
 				self.xdimPos.append(xtemp)
 				self.ydimPos.append(ytemp)
@@ -452,13 +454,18 @@ class Disperse_Plotter():
 		else:
 			raise ValueError('ndim less than 2 or greater than 3!')
 		print 'Plotting'
+
+		if Comparison == 1:
+			NormedArgument = True
+		else:
+			NormedArgument = False
 		# Histogram of number of filament connections
 		NumMin = min(self.NumFilamentConnections)
 		NumMax = max(self.NumFilamentConnections)
 		BinSize = (NumMax - NumMin)/(0.5) + 1
 		Bin_list = np.linspace(NumMin, NumMax, BinSize)
 		ConnectedHist = plt.figure()
-		plt.hist(self.NumFilamentConnections, align='mid', rwidth=1, bins=50, normed=True)
+		plt.hist(self.NumFilamentConnections, align='mid', rwidth=1, bins=50, normed=NormedArgument)
 		plt.xlabel('Number of connected filaments')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram of number connections between the critical points \n with %.2f critical points. ' \
@@ -471,11 +478,22 @@ class Disperse_Plotter():
 		BinSize_FilLengths = (LenMax - LenMin)/(0.5) + 1
 		BinList_FilLengths = np.linspace(LenMin, LenMax, BinSize_FilLengths)
 		FilamentLengthsHist = plt.figure()
-		plt.hist(self.FilLengths, align='left', rwidth=1, bins=300, normed=True)#, bins=BinList_FilLengths)
+		plt.hist(self.FilLengths, align='left', rwidth=1, bins=300, normed=NormedArgument)#, bins=BinList_FilLengths)
 		plt.xlabel('Length of filaments - [Mpc]')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram of filament lengths with ' + self.nPart_text + '$\mathregular{^3}$ particles.')
 		plt.xlim([LenMin, LenMax])
+
+		# Histogram of number of points each filament has
+		PtsMin = min(self.NFilamentPoints)
+		PtsMax = max(self.NFilamentPoints)
+		BinSize_FilPts = (PtsMax - PtsMin)/(0.5) + 1
+		BinList_FilPts = np.linspace(PtsMin, PtsMax, BinSize_FilPts)
+		FilamentPtsHis = plt.figure()
+		plt.hist(self.NFilamentPoints, align='left', rwidth=1, bins=BinList_FilPts, normed=NormedArgument)
+		plt.xlabel('Number of position points for a filament')
+		plt.ylabel('Number of occurances')
+		plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
 
 		if ndim == 2:
 			if PlotFilaments == 1:
@@ -635,9 +653,9 @@ class Histogram_Comparison():
 
 if __name__ == '__main__':
 	HOMEPC = 0					# Set 1 if working in UiO terminal
-	PlotFilaments = 1			# Set 1 to plot actual filaments
+	PlotFilaments = 0			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	FilamentLimit = 0			# Limits the number of filament read from file. Reads all if 0
 
 	if HOMEPC == 0:
@@ -647,12 +665,12 @@ if __name__ == '__main__':
 		#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 		
 		LCDM_64Periodic_dir = 'lcdm_z0_testing/LCDM64_Periodic/'
-		LCDM_z0_64Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
+		LCDM_z0_64Peri = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
 		NConnections_64Peri, FilLengths_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
 		
-		LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
-		LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
-		NConnections_128Peri, FilLengths_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
+		#LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
+		#LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
+		#NConnections_128Peri, FilLengths_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
 		
 		# Lots of memory usage for 256^3.
 		#LCDM_256Periodic_dir = 'lcdm_z0_testing/LCDM256_Periodic/'
