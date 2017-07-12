@@ -99,10 +99,10 @@ class Disperse_Plotter():
 		else:
 			self.NFils = FilamentLimit
 
+		# General data
 		self.NumFilamentConnections = []
 		self.IDFilamentConnected = []
 		self.CritPointInfo = []
-		
 		for i in range(1, len(self.CriticalPoints)-1):
 			stuff = self.CriticalPoints[i]
 			if len(stuff) == 1:
@@ -122,6 +122,8 @@ class Disperse_Plotter():
 					InfoListTemp.append(float(stuff[k]))
 				self.CritPointInfo.append(InfoListTemp)
 		
+		"""
+		# Data for non-connected critical points
 		self.CriticalPointPosition = []
 		self.CritPointXpos = []
 		self.CritPointYpos = []
@@ -129,7 +131,6 @@ class Disperse_Plotter():
 		self.CritPointXposNOTCON = []
 		self.CritPointYposNOTCON = []
 		self.CritPointZposNOTCON = []
-		
 		if dimensions == 2:
 			for i in range(self.NcritPts):
 				if int(self.CritPointInfo[i][0]) == 0:
@@ -148,7 +149,9 @@ class Disperse_Plotter():
 					self.CritPointXpos.append(float(self.CritPointInfo[i][1]))
 					self.CritPointYpos.append(float(self.CritPointInfo[i][2]))
 					self.CritPointZpos.append(float(self.CritPointInfo[i][3]))
-			
+		"""
+
+		# Filament positions etc
 		self.FilamentPos = []
 		self.FilID = []
 		self.xdimPos = []
@@ -205,6 +208,31 @@ class Disperse_Plotter():
 					if k >= FilamentLimit:
 						self.NFils = len(self.xdimPos)
 						break
+
+	def Mask_slices(self):
+		print 'Computing masks'
+		LowerBoundary = 0.45
+		UpperBoundary = 0.55
+		self.zdimMasked = []
+		self.MaskedFilamentSegments = []
+		for i in range(len(self.zdimPos)):
+			if np.any(np.array(self.zdimPos[i]) > LowerBoundary) and np.any(np.array(self.zdimPos[i]) < UpperBoundary):
+				self.zdimMasked.append(self.zdimPos[i])
+				self.MaskedFilamentSegments.append(self.FilamentPos[i])
+
+		self.CutOffFilamentSegments = []
+		self.CutOffzDim = []
+
+		for i in range(len(self.zdimPos)):
+			Indices = np.where(np.logical_and(np.greater(self.zdimPos[i], LowerBoundary), np.less(self.zdimPos[i], UpperBoundary)))[0]
+			if not len(Indices) == 0:
+				FilSegmentTemp = []
+				zDimTemp = []
+				for idx in Indices:
+					zDimTemp.append(self.zdimPos[i][idx])
+					FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
+				self.CutOffFilamentSegments.append(FilSegmentTemp)
+				self.CutOffzDim.append(zDimTemp)
 
 	def Check_Boundaries(self):
 		""" Checks the boundaries. Assuming periodic bondary. Will split segment if change is larger than 10000 """
@@ -517,7 +545,7 @@ class Disperse_Plotter():
 			if PlotFilaments == 1:
 				FilPositions = plt.figure()
 				ax = plt.axes()
-				ax.set_xlim(self.xmin, self.ymax)
+				ax.set_xlim(self.xmin, self.xmax)
 				ax.set_ylim(self.ymin, self.ymax)
 				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection(line_segments)
@@ -527,7 +555,7 @@ class Disperse_Plotter():
 			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts = plt.figure()
 				ax = plt.axes()
-				ax.set_xlim(self.xmin, self.ymax)
+				ax.set_xlim(self.xmin, self.xmax)
 				ax.set_ylim(self.ymin, self.ymax)
 				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection(line_segments)
@@ -541,7 +569,7 @@ class Disperse_Plotter():
 			if PlotFilaments == 1:
 				FilPositions = plt.figure()
 				ax = FilPositions.gca(projection='3d')
-				ax.set_xlim(self.xmin, self.ymax)
+				ax.set_xlim(self.xmin, self.xmax)
 				ax.set_ylim(self.ymin, self.ymax)
 				ax.set_zlim(self.zmin, self.zmax)
 				#line_segments = LineCollection(self.FilXYPositionsBoundary, linestyle='solid')
@@ -555,7 +583,7 @@ class Disperse_Plotter():
 			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts = plt.figure()
 				ax = FilPositions_WCritPts.gca(projection='3d')
-				ax.set_xlim(self.xmin, self.ymax)
+				ax.set_xlim(self.xmin, self.xmax)
 				ax.set_ylim(self.ymin, self.ymax)
 				ax.set_zlim(self.zmin, self.zmax)
 				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
@@ -575,7 +603,43 @@ class Disperse_Plotter():
 				ax.add_collection(line_segments)
 				ax.set_xlabel('$\mathregular{x}$ - Mpc')
 				ax.set_ylabel('$\mathregular{y}$ - Mpc')
-				plt.title('2D Position projection of the filaments')				
+				plt.title('2D Position projection of the filaments')
+			if IncludeSlicing == 1:
+				self.Mask_slices()
+				FilamentSliced = plt.figure()
+				ax = FilamentSliced.gca(projection='3d')
+				ax.set_xlim(self.xmin, self.xmax)
+				ax.set_ylim(self.ymin, self.ymax)
+				ax.set_zlim(self.zmin, self.zmax)
+				line_segments = LineCollection(self.MaskedFilamentSegments, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
+				ax.add_collection3d(line_segments, self.zdimMasked, zdir='z')
+				ax.set_xlabel('$\mathregular{x}$ - Mpc')
+				ax.set_ylabel('$\mathregular{y}$ - Mpc')
+				ax.set_zlabel('$\mathregular{z}$ - Mpc')
+				plt.title('Sliced segment of the 3D box')
+
+				FilamentCutOff = plt.figure()
+				ax2 = FilamentCutOff.gca(projection='3d')
+				ax2.set_xlim(self.xmin, self.xmax)
+				ax2.set_ylim(self.ymin, self.ymax)
+				ax2.set_zlim(self.zmin, self.zmax)
+				line_segments_CO = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
+				ax2.add_collection3d(line_segments_CO, self.CutOffzDim, zdir='z')
+				ax2.set_xlabel('$\mathregular{x}$ - Mpc')
+				ax2.set_ylabel('$\mathregular{y}$ - Mpc')
+				ax2.set_zlabel('$\mathregular{z}$ - Mpc')
+				plt.title('Sliced segment of the 3D box, with filaments cut off outside of boundary')
+				
+				if Projection2D == 1:
+					FilPositions_2DProjectionSliced = plt.figure()
+					ax = plt.axes()
+					ax.set_xlim(self.xmin, self.ymax)
+					ax.set_ylim(self.ymin, self.ymax)
+					line_segments2 = LineCollection(self.MaskedFilamentSegments, array=ColorArray, cmap=plt.cm.gist_ncar)
+					ax.add_collection(line_segments2)
+					ax.set_xlabel('$\mathregular{x}$ - Mpc')
+					ax.set_ylabel('$\mathregular{y}$ - Mpc')
+					plt.title('2D Position projection sliced box')
 
 		if self.savefile == 1:
 			ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + Filenamedimension)
@@ -587,6 +651,10 @@ class Disperse_Plotter():
 				FilPositions_WCritPts.savefig(self.results_dir + 'FilamentPositionsWithCritPts' + Filenamedimension)
 			if Projection2D == 1:
 				FilPositions_2DProjection.savefig(self.results_dir + '2DProjectedFilamentPosition' + Filenamedimension)
+			if IncludeSlicing == 1:
+				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + Filenamedimension)
+				if Projection2D == 1:
+					FilPositions_2DProjectionSliced.savefig(self.results_dir + '2DProjectionSliced3dBox' + Filenamedimension)
 		else:
 			plt.show()
 
@@ -803,6 +871,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	FilamentLimit = 0			# Limits the number of filament read from file. Reads all if 0
+	IncludeSlicing = 1 			# Set 1 to include slices of the box
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
@@ -812,13 +881,13 @@ if __name__ == '__main__':
 		#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 		
 		LCDM_64Periodic_dir = 'lcdm_z0_testing/LCDM64_Periodic/'
-		LCDM_z0_64Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
+		LCDM_z0_64Peri = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
 		NConnections_64Peri, FilLengths_64Peri, NPoints_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
-		
+		"""
 		LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
 		LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
 		NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
-		
+		"""
 		# Lots of memory usage for 256^3.
 		#LCDM_256Periodic_dir = 'lcdm_z0_testing/LCDM256_Periodic/'
 		#LCDM_z0_256Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_256Periodic_dir + 'Plots/', nPart=256)
