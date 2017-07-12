@@ -514,17 +514,14 @@ class Disperse_Plotter():
 		# Histogram of filament lengths
 		LenMin = min(self.FilLengths)
 		LenMax = max(self.FilLengths)
-		hist = np.histogram(self.FilLengths)
-		BinList_FilLengths = np.linspace(LenMin, LenMax, len(hist[0])/0.0002 + 1)
-		#BinSize_FilLengths = (LenMax - LenMin)/(0.5) + 1
-		#BinList_FilLengths = np.linspace(LenMin, LenMax, BinSize_FilLengths)
-		#self.SortedLengths = sorted(self.FilLengths)
-		self.FilLengths.sort()
-		fit = stats.norm.pdf(self.FilLengths, np.mean(self.FilLengths), np.std(self.FilLengths))
+		BinSize_size = (LenMax - LenMin)/(0.5) + 1
+		#BinList_FilLengths = np.linspace(LenMin, LenMax, BinSize_size)
 		FilamentLengthsHist = plt.figure()
-		#plt.hist(self.FilLengths, align='left', rwidth=1, bins=BinList_FilLengths, normed=NormedArgument)#, bins=BinList_FilLengths)
-		plt.hold("on")
-		plt.plot(self.FilLengths, fit)
+		plt.hist(self.FilLengths, align='left', rwidth=1, bins=600, normed=NormedArgument, histtype='step')#, bins=BinList_FilLengths)
+		#plt.hold("on")
+		#self.FilLengths.sort()
+		#fit = stats.norm.pdf(self.FilLengths, np.mean(self.FilLengths), np.std(self.FilLengths))
+		#plt.plot(self.FilLengths, fit)
 		plt.xlabel('Length of filaments - [Mpc]')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram of filament lengths with ' + self.nPart_text + '$\mathregular{^3}$ particles.')
@@ -653,8 +650,10 @@ class Disperse_Plotter():
 				FilPositions_2DProjection.savefig(self.results_dir + '2DProjectedFilamentPosition' + Filenamedimension)
 			if IncludeSlicing == 1:
 				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + Filenamedimension)
+				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + Filenamedimension)
 				if Projection2D == 1:
 					FilPositions_2DProjectionSliced.savefig(self.results_dir + '2DProjectionSliced3dBox' + Filenamedimension)
+
 		else:
 			plt.show()
 
@@ -740,7 +739,7 @@ class Histogram_Comparison():
 		LengthHistComparison = plt.figure()
 		plt.hold("on")
 		for i in range(self.N):
-			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=Bin_list, normed=True, alpha=alphas[i])
+			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=600, normed=True, alpha=alphas[i], histtype='step')
 		plt.xlabel('Filament lengths -[Mpc]')
 		plt.ylabel('Number of occurances')
 		plt.legend(self.LegendText)
@@ -814,9 +813,7 @@ class Histogram_Comparison2():
 		LengthHistComparison = plt.figure()
 		plt.hold("on")
 		for i in range(len(histograms)):
-			fit = stats.norm.pdf(histograms[i], np.mean(histograms[i]), np.std(histograms[i]))
-			#plt.hist(histograms[i], align='mid', rwidth=1, bins=300, normed=True, alpha=self.alphas[i])
-			plt.plot(histograms[i], fit)
+			plt.hist(histograms[i], align='mid', rwidth=1, bins=600, normed=True, alpha=self.alphas[i], histtype='step')
 		plt.xlabel('Filament lengths -[Mpc]')
 		plt.ylabel('Number of occurances')
 		plt.legend(self.LegendText)
@@ -865,13 +862,13 @@ class Histogram_Comparison2():
 
 if __name__ == '__main__':
 	HOMEPC = 0					# Set 1 if working in UiO terminal
-	PlotFilaments = 1			# Set 1 to plot actual filaments
+	PlotFilaments = 0			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
+	Projection2D = 0 			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	FilamentLimit = 0			# Limits the number of filament read from file. Reads all if 0
-	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	IncludeSlicing = 0 			# Set 1 to include slices of the box
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
