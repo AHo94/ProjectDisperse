@@ -572,8 +572,6 @@ class Disperse_Plotter():
 				ax.set_xlim(self.xmin, self.ymax)
 				ax.set_ylim(self.ymin, self.ymax)
 				line_segments = LineCollection(self.FilamentPos, array=ColorArray, cmap=plt.cm.gist_ncar)
-				#plt.gca().add_collection(line_segments)
-				ax.autoscale()
 				ax.add_collection(line_segments)
 				ax.set_xlabel('$\mathregular{x}$ - Mpc')
 				ax.set_ylabel('$\mathregular{y}$ - Mpc')
@@ -798,12 +796,12 @@ class Histogram_Comparison2():
 		#	plt.show()
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
 	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
-	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	FilamentLimit = 0			# Limits the number of filament read from file. Reads all if 0
 
 	if HOMEPC == 0:
