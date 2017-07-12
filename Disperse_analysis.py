@@ -812,12 +812,12 @@ if __name__ == '__main__':
 		#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 		
 		LCDM_64Periodic_dir = 'lcdm_z0_testing/LCDM64_Periodic/'
-		LCDM_z0_64Peri = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
+		LCDM_z0_64Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
 		NConnections_64Peri, FilLengths_64Peri, NPoints_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
 		
-		#LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
-		#LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
-		#NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
+		LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
+		LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
+		NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
 		
 		# Lots of memory usage for 256^3.
 		#LCDM_256Periodic_dir = 'lcdm_z0_testing/LCDM256_Periodic/'
