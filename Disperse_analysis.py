@@ -925,7 +925,7 @@ if __name__ == '__main__':
 		"""
 
 		LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting'
-		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', npart=64)
+		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 		NN, FF, FP, LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 		Comparison_dir = 'lcdm_testing/Comparison_plots/'
