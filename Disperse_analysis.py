@@ -1,6 +1,6 @@
 ### Set comment on the two below to plot. Only use if running on papsukal, nekkar etc. 
-#import matplotlib
-#matplotlib.use('Agg')
+import matplotlib
+matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -927,7 +927,7 @@ if __name__ == '__main__':
 		LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting'
 		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', npart=64)
 		NN, FF, FP, LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
-		
+
 		Comparison_dir = 'lcdm_testing/Comparison_plots/'
 		if Comparison == 1:
 			NumConnections_list = [NConnections_64, NConnections_128]
