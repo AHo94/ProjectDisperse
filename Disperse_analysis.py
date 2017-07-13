@@ -861,14 +861,14 @@ class Histogram_Comparison2():
 		#	plt.show()
 
 if __name__ == '__main__':
-	HOMEPC = 0					# Set 1 if working in UiO terminal
-	PlotFilaments = 0			# Set 1 to plot actual filaments
+	HOMEPC = 1					# Set 1 if working in UiO terminal
+	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 0 			# Set to 1 to plot a 2D projection of the 3D case
+	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	FilamentLimit = 0			# Limits the number of filament read from file. Reads all if 0
-	IncludeSlicing = 0 			# Set 1 to include slices of the box
+	IncludeSlicing = 1 			# Set 1 to include slices of the box
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
@@ -923,6 +923,11 @@ if __name__ == '__main__':
 		LCDM_z0_64rockstarInstance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_rockstar_dir+'Plots/', nPart=64)
 		NN, FF, FP = LCDM_z0_64rockstarInstance.Solve(LCDM_z0_64_rockstar_dir+'SkelconvOutput_LCDMz0_64.a.NDskl', ndim=3)
 		"""
+
+		LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting'
+		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', npart=64)
+		NN, FF, FP, LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
+		
 		Comparison_dir = 'lcdm_testing/Comparison_plots/'
 		if Comparison == 1:
 			NumConnections_list = [NConnections_64, NConnections_128]
