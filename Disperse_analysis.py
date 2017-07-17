@@ -1,6 +1,6 @@
 ### Set comment on the two below to plot. Only use if running on papsukal, nekkar etc. 
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -469,7 +469,84 @@ class Disperse_Plotter():
 				del self.FilXYPositionsBoundary[i]
 				del self.FilZPositionsBoundary[i]
 
+	def Check_Boundary2(self):
+		print 'Checking boundaries'
+		BoxSize = self.xmax - self.xmin
+		FilPosTemp = []
+		xPosTemp = []
+		yPosTemp = []
+		zPosTemp = []
+		self.FilLengths = []
+		for i in range(len(self.xdimPos)):
+			SplitFilament = 0
+			xyTemp = []
+			xTemp = []
+			yTemp = []
+			zTemp = []
+			xyNewTemp = []
+			xNewTemp = []
+			yNewTemp = []
+			zNewTemp = []
+			for j in range(len(self.xdimPos[i])-1):
+				xDiff = self.xdimPos[i][j+1] - self.xdimPos[i][j]
+				yDiff = self.ydimPos[i][j+1] - self.ydimPos[i][j]
+				zDiff = self.zdimPos[i][j+1] - self.zdimPos[i][j]
+				if xDiff > 0.5*BoxSize or yDiff > 0.5*BoxSize or zDiff > 0.5*BoxSize:
+					print i
+					print 'do hit?'
+					SplitFilament = 1
+
+				if not SplitFilament == 0:
+					xyTemp.append([self.xdimPos[i][j], self.ydimPos[i][j]])
+					xTemp.append(self.xdimPos[i][j])
+					yTemp.append(self.ydimPos[i][j])
+					zTemp.append(self.zdimPos[i][j])
+				else:
+					xyNewTemp.append([self.xdimPos[i][j], self.ydimPos[i][j]])
+					xNewTemp.append(self.xdimPos[i][j])
+					yNewTemp.append(self.ydimPos[i][j])
+					zNewTemp.append(self.zdimPos[i][j])
+			
+			if not SplitFilament == 0:
+				xyTemp.append([self.xdimPos[i][-1], self.ydimPos[i][-1]])
+				xTemp.append(self.xdimPos[i][-1])
+				yTemp.append(self.ydimPos[i][-1])
+				zTemp.append(self.zdimPos[i][-1])
+			else:
+				xyNewTemp.append([self.xdimPos[i][-1], self.ydimPos[i][-1]])
+				xNewTemp.append(self.xdimPos[i][-1])
+				yNewTemp.append(self.ydimPos[i][-1])
+				zNewTemp.append(self.zdimPos[i][-1])
+
+			if len(zTemp) > 1:
+				FilPosTemp.append(xyTemp)
+				xPosTemp.append(xTemp)
+				yPosTemp.append(yTemp)
+				zPosTemp.append(zTemp)
+			if len(zNewTemp) > 1:
+				FilPosTemp.append(xyNewTemp)
+				xPosTemp.append(xNewTemp)
+				yPosTemp.append(yNewTemp)
+				zPosTemp.append(zNewTemp)
+
+			TempLength = 0
+			if len(zTemp) > 1:
+				for k in range(len(zTemp)-1):
+						TempLength += np.sqrt((xyTemp[k+1][0]-xyTemp[k][0])**2 + (xyTemp[k+1][1] - xyTemp[k][1])**2 + (zTemp[k+1]-zTemp[k])**2)
+			if len(zNewTemp) > 1:
+				for k in range(len(zNewTemp)-1):
+						TempLength += np.sqrt((xyNewTemp[k+1][0]-xyNewTemp[k][0])**2 + (xyNewTemp[k+1][1] - xyNewTemp[k][1])**2 \
+											+ (zNewTemp[k+1]-zNewTemp[k])**2)
+
+			self.FilLengths.append(TempLength)
+		
+		self.FilamentPos = FilPosTemp
+		self.xdimPos = xPosTemp
+		self.ydimPos = yPosTemp
+		self.zdimPos = zPosTemp
+
 	def Filament_Length(self, dimensions):
+		print 'Computing filament lengths'
 		if dimensions == 3:
 			self.FilLengths = []
 			for i in range(self.NFils-1):
@@ -512,6 +589,7 @@ class Disperse_Plotter():
 		plt.xlim([NumMin, NumMax])
 
 		# Histogram of filament lengths
+
 		LenMin = min(self.FilLengths)
 		LenMax = max(self.FilLengths)
 		BinSize_size = (LenMax - LenMin)/(0.5) + 1
@@ -660,9 +738,12 @@ class Disperse_Plotter():
 	def Solve(self, filename, ndim=2):
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)
-		self.Filament_Length(ndim)
+		self.Check_Boundary2()
+		#self.Filament_Length(ndim)
+		
 		#if ndim == 3:
 		#	self.Check_Boundaries()
+		
 		if Comparison == 0:
 			if self.savefile == 2:
 				print 'Done! No files saved.'
@@ -861,14 +942,14 @@ class Histogram_Comparison2():
 		#	plt.show()
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
-	PlotFilaments = 1			# Set 1 to plot actual filaments
+	HOMEPC = 0					# Set 1 if working in UiO terminal
+	PlotFilaments = 0			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
 	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	FilamentLimit = 0			# Limits the number of filament read from file. Reads all if 0
-	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	FilamentLimit = 500			# Limits the number of lines read from file. Reads all if 0
+	IncludeSlicing = 0 			# Set 1 to include slices of the box
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
@@ -876,20 +957,25 @@ if __name__ == '__main__':
 		#solveInstance1 = Disperse_Plotter(savefile=1, savefigDirectory='Plot_Disperse_Example/', nPart=64)
 		#solveInstance1.Plot("simu_2D.ND.NDnet_s3.up.NDskl.a.NDskl", ndim=2)
 		#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
-		
+		"""
 		LCDM_64Periodic_dir = 'lcdm_z0_testing/LCDM64_Periodic/'
 		LCDM_z0_64Peri = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
-		NConnections_64Peri, FilLengths_64Peri, NPoints_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
+		NConnections_64Peri, FilLengths_64Peri, NPoints_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl',ndim=3)
+		"""
 		"""
 		LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
 		LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
-		NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
+		NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl',ndim=3)
 		"""
 		# Lots of memory usage for 256^3.
 		#LCDM_256Periodic_dir = 'lcdm_z0_testing/LCDM256_Periodic/'
 		#LCDM_z0_256Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_256Periodic_dir + 'Plots/', nPart=256)
 		#LCDM_z0_256Peri.Solve(LCDM_256Periodic_dir+'SkelconvOutput_LCDM256Periodic.a.NDskl', ndim=3)
 		
+		LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
+		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+		NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
+
 		Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
 		if Comparison == 1:
 			NumConnections_list = [NConnections_64Peri, NConnections_128Peri]
