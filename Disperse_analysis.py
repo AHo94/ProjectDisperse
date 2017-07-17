@@ -488,31 +488,29 @@ class Disperse_Plotter():
 			yNewTemp = []
 			zNewTemp = []
 			for j in range(len(self.xdimPos[i])-1):
-				xDiff = self.xdimPos[i][j+1] - self.xdimPos[i][j]
-				yDiff = self.ydimPos[i][j+1] - self.ydimPos[i][j]
-				zDiff = self.zdimPos[i][j+1] - self.zdimPos[i][j]
-				if xDiff > 0.5*BoxSize or yDiff > 0.5*BoxSize or zDiff > 0.5*BoxSize:
-					print i
-					print 'do hit?'
-					SplitFilament = 1
+				xDiff = np.abs(self.xdimPos[i][j+1] - self.xdimPos[i][j])
+				yDiff = np.abs(self.ydimPos[i][j+1] - self.ydimPos[i][j])
+				zDiff = np.abs(self.zdimPos[i][j+1] - self.zdimPos[i][j])
 
-				if not SplitFilament == 0:
+				if SplitFilament == 0:
 					xyTemp.append([self.xdimPos[i][j], self.ydimPos[i][j]])
 					xTemp.append(self.xdimPos[i][j])
 					yTemp.append(self.ydimPos[i][j])
 					zTemp.append(self.zdimPos[i][j])
-				else:
+				elif SplitFilament == 1:
 					xyNewTemp.append([self.xdimPos[i][j], self.ydimPos[i][j]])
 					xNewTemp.append(self.xdimPos[i][j])
 					yNewTemp.append(self.ydimPos[i][j])
 					zNewTemp.append(self.zdimPos[i][j])
-			
-			if not SplitFilament == 0:
+				if xDiff > 0.5*BoxSize or yDiff > 0.5*BoxSize or zDiff > 0.5*BoxSize:
+					SplitFilament += 1			
+
+			if SplitFilament == 0:
 				xyTemp.append([self.xdimPos[i][-1], self.ydimPos[i][-1]])
 				xTemp.append(self.xdimPos[i][-1])
 				yTemp.append(self.ydimPos[i][-1])
 				zTemp.append(self.zdimPos[i][-1])
-			else:
+			elif SplitFilament == 1:
 				xyNewTemp.append([self.xdimPos[i][-1], self.ydimPos[i][-1]])
 				xNewTemp.append(self.xdimPos[i][-1])
 				yNewTemp.append(self.ydimPos[i][-1])
@@ -574,7 +572,7 @@ class Disperse_Plotter():
 			ColorArray = np.linspace(0,10,110)
 		else:
 			ColorArray = np.linspace(0,10,1)
-
+		
 		# Histogram of number of filament connections
 		NumMin = min(self.NumFilamentConnections)
 		NumMax = max(self.NumFilamentConnections)
@@ -615,7 +613,7 @@ class Disperse_Plotter():
 		plt.xlabel('Number of position points for a filament')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
-
+		
 		if ndim == 2:
 			if PlotFilaments == 1:
 				FilPositions = plt.figure()
@@ -943,13 +941,13 @@ class Histogram_Comparison2():
 
 if __name__ == '__main__':
 	HOMEPC = 0					# Set 1 if working in UiO terminal
-	PlotFilaments = 0			# Set 1 to plot actual filaments
+	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
 	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	FilamentLimit = 500			# Limits the number of lines read from file. Reads all if 0
-	IncludeSlicing = 0 			# Set 1 to include slices of the box
+	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
+	IncludeSlicing = 1 			# Set 1 to include slices of the box
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
@@ -973,7 +971,7 @@ if __name__ == '__main__':
 		#LCDM_z0_256Peri.Solve(LCDM_256Periodic_dir+'SkelconvOutput_LCDM256Periodic.a.NDskl', ndim=3)
 		
 		LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 		NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 		Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
