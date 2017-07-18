@@ -663,7 +663,7 @@ class Disperse_Plotter():
 				ax.set_ylim(self.ymin, self.ymax)
 				ax.set_zlim(self.zmin, self.zmax)
 				#line_segments = LineCollection(self.FilXYPositionsBoundary, linestyle='solid')
-				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
+				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=np.linspace(self.zmin, self.zmax, 100), cmap='YlGnBu')
 				#ax.add_collection3d(line_segments, self.FilZPositionsBoundary, zdir='z')
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
 				ax.set_xlabel('$\mathregular{x}$')
@@ -689,7 +689,7 @@ class Disperse_Plotter():
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.ymax)
 				ax.set_ylim(self.ymin, self.ymax)
-				line_segments = LineCollection(self.FilamentPos, array=ColorArray, cmap=plt.cm.gist_ncar)
+				line_segments = LineCollection(self.FilamentPos, array=np.linspace(self.zmin, self.zmax, 100), cmap='YlGnBu')
 				ax.add_collection(line_segments)
 				ax.set_xlabel('$\mathregular{x}$')
 				ax.set_ylabel('$\mathregular{y}$')
@@ -961,12 +961,12 @@ if __name__ == '__main__':
 	HOMEPC = 0					# Set 1 if working in UiO terminal
 	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	HistogramPlots = 1 			# Set to 1 to plot histograms
+	HistogramPlots = 0 			# Set to 1 to plot histograms
 	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
-	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	FilamentLimit = 5000			# Limits the number of lines read from file. Reads all if 0
+	IncludeSlicing = 0 			# Set 1 to include slices of the box
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
