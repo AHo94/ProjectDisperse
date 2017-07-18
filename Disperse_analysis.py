@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 import scipy.stats as stats
 from matplotlib import colors as mcolors
+from scipy import interpolate
 
 class Disperse_Plotter():
 	def __init__(self, savefile, savefigDirectory, nPart):
@@ -309,6 +310,208 @@ class Disperse_Plotter():
 		self.ydimPos = yPosTemp
 		self.zdimPos = zPosTemp
 
+	def BoundaryStuff(self):
+		BoxSize = self.xmax - self.xmin
+		FilPosTemp = []
+		xPosTemp = []
+		yPosTemp = []
+		zPosTemp = []
+		self.FilLengths = []
+		for i in range(len(self.xdimPos)):
+			SplitFilament = 0
+			xBoundary = 0
+			yBoundary = 0
+			zBoundary = 0
+			xyTemp = []
+			xTemp = []
+			yTemp = []
+			zTemp = []
+			xyNewTemp = []
+			xNewTemp = []
+			yNewTemp = []
+			zNewTemp = []
+			xyNewTemp2 = []
+			xNewTemp2 = []
+			yNewTemp2 = []
+			zNewTemp2 = []
+			for j in range(len(self.xdimPos[i])-1):
+				xDiff = np.abs(self.xdimPos[i][j+1] - self.xdimPos[i][j])
+				yDiff = np.abs(self.ydimPos[i][j+1] - self.ydimPos[i][j])
+				zDiff = np.abs(self.zdimPos[i][j+1] - self.zdimPos[i][j])
+
+				if SplitFilament == 0:
+					xyTemp.append([self.xdimPos[i][j], self.ydimPos[i][j]])
+					xTemp.append(self.xdimPos[i][j])
+					yTemp.append(self.ydimPos[i][j])
+					zTemp.append(self.zdimPos[i][j])
+				elif SplitFilament == 1:
+					if xBoundary == 1:
+						yBoundaryPoint = 2.0*(self.ydimPos[i][j] - self.ydimPos[i][j-1])/BoxSize
+						zBoundaryPoint = 2.0*(self.zdimPos[i][j] - self.zdimPos[i][j-1])/BoxSize
+						if np.abs(self.xdimPos[i][j-1] - self.xmin) > 0.5*BoxSize:
+							xyTemp.append([self.xmax, self.ydimPos[i][j-1]+yBoundaryPoint])
+							xyNewTemp.append([self.xmin, self.ydimPos[i][j-1]-yBoundaryPoint])
+							zTemp.append(self.zdimPos[i][j-1]+zBoundaryPoint)
+							zNewTemp.append(self.zdimPos[i][j-1]-zBoundaryPoint)
+							xBoundary = 2
+						elif np.abs(self.xdimPos[i][j-1] - self.xmax) > 0.5*BoxSize: 
+							xyTemp.append([self.xmin, self.ydimPos[i][j-1]+yBoundaryPoint])
+							xyNewTemp.append([self.xmax, self.ydimPos[i][j-1]-yBoundaryPoint])
+							zTemp.append(self.zdimPos[i][j-1]+zBoundaryPoint)
+							zNewTemp.append(self.zdimPos[i][j-1]-zBoundaryPoint)
+							xBoundary = 2
+					elif yBoundary == 1:
+						xBoundaryPoint = 2.0*(self.xdimPos[i][j] - self.xdimPos[i][j-1])/BoxSize
+						zBoundaryPoint = 2.0*(self.zdimPos[i][j] - self.zdimPos[i][j-1])/BoxSize
+						if np.abs(self.ydimPos[i][j-1] - self.ymin) > 0.5*BoxSize:
+							xyTemp.append([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymax])
+							xyNewTemp.append([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymin])
+							zTemp.append(self.zdimPos[i][j-1]+zBoundaryPoint)
+							zNewTemp.append(self.zdimPos[i][j-1]-zBoundaryPoint)
+							yBoundary = 2
+						elif np.abs(self.ydimPos[i][j-1] - self.ymax) > 0.5*BoxSize: 
+							xyTemp.append([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymin])
+							xyNewTemp.append([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymax])
+							zTemp.append(self.zdimPos[i][j-1]+zBoundaryPoint)
+							zNewTemp.append(self.zdimPos[i][j-1]-zBoundaryPoint)
+							yBoundary = 2
+					elif zBoundary == 1:
+						xBoundaryPoint = 2.0*(self.xdimPos[i][j] - self.xdimPos[i][j-1])/BoxSize
+						yBoundaryPoint = 2.0*(self.ydimPos[i][j] - self.ydimPos[i][j-1])/BoxSize
+						if np.abs(self.zdimPos[i][j-1] - self.zmin) > 0.5*BoxSize:
+							xyTemp.append([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint])
+							xyNewTemp.append([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint])
+							zTemp.append(self.zmax)
+							zNewTemp.append(self.zmin)
+							zBoundary = 2
+						elif np.abs(self.zdimPos[i][j-1] - self.zmax) > 0.5*BoxSize:
+							xyTemp.append([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint])
+							xyNewTemp.append([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint])
+							zTemp.append(self.zmin)
+							zNewTemp.append(self.zmax)
+							zBoundary = 2
+					xyNewTemp.append([self.xdimPos[i][j], self.ydimPos[i][j]])
+					xNewTemp.append(self.xdimPos[i][j])
+					yNewTemp.append(self.ydimPos[i][j])
+					zNewTemp.append(self.zdimPos[i][j])
+				elif SplitFilament == 2:
+					if xBoundary == 1:
+						yBoundaryPoint = 2.0*(self.ydimPos[i][j] - self.ydimPos[i][j-1])/BoxSize
+						zBoundaryPoint = 2.0*(self.zdimPos[i][j] - self.zdimPos[i][j-1])/BoxSize
+						if np.abs(self.xdimPos[i][j-1] - self.xmin) > 0.5*BoxSize:
+							xyNewTemp.append([self.xmax, self.ydimPos[i][j-1]+yBoundaryPoint])
+							xyNewTemp2.append([self.xmin, self.ydimPos[i][j-1]-yBoundaryPoint])
+							zNewTemp.append(self.zdimPos[i][j-1]+zBoundaryPoint)
+							zNewTemp2.append(self.zdimPos[i][j-1]-zBoundaryPoint)
+							xBoundary = 2
+						elif np.abs(self.xdimPos[i][j-1] - self.xmax) > 0.5*BoxSize: 
+							xyNewTemp.append([self.xmin, self.ydimPos[i][j-1]+yBoundaryPoint])
+							xyNewTemp2.append([self.xmax, self.ydimPos[i][j-1]-yBoundaryPoint])
+							zNewTemp.append(self.zdimPos[i][j-1]+zBoundaryPoint)
+							zNewTemp2.append(self.zdimPos[i][j-1]-zBoundaryPoint)
+							xBoundary = 2
+					elif yBoundary == 1:
+						xBoundaryPoint = 2.0*(self.xdimPos[i][j] - self.xdimPos[i][j-1])/BoxSize
+						zBoundaryPoint = 2.0*(self.zdimPos[i][j] - self.zdimPos[i][j-1])/BoxSize
+						if np.abs(self.ydimPos[i][j-1] - self.ymin) > 0.5*BoxSize:
+							xyNewTemp.append([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymax])
+							xyNewTemp2.append([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymin])
+							zNewTemp.append(self.zdimPos[i][j-1]+zBoundaryPoint)
+							zNewTemp2.append(self.zdimPos[i][j-1]-zBoundaryPoint)
+							yBoundary = 2
+						elif np.abs(self.ydimPos[i][j-1] - self.ymax) > 0.5*BoxSize: 
+							xyNewTemp.append([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymin])
+							xyNewTemp2.append([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymax])
+							zNewTemp.append(self.zdimPos[i][j-1]+zBoundaryPoint)
+							zNewTemp2.append(self.zdimPos[i][j-1]-zBoundaryPoint)
+							yBoundary = 2
+					elif zBoundary == 1:
+						xBoundaryPoint = 2.0*(self.xdimPos[i][j] - self.xdimPos[i][j-1])/BoxSize
+						yBoundaryPoint = 2.0*(self.ydimPos[i][j] - self.ydimPos[i][j-1])/BoxSize
+						if np.abs(self.zdimPos[i][j-1] - self.zmin) > 0.5*BoxSize:
+							xyNewTemp.append([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint])
+							xyNewTemp2.append([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint])
+							zNewTemp.append(self.zmax)
+							zNewTemp2.append(self.zmin)
+							zBoundary = 2
+						elif np.abs(self.zdimPos[i][j-1] - self.zmax) > 0.5*BoxSize:
+							xyNewTemp.append([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint])
+							xyNewTemp2.append([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint])
+							zNewTemp.append(self.zmin)
+							zNewTemp2.append(self.zmax)
+							zBoundary = 2
+					xyNewTemp2.append([self.xdimPos[i][j], self.ydimPos[i][j]])
+					xNewTemp2.append(self.xdimPos[i][j])
+					yNewTemp2.append(self.ydimPos[i][j])
+					zNewTemp2.append(self.zdimPos[i][j])
+
+				if xDiff > 0.5*BoxSize:
+					if SplitFilament == 1:
+						SplitFilament = 2
+					else:
+						SplitFilament = 1
+						xBoundary = 1
+				if yDiff > 0.5*BoxSize:
+					if SplitFilament == 1:
+						SplitFilament = 2
+					else:
+						SplitFilament = 1
+						yBoundary = 1
+				if zDiff > 0.5*BoxSize:
+					if SplitFilament == 1:
+						SplitFilament = 2
+					else:
+						SplitFilament = 1
+						zBoundary = 1			
+
+			if SplitFilament == 0:
+				xyTemp.append([self.xdimPos[i][-1], self.ydimPos[i][-1]])
+				xTemp.append(self.xdimPos[i][-1])
+				yTemp.append(self.ydimPos[i][-1])
+				zTemp.append(self.zdimPos[i][-1])
+			elif SplitFilament == 1:
+				xyNewTemp.append([self.xdimPos[i][-1], self.ydimPos[i][-1]])
+				xNewTemp.append(self.xdimPos[i][-1])
+				yNewTemp.append(self.ydimPos[i][-1])
+				zNewTemp.append(self.zdimPos[i][-1])
+
+			if len(zTemp) > 1:
+				FilPosTemp.append(xyTemp)
+				xPosTemp.append(xTemp)
+				yPosTemp.append(yTemp)
+				zPosTemp.append(zTemp)
+			if len(zNewTemp) > 1:
+				FilPosTemp.append(xyNewTemp)
+				xPosTemp.append(xNewTemp)
+				yPosTemp.append(yNewTemp)
+				zPosTemp.append(zNewTemp)
+			if len(zNewTemp2) > 1:
+				FilPosTemp.append(xyNewTemp2)
+				xPosTemp.append(xNewTemp2)
+				yPosTemp.append(yNewTemp2)
+				zPosTemp.append(zNewTemp2)
+				
+			TempLength = 0
+			if len(zTemp) > 1:
+				for k in range(len(zTemp)-1):
+					TempLength += np.sqrt((xyTemp[k+1][0]-xyTemp[k][0])**2 + (xyTemp[k+1][1] - xyTemp[k][1])**2 + (zTemp[k+1]-zTemp[k])**2)
+			if len(zNewTemp) > 1:
+				for k in range(len(zNewTemp)-1):
+					TempLength += np.sqrt((xyNewTemp[k+1][0]-xyNewTemp[k][0])**2 + (xyNewTemp[k+1][1] - xyNewTemp[k][1])**2 \
+										+ (zNewTemp[k+1]-zNewTemp[k])**2)
+			if len(zNewTemp2) > 1:
+				for k in range(len(zNewTemp2)-1):
+					TempLength += np.sqrt((xyNewTemp2[k+1][0]-xyNewTemp2[k][0])**2 + (xyNewTemp2[k+1][1] - xyNewTemp2[k][1])**2 \
+										+ (zNewTemp2[k+1]-zNewTemp2[k])**2)
+
+			self.FilLengths.append(TempLength)
+		
+		self.FilamentPos = FilPosTemp
+		self.xdimPos = xPosTemp
+		self.ydimPos = yPosTemp
+		self.zdimPos = zPosTemp
+
+
 	def Filament_Length(self, dimensions):
 		print 'Computing filament lengths'
 		if dimensions == 3:
@@ -338,7 +541,7 @@ class Disperse_Plotter():
 			ColorArray = np.linspace(0,10,110)
 		else:
 			ColorArray = np.linspace(0,10,1)
-		
+		"""
 		# Histogram of number of filament connections
 		NumMin = min(self.NumFilamentConnections)
 		NumMax = max(self.NumFilamentConnections)
@@ -364,7 +567,7 @@ class Disperse_Plotter():
 		#self.FilLengths.sort()
 		#fit = stats.norm.pdf(self.FilLengths, np.mean(self.FilLengths), np.std(self.FilLengths))
 		#plt.plot(self.FilLengths, fit)
-		plt.xlabel('Length of filaments - [Mpc]')
+		plt.xlabel('Length of filaments ')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram of filament lengths with ' + self.nPart_text + '$\mathregular{^3}$ particles.')
 		plt.xlim([LenMin, LenMax])
@@ -379,7 +582,7 @@ class Disperse_Plotter():
 		plt.xlabel('Number of position points for a filament')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
-		
+		"""
 		if ndim == 2:
 			if PlotFilaments == 1:
 				FilPositions = plt.figure()
@@ -388,8 +591,8 @@ class Disperse_Plotter():
 				ax.set_ylim(self.ymin, self.ymax)
 				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection(line_segments)
-				plt.xlabel('$\mathregular{x}$ - Mpc')
-				plt.ylabel('$\mathregular{y}$ - Mpc')
+				plt.xlabel('$\mathregular{x}$')
+				plt.ylabel('$\mathregular{y}$')
 				plt.title('Positions of the filaments with '+ self.nPart_text+ '$^3$ particles')
 			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts = plt.figure()
@@ -401,8 +604,8 @@ class Disperse_Plotter():
 				plt.hold("on")
 				plt.plot(self.CritPointXpos, self.CritPointYpos, 'ro', alpha=0.7, markersize=3)
 				#plt.plot(self.CritPointXposNOTCON, self.CritPointYposNOTCON, 'go', alpha=0.7, markersize=3)
-				plt.xlabel('$\mathregular{x}$ - Mpc')
-				plt.ylabel('$\mathregular{y}$ - Mpc')
+				plt.xlabel('$\mathregular{x}$')
+				plt.ylabel('$\mathregular{y}$')
 				plt.title('Position of the filaments with critical points shown')
 		if ndim == 3:
 			if PlotFilaments == 1:
@@ -415,9 +618,9 @@ class Disperse_Plotter():
 				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				#ax.add_collection3d(line_segments, self.FilZPositionsBoundary, zdir='z')
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
-				ax.set_xlabel('$\mathregular{x}$ - Mpc')
-				ax.set_ylabel('$\mathregular{y}$ - Mpc')
-				ax.set_zlabel('$\mathregular{z}$ - Mpc')
+				ax.set_xlabel('$\mathregular{x}$')
+				ax.set_ylabel('$\mathregular{y}$')
+				ax.set_zlabel('$\mathregular{z}$')
 				plt.title('3D Position of the filaments with '+ self.nPart_text+ '$^3$ particles.')
 			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts = plt.figure()
@@ -429,9 +632,9 @@ class Disperse_Plotter():
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
 				plt.hold("on")
 				ax.plot(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos, 'ro', alpha=0.7, markersize=3)
-				ax.set_xlabel('$\mathregular{x}$ - Mpc')
-				ax.set_ylabel('$\mathregular{y}$ - Mpc')
-				ax.set_zlabel('$\mathregular{z}$ - Mpc')
+				ax.set_xlabel('$\mathregular{x}$')
+				ax.set_ylabel('$\mathregular{y}$')
+				ax.set_zlabel('$\mathregular{z}$')
 				plt.title('3D Position of the filaments with critical points')
 			if Projection2D == 1:
 				FilPositions_2DProjection = plt.figure()
@@ -440,8 +643,8 @@ class Disperse_Plotter():
 				ax.set_ylim(self.ymin, self.ymax)
 				line_segments = LineCollection(self.FilamentPos, array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection(line_segments)
-				ax.set_xlabel('$\mathregular{x}$ - Mpc')
-				ax.set_ylabel('$\mathregular{y}$ - Mpc')
+				ax.set_xlabel('$\mathregular{x}$')
+				ax.set_ylabel('$\mathregular{y}$')
 				plt.title('2D Position projection of the filaments')
 			if IncludeSlicing == 1:
 				self.Mask_slices()
@@ -452,9 +655,9 @@ class Disperse_Plotter():
 				ax.set_zlim(self.zmin, self.zmax)
 				line_segments = LineCollection(self.MaskedFilamentSegments, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection3d(line_segments, self.zdimMasked, zdir='z')
-				ax.set_xlabel('$\mathregular{x}$ - Mpc')
-				ax.set_ylabel('$\mathregular{y}$ - Mpc')
-				ax.set_zlabel('$\mathregular{z}$ - Mpc')
+				ax.set_xlabel('$\mathregular{x}$')
+				ax.set_ylabel('$\mathregular{y}$')
+				ax.set_zlabel('$\mathregular{z}$')
 				plt.title('Sliced segment of the 3D box')
 
 				FilamentCutOff = plt.figure()
@@ -464,9 +667,9 @@ class Disperse_Plotter():
 				ax2.set_zlim(self.zmin, self.zmax)
 				line_segments_CO = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax2.add_collection3d(line_segments_CO, self.CutOffzDim, zdir='z')
-				ax2.set_xlabel('$\mathregular{x}$ - Mpc')
-				ax2.set_ylabel('$\mathregular{y}$ - Mpc')
-				ax2.set_zlabel('$\mathregular{z}$ - Mpc')
+				ax2.set_xlabel('$\mathregular{x}$')
+				ax2.set_ylabel('$\mathregular{y}$')
+				ax2.set_zlabel('$\mathregular{z}$')
 				plt.title('Sliced segment of the 3D box, with filaments cut off outside of boundary')
 				
 				if Projection2D == 1:
@@ -476,8 +679,8 @@ class Disperse_Plotter():
 					ax.set_ylim(self.ymin, self.ymax)
 					line_segments2 = LineCollection(self.MaskedFilamentSegments, array=ColorArray, cmap=plt.cm.gist_ncar)
 					ax.add_collection(line_segments2)
-					ax.set_xlabel('$\mathregular{x}$ - Mpc')
-					ax.set_ylabel('$\mathregular{y}$ - Mpc')
+					ax.set_xlabel('$\mathregular{x}$')
+					ax.set_ylabel('$\mathregular{y}$')
 					plt.title('2D Position projection sliced box')
 
 		if self.savefile == 1:
@@ -502,7 +705,8 @@ class Disperse_Plotter():
 	def Solve(self, filename, ndim=2):
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)
-		self.Check_Boundary_and_compute_length()
+		#self.Check_Boundary_and_compute_length()
+		self.BoundaryStuff()
 		#self.Filament_Length(ndim)
 		
 		#if ndim == 3:
@@ -585,7 +789,7 @@ class Histogram_Comparison():
 		plt.hold("on")
 		for i in range(self.N):
 			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=600, normed=True, alpha=alphas[i], histtype='step')
-		plt.xlabel('Filament lengths -[Mpc]')
+		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
 		plt.legend(self.LegendText)
 
@@ -659,7 +863,7 @@ class Histogram_Comparison2():
 		plt.hold("on")
 		for i in range(len(histograms)):
 			plt.hist(histograms[i], align='mid', rwidth=1, bins=600, normed=True, alpha=self.alphas[i], histtype='step')
-		plt.xlabel('Filament lengths -[Mpc]')
+		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
 		plt.legend(self.LegendText)
 		plt.title('Comparison of filament lengths for the model: ' + self.model)
@@ -712,8 +916,8 @@ if __name__ == '__main__':
 	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
-	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	FilamentLimit = 5000			# Limits the number of lines read from file. Reads all if 0
+	IncludeSlicing = 0 			# Set 1 to include slices of the box
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
@@ -737,7 +941,7 @@ if __name__ == '__main__':
 		#LCDM_z0_256Peri.Solve(LCDM_256Periodic_dir+'SkelconvOutput_LCDM256Periodic.a.NDskl', ndim=3)
 		
 		LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 		NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 		Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
