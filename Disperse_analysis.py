@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d import Axes3D
 #from matplotlib.collections import PolyCollection
-#from matplotlib.colors import colorConverter
+from matplotlib.colors import ListedColormap, BoundaryNorm
 import os
 import scipy.stats as stats
 from matplotlib import colors as mcolors
@@ -586,10 +586,13 @@ class Disperse_Plotter():
 			NormedArgument = False
 
 		if FilamentColors == 1:
-			ColorArray = np.linspace(0,10,110)
+			ColorArray = np.linspace(0,1,110)
+			#ColorArray = plt.cm.rainbow(np.linspace(self.zmin, self.zmax, len(self.zdimPos)))
+			ColorMap2D = np.array([np.mean(zvalues) for zvalues in self.zdimPos])
 		else:
-			ColorArray = np.linspace(0,10,1)
+			ColorArray = None#np.linspace(0,1,1)
 		
+
 		if HistogramPlots == 1:
 			# Histogram of number of filament connections
 			NumMin = min(self.NumFilamentConnections)
@@ -663,7 +666,7 @@ class Disperse_Plotter():
 				ax.set_ylim(self.ymin, self.ymax)
 				ax.set_zlim(self.zmin, self.zmax)
 				#line_segments = LineCollection(self.FilXYPositionsBoundary, linestyle='solid')
-				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=np.linspace(self.zmin, self.zmax, 100), cmap='YlGnBu')
+				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.rainbow)
 				#ax.add_collection3d(line_segments, self.FilZPositionsBoundary, zdir='z')
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
 				ax.set_xlabel('$\mathregular{x}$')
@@ -689,8 +692,10 @@ class Disperse_Plotter():
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.ymax)
 				ax.set_ylim(self.ymin, self.ymax)
-				line_segments = LineCollection(self.FilamentPos, array=np.linspace(self.zmin, self.zmax, 100), cmap='YlGnBu')
+				line_segments = LineCollection(self.FilamentPos, array=ColorMap2D, cmap=plt.cm.rainbow)
 				ax.add_collection(line_segments)
+				FilPositions_2DProjection.colorbar(line_segments)
+				#FilPositions_2DProjection.colorbar(line_segments)
 				ax.set_xlabel('$\mathregular{x}$')
 				ax.set_ylabel('$\mathregular{y}$')
 				plt.title('2D Position projection of the filaments')
@@ -965,7 +970,7 @@ if __name__ == '__main__':
 	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	FilamentLimit = 5000			# Limits the number of lines read from file. Reads all if 0
+	FilamentLimit = 500			# Limits the number of lines read from file. Reads all if 0
 	IncludeSlicing = 0 			# Set 1 to include slices of the box
 
 	if HOMEPC == 0:
