@@ -92,7 +92,7 @@ class Disperse_Plotter():
 		datafiles.close()
 
 	def Read_SolveFile(self):
-		print 'Reading data for the file: ', solve_file_dir, solve_filename, '...' 
+		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...' 
 		datafiles = open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r')
 		self.PartPosX = []
 		self.PartPosY = []
@@ -806,20 +806,21 @@ class Disperse_Plotter():
 					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
 					plt.xlabel('$\mathregular{x}$')
 					plt.ylabel('$\mathregular{y}$')
-					plt.colorbar()
+					plt.title('Dark matter density field over a segment of the particle box.')
 
 					DMParticleHistwFilaments = plt.figure()
 					plt.hold("on")
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.xmax)
 					ax.set_ylim(self.ymin, self.ymax)
-					line_segmentsDM = LineCollection(self.MaskedFilamentSegments, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
+					line_segmentsDM = LineCollection(self.MaskedFilamentSegments, linestyle='solid', array=ColorMap2D, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsDM)
+					DMParticleHistwFilaments.colorbar(line_segmentsDM)
 					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
 					plt.xlabel('$\mathregular{x}$')
 					plt.ylabel('$\mathregular{y}$')
-					plt.colorbar()
 					plt.hold("off")
+					plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar. Colors indicate average z-value.')
 
 		if self.savefile == 1:
 			if HistogramPlots == 1:
@@ -839,6 +840,9 @@ class Disperse_Plotter():
 				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + Filenamedimension)
 				if Projection2D == 1:
 					FilPositions_2DProjectionSliced.savefig(self.results_dir + '2DProjectionSliced3dBox' + Filenamedimension)
+				if IncludeDMParticles == 1:
+					DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram' + Filenamedimension)
+					DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments' + Filenamedimension)
 
 		else:
 			plt.show()
@@ -1056,10 +1060,10 @@ if __name__ == '__main__':
 	HOMEPC = 1					# Set 1 if working in UiO terminal
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
 	
-	PlotFilaments = 0			# Set 1 to plot actual filaments
+	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 0 			# Set to 1 to plot a 2D projection of the 3D case
-	ColorBarZDir = 0
+	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
+	ColorBarZDir = 1
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
@@ -1067,22 +1071,12 @@ if __name__ == '__main__':
 		LowerBoundary = 0.45
 		UpperBoundary = 0.55
 
-	HistogramPlots = 0 			# Set to 1 to plot histograms
+	HistogramPlots = 1 			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 				
-	"""
-	xx = np.random.random(size=(1000,2))
-	figg = plt.figure()
-	ax = plt.axes()
-	plt.hist2d(xx[:,0],xx[:,1],25)
-	plt.hold("on")
-	lineseg = [[[0.1, 0.1], [0.2, 0.2], [0.3, 0.3], [0.4,0.4]]]
-	line_segments = LineCollection(lineseg)
-	ax.add_collection(line_segments)
-	plt.show()
-	"""
+	
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
 		savefile_directory = file_directory
@@ -1101,7 +1095,7 @@ if __name__ == '__main__':
 		"""
 		
 		LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 		NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 		Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
@@ -1136,12 +1130,6 @@ if __name__ == '__main__':
 			LCDM_z0_512Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512)
 			NConnections_512, FilLengths_512, FilPoints_512 = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDM512Periodic.a.NDskl', ndim=3)
 			"""
-			"""
-			LCDM_z0_64_rockstar_dir = 'lcdm_rockstar/LCDM_z0_64/'
-			LCDM_z0_64rockstarInstance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_rockstar_dir+'Plots/', nPart=64)
-			NN, FF, FP = LCDM_z0_64rockstarInstance.Solve(LCDM_z0_64_rockstar_dir+'SkelconvOutput_LCDMz0_64.a.NDskl', ndim=3)
-			"""
-
 			LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
