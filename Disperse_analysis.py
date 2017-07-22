@@ -813,7 +813,7 @@ class Disperse_Plotter():
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.xmax)
 					ax.set_ylim(self.ymin, self.ymax)
-					line_segmentsDM = LineCollection(self.MaskedFilamentSegments, linestyle='solid', array=ColorMap2D, cmap=plt.cm.rainbow)
+					line_segmentsDM = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMap2D, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsDM)
 					DMParticleHistwFilaments.colorbar(line_segmentsDM)
 					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
@@ -1060,10 +1060,10 @@ if __name__ == '__main__':
 	HOMEPC = 1					# Set 1 if working in UiO terminal
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
 	
-	PlotFilaments = 1			# Set 1 to plot actual filaments
+	PlotFilaments = 0			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
-	ColorBarZDir = 1
+	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
+	ColorBarZDir = 0
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
@@ -1071,7 +1071,7 @@ if __name__ == '__main__':
 		LowerBoundary = 0.45
 		UpperBoundary = 0.55
 
-	HistogramPlots = 1 			# Set to 1 to plot histograms
+	HistogramPlots = 0 			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1080,6 +1080,7 @@ if __name__ == '__main__':
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
 		savefile_directory = file_directory
+		IncludeDMParticles = 0
 		#solveInstance1 = Disperse_Plotter(savefile=1, savefigDirectory='Plot_Disperse_Example/', nPart=64)
 		#solveInstance1.Plot("simu_2D.ND.NDnet_s3.up.NDskl.a.NDskl", ndim=2)
 		#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
@@ -1095,7 +1096,7 @@ if __name__ == '__main__':
 		"""
 		
 		LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 		NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 		Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
@@ -1131,7 +1132,7 @@ if __name__ == '__main__':
 			NConnections_512, FilLengths_512, FilPoints_512 = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDM512Periodic.a.NDskl', ndim=3)
 			"""
 			LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
