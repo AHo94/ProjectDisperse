@@ -38,7 +38,7 @@ class Disperse_Plotter():
 			os.makedirs(self.results_dir)
 
 	def ReadFile(self, filename, dimensions):
-		""" Reads the data for a given file """
+		""" Reads the data from the skeleton file from Disperse """
 		print 'Reading data for the file: ', filename, '...' 
 		datafiles = open(os.path.join(file_directory, filename), 'r')
 		self.CriticalPoints = []
@@ -91,8 +91,32 @@ class Disperse_Plotter():
 
 		datafiles.close()
 
+	def Read_SolveFile(self, filename):
+		print 'Reading data for the file: ', filename, '...' 
+		datafiles = open(os.path.join(file_directory, filename), 'r')
+		PartPosX = []
+		PartPosY = []
+		PartPosZ = []
+		
+		PartVelX = []
+		PartVelY = []
+		PartVelZ = []
+		for line in datafiles:
+			data_set = line.split()
+			if IncludeSlicing == 1:
+				if float(data_set[2]) > LowerBoundary and float(data_set[2]) < UpperBoundary:
+					PartPosX.append(float(data_set[0]))
+					PartPosY.append(float(data_set[1]))
+					PartPosZ.append(float(data_set[2]))
+					PartVelX.append(float(data_set[3]))
+					PartVelY.append(float(data_set[4]))
+					PartVelZ.append(float(data_set[5]))
+
 	def Sort_arrays(self, dimensions):
-		""" Sorts data to their respective arrays """
+		""" 
+		Sorts data to their respective arrays 
+		Data to be sorted: Critical points, ID of filament and filament points
+		"""
 		print 'Sorting data ...'
 		self.NcritPts = int(self.CriticalPoints[0][0])
 		if FilamentLimit == 0:
@@ -211,9 +235,12 @@ class Disperse_Plotter():
 						break
 
 	def Mask_slices(self):
+		"""
+		Creates a mask to plot a slice of the filament box. Boundary of slice chosen arbitrarily.
+		The masking includes filaments that are within the given boundary.
+		Also includes masking where the filament are cut off outside the boundary. 
+		"""
 		print 'Computing masks'
-		LowerBoundary = 0.45
-		UpperBoundary = 0.55
 		self.zdimMasked = []
 		self.MaskedFilamentSegments = []
 		for i in range(len(self.zdimPos)):
@@ -311,6 +338,17 @@ class Disperse_Plotter():
 		self.zdimPos = zPosTemp
 
 	def BoundaryStuff(self):
+		"""
+		This function checks whether a filament crosses the boundary or not. 
+		If a filament crosses the boundary, the filament will be split into two/three filaments, i.e different lists/arrays.
+		The algorithm of splitting the filament:
+		1) Check which direction the filament crosses the boundary.
+		2) For the point we are considering, check which boundary is closest to the point and add that to the old list. 
+		3) Create new list and add other side of the boundary as the first point in the new list.
+		4) For the other directions, add 'directionPoint*2/BoxSize' to the old list and subtract the same to the new list.
+		5) Repeat if filament crosses boundary multiple times.
+		Function also computes the length of the filament.
+		"""
 		BoxSize = self.xmax - self.xmin
 		FilPosTemp = []
 		xPosTemp = []
@@ -561,6 +599,7 @@ class Disperse_Plotter():
 
 
 	def Filament_Length(self, dimensions):
+		""" Computes the length of the filament """
 		print 'Computing filament lengths'
 		if dimensions == 3:
 			self.FilLengths = []
@@ -572,6 +611,7 @@ class Disperse_Plotter():
 				self.FilLengths.append(TempLength)
 
 	def Plot_Figures(self, filename, ndim=2):
+		""" All plots done in this function	"""
 		if ndim == 2:
 			Filenamedimension = '2D.png'
 		elif ndim == 3:
@@ -587,10 +627,9 @@ class Disperse_Plotter():
 
 		if FilamentColors == 1:
 			ColorArray = np.linspace(0,1,110)
-			#ColorArray = plt.cm.rainbow(np.linspace(self.zmin, self.zmax, len(self.zdimPos)))
 			ColorMap2D = np.array([np.mean(zvalues) for zvalues in self.zdimPos])
 		else:
-			ColorArray = None#np.linspace(0,1,1)
+			ColorArray = None
 		
 
 		if HistogramPlots == 1:
@@ -665,9 +704,7 @@ class Disperse_Plotter():
 				ax.set_xlim(self.xmin, self.xmax)
 				ax.set_ylim(self.ymin, self.ymax)
 				ax.set_zlim(self.zmin, self.zmax)
-				#line_segments = LineCollection(self.FilXYPositionsBoundary, linestyle='solid')
 				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.rainbow)
-				#ax.add_collection3d(line_segments, self.FilZPositionsBoundary, zdir='z')
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
 				ax.set_xlabel('$\mathregular{x}$')
 				ax.set_ylabel('$\mathregular{y}$')
@@ -692,13 +729,23 @@ class Disperse_Plotter():
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.ymax)
 				ax.set_ylim(self.ymin, self.ymax)
-				line_segments = LineCollection(self.FilamentPos, array=ColorMap2D, cmap=plt.cm.rainbow)
+				line_segments = LineCollection(self.FilamentPos, array=ColorArray, cmap=plt.cm.rainbow)
 				ax.add_collection(line_segments)
-				FilPositions_2DProjection.colorbar(line_segments)
-				#FilPositions_2DProjection.colorbar(line_segments)
 				ax.set_xlabel('$\mathregular{x}$')
 				ax.set_ylabel('$\mathregular{y}$')
 				plt.title('2D Position projection of the filaments')
+				if ColorBarZDir == 1:
+					FilPositions_2DProjectionColorBarZDir = plt.figure()
+					ax = plt.axes()
+					ax.set_xlim(self.xmin, self.ymax)
+					ax.set_ylim(self.ymin, self.ymax)
+					line_segmentsCbar = LineCollection(self.FilamentPos, array=ColorMap2D, cmap=plt.cm.rainbow)
+					ax.add_collection(line_segmentsCbar)
+					FilPositions_2DProjectionColorBarZDir.colorbar(line_segmentsCbar)
+					ax.set_xlabel('$\mathregular{x}$')
+					ax.set_ylabel('$\mathregular{y}$')
+					plt.title('2D Position projection of the filaments. Color based on average z-position')
+
 			if IncludeSlicing == 1:
 				self.Mask_slices()
 				FilamentSliced = plt.figure()
@@ -737,15 +784,18 @@ class Disperse_Plotter():
 					plt.title('2D Position projection sliced box')
 
 		if self.savefile == 1:
-			ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + Filenamedimension)
-			FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + Filenamedimension)
-			FilamentPtsHis.savefig(self.results_dir + 'FilamentPointsHistogram' + Filenamedimension)
+			if HistogramPlots == 1:
+				ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + Filenamedimension)
+				FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + Filenamedimension)
+				FilamentPtsHis.savefig(self.results_dir + 'FilamentPointsHistogram' + Filenamedimension)
 			if PlotFilaments == 1:
 				FilPositions.savefig(self.results_dir + 'FilamentPositions' + Filenamedimension)
 			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts.savefig(self.results_dir + 'FilamentPositionsWithCritPts' + Filenamedimension)
 			if Projection2D == 1:
 				FilPositions_2DProjection.savefig(self.results_dir + '2DProjectedFilamentPosition' + Filenamedimension)
+				if ColorBarZDir == 1:
+					FilPositions_2DProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionColorBarZDir' + Filenamedimension)
 			if IncludeSlicing == 1:
 				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + Filenamedimension)
 				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + Filenamedimension)
@@ -964,15 +1014,23 @@ class Histogram_Comparison2():
 
 if __name__ == '__main__':
 	HOMEPC = 0					# Set 1 if working in UiO terminal
+	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
+	
 	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	HistogramPlots = 0 			# Set to 1 to plot histograms
 	Projection2D = 1 			# Set to 1 to plot a 2D projection of the 3D case
+	ColorBarZDir = 1
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	FilamentLimit = 500			# Limits the number of lines read from file. Reads all if 0
-	IncludeSlicing = 0 			# Set 1 to include slices of the box
+	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	if IncludeSlicing == 1:
+		LowerBoundary = 0.45
+		UpperBoundary = 0.55
 
+	HistogramPlots = 1 			# Set to 1 to plot histograms
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+
+
+	
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
 		savefile_directory = file_directory
@@ -995,7 +1053,7 @@ if __name__ == '__main__':
 		#LCDM_z0_256Peri.Solve(LCDM_256Periodic_dir+'SkelconvOutput_LCDM256Periodic.a.NDskl', ndim=3)
 		
 		LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 		NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 		Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
