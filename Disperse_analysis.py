@@ -651,6 +651,7 @@ class Disperse_Plotter():
 			plt.title('Histogram of number connections between the critical points \n with %.2f critical points. ' \
 						%self.NcritPts + Filenamedimension.replace('.png', '')+ '. Using '+ self.nPart_text+'$\mathregular{^3}$ particles.')
 			plt.xlim([NumMin, NumMax])
+			#plt.xticks(self.NumFilamentConnections)
 
 			# Histogram of filament lengths
 			LenMin = min(self.FilLengths)
@@ -678,6 +679,7 @@ class Disperse_Plotter():
 			plt.xlabel('Number of position points for a filament')
 			plt.ylabel('Number of occurances')
 			plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
+			#plt.xticks(self.NFilamentPoints)
 			
 		if ndim == 2:
 			if PlotFilaments == 1:
@@ -1065,13 +1067,13 @@ if __name__ == '__main__':
 	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
 	ColorBarZDir = 0
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
-	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
-	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
+	IncludeSlicing = 0 			# Set 1 to include slices of the box
 	if IncludeSlicing == 1:
 		LowerBoundary = 0.45
 		UpperBoundary = 0.55
 
-	HistogramPlots = 0 			# Set to 1 to plot histograms
+	HistogramPlots = 1 			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1132,7 +1134,7 @@ if __name__ == '__main__':
 			NConnections_512, FilLengths_512, FilPoints_512 = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDM512Periodic.a.NDskl', ndim=3)
 			"""
 			LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
