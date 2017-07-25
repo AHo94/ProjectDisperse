@@ -92,7 +92,7 @@ class Disperse_Plotter():
 		datafiles.close()
 
 	def Read_SolveFile(self):
-		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...' 
+		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
 		datafiles = open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r')
 		self.PartPosX = []
 		self.PartPosY = []
@@ -109,10 +109,10 @@ class Disperse_Plotter():
 				if SkipFirstLine == 0:
 					SkipFirstLine = 1
 				else:
-					if float(data_set[2]) > LowerBoundary and float(data_set[2]) < UpperBoundary:
+					if float(data_set[2])*UnitConverter > LowerBoundary and float(data_set[2])*UnitConverter < UpperBoundary:
 						#self.XYPartPos.append([float(data_set[0]), float(data_set[1])])
-						self.PartPosX.append(float(data_set[0]))*UnitConverter
-						self.PartPosY.append(float(data_set[1]))*UnitConverter
+						self.PartPosX.append(float(data_set[0])*UnitConverter)
+						self.PartPosY.append(float(data_set[1])*UnitConverter)
 						#PartPosZ.append(float(data_set[2]))
 						#PartVelX.append(float(data_set[3]))
 						#PartVelY.append(float(data_set[4]))
