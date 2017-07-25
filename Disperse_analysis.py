@@ -52,13 +52,13 @@ class Disperse_Plotter():
 				BoxMax = BoxSize[2]
 				MaxValues = BoxMax[BoxMax.index("[") + 1:BoxMax.rindex("]")].replace(",", " ").split()
 				MinValues = BoxMin[BoxMin.index("[") + 1:BoxMin.rindex("]")].replace(",", " ").split()
-				self.xmin = float(MinValues[0])
-				self.xmax = float(MaxValues[0])
-				self.ymin = float(MinValues[1])
-				self.ymax = float(MaxValues[1])
+				self.xmin = float(MinValues[0])*UnitConverter
+				self.xmax = float(MaxValues[0])*UnitConverter
+				self.ymin = float(MinValues[1])*UnitConverter
+				self.ymax = float(MaxValues[1])*UnitConverter
 				if dimensions == 3:
-					self.zmin = float(MinValues[2])
-					self.zmax = float(MaxValues[2])
+					self.zmin = float(MinValues[2])*UnitConverter
+					self.zmax = float(MaxValues[2])*UnitConverter
 				else:
 					continue
 				
@@ -134,6 +134,7 @@ class Disperse_Plotter():
 		self.NumFilamentConnections = []
 		self.IDFilamentConnected = []
 		self.CritPointInfo = []
+		############ UNIT CONVERSION NOT FIXED HERE!!!! 
 		for i in range(1, len(self.CriticalPoints)-1):
 			stuff = self.CriticalPoints[i]
 			if len(stuff) == 1:
@@ -197,8 +198,8 @@ class Disperse_Plotter():
 				ytemp = []
 				self.FilID.append(float(Filstuff[0]))
 				for j in range(1, int(Filstuff[-1])+1):
-					xPos = float(self.Filaments[k+j][0])
-					yPos = float(self.Filaments[k+j][1])
+					xPos = float(self.Filaments[k+j][0])*UnitConverter
+					yPos = float(self.Filaments[k+j][1])*UnitConverter
 					TempPositions.append([xPos, yPos])
 					xtemp.append(xPos)
 					ytemp.append(yPos)
@@ -221,9 +222,9 @@ class Disperse_Plotter():
 				for j in range(1, int(Filstuff[-1])+1):
 					if k+j >= len(self.Filaments):
 						break
-					xPos = float(self.Filaments[k+j][0])
-					yPos = float(self.Filaments[k+j][1])
-					zPos = float(self.Filaments[k+j][2])
+					xPos = float(self.Filaments[k+j][0])*UnitConverter
+					yPos = float(self.Filaments[k+j][1])*UnitConverter
+					zPos = float(self.Filaments[k+j][2])*UnitConverter
 					TempPositions.append([xPos, yPos])
 					xtemp.append(xPos)
 					ytemp.append(yPos)
@@ -249,6 +250,7 @@ class Disperse_Plotter():
 		print 'Computing masks'
 		self.zdimMasked = []
 		self.MaskedFilamentSegments = []
+		self.MaskedLengths = []
 		for i in range(len(self.zdimPos)):
 			if np.any(np.array(self.zdimPos[i]) > LowerBoundary) and np.any(np.array(self.zdimPos[i]) < UpperBoundary):
 				self.zdimMasked.append(self.zdimPos[i])
@@ -256,12 +258,14 @@ class Disperse_Plotter():
 
 		self.CutOffFilamentSegments = []
 		self.CutOffzDim = []
+		self.CutOffLengths = []
 
 		for i in range(len(self.zdimPos)):
 			Indices = np.where(np.logical_and(np.greater(self.zdimPos[i], LowerBoundary), np.less(self.zdimPos[i], UpperBoundary)))[0]
 			if not len(Indices) == 0:
 				FilSegmentTemp = []
 				zDimTemp = []
+				LengthsTemp = []
 				for idx in Indices:
 					zDimTemp.append(self.zdimPos[i][idx])
 					FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
@@ -286,6 +290,7 @@ class Disperse_Plotter():
 		yPosTemp = []
 		zPosTemp = []
 		self.FilLengths = []
+		self.LengthSplitFilament = []
 		for i in range(len(self.xdimPos)):
 			SplitFilament = 0
 			xBoundary = 0
@@ -522,12 +527,19 @@ class Disperse_Plotter():
 											+ (zNewTemp2[k+1]-zNewTemp2[k])**2)
 
 			self.FilLengths.append(TempLength)
+			if len(zTemp) > 1:
+				self.LengthSplitFilament.append(TempLength)
+			if len(zNewTemp) > 1: 
+				self.LengthSplitFilament.append(TempLength)
+			if SplitFilament == 2:
+				if len(zNewTemp2) > 1:
+					self.LengthSplitFilament.append(TempLength)
+				
 		
 		self.FilamentPos = FilPosTemp
 		self.xdimPos = xPosTemp
 		self.ydimPos = yPosTemp
 		self.zdimPos = zPosTemp
-
 
 	def Filament_Length(self, dimensions):
 		""" Computes the length of the filament """
@@ -558,10 +570,15 @@ class Disperse_Plotter():
 
 		if FilamentColors == 1:
 			ColorArray = np.linspace(0,1,110)
+			ColorMap2DCutOff = np.array([np.mean(zvalues) for zvalues in self.CutOffzDim])
 			ColorMap2D = np.array([np.mean(zvalues) for zvalues in self.zdimPos])
 		else:
 			ColorArray = None
 		
+		if IncludeUnits == 1:
+			LegendText = ' - [Mpc/h]'
+		else:
+			LegendText = ''
 
 		if HistogramPlots == 1:
 			# Histogram of number of filament connections
@@ -589,7 +606,7 @@ class Disperse_Plotter():
 			#self.FilLengths.sort()
 			#fit = stats.norm.pdf(self.FilLengths, np.mean(self.FilLengths), np.std(self.FilLengths))
 			#plt.plot(self.FilLengths, fit)
-			plt.xlabel('Length of filaments ')
+			plt.xlabel('Length of filaments' + LegendText)
 			plt.ylabel('Number of occurances')
 			plt.title('Histogram of filament lengths with ' + self.nPart_text + '$\mathregular{^3}$ particles.')
 			plt.xlim([LenMin, LenMax])
@@ -639,10 +656,10 @@ class Disperse_Plotter():
 				ax.set_zlim(self.zmin, self.zmax)
 				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.rainbow)
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
-				ax.set_xlabel('$\mathregular{x}$')
-				ax.set_ylabel('$\mathregular{y}$')
-				ax.set_zlabel('$\mathregular{z}$')
-				plt.title('3D Position of the filaments with '+ self.nPart_text+ '$^3$ particles.')
+				ax.set_xlabel('$\mathregular{x}$' + LegendText)
+				ax.set_ylabel('$\mathregular{y}$' + LegendText)
+				ax.set_zlabel('$\mathregular{z}$' + LegendText)
+				plt.title('3D Position of the filaments with '+ self.nPart_text+ '$\mathregular{^3}$ particles.')
 			if PlotFilamentsWCritPts == 1:
 				FilPositions_WCritPts = plt.figure()
 				ax = FilPositions_WCritPts.gca(projection='3d')
@@ -653,9 +670,9 @@ class Disperse_Plotter():
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
 				plt.hold("on")
 				ax.plot(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos, 'ro', alpha=0.7, markersize=3)
-				ax.set_xlabel('$\mathregular{x}$')
-				ax.set_ylabel('$\mathregular{y}$')
-				ax.set_zlabel('$\mathregular{z}$')
+				ax.set_xlabel('$\mathregular{x}$' + LegendText)
+				ax.set_ylabel('$\mathregular{y}$' + LegendText)
+				ax.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('3D Position of the filaments with critical points')
 			if Projection2D == 1:
 				FilPositions_2DProjection = plt.figure()
@@ -664,8 +681,8 @@ class Disperse_Plotter():
 				ax.set_ylim(self.ymin, self.ymax)
 				line_segments = LineCollection(self.FilamentPos, array=ColorArray, cmap=plt.cm.rainbow)
 				ax.add_collection(line_segments)
-				ax.set_xlabel('$\mathregular{x}$')
-				ax.set_ylabel('$\mathregular{y}$')
+				ax.set_xlabel('$\mathregular{x}$' + LegendText)
+				ax.set_ylabel('$\mathregular{y}$' + LegendText)
 				plt.title('2D Position projection of the filaments')
 				if ColorBarZDir == 1:
 					FilPositions_2DProjectionColorBarZDir = plt.figure()
@@ -675,12 +692,11 @@ class Disperse_Plotter():
 					line_segmentsCbar = LineCollection(self.FilamentPos, array=ColorMap2D, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsCbar)
 					FilPositions_2DProjectionColorBarZDir.colorbar(line_segmentsCbar)
-					ax.set_xlabel('$\mathregular{x}$')
-					ax.set_ylabel('$\mathregular{y}$')
+					ax.set_xlabel('$\mathregular{x}$' + LegendText)
+					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D Position projection of the filaments.\n Color based on average z-position')
 
 			if IncludeSlicing == 1:
-				self.Mask_slices()
 				FilamentSliced = plt.figure()
 				ax = FilamentSliced.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.xmax)
@@ -688,9 +704,9 @@ class Disperse_Plotter():
 				ax.set_zlim(self.zmin, self.zmax)
 				line_segments = LineCollection(self.MaskedFilamentSegments, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection3d(line_segments, self.zdimMasked, zdir='z')
-				ax.set_xlabel('$\mathregular{x}$')
-				ax.set_ylabel('$\mathregular{y}$')
-				ax.set_zlabel('$\mathregular{z}$')
+				ax.set_xlabel('$\mathregular{x}$' + LegendText)
+				ax.set_ylabel('$\mathregular{y}$' + LegendText)
+				ax.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('Sliced segment of the 3D box')
 
 				FilamentCutOff = plt.figure()
@@ -700,9 +716,9 @@ class Disperse_Plotter():
 				ax2.set_zlim(self.zmin, self.zmax)
 				line_segments_CO = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax2.add_collection3d(line_segments_CO, self.CutOffzDim, zdir='z')
-				ax2.set_xlabel('$\mathregular{x}$')
-				ax2.set_ylabel('$\mathregular{y}$')
-				ax2.set_zlabel('$\mathregular{z}$')
+				ax2.set_xlabel('$\mathregular{x}$' + LegendText)
+				ax2.set_ylabel('$\mathregular{y}$' + LegendText)
+				ax2.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('Sliced segment of the 3D box, with filaments cut off outside of boundary')
 				
 				if Projection2D == 1:
@@ -712,8 +728,8 @@ class Disperse_Plotter():
 					ax.set_ylim(self.ymin, self.ymax)
 					line_segments2 = LineCollection(self.MaskedFilamentSegments, array=ColorArray, cmap=plt.cm.gist_ncar)
 					ax.add_collection(line_segments2)
-					ax.set_xlabel('$\mathregular{x}$')
-					ax.set_ylabel('$\mathregular{y}$')
+					ax.set_xlabel('$\mathregular{x}$' + LegendText)
+					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D Position projection sliced box')
 
 				if ColorBarZDir == 1:
@@ -724,15 +740,15 @@ class Disperse_Plotter():
 					line_segmentsCbar = LineCollection(self.FilamentPos, array=ColorMap2D, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsCbar)
 					FilPositions_2DSlicedProjectionColorBarZDir.colorbar(line_segmentsCbar)
-					ax.set_xlabel('$\mathregular{x}$')
-					ax.set_ylabel('$\mathregular{y}$')
+					ax.set_xlabel('$\mathregular{x}$' + LegendText)
+					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on average z-position')
 
 				if IncludeDMParticles == 1:
 					DMParticleHist = plt.figure()
 					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
-					plt.xlabel('$\mathregular{x}$')
-					plt.ylabel('$\mathregular{y}$')
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter density field over a segment of the particle box.')
 
 					DMParticleHistwFilaments = plt.figure()
@@ -740,12 +756,12 @@ class Disperse_Plotter():
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.xmax)
 					ax.set_ylim(self.ymin, self.ymax)
-					line_segmentsDM = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMap2D, cmap=plt.cm.rainbow)
+					line_segmentsDM = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMap2DCutOff, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsDM)
 					DMParticleHistwFilaments.colorbar(line_segmentsDM)
 					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
-					plt.xlabel('$\mathregular{x}$')
-					plt.ylabel('$\mathregular{y}$')
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.hold("off")
 					plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar. Colors indicate average z-value.')
 
@@ -779,12 +795,10 @@ class Disperse_Plotter():
 		if IncludeDMParticles == 1:
 			self.Read_SolveFile()
 		self.Sort_arrays(ndim)
-		#self.Check_Boundary_and_compute_length()
 		self.BoundaryStuff()
+		if IncludeSlicing == 1:
+			self.Mask_slices()
 		#self.Filament_Length(ndim)
-		
-		#if ndim == 3:
-		#	self.Check_Boundaries()
 		
 		if Comparison == 0:
 			if self.savefile == 2:
@@ -987,23 +1001,29 @@ if __name__ == '__main__':
 	HOMEPC = 1					# Set 1 if working in UiO terminal
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
 	
-	PlotFilaments = 0			# Set 1 to plot actual filaments
+	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
-	ColorBarZDir = 0
+	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
+	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
-	IncludeSlicing = 0 			# Set 1 to include slices of the box
-	if IncludeSlicing == 1:
-		LowerBoundary = 0.45
-		UpperBoundary = 0.55
+	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	if IncludeDMParticles == 1:
+		IncludeSlicing = 1
 
 	HistogramPlots = 1 			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-
+	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc and km/s
+		
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 				
-	
+		
+	# Global properties to be set
+	UnitConverter = 256.0 if IncludeUnits == 1 else 1
+	if IncludeSlicing == 1:
+		LowerBoundary = 0.45*UnitConverter
+		UpperBoundary = 0.55*UnitConverter
+			
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
 		savefile_directory = file_directory
