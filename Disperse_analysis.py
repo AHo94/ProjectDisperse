@@ -111,8 +111,8 @@ class Disperse_Plotter():
 				else:
 					if float(data_set[2]) > LowerBoundary and float(data_set[2]) < UpperBoundary:
 						#self.XYPartPos.append([float(data_set[0]), float(data_set[1])])
-						self.PartPosX.append(float(data_set[0]))
-						self.PartPosY.append(float(data_set[1]))
+						self.PartPosX.append(float(data_set[0]))*UnitConverter
+						self.PartPosY.append(float(data_set[1]))*UnitConverter
 						#PartPosZ.append(float(data_set[2]))
 						#PartVelX.append(float(data_set[3]))
 						#PartVelY.append(float(data_set[4]))
@@ -576,9 +576,11 @@ class Disperse_Plotter():
 		if FilamentColors == 1:
 			ColorArray = np.linspace(0,1,110)
 			ColorMap2DCutOff = np.array([np.mean(zvalues) for zvalues in self.CutOffzDim])
+			ColorMap2DMasked = np.array([np.mean(zvalues) for zvalues in self.zdimMasked])
 			ColorMap2D = np.array([np.mean(zvalues) for zvalues in self.zdimPos])
-			ColorMapLength = np.array([lengths for lengths in self.LengthSplitFilament])
 			ColorMapLengthCutOff = np.array([lengths for lengths in self.CutOffLengths])
+			ColorMapLengthMasked = np.array([lengths for lengths in self.MaskedLengths])
+			ColorMapLength = np.array([lengths for lengths in self.LengthSplitFilament])
 		else:
 			ColorArray = None
 		
@@ -755,7 +757,7 @@ class Disperse_Plotter():
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
 					ax.set_ylim(self.ymin, self.ymax)
-					line_segmentsCbar = LineCollection(self.MaskedFilamentSegments, array=ColorMap2D, cmap=plt.cm.rainbow)
+					line_segmentsCbar = LineCollection(self.MaskedFilamentSegments, array=ColorMap2DMasked, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsCbar)
 					FilPositions_2DSlicedProjectionColorBarZDir.colorbar(line_segmentsCbar)
 					ax.set_xlabel('$\mathregular{x}$' + LegendText)
@@ -767,7 +769,7 @@ class Disperse_Plotter():
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
 					ax.set_ylim(self.ymin, self.ymax)
-					line_segmentsCbar = LineCollection(self.MaskedFilamentSegments, array=ColorMapLength, cmap=plt.cm.rainbow)
+					line_segmentsCbar = LineCollection(self.MaskedFilamentSegments, array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsCbar)
 					FilPositions_2DSlicedProjectionColorBarLen.colorbar(line_segmentsCbar)
 					ax.set_xlabel('$\mathregular{x}$' + LegendText)
@@ -808,11 +810,17 @@ class Disperse_Plotter():
 				FilPositions_2DProjection.savefig(self.results_dir + '2DProjectedFilamentPosition' + Filenamedimension)
 				if ColorBarZDir == 1:
 					FilPositions_2DProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionColorBarZDir' + Filenamedimension)
+				if ColorBarLength == 1:
+					FilPositions_2DProjectionColobarLength.savefig(self.results_dir + '2DProjectionColobarLength' + Filenamedimension)
 			if IncludeSlicing == 1:
 				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + Filenamedimension)
 				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + Filenamedimension)
 				if Projection2D == 1:
 					FilPositions_2DProjectionSliced.savefig(self.results_dir + '2DProjectionSliced3dBox' + Filenamedimension)
+				if ColorBarZDir == 1:
+					FilPositions_2DSlicedProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionSlicedColobarZDir' + Filenamedimension)
+				if ColorBarLength == 1:
+					FilPositions_2DSlicedProjectionColorBarLen.savefig(self.results_dir + '2DProjectionSlicedColobarLength' + Filenamedimension)
 				if IncludeDMParticles == 1:
 					DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram' + Filenamedimension)
 					DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments' + Filenamedimension)
@@ -1037,7 +1045,7 @@ if __name__ == '__main__':
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
-	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
 	if IncludeDMParticles == 1:
 		IncludeSlicing = 1
@@ -1110,7 +1118,7 @@ if __name__ == '__main__':
 			NConnections_512, FilLengths_512, FilPoints_512 = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDM512Periodic.a.NDskl', ndim=3)
 			"""
 			LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
