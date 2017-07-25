@@ -255,6 +255,7 @@ class Disperse_Plotter():
 			if np.any(np.array(self.zdimPos[i]) > LowerBoundary) and np.any(np.array(self.zdimPos[i]) < UpperBoundary):
 				self.zdimMasked.append(self.zdimPos[i])
 				self.MaskedFilamentSegments.append(self.FilamentPos[i])
+				self.MaskedLengths.append(self.LengthSplitFilament[i])
 
 		self.CutOffFilamentSegments = []
 		self.CutOffzDim = []
@@ -265,12 +266,15 @@ class Disperse_Plotter():
 			if not len(Indices) == 0:
 				FilSegmentTemp = []
 				zDimTemp = []
-				LengthsTemp = []
 				for idx in Indices:
 					zDimTemp.append(self.zdimPos[i][idx])
 					FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
 				self.CutOffFilamentSegments.append(FilSegmentTemp)
 				self.CutOffzDim.append(zDimTemp)
+				TempLen = 0
+				for j in range(len(zDimTemp)-1):
+					TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2 + (zDimTemp[j+1] - zDimTemp[j])**2)
+				self.CutOffLengths.append(TempLen)
 
 	def BoundaryStuff(self):
 		"""
@@ -289,8 +293,9 @@ class Disperse_Plotter():
 		xPosTemp = []
 		yPosTemp = []
 		zPosTemp = []
-		self.FilLengths = []
-		self.LengthSplitFilament = []
+		self.FilLengths = [] 			# Contains the length of each filament
+		self.LengthSplitFilament = []	# Used for colormap purposes. Filament that crosses the boundary get split in two. 
+										# Lengths here gives the filament length to the split filaments.
 		for i in range(len(self.xdimPos)):
 			SplitFilament = 0
 			xBoundary = 0
@@ -572,6 +577,8 @@ class Disperse_Plotter():
 			ColorArray = np.linspace(0,1,110)
 			ColorMap2DCutOff = np.array([np.mean(zvalues) for zvalues in self.CutOffzDim])
 			ColorMap2D = np.array([np.mean(zvalues) for zvalues in self.zdimPos])
+			ColorMapLength = np.array([lengths for lengths in self.LengthSplitFilament])
+			ColorMapLengthCutOff = np.array([lengths for lengths in self.CutOffLengths])
 		else:
 			ColorArray = None
 		
@@ -695,6 +702,17 @@ class Disperse_Plotter():
 					ax.set_xlabel('$\mathregular{x}$' + LegendText)
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D Position projection of the filaments.\n Color based on average z-position')
+				if ColorBarLength == 1:
+					FilPositions_2DProjectionColobarLength = plt.figure()
+					ax = plt.axes()
+					ax.set_xlim(self.xmin, self.ymax)
+					ax.set_ylim(self.ymin, self.ymax)
+					line_segmentsCbarLen = LineCollection(self.FilamentPos, array=ColorMapLength, cmap=plt.cm.rainbow)
+					ax.add_collection(line_segmentsCbarLen)
+					FilPositions_2DProjectionColobarLength.colorbar(line_segmentsCbarLen)
+					ax.set_xlabel('$\mathregular{x}$' + LegendText)
+					ax.set_ylabel('$\mathregular{y}$' + LegendText)
+					plt.title('2D Position projection of the filaments.\n Color based on the lenght of the filament')
 
 			if IncludeSlicing == 1:
 				FilamentSliced = plt.figure()
@@ -737,12 +755,24 @@ class Disperse_Plotter():
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
 					ax.set_ylim(self.ymin, self.ymax)
-					line_segmentsCbar = LineCollection(self.FilamentPos, array=ColorMap2D, cmap=plt.cm.rainbow)
+					line_segmentsCbar = LineCollection(self.MaskedFilamentSegments, array=ColorMap2D, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsCbar)
 					FilPositions_2DSlicedProjectionColorBarZDir.colorbar(line_segmentsCbar)
 					ax.set_xlabel('$\mathregular{x}$' + LegendText)
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on average z-position')
+
+				if ColorBarLength == 1:
+					FilPositions_2DSlicedProjectionColorBarLen = plt.figure()
+					ax = plt.axes()
+					ax.set_xlim(self.xmin, self.ymax)
+					ax.set_ylim(self.ymin, self.ymax)
+					line_segmentsCbar = LineCollection(self.MaskedFilamentSegments, array=ColorMapLength, cmap=plt.cm.rainbow)
+					ax.add_collection(line_segmentsCbar)
+					FilPositions_2DSlicedProjectionColorBarLen.colorbar(line_segmentsCbar)
+					ax.set_xlabel('$\mathregular{x}$' + LegendText)
+					ax.set_ylabel('$\mathregular{y}$' + LegendText)
+					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on filament length')
 
 				if IncludeDMParticles == 1:
 					DMParticleHist = plt.figure()
@@ -1005,6 +1035,7 @@ if __name__ == '__main__':
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
 	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
+	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
