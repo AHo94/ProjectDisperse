@@ -63,17 +63,14 @@ class Disperse_Plotter():
 					continue
 				
 			if '[CRITICAL POINTS]' in line:
-				if PlotFilamentsWCritPts == 1:
-					SETLIMIT = 0
-					for lineCrit in datafiles:
-						dataCritpts = lineCrit.split()
-						if '[FILAMENTS]' in lineCrit:
-							line = lineCrit
-							break
-						else:
-							self.CriticalPoints.append(dataCritpts)
-				else:
-					continue
+				SETLIMIT = 0
+				for lineCrit in datafiles:
+					dataCritpts = lineCrit.split()
+					if '[FILAMENTS]' in lineCrit:
+						line = lineCrit
+						break
+					else:
+						self.CriticalPoints.append(dataCritpts)
 			if '[FILAMENTS]' in line:
 				SETLIMIT = 0
 				for lineFil in datafiles:
@@ -152,28 +149,28 @@ class Disperse_Plotter():
 		self.NumFilamentConnections = []
 		self.IDFilamentConnected = []
 		self.CritPointInfo = []
-		# Critical points
 		############ UNIT CONVERSION NOT FIXED HERE!!!! 
-		if PlotFilamentsWCritPts == 1:
-			self.NcritPts = int(self.CriticalPoints[0][0])
-			for i in range(1, len(self.CriticalPoints)-1):
-				stuff = self.CriticalPoints[i]
-				if len(stuff) == 1:
-					self.NumFilamentConnections.append(int(stuff[0]))
-					IDconnections = []
-					if int(stuff[0]) == 1:
-						IDS = self.CriticalPoints[i+1]
-						IDconnections.append([float(IDS[0]), float(IDS[1])])
-					else:	
-						for j in range(1, int(stuff[0])+1):
-							IDS = self.CriticalPoints[i+j]
-							IDconnections.append([float(IDS[0]),float(IDS[1])])
-					self.IDFilamentConnected.append(IDconnections)
-				elif len(stuff) > 2:
-					InfoListTemp = []
-					for k in range(len(stuff)):
-						InfoListTemp.append(float(stuff[k]))
-					self.CritPointInfo.append(InfoListTemp)
+		self.NcritPts = int(self.CriticalPoints[0][0])
+		for i in range(1, len(self.CriticalPoints)-1):
+			stuff = self.CriticalPoints[i]
+			if len(stuff) == 1:
+				self.NumFilamentConnections.append(int(stuff[0]))
+				IDconnections = []
+				if int(stuff[0]) == 1:
+					IDS = self.CriticalPoints[i+1]
+					IDconnections.append([float(IDS[0]), float(IDS[1])])
+				else:	
+					for j in range(1, int(stuff[0])+1):
+						IDS = self.CriticalPoints[i+j]
+						IDconnections.append([float(IDS[0]),float(IDS[1])])
+				self.IDFilamentConnected.append(IDconnections)
+			elif len(stuff) > 2:
+				InfoListTemp = []
+				for k in range(len(stuff)):
+					InfoListTemp.append(float(stuff[k]))
+				self.CritPointInfo.append(InfoListTemp)
+		self.IDFilamentConnected = np.asarray(self.IDFilamentConnected)
+		self.CritPointInfo = np.asarray(self.CritPointInfo)
 			
 		"""
 		# Data for non-connected critical points
