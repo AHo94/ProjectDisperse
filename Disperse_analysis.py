@@ -63,15 +63,17 @@ class Disperse_Plotter():
 					continue
 				
 			if '[CRITICAL POINTS]' in line:
-				SETLIMIT = 0
-				for lineCrit in datafiles:
-					dataCritpts = lineCrit.split()
-					if '[FILAMENTS]' in lineCrit:
-						line = lineCrit
-						break
-					else:
-						self.CriticalPoints.append(dataCritpts)
-
+				if PlotFilamentsWCritPts == 1:
+					SETLIMIT = 0
+					for lineCrit in datafiles:
+						dataCritpts = lineCrit.split()
+						if '[FILAMENTS]' in lineCrit:
+							line = lineCrit
+							break
+						else:
+							self.CriticalPoints.append(dataCritpts)
+				else:
+					continue
 			if '[FILAMENTS]' in line:
 				SETLIMIT = 0
 				for lineFil in datafiles:
@@ -93,7 +95,7 @@ class Disperse_Plotter():
 
 	def Read_SolveFile(self):
 		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
-		datafiles = open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r')
+		#datafiles = open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r')
 		self.PartPosX = []
 		self.PartPosY = []
 		PartPosZ = []
@@ -102,6 +104,21 @@ class Disperse_Plotter():
 		PartVelY = []
 		PartVelZ = []
 		self.XYPartPos = []
+		with open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r') as datafiles:
+			next(datafiles)
+			for line in datafiles:
+				if MaskZdir == 1:
+					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
+						self.PartPosX.append(float(data_set[0])*UnitConverter)
+						selt.PartPosY.append(float(data_set[1])*UnitConverter)
+				if MaskXdir == 1 and MaskXdir == 1 and MaskYdir == 1:
+					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir\
+					and float(data_set[1])*UnitConverter > LowerBoundaryYDir and float(data_set[1])*UnitConverter < UpperBoundaryYDir\
+					and float(data_set[0])*UnitConverter > LowerBoundaryXDir and float(data_set[0])*UnitConverter < UpperBoundaryXDir:
+						self.PartPosX.append(float(data_set[0])*UnitConverter)
+						selt.PartPosY.append(float(data_set[1])*UnitConverter)
+
+		"""
 		SkipFirstLine = 0
 		for line in datafiles:
 			data_set = line.split()
@@ -117,6 +134,8 @@ class Disperse_Plotter():
 						#PartVelX.append(float(data_set[3]))
 						#PartVelY.append(float(data_set[4]))
 						#PartVelZ.append(float(data_set[5]))
+		"""
+		datafiles.close()
 
 	def Sort_arrays(self, dimensions):
 		""" 
@@ -124,7 +143,6 @@ class Disperse_Plotter():
 		Data to be sorted: Critical points, ID of filament and filament points
 		"""
 		print 'Sorting data ...'
-		self.NcritPts = int(self.CriticalPoints[0][0])
 		if FilamentLimit == 0:
 			self.NFils = int(self.Filaments[0][0])
 		else:
@@ -134,26 +152,29 @@ class Disperse_Plotter():
 		self.NumFilamentConnections = []
 		self.IDFilamentConnected = []
 		self.CritPointInfo = []
+		# Critical points
 		############ UNIT CONVERSION NOT FIXED HERE!!!! 
-		for i in range(1, len(self.CriticalPoints)-1):
-			stuff = self.CriticalPoints[i]
-			if len(stuff) == 1:
-				self.NumFilamentConnections.append(int(stuff[0]))
-				IDconnections = []
-				if int(stuff[0]) == 1:
-					IDS = self.CriticalPoints[i+1]
-					IDconnections.append([float(IDS[0]), float(IDS[1])])
-				else:	
-					for j in range(1, int(stuff[0])+1):
-						IDS = self.CriticalPoints[i+j]
-						IDconnections.append([float(IDS[0]),float(IDS[1])])
-				self.IDFilamentConnected.append(IDconnections)
-			elif len(stuff) > 2:
-				InfoListTemp = []
-				for k in range(len(stuff)):
-					InfoListTemp.append(float(stuff[k]))
-				self.CritPointInfo.append(InfoListTemp)
-		
+		if PlotFilamentsWCritPts == 1:
+			self.NcritPts = int(self.CriticalPoints[0][0])
+			for i in range(1, len(self.CriticalPoints)-1):
+				stuff = self.CriticalPoints[i]
+				if len(stuff) == 1:
+					self.NumFilamentConnections.append(int(stuff[0]))
+					IDconnections = []
+					if int(stuff[0]) == 1:
+						IDS = self.CriticalPoints[i+1]
+						IDconnections.append([float(IDS[0]), float(IDS[1])])
+					else:	
+						for j in range(1, int(stuff[0])+1):
+							IDS = self.CriticalPoints[i+j]
+							IDconnections.append([float(IDS[0]),float(IDS[1])])
+					self.IDFilamentConnected.append(IDconnections)
+				elif len(stuff) > 2:
+					InfoListTemp = []
+					for k in range(len(stuff)):
+						InfoListTemp.append(float(stuff[k]))
+					self.CritPointInfo.append(InfoListTemp)
+			
 		"""
 		# Data for non-connected critical points
 		self.CriticalPointPosition = []
