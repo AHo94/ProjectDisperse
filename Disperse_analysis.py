@@ -109,7 +109,7 @@ class Disperse_Plotter():
 				if SkipFirstLine == 0:
 					SkipFirstLine = 1
 				else:
-					if float(data_set[2])*UnitConverter > LowerBoundary and float(data_set[2])*UnitConverter < UpperBoundary:
+					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
 						#self.XYPartPos.append([float(data_set[0]), float(data_set[1])])
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
 						self.PartPosY.append(float(data_set[1])*UnitConverter)
@@ -251,30 +251,185 @@ class Disperse_Plotter():
 		self.zdimMasked = []
 		self.MaskedFilamentSegments = []
 		self.MaskedLengths = []
-		for i in range(len(self.zdimPos)):
-			if np.any(np.array(self.zdimPos[i]) > LowerBoundary) and np.any(np.array(self.zdimPos[i]) < UpperBoundary):
-				self.zdimMasked.append(self.zdimPos[i])
-				self.MaskedFilamentSegments.append(self.FilamentPos[i])
-				self.MaskedLengths.append(self.LengthSplitFilament[i])
 
 		self.CutOffFilamentSegments = []
 		self.CutOffzDim = []
 		self.CutOffLengths = []
 
-		for i in range(len(self.zdimPos)):
-			Indices = np.where(np.logical_and(np.greater(self.zdimPos[i], LowerBoundary), np.less(self.zdimPos[i], UpperBoundary)))[0]
-			if not len(Indices) == 0:
-				FilSegmentTemp = []
-				zDimTemp = []
-				for idx in Indices:
-					zDimTemp.append(self.zdimPos[i][idx])
-					FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
-				self.CutOffFilamentSegments.append(FilSegmentTemp)
-				self.CutOffzDim.append(zDimTemp)
-				TempLen = 0
-				for j in range(len(zDimTemp)-1):
-					TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2 + (zDimTemp[j+1] - zDimTemp[j])**2)
-				self.CutOffLengths.append(TempLen)
+		# Mask Z direction only
+		if MaskZdir == 1 and MaskXdir == 0 and MaskYdir == 0:
+			for i in range(len(self.zdimPos)):
+				if np.any(np.array(self.zdimPos[i]) > LowerBoundaryZDir) and np.any(np.array(self.zdimPos[i]) < UpperBoundaryZDir):
+					self.zdimMasked.append(self.zdimPos[i])
+					self.MaskedFilamentSegments.append(self.FilamentPos[i])
+					self.MaskedLengths.append(self.LengthSplitFilament[i])
+
+			for i in range(len(self.zdimPos)):
+				Indices = np.where(np.logical_and(np.greater(self.zdimPos[i], LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir)))[0]
+				if not len(Indices) == 0:
+					FilSegmentTemp = []
+					zDimTemp = []
+					for idx in Indices:
+						zDimTemp.append(self.zdimPos[i][idx])
+						FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
+					self.CutOffFilamentSegments.append(FilSegmentTemp)
+					self.CutOffzDim.append(zDimTemp)
+					TempLen = 0
+					for j in range(len(zDimTemp)-1):
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+								 + (zDimTemp[j+1] - zDimTemp[j])**2)
+					self.CutOffLengths.append(TempLen)
+
+		# Mask X direction only	
+		if MaskXdir == 1 and MaskYdir == 0 and MaskZdir == 0:
+			for i in range(len(self.xdimPos)):
+				if np.any(np.array(self.xdimPos[i]) > LowerBoundaryXDir) and np.any(np.array(self.xdimPos[i]) < UpperBoundaryXDir):
+					self.zdimMasked.append(self.zdimPos[i])
+					self.MaskedFilamentSegments.append(self.FilamentPos[i])
+					self.MaskedLengths.append(self.LengthSplitFilament[i])
+
+			for i in range(len(self.xdimPos)):
+				Indices = np.where(np.logical_and(np.greater(self.xdimPos[i], LowerBoundaryXDir), np.less(self.xdimPos[i], UpperBoundaryXDir)))[0]
+				if not len(Indices) == 0:
+					FilSegmentTemp = []
+					zDimTemp = []
+					for idx in Indices:
+						zDimTemp.append(self.zdimPos[i][idx])
+						FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
+					self.CutOffFilamentSegments.append(FilSegmentTemp)
+					self.CutOffzDim.append(zDimTemp)
+					TempLen = 0
+					for j in range(len(zDimTemp)-1):
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+								 + (zDimTemp[j+1] - zDimTemp[j])**2)
+					self.CutOffLengths.append(TempLen)
+		# Mask Y direction only		
+		if MaskYdir == 1 and MaskXdir == 0 and MaskZdir == 0:
+			for i in range(len(self.ydimPos)):
+				if np.any(np.array(self.ydimPos[i]) > LowerBoundaryYDir) and np.any(np.array(self.ydimPos[i]) < UpperBoundaryYDir):
+					self.zdimMasked.append(self.zdimPos[i])
+					self.MaskedFilamentSegments.append(self.FilamentPos[i])
+					self.MaskedLengths.append(self.LengthSplitFilament[i])
+
+			for i in range(len(self.ydimPos)):
+				Indices = np.where(np.logical_and(np.greater(self.ydimPos[i], LowerBoundaryYDir), np.less(self.ydimPos[i], UpperBoundaryYDir)))[0]
+				if not len(Indices) == 0:
+					FilSegmentTemp = []
+					zDimTemp = []
+					for idx in Indices:
+						zDimTemp.append(self.zdimPos[i][idx])
+						FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
+					self.CutOffFilamentSegments.append(FilSegmentTemp)
+					self.CutOffzDim.append(zDimTemp)
+					TempLen = 0
+					for j in range(len(zDimTemp)-1):
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+								 + (zDimTemp[j+1] - zDimTemp[j])**2)
+					self.CutOffLengths.append(TempLen)
+
+		# Mask X and Y direction
+		if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 0:
+			for i in range(len(self.xdimPos)):
+				if np.any(np.array(self.xdimPos[i]) > LowerBoundaryXDir) and np.any(np.array(self.xdimPos[i]) < UpperBoundaryXDir)\
+				 and np.any(np.array(self.ydimPos[i]) > LowerBoundaryYDir) and np.any(np.array(self.ydimPos[i]) < UpperBoundaryYDir):
+					self.zdimMasked.append(self.zdimPos[i])
+					self.MaskedFilamentSegments.append(self.FilamentPos[i])
+					self.MaskedLengths.append(self.LengthSplitFilament[i])
+
+			for i in range(len(self.xdimPos)):
+				Indices = np.where(np.logical_and(np.logical_and(np.greater(self.xdimPos[i], LowerBoundaryXDir), np.less(self.xdimPos[i], UpperBoundaryXDir)),\
+					np.logical_and(np.greater(self.ydimPos[i], LowerBoundaryYDir), np.less(self.ydimPos[i], UpperBoundaryYDir))))[0]
+				if not len(Indices) == 0:
+					FilSegmentTemp = []
+					zDimTemp = []
+					for idx in Indices:
+						zDimTemp.append(self.zdimPos[i][idx])
+						FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
+					self.CutOffFilamentSegments.append(FilSegmentTemp)
+					self.CutOffzDim.append(zDimTemp)
+					TempLen = 0
+					for j in range(len(zDimTemp)-1):
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+								 + (zDimTemp[j+1] - zDimTemp[j])**2)
+					self.CutOffLengths.append(TempLen)
+		# Mask Y and Z direction
+		if MaskXdir == 0 and MaskYdir == 1 and MaskZdir == 1:
+			for i in range(len(self.zdimPos)):
+				if np.any(np.array(self.zdimPos[i]) > LowerBoundaryZDir) and np.any(np.array(self.zdimPos[i]) < UpperBoundaryZDir)\
+				 and np.any(np.array(self.ydimPos[i]) > LowerBoundaryYDir) and np.any(np.array(self.ydimPos[i]) < UpperBoundaryYDir):
+					self.zdimMasked.append(self.zdimPos[i])
+					self.MaskedFilamentSegments.append(self.FilamentPos[i])
+					self.MaskedLengths.append(self.LengthSplitFilament[i])
+
+			for i in range(len(self.xdimPos)):
+				Indices = np.where(np.logical_and(np.logical_and(np.greater(self.zdimPos[i], LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir)),\
+					np.logical_and(np.greater(self.ydimPos[i], LowerBoundaryYDir), np.less(self.ydimPos[i], UpperBoundaryYDir))))[0]
+				if not len(Indices) == 0:
+					FilSegmentTemp = []
+					zDimTemp = []
+					for idx in Indices:
+						zDimTemp.append(self.zdimPos[i][idx])
+						FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
+					self.CutOffFilamentSegments.append(FilSegmentTemp)
+					self.CutOffzDim.append(zDimTemp)
+					TempLen = 0
+					for j in range(len(zDimTemp)-1):
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+								 + (zDimTemp[j+1] - zDimTemp[j])**2)
+					self.CutOffLengths.append(TempLen)
+		# Mask X and Z direction
+		if MaskXdir == 1 and MaskYdir == 0 and MaskZdir == 1:
+			for i in range(len(self.zdimPos)):
+				if np.any(np.array(self.zdimPos[i]) > LowerBoundaryZDir) and np.any(np.array(self.zdimPos[i]) < UpperBoundaryZDir)\
+				 and np.any(np.array(self.xdimPos[i]) > LowerBoundaryXDir) and np.any(np.array(self.xdimPos[i]) < UpperBoundaryXDir):
+					self.zdimMasked.append(self.zdimPos[i])
+					self.MaskedFilamentSegments.append(self.FilamentPos[i])
+					self.MaskedLengths.append(self.LengthSplitFilament[i])
+
+			for i in range(len(self.xdimPos)):
+				Indices = np.where(np.logical_and(np.logical_and(np.greater(self.zdimPos[i], LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir)),\
+					np.logical_and(np.greater(self.xdimPos[i], LowerBoundaryXDir), np.less(self.xdimPos[i], UpperBoundaryXDir))))[0]
+				if not len(Indices) == 0:
+					FilSegmentTemp = []
+					zDimTemp = []
+					for idx in Indices:
+						zDimTemp.append(self.zdimPos[i][idx])
+						FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
+					self.CutOffFilamentSegments.append(FilSegmentTemp)
+					self.CutOffzDim.append(zDimTemp)
+					TempLen = 0
+					for j in range(len(zDimTemp)-1):
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+								 + (zDimTemp[j+1] - zDimTemp[j])**2)
+					self.CutOffLengths.append(TempLen)
+		# Mask all directions
+		if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
+			for i in range(len(self.zdimPos)):
+				if np.any(np.array(self.zdimPos[i]) > LowerBoundaryZDir) and np.any(np.array(self.zdimPos[i]) < UpperBoundaryZDir)\
+				and np.any(np.array(self.ydimPos[i]) > LowerBoundaryYDir) and np.any(np.array(self.ydimPos[i]) < UpperBoundaryYDir)\
+				and np.any(np.array(self.xdimPos[i]) > LowerBoundaryXDir) and np.any(np.array(self.xdimPos[i]) < UpperBoundaryXDir):
+					self.zdimMasked.append(self.zdimPos[i])
+					self.MaskedFilamentSegments.append(self.FilamentPos[i])
+					self.MaskedLengths.append(self.LengthSplitFilament[i])
+
+			for i in range(len(self.xdimPos)):
+				Indices = np.where(
+					np.logical_and(np.logical_and(np.greater(self.ydimPos[i], LowerBoundaryYDir), np.less(self.ydimPos[i], UpperBoundaryYDir)),
+					np.logical_and(np.logical_and(np.greater(self.zdimPos[i], LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir)),\
+					np.logical_and(np.greater(self.xdimPos[i], LowerBoundaryXDir), np.less(self.xdimPos[i], UpperBoundaryXDir)))))[0]
+				if not len(Indices) == 0:
+					FilSegmentTemp = []
+					zDimTemp = []
+					for idx in Indices:
+						zDimTemp.append(self.zdimPos[i][idx])
+						FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
+					self.CutOffFilamentSegments.append(FilSegmentTemp)
+					self.CutOffzDim.append(zDimTemp)
+					TempLen = 0
+					for j in range(len(zDimTemp)-1):
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+								 + (zDimTemp[j+1] - zDimTemp[j])**2)
+					self.CutOffLengths.append(TempLen)
 
 	def BoundaryStuff(self):
 		"""
@@ -1036,23 +1191,26 @@ class Histogram_Comparison2():
 		#	plt.show()
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
 	
-	PlotFilaments = 1			# Set 1 to plot actual filaments
+	PlotFilaments = 0			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
+	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
-	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	MaskXdir = 1 				# Set 1 to mask one direction.
+	MaskYdir = 1
+	MaskZdir = 1
 	if IncludeDMParticles == 1:
 		IncludeSlicing = 1
 
-	HistogramPlots = 1 			# Set to 1 to plot histograms
+	HistogramPlots = 0 			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc and km/s
+	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
 		
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 				
@@ -1060,9 +1218,17 @@ if __name__ == '__main__':
 	# Global properties to be set
 	UnitConverter = 256.0 if IncludeUnits == 1 else 1
 	if IncludeSlicing == 1:
-		LowerBoundary = 0.45*UnitConverter
-		UpperBoundary = 0.55*UnitConverter
-			
+		if MaskXdir == 1:
+			LowerBoundaryXDir = 0.45*UnitConverter
+			UpperBoundaryXDir = 0.55*UnitConverter
+		if MaskYdir == 1:
+			LowerBoundaryYDir = 0.45*UnitConverter
+			UpperBoundaryYDir = 0.55*UnitConverter
+		if MaskZdir == 1:
+			LowerBoundaryZDir = 0.45*UnitConverter
+			UpperBoundaryZDir = 0.55*UnitConverter
+
+
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
 		savefile_directory = file_directory
@@ -1082,7 +1248,7 @@ if __name__ == '__main__':
 		"""
 		
 		LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
 		NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 		Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
