@@ -775,7 +775,9 @@ class Disperse_Plotter():
 			LegendText = ' - [Mpc/h]'
 		else:
 			LegendText = ''
-
+		
+		print len(self.zdimMasked[i])
+		print len(self.MaskedFilamentSegments[i])
 
 		if HistogramPlots == 1:
 			# Histogram of number of filament connections
@@ -1247,7 +1249,7 @@ if __name__ == '__main__':
 		
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 				
-		
+
 	# Global properties to be set
 	UnitConverter = 256.0 if IncludeUnits == 1 else 1
 	if IncludeSlicing == 1:
