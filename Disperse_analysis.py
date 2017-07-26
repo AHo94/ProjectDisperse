@@ -258,6 +258,12 @@ class Disperse_Plotter():
 					if k >= FilamentLimit:
 						self.NFils = len(self.xdimPos)
 						break
+		self.NFilamentPoints = np.asarray(self.NFilamentPoints)
+		self.FilamentPos = np.asarray(self.FilamentPos)
+		self.xdimPos = np.asarray(self.xdimPos)
+		self.ydimPos = np.asarray(self.ydimPos)
+		if dimensions == 3:
+			self.zdimPos = np.asarray(self.zdimPos)
 
 	def Mask_slices(self):
 		"""
@@ -448,6 +454,13 @@ class Disperse_Plotter():
 						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
 								 + (zDimTemp[j+1] - zDimTemp[j])**2)
 					self.CutOffLengths.append(TempLen)
+
+		self.zdimMasked = np.asarray(self.zdimMasked)
+		self.MaskedFilamentSegments = np.asarray(self.MaskedFilamentSegments)
+		self.MaskedLengths = np.asarray(self.MaskedLengths)
+		self.CutOffzDim = np.asarray(self.CutOffzDim)
+		self.CutOffFilamentSegments = np.asarray(self.CutOffFilamentSegments)
+		self.CutOffLengths = np.asarray(self.CutOffLengths)
 
 	def BoundaryStuff(self):
 		"""
@@ -714,10 +727,10 @@ class Disperse_Plotter():
 					self.LengthSplitFilament.append(TempLength)
 				
 		
-		self.FilamentPos = FilPosTemp
-		self.xdimPos = xPosTemp
-		self.ydimPos = yPosTemp
-		self.zdimPos = zPosTemp
+		self.FilamentPos = np.array(FilPosTemp)
+		self.xdimPos = np.array(xPosTemp)
+		self.ydimPos = np.array(yPosTemp)
+		self.zdimPos = np.array(zPosTemp)
 
 	def Filament_Length(self, dimensions):
 		""" Computes the length of the filament """
