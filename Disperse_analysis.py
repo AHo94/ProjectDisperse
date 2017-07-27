@@ -782,8 +782,6 @@ class Disperse_Plotter():
 		else:
 			LegendText = ''
 
-
-
 		if HistogramPlots == 1:
 			# Histogram of number of filament connections
 			NumMin = min(self.NumFilamentConnections)
@@ -1066,7 +1064,7 @@ class Read_solve_files():
 		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
 		self.PartPosX = []
 		self.PartPosY = []
-		PartPosZ = []
+		self.PartPosZ = []
 		
 		PartVelX = []
 		PartVelY = []
@@ -1079,13 +1077,18 @@ class Read_solve_files():
 					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
 						selt.PartPosY.append(float(data_set[1])*UnitConverter)
+						self.PartPosZ.append(float(data_set[2])*UnitConverter))
 				if MaskXdir == 1 and MaskXdir == 1 and MaskYdir == 1:
 					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir\
 					and float(data_set[1])*UnitConverter > LowerBoundaryYDir and float(data_set[1])*UnitConverter < UpperBoundaryYDir\
 					and float(data_set[0])*UnitConverter > LowerBoundaryXDir and float(data_set[0])*UnitConverter < UpperBoundaryXDir:
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
 						selt.PartPosY.append(float(data_set[1])*UnitConverter)
+						self.PartPosZ.append(float(data_set[2])*UnitConverter)
 
+		self.PartPosX = np.asarray(self.PartPosZ)
+		self.PartPosY = np.asarray(self.PartPosY)
+		self.PartPosZ = np.asarray(self.PartPosZ)
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, ndim, NumberConnections, FilamentLengths):
@@ -1284,9 +1287,9 @@ if __name__ == '__main__':
 	PlotFilaments = 0			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
 	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
+	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one direction.
@@ -1294,7 +1297,7 @@ if __name__ == '__main__':
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 0 			# Set to 1 to plot histograms
+	HistogramPlots = 1			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1307,9 +1310,14 @@ if __name__ == '__main__':
 	SaveAsPDF = 0 				# Set 1 to save figures as PDF
 
 	# Some if tests before the simulation runs
+	if FilamentLimit == 1:
+		print 'Running program with limited amount of filaments.'
+
 	if IncludeDMParticles == 1:
 		IncludeSlicing = 1
 
+	if IncludeSlicing == 1 and MaskXdir == 0 and MaskYdir == 0 and MaskZdir == 0:
+		raise ValueError('IncludeSlicing set to 1, but all mask direction set to 0. Set at least one of them to 1.')
 
 	UnitConverter = 256.0 if IncludeUnits == 1 else 1
 	if IncludeSlicing == 1:
@@ -1353,7 +1361,7 @@ if __name__ == '__main__':
 			"""
 
 			LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 			Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
