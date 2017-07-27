@@ -13,7 +13,7 @@ from matplotlib import colors as mcolors
 from scipy import interpolate
 
 class Disperse_Plotter():
-	def __init__(self, savefile, savefigDirectory, nPart):
+	def __init__(self, savefile, savefigDirectory, nPart, model, redshift):
 		self.savefile = savefile
 		self.PlotChecker = 0
 		self.nPart = nPart
@@ -36,6 +36,18 @@ class Disperse_Plotter():
 		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
 		if not os.path.isdir(self.results_dir):
 			os.makedirs(self.results_dir)
+
+		if type(redshift) != int and type(redshift) != float:
+			raise ValueError('Value of redshift must be an integer or float')
+
+		if model == 'LCDM':
+			self.ModelFilename = 'LCDM' + 'z' + str(redshift) + filetype
+		elif model == 'SymmA':
+			self.ModelFilename = 'SymmA' + 'z' + str(redshift) + filetype
+		elif model == 'SymmB':
+			self.ModelFilename = 'SymmB' + 'z' + str(redshift) + filetype
+		else:
+			raise ValueError('Model name not properly set')
 
 	def ReadFile(self, filename, dimensions):
 		""" Reads the data from the skeleton file from Disperse """
@@ -732,14 +744,10 @@ class Disperse_Plotter():
 								 + (self.zdimPos[i][j+1] - self.zdimPos[i][j])**2.0)
 				self.FilLengths.append(TempLength)
 
-	def Plot_Figures(self, filename, ndim=2):
+	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
-		if ndim == 2:
-			Filenamedimension = '2D.png'
-		elif ndim == 3:
-			Filenamedimension = '3D.png'
-		else:
-			raise ValueError('ndim less than 2 or greater than 3!')
+		
+
 		print 'Plotting'
 
 		if Comparison == 1:
@@ -775,7 +783,7 @@ class Disperse_Plotter():
 			plt.xlabel('Number of connected filaments')
 			plt.ylabel('Number of occurances')
 			plt.title('Histogram of number connections between the critical points \n with %.2f critical points. ' \
-						%self.NcritPts + Filenamedimension.replace('.png', '')+ '. Using '+ self.nPart_text+'$\mathregular{^3}$ particles.')
+						%self.NcritPts + '. Using '+ self.nPart_text+'$\mathregular{^3}$ particles.')
 			plt.xlim([NumMin, NumMax])
 			#plt.xticks(self.NumFilamentConnections)
 
@@ -953,7 +961,7 @@ class Disperse_Plotter():
 
 				if IncludeDMParticles == 1:
 					DMParticleHist = plt.figure()
-					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
+					plt.hist2d(PartPosX, PartPosY, bins=100)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter density field over a segment of the particle box.')
@@ -966,7 +974,7 @@ class Disperse_Plotter():
 					line_segmentsDM = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMap2DCutOff, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsDM)
 					DMParticleHistwFilaments.colorbar(line_segmentsDM)
-					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
+					plt.hist2d(PartPosX, PartPosY, bins=100)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.hold("off")
@@ -974,39 +982,39 @@ class Disperse_Plotter():
 
 		if self.savefile == 1:
 			if HistogramPlots == 1:
-				ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + Filenamedimension)
-				FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + Filenamedimension)
-				FilamentPtsHis.savefig(self.results_dir + 'FilamentPointsHistogram' + Filenamedimension)
+				ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + self.ModelFilename)
+				FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + self.ModelFilename)
+				FilamentPtsHis.savefig(self.results_dir + 'FilamentPointsHistogram' + self.ModelFilename)
 			if PlotFilaments == 1:
-				FilPositions.savefig(self.results_dir + 'FilamentPositions' + Filenamedimension)
+				FilPositions.savefig(self.results_dir + 'FilamentPositions' + self.ModelFilename)
 			if PlotFilamentsWCritPts == 1:
-				FilPositions_WCritPts.savefig(self.results_dir + 'FilamentPositionsWithCritPts' + Filenamedimension)
+				FilPositions_WCritPts.savefig(self.results_dir + 'FilamentPositionsWithCritPts' + self.ModelFilename)
 			if Projection2D == 1:
-				FilPositions_2DProjection.savefig(self.results_dir + '2DProjectedFilamentPosition' + Filenamedimension)
+				FilPositions_2DProjection.savefig(self.results_dir + '2DProjectedFilamentPosition' + self.ModelFilename)
 				if ColorBarZDir == 1:
-					FilPositions_2DProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionColorBarZDir' + Filenamedimension)
+					FilPositions_2DProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionColorBarZDir' + self.ModelFilename)
 				if ColorBarLength == 1:
-					FilPositions_2DProjectionColobarLength.savefig(self.results_dir + '2DProjectionColobarLength' + Filenamedimension)
+					FilPositions_2DProjectionColobarLength.savefig(self.results_dir + '2DProjectionColobarLength' + self.ModelFilename)
 			if IncludeSlicing == 1:
-				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + Filenamedimension)
-				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + Filenamedimension)
+				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + self.ModelFilename)
+				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + self.ModelFilename)
 				if Projection2D == 1:
-					FilPositions_2DProjectionSliced.savefig(self.results_dir + '2DProjectionSliced3dBox' + Filenamedimension)
+					FilPositions_2DProjectionSliced.savefig(self.results_dir + '2DProjectionSliced3dBox' + self.ModelFilename)
 				if ColorBarZDir == 1:
-					FilPositions_2DSlicedProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionSlicedColobarZDir' + Filenamedimension)
+					FilPositions_2DSlicedProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionSlicedColobarZDir' + self.ModelFilename)
 				if ColorBarLength == 1:
-					FilPositions_2DSlicedProjectionColorBarLen.savefig(self.results_dir + '2DProjectionSlicedColobarLength' + Filenamedimension)
+					FilPositions_2DSlicedProjectionColorBarLen.savefig(self.results_dir + '2DProjectionSlicedColobarLength' + self.ModelFilename)
 				if IncludeDMParticles == 1:
-					DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram' + Filenamedimension)
-					DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments' + Filenamedimension)
+					DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram' + self.ModelFilename)
+					DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments' + self.ModelFilename)
 
 		else:
 			plt.show()
 
 	def Solve(self, filename, ndim=2):
 		self.ReadFile(filename, ndim)
-		if IncludeDMParticles == 1:
-			self.Read_SolveFile()
+		#if IncludeDMParticles == 1:
+		#	self.Read_SolveFile()
 		self.Sort_arrays(ndim)
 		self.BoundaryStuff()
 		if IncludeSlicing == 1:
@@ -1020,6 +1028,35 @@ class Disperse_Plotter():
 				self.Plot_Figures(filename, ndim)
 		
 		return self.NumFilamentConnections, sorted(self.FilLengths), self.NFilamentPoints
+
+class Read_solve_files():
+	def __init__(self):
+		self.read_solvefile()
+
+	def read_solvefile(self):
+		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
+		self.PartPosX = []
+		self.PartPosY = []
+		PartPosZ = []
+		
+		PartVelX = []
+		PartVelY = []
+		PartVelZ = []
+		self.XYPartPos = []
+		with open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r') as datafiles:
+			next(datafiles)
+			for line in datafiles:
+				if MaskZdir == 1:
+					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
+						self.PartPosX.append(float(data_set[0])*UnitConverter)
+						selt.PartPosY.append(float(data_set[1])*UnitConverter)
+				if MaskXdir == 1 and MaskXdir == 1 and MaskYdir == 1:
+					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir\
+					and float(data_set[1])*UnitConverter > LowerBoundaryYDir and float(data_set[1])*UnitConverter < UpperBoundaryYDir\
+					and float(data_set[0])*UnitConverter > LowerBoundaryXDir and float(data_set[0])*UnitConverter < UpperBoundaryXDir:
+						self.PartPosX.append(float(data_set[0])*UnitConverter)
+						selt.PartPosY.append(float(data_set[1])*UnitConverter)
+
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, ndim, NumberConnections, FilamentLengths):
@@ -1065,9 +1102,9 @@ class Histogram_Comparison():
 			
 	def Plot_Histograms(self):
 		if self.ndim == 2:
-			Filenamedimension = '2D.png'
+			self.ModelFilename = '2D.png'
 		elif self.ndim == 3:
-			Filenamedimension = '3D.png'
+			self.ModelFilename = '3D.png'
 		else:
 			raise ValueError('ndim less than 2 or greater than 3!')
 		print 'Plotting'
@@ -1095,8 +1132,8 @@ class Histogram_Comparison():
 		plt.legend(self.LegendText)
 
 		if self.savefile == 1:
-			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison' + Filenamedimension)
-			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison' + Filenamedimension)
+			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison' + self.ModelFilename)
+			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison' + self.ModelFilename)
 		elif self.savefile == 2:
 			print 'Done! No histograms to plot.'
 		else:
@@ -1117,9 +1154,9 @@ class Histogram_Comparison2():
 			raise ValueError('Argument model must be a string!')
 
 		if self.ndim == 2:
-			self.Filenamedimension = '2D.png'
+			self.self.ModelFilename = '2D.png'
 		elif self.ndim == 3:
-			self.Filenamedimension = '3D.png'
+			self.self.ModelFilename = '3D.png'
 		else:
 			raise ValueError('ndim less than 2 or greater than 3!')
 		print 'Plotting histogram comparisons'
@@ -1157,7 +1194,7 @@ class Histogram_Comparison2():
 		plt.legend(self.LegendText)
 		plt.title('Comparison of number of connected points for the model: ' + self.model)
 		if self.savefile == 1:
-			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison' + self.Filenamedimension)
+			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison' + self.self.ModelFilename)
 		
 	def Plot_Filament_Lengths(self, histograms):
 		LengthHistComparison = plt.figure()
@@ -1169,7 +1206,7 @@ class Histogram_Comparison2():
 		plt.legend(self.LegendText)
 		plt.title('Comparison of filament lengths for the model: ' + self.model)
 		if self.savefile == 1:
-			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison' + self.Filenamedimension)
+			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison' + self.self.ModelFilename)
 
 	def Plot_Filament_Points(self, histograms):
 		FilPointsHistComparison = plt.figure()
@@ -1186,7 +1223,7 @@ class Histogram_Comparison2():
 		plt.legend(self.LegendText)
 		plt.title('Comparison of number of points in a filament for model: ' + self.model)
 		if self.savefile == 1:
-			FilPointsHistComparison.savefig(self.results_dir + 'HisFilamentPointsComparison' + self.Filenamedimension)
+			FilPointsHistComparison.savefig(self.results_dir + 'HisFilamentPointsComparison' + self.self.ModelFilename)
 
 	def Solve(self, FilamentProperty, FilamentPropertyList):
 		if len(FilamentPropertyList) < 2:
@@ -1211,31 +1248,40 @@ class Histogram_Comparison2():
 		#	plt.show()
 
 if __name__ == '__main__':
-	HOMEPC = 0					# Set 1 if working in UiO terminal
+	HOMEPC = 10					# Set 1 if working in UiO terminal
+
+	 dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
-	
-	PlotFilaments = 0			# Set 1 to plot actual filaments
+	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
+	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
-	MaskXdir = 1 				# Set 1 to mask one direction.
-	MaskYdir = 1
+	MaskXdir = 0 				# Set 1 to mask one direction.
+	MaskYdir = 0
 	MaskZdir = 1
+
+	# Histogram plots
+	HistogramPlots = 0 			# Set to 1 to plot histograms
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	
+	# Run simulation for different models. Set to 1 to run them. 
+	LCDM_model = 1 
+	SymmA_model = 0
+		
+	# Global properties to be set
+	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
+	SaveAsPNG = 1 				# Set 1 to save figures as PNG
+	SaveAsPDF = 0 				# Set 1 to save figures as PDF
+
+	# Some if tests before the simulation runs
 	if IncludeDMParticles == 1:
 		IncludeSlicing = 1
 
-	HistogramPlots = 0 			# Set to 1 to plot histograms
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
-		
-	# Run simulation for different models. Set to 1 to run them. 
-	LCDM_model = 1 				
-		
-	# Global properties to be set
+
 	UnitConverter = 256.0 if IncludeUnits == 1 else 1
 	if IncludeSlicing == 1:
 		if MaskXdir == 1:
@@ -1248,36 +1294,46 @@ if __name__ == '__main__':
 			LowerBoundaryZDir = 0.45*UnitConverter
 			UpperBoundaryZDir = 0.55*UnitConverter
 
+	if SaveAsPNG == 1 and SaveAsPDF	== 1:
+		raise ValueError('Cannot save both PDF and PNG at the same time. Only allow one at a time.')
+	elif SaveAsPDF == 1 and SaveAsPNG == 0:
+		filetype = '.pdf'
+	elif SaveAsPNG == 1 and SaveAsPDF == 0:
+		filetype = '.png'
+	else:
+		raise ValueError('Figure filetype to save not selected.')
 
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
 		savefile_directory = file_directory
 		IncludeDMParticles = 0
-		#solveInstance1 = Disperse_Plotter(savefile=1, savefigDirectory='Plot_Disperse_Example/', nPart=64)
-		#solveInstance1.Plot("simu_2D.ND.NDnet_s3.up.NDskl.a.NDskl", ndim=2)
-		#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
-		"""
-		LCDM_64Periodic_dir = 'lcdm_z0_testing/LCDM64_Periodic/'
-		LCDM_z0_64Peri = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64)
-		NConnections_64Peri, FilLengths_64Peri, NPoints_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl',ndim=3)
-		"""
-		"""
-		LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
-		LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
-		NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl',ndim=3)
-		"""
-		
-		LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-		LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
-		NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
+		if LCDM_model == 1:
 
-		Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
-		if Comparison == 1:
-			NumConnections_list = [NConnections_64Peri, NConnections_128Peri]
-			FilLengths_list = [FilLengths_64Peri, FilLengths_128Peri]
-			FilPoints_list = [NPoints_64Peri, NPoints_128Peri]
-			Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
-	
+			#solveInstance1 = Disperse_Plotter(savefile=1, savefigDirectory='Plot_Disperse_Example/', nPart=64)
+			#solveInstance1.Plot("simu_2D.ND.NDnet_s3.up.NDskl.a.NDskl", ndim=2)
+			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
+			"""
+			LCDM_64Periodic_dir = 'lcdm_z0_testing/LCDM64_Periodic/'
+			LCDM_z0_64Peri = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64, model='LCDM', redshift=0)
+			NConnections_64Peri, FilLengths_64Peri, NPoints_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl',ndim=3)
+			"""
+			"""
+			LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
+			LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
+			NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl',ndim=3)
+			"""
+
+			LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
+			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
+
+			Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
+			if Comparison == 1:
+				NumConnections_list = [NConnections_64Peri, NConnections_128Peri]
+				FilLengths_list = [FilLengths_64Peri, FilLengths_128Peri]
+				FilPoints_list = [NPoints_64Peri, NPoints_128Peri]
+				Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
+		
 	if HOMEPC == 1:
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/uio/hume/student-u70/aleh/Masters_project/disperse_results'
@@ -1285,26 +1341,30 @@ if __name__ == '__main__':
 		if LCDM_model == 1:
 			solve_file_dir = '/lcdm_testing/'
 			solve_filename = 'lcdm_z0_test.solve'
+			SolveReadInstance = Read_solve_files()
+			PartPosX = SolveReadInstance.PartPosX
+			PartPosY = SolveReadInstance.PartPosY
+
 			"""
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64Periodic/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NConnections_64, FilLengths_64, FilPoints_64 = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
 			
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128Periodic/'
-			LCDM_z0_128Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128)
+			LCDM_z0_128Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			NConnections_128, FilLengths_128, FilPoints_128 = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
 			"""
 			"""
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256Periodic/'
-			LCDM_z0_256Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256)
+			LCDM_z0_256Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
 			NConnections_256, FilLengths_256, FilPoints_256 = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDM256Periodic.a.NDskl', ndim=3)
 			
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512Periodic/'
-			LCDM_z0_512Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512)
+			LCDM_z0_512Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
 			NConnections_512, FilLengths_512, FilPoints_512 = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDM512Periodic.a.NDskl', ndim=3)
 			"""
 			LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64)
+			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
