@@ -990,7 +990,24 @@ class Disperse_Plotter():
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.hold("off")
-					plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar. Colors indicate average z-value.')
+					plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar.\
+							 Colors indicate average z-value.')
+
+					DMParticleHistwFilamentsLengthCbar = plt.figure()
+					plt.hold("on")
+					ax = plt.axes()
+					ax.set_xlim(self.xmin, self.xmax)
+					ax.set_ylim(self.ymin, self.ymax)
+					line_segmentsDMlen = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
+					ax.add_collection(line_segmentsDMlen)
+					DMParticleHistwFilamentsLengthCbar.colorbar(line_segmentsDMlen)
+					plt.hist2d(PartPosX, PartPosY, bins=100)
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+					plt.ylabel('$\mathregular{y}$' + LegendText)
+					plt.hold("off")
+					plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar.\
+							 Colors indicate length of a filament.')
+
 
 		if self.savefile == 1:
 			if HistogramPlots == 1:
@@ -1331,7 +1348,8 @@ if __name__ == '__main__':
 			"""
 			LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
 			LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
-			NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri = LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl',ndim=3)
+			NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri =\
+							 LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl',ndim=3)
 			"""
 
 			LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
@@ -1343,7 +1361,8 @@ if __name__ == '__main__':
 				NumConnections_list = [NConnections_64Peri, NConnections_128Peri]
 				FilLengths_list = [FilLengths_64Peri, FilLengths_128Peri]
 				FilPoints_list = [NPoints_64Peri, NPoints_128Peri]
-				Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
+				Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list,\
+									 FilamentLengths=FilLengths_list)
 		
 	if HOMEPC == 1:
 		file_directory = '/mn/stornext/d5/aleh'
@@ -1384,7 +1403,8 @@ if __name__ == '__main__':
 				NumConnections_list = [NConnections_64, NConnections_128]
 				FilLengths_list = [FilLengths_64, FilLengths_128]
 				FilPoints_list = [FilPoints_64, FilPoints_128]
-				#Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
+				#Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3,\
+				#					 NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
 				ComparisonInstance = Histogram_Comparison2(savefile=0, savefigDirectory=Comparison_dir, ndim=3, model='$\mathregular{\Lambda}$CDM',\
 													 Nparticles=[64, 128])
 				ComparisonInstance.Solve('Connections', NumConnections_list)
