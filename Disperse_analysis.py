@@ -237,7 +237,7 @@ class Disperse_Plotter():
 				for j in range(1, int(Filstuff[-1])+1):
 					xPos = float(self.Filaments[k+j][0])*UnitConverter
 					yPos = float(self.Filaments[k+j][1])*UnitConverter
-					TempPositions.append(np.asarray([xPos, yPos]))
+					TempPositions.append(np.array([xPos, yPos]))
 					xtemp.append(xPos)
 					ytemp.append(yPos)
 				self.FilamentPos.append(np.asarray(TempPositions))
@@ -262,7 +262,7 @@ class Disperse_Plotter():
 					xPos = float(self.Filaments[k+j][0])*UnitConverter
 					yPos = float(self.Filaments[k+j][1])*UnitConverter
 					zPos = float(self.Filaments[k+j][2])*UnitConverter
-					TempPositions.append(np.asarray([xPos, yPos]))
+					TempPositions.append(np.array([xPos, yPos]))
 					xtemp.append(xPos)
 					ytemp.append(yPos)
 					ztemp.append(zPos)		
@@ -539,8 +539,8 @@ class Disperse_Plotter():
 						yBoundaryPoint = 2.0*(self.ydimPos[i][j] - self.ydimPos[i][j-1])/BoxSize
 						zBoundaryPoint = 2.0*(self.zdimPos[i][j] - self.zdimPos[i][j-1])/BoxSize
 						if np.abs(self.xdimPos[i][j-1] - self.xmin) > 0.5*BoxSize:
-							xyTemp.append(np.asarray([self.xmax, self.ydimPos[i][j-1]+yBoundaryPoint]))
-							xyNewTemp.append(np.asarray([self.xmin, self.ydimPos[i][j-1]-yBoundaryPoint]))
+							xyTemp.append(np.array([self.xmax, self.ydimPos[i][j-1]+yBoundaryPoint]))
+							xyNewTemp.append(np.array([self.xmin, self.ydimPos[i][j-1]-yBoundaryPoint]))
 							xTemp.append(self.xmax)
 							xNewTemp.append(self.xmin)
 							yTemp.append(self.ydimPos[i][j-1]+yBoundaryPoint)
@@ -549,8 +549,8 @@ class Disperse_Plotter():
 							zNewTemp.append(self.zdimPos[i][j-1]-zBoundaryPoint)
 							xBoundary = 2
 						elif np.abs(self.xdimPos[i][j-1] - self.xmax) > 0.5*BoxSize: 
-							xyTemp.append(np.asarray([self.xmin, self.ydimPos[i][j-1]+yBoundaryPoint]))
-							xyNewTemp.append(np.asarray([self.xmax, self.ydimPos[i][j-1]-yBoundaryPoint]))
+							xyTemp.append(np.array([self.xmin, self.ydimPos[i][j-1]+yBoundaryPoint]))
+							xyNewTemp.append(np.array([self.xmax, self.ydimPos[i][j-1]-yBoundaryPoint]))
 							xTemp.append(self.xmin)
 							xNewTemp.append(self.xmax)
 							yTemp.append(self.ydimPos[i][j-1]+yBoundaryPoint)
@@ -562,8 +562,8 @@ class Disperse_Plotter():
 						xBoundaryPoint = 2.0*(self.xdimPos[i][j] - self.xdimPos[i][j-1])/BoxSize
 						zBoundaryPoint = 2.0*(self.zdimPos[i][j] - self.zdimPos[i][j-1])/BoxSize
 						if np.abs(self.ydimPos[i][j-1] - self.ymin) > 0.5*BoxSize:
-							xyTemp.append(np.asarray([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymax]))
-							xyNewTemp.append(np.asarray([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymin]))
+							xyTemp.append(np.array([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymax]))
+							xyNewTemp.append(np.array([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymin]))
 							xTemp.append(self.xdimPos[i][j-1]+xBoundaryPoint)
 							xNewTemp.append(self.xdimPos[i][j-1]-xBoundaryPoint)
 							yTemp.append(self.ymax)
@@ -572,8 +572,8 @@ class Disperse_Plotter():
 							zNewTemp.append(self.zdimPos[i][j-1]-zBoundaryPoint)
 							yBoundary = 2
 						elif np.abs(self.ydimPos[i][j-1] - self.ymax) > 0.5*BoxSize: 
-							xyTemp.append(np.asarray([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymin]))
-							xyNewTemp.append(np.asarray([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymax]))
+							xyTemp.append(np.array([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymin]))
+							xyNewTemp.append(np.array([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymax]))
 							xTemp.append(self.xdimPos[i][j-1]+xBoundaryPoint)
 							xNewTemp.append(self.xdimPos[i][j-1]-xBoundaryPoint)
 							yTemp.append(self.ymin)
@@ -585,8 +585,8 @@ class Disperse_Plotter():
 						xBoundaryPoint = 2.0*(self.xdimPos[i][j] - self.xdimPos[i][j-1])/BoxSize
 						yBoundaryPoint = 2.0*(self.ydimPos[i][j] - self.ydimPos[i][j-1])/BoxSize
 						if np.abs(self.zdimPos[i][j-1] - self.zmin) > 0.5*BoxSize:
-							xyTemp.append(np.asarray([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint]))
-							xyNewTemp.append(np.asarray([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint]))
+							xyTemp.append(np.array([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint]))
+							xyNewTemp.append(np.array([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint]))
 							xTemp.append(self.xdimPos[i][j-1]+xBoundaryPoint)
 							xNewTemp.append(self.xdimPos[i][j-1]-xBoundaryPoint)
 							yTemp.append(self.ydimPos[i][j-1]+yBoundaryPoint)
@@ -595,8 +595,8 @@ class Disperse_Plotter():
 							zNewTemp.append(self.zmin)
 							zBoundary = 2
 						elif np.abs(self.zdimPos[i][j-1] - self.zmax) > 0.5*BoxSize:
-							xyTemp.append(np.asarray([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint]))
-							xyNewTemp.append(np.asarray([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint]))
+							xyTemp.append(np.array([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint]))
+							xyNewTemp.append(np.array([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint]))
 							xTemp.append(self.xdimPos[i][j-1]+xBoundaryPoint)
 							xNewTemp.append(self.xdimPos[i][j-1]-xBoundaryPoint)
 							yTemp.append(self.ydimPos[i][j-1]+yBoundaryPoint)
@@ -613,8 +613,8 @@ class Disperse_Plotter():
 						yBoundaryPoint = 2.0*(self.ydimPos[i][j] - self.ydimPos[i][j-1])/BoxSize
 						zBoundaryPoint = 2.0*(self.zdimPos[i][j] - self.zdimPos[i][j-1])/BoxSize
 						if np.abs(self.xdimPos[i][j-1] - self.xmin) > 0.5*BoxSize:
-							xyNewTemp.append(np.asarray([self.xmax, self.ydimPos[i][j-1]+yBoundaryPoint]))
-							xyNewTemp2.append(np.asarray([self.xmin, self.ydimPos[i][j-1]-yBoundaryPoint]))
+							xyNewTemp.append(np.array([self.xmax, self.ydimPos[i][j-1]+yBoundaryPoint]))
+							xyNewTemp2.append(np.array([self.xmin, self.ydimPos[i][j-1]-yBoundaryPoint]))
 							xNewTemp.append(self.xmax)
 							xNewTemp2.append(self.xmin)
 							yNewTemp.append(self.ydimPos[i][j-1]+yBoundaryPoint)
@@ -623,8 +623,8 @@ class Disperse_Plotter():
 							zNewTemp2.append(self.zdimPos[i][j-1]-zBoundaryPoint)
 							xBoundary = 2
 						elif np.abs(self.xdimPos[i][j-1] - self.xmax) > 0.5*BoxSize: 
-							xyNewTemp.append(np.asarray([self.xmin, self.ydimPos[i][j-1]+yBoundaryPoint]))
-							xyNewTemp2.append(np.asarray([self.xmax, self.ydimPos[i][j-1]-yBoundaryPoint]))
+							xyNewTemp.append(np.array([self.xmin, self.ydimPos[i][j-1]+yBoundaryPoint]))
+							xyNewTemp2.append(np.array([self.xmax, self.ydimPos[i][j-1]-yBoundaryPoint]))
 							xNewTemp.append(self.xmin)
 							xNewTemp2.append(self.xmax)
 							yNewTemp.append(self.ydimPos[i][j-1]+yBoundaryPoint)
@@ -636,8 +636,8 @@ class Disperse_Plotter():
 						xBoundaryPoint = 2.0*(self.xdimPos[i][j] - self.xdimPos[i][j-1])/BoxSize
 						zBoundaryPoint = 2.0*(self.zdimPos[i][j] - self.zdimPos[i][j-1])/BoxSize
 						if np.abs(self.ydimPos[i][j-1] - self.ymin) > 0.5*BoxSize:
-							xyNewTemp.append(np.asarray([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymax]))
-							xyNewTemp2.append(np.asarray([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymin]))
+							xyNewTemp.append(np.array([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymax]))
+							xyNewTemp2.append(np.array([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymin]))
 							xNewTemp.append(self.xdimPos[i][j-1]+xBoundaryPoint)
 							xNewTemp2.append(self.xdimPos[i][j-1]-xBoundaryPoint)
 							yNewTemp.append(self.ymax)
@@ -646,8 +646,8 @@ class Disperse_Plotter():
 							zNewTemp2.append(self.zdimPos[i][j-1]-zBoundaryPoint)
 							yBoundary = 2
 						elif np.abs(self.ydimPos[i][j-1] - self.ymax) > 0.5*BoxSize: 
-							xyNewTemp.append(np.asarray([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymin]))
-							xyNewTemp2.append(np.asarray([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymax]))
+							xyNewTemp.append(np.array([self.xdimPos[i][j-1]+xBoundaryPoint, self.ymin]))
+							xyNewTemp2.append(np.array([self.xdimPos[i][j-1]-xBoundaryPoint, self.ymax]))
 							xNewTemp.append(self.xdimPos[i][j-1]+xBoundaryPoint)
 							xNewTemp2.append(self.xdimPos[i][j-1]-xBoundaryPoint)
 							yNewTemp.append(self.ymin)
@@ -659,8 +659,8 @@ class Disperse_Plotter():
 						xBoundaryPoint = 2.0*(self.xdimPos[i][j] - self.xdimPos[i][j-1])/BoxSize
 						yBoundaryPoint = 2.0*(self.ydimPos[i][j] - self.ydimPos[i][j-1])/BoxSize
 						if np.abs(self.zdimPos[i][j-1] - self.zmin) > 0.5*BoxSize:
-							xyNewTemp.append(np.asarray([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint]))
-							xyNewTemp2.append(np.asarray([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint]))
+							xyNewTemp.append(np.array([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint]))
+							xyNewTemp2.append(np.array([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint]))
 							xNewTemp.append(self.xdimPos[i][j-1]+xBoundaryPoint)
 							xNewTemp2.append(self.xdimPos[i][j-1]-xBoundaryPoint)
 							yNewTemp.append(self.ydimPos[i][j-1]+yBoundaryPoint)
@@ -669,8 +669,8 @@ class Disperse_Plotter():
 							zNewTemp2.append(self.zmin)
 							zBoundary = 2
 						elif np.abs(self.zdimPos[i][j-1] - self.zmax) > 0.5*BoxSize:
-							xyNewTemp.append(np.asarray([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint]))
-							xyNewTemp2.append(np.asarray([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint]))
+							xyNewTemp.append(np.array([self.xdimPos[i][j-1]+xBoundaryPoint, self.ydimPos[i][j-1]+yBoundaryPoint]))
+							xyNewTemp2.append(np.array([self.xdimPos[i][j-1]-xBoundaryPoint, self.ydimPos[i][j-1]-yBoundaryPoint]))
 							xNewTemp.append(self.xdimPos[i][j-1]+xBoundaryPoint)
 							xNewTemp2.append(self.xdimPos[i][j-1]-xBoundaryPoint)
 							yNewTemp.append(self.ydimPos[i][j-1]+yBoundaryPoint)
@@ -678,7 +678,7 @@ class Disperse_Plotter():
 							zNewTemp.append(self.zmin)
 							zNewTemp2.append(self.zmax)
 							zBoundary = 2
-					xyNewTemp2.append(np.asarray([self.xdimPos[i][j], self.ydimPos[i][j]]))
+					xyNewTemp2.append(np.array([self.xdimPos[i][j], self.ydimPos[i][j]]))
 					xNewTemp2.append(self.xdimPos[i][j])
 					yNewTemp2.append(self.ydimPos[i][j])
 					zNewTemp2.append(self.zdimPos[i][j])
@@ -764,6 +764,7 @@ class Disperse_Plotter():
 		The allowed distance between a particle and filament is arbitrarily chosen.
 		"""
 		print 'Checking number of particles within each filament'
+		
 		#for i in range(len(self.FilamentPos)):
 
 
