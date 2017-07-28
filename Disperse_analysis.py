@@ -11,6 +11,7 @@ import os
 import scipy.stats as stats
 from matplotlib import colors as mcolors
 from scipy import interpolate
+import time
 
 class Disperse_Plotter():
 	def __init__(self, savefile, savefigDirectory, nPart, model, redshift):
@@ -51,6 +52,7 @@ class Disperse_Plotter():
 
 	def ReadFile(self, filename, dimensions):
 		""" Reads the data from the skeleton file from Disperse """
+		time_start = time.clock()
 		print 'Reading data for the file: ', filename, '...' 
 		datafiles = open(os.path.join(file_directory, filename), 'r')
 		self.CriticalPoints = []
@@ -103,6 +105,8 @@ class Disperse_Plotter():
 		datafiles.close()
 		self.CriticalPoints = np.asarray(self.CriticalPoints)
 		self.Filaments = np.asarray(self.Filaments)
+		print 'Time elapsed for filament data reading: ', time.clock() - time_start, 's'
+
 	def Read_SolveFile(self):
 		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
 		#datafiles = open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r')
@@ -152,6 +156,7 @@ class Disperse_Plotter():
 		Sorts data to their respective arrays 
 		Data to be sorted: Critical points, ID of filament and filament points
 		"""
+		time_start = time.clock()
 		print 'Sorting data ...'
 		if FilamentLimit == 0:
 			self.NFils = int(self.Filaments[0][0])
@@ -280,12 +285,15 @@ class Disperse_Plotter():
 		if dimensions == 3:
 			self.zdimPos = np.asarray(self.zdimPos)
 
+		print 'Array sorting time: ', time.clock() - time_start, 's'
+
 	def Mask_slices(self):
 		"""
 		Creates a mask to plot a slice of the filament box. Boundary of slice chosen arbitrarily.
 		The masking includes filaments that are within the given boundary.
 		Also includes masking where the filament are cut off outside the boundary. 
 		"""
+		time_start = time.clock()
 		print 'Computing masks'
 		self.zdimMasked = []
 		self.MaskedFilamentSegments = []
@@ -469,6 +477,14 @@ class Disperse_Plotter():
 						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
 								 + (zDimTemp[j+1] - zDimTemp[j])**2)
 					self.CutOffLengths.append(TempLen)
+
+		self.MaskedFilamentSegments = np.asarray(self.MaskedFilamentSegments)
+		self.MaskedLengths = np.asarray(self.MaskedLengths)
+		self.zdimMasked = np.asarray(self.zdimMasked)
+		self.CutOffFilamentSegments = np.asarray(self.CutOffFilamentSegments)
+		self.CutOffLengths = np.asarray(self.CutOffLengths)
+		self.CutOffzDim = np.asarray(self.CutOffzDim)
+		print 'Masking time: ', time.clock() - time_start, 's'
 
 	def BoundaryStuff(self):
 		"""
@@ -741,6 +757,14 @@ class Disperse_Plotter():
 		self.xdimPos = np.asarray(xPosTemp)
 		self.ydimPos = np.asarray(yPosTemp)
 		self.zdimPos = np.asarray(zPosTemp)
+
+	def NumParticles_per_filament(self):
+		""" 
+		Checks the number of dark matter filaments per filament.
+		The allowed distance between a particle and filament is arbitrarily chosen.
+		"""
+		print 'Checking number of particles within each filament'
+		#for i in range(len(self.FilamentPos)):
 
 
 	def Filament_Length(self, dimensions):
@@ -1065,6 +1089,8 @@ class Read_solve_files():
 		self.read_solvefile()
 
 	def read_solvefile(self):
+		""" Reads the .solve file which contains dark matter particle positions and velocities """
+		time_start = time.clock()
 		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
 		self.PartPosX = []
 		self.PartPosY = []
@@ -1100,6 +1126,7 @@ class Read_solve_files():
 		self.PartPosX = np.asarray(self.PartPosX)
 		self.PartPosY = np.asarray(self.PartPosY)
 		self.PartPosZ = np.asarray(self.PartPosZ)
+		print 'Read solve file time: ', time.clock() - time_start, 's'
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, ndim, NumberConnections, FilamentLengths):
@@ -1295,9 +1322,9 @@ if __name__ == '__main__':
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
-	PlotFilaments = 0			# Set 1 to plot actual filaments
+	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
+	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
@@ -1308,7 +1335,7 @@ if __name__ == '__main__':
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 0			# Set to 1 to plot histograms
+	HistogramPlots = 1			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1325,7 +1352,7 @@ if __name__ == '__main__':
 		print 'Running program with limited amount of filaments.'
 
 	if IncludeDMParticles == 1:
-		print 'Program will read through all the dark matter particles'
+		print 'Dark matter particles will be included'
 		IncludeSlicing = 1
 	else:
 		print 'Dark matter particles not included'
@@ -1349,8 +1376,10 @@ if __name__ == '__main__':
 	if SaveAsPNG == 1 and SaveAsPDF	== 1:
 		raise ValueError('Cannot save both PDF and PNG at the same time. Only allow one at a time.')
 	elif SaveAsPDF == 1 and SaveAsPNG == 0:
+		print 'Saving figures as PDF files'
 		filetype = '.pdf'
 	elif SaveAsPNG == 1 and SaveAsPDF == 0:
+		print 'Saving figures as PNG files'
 		filetype = '.png'
 	else:
 		raise ValueError('Figure filetype to save not selected.')
@@ -1360,7 +1389,7 @@ if __name__ == '__main__':
 		savefile_directory = file_directory
 		IncludeDMParticles = 0
 		if LCDM_model == 1:
-			print 'Running for LCDM model'
+			print '=== Running for the LCDM model ==='
 			#solveInstance1 = Disperse_Plotter(savefile=1, savefigDirectory='Plot_Disperse_Example/', nPart=64)
 			#solveInstance1.Plot("simu_2D.ND.NDnet_s3.up.NDskl.a.NDskl", ndim=2)
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
@@ -1393,7 +1422,7 @@ if __name__ == '__main__':
 		savefile_directory = '/uio/hume/student-u70/aleh/Masters_project/disperse_results'
 		
 		if LCDM_model == 1:
-			print 'Running for LCDM model'
+			print '=== Running for the LCDM model ==='
 			solve_file_dir = '/lcdm_testing/'
 			solve_filename = 'lcdm_z0_test.solve'
 			if IncludeDMParticles == 1:
@@ -1420,7 +1449,7 @@ if __name__ == '__main__':
 			NConnections_512, FilLengths_512, FilPoints_512 = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDM512Periodic.a.NDskl', ndim=3)
 			"""
 			LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
