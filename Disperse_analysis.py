@@ -188,6 +188,7 @@ class Disperse_Plotter():
 					InfoListTemp.append(float(stuff[k]))
 				self.CritPointInfo.append(np.asarray(InfoListTemp))
 
+		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
 		self.IDFilamentConnected = np.asarray(self.IDFilamentConnected)
 		self.CritPointInfo = np.asarray(self.CritPointInfo)
 			
@@ -710,7 +711,7 @@ class Disperse_Plotter():
 				yNewTemp.append(self.ydimPos[i][-1])
 				zNewTemp.append(self.zdimPos[i][-1])
 
-			### No array conversion here. Unkown bugs appear here.
+			### No array conversion here. Numpy arrays cannot have different dimensions for matrices.
 			if len(zTemp) > 1:
 				FilPosTemp.append(xyTemp)
 				xPosTemp.append(xTemp)
@@ -763,10 +764,43 @@ class Disperse_Plotter():
 		Checks the number of dark matter filaments per filament.
 		The allowed distance between a particle and filament is arbitrarily chosen.
 		"""
+		time_start = time.clock()
 		print 'Checking number of particles within each filament'
-		
-		#for i in range(len(self.FilamentPos)):
+		self.Particles_per_filament = []
 
+		TempPartPosX = PartPosX
+		TempPartPosY = PartPosY
+		TempPartPosZ = PartPosZ
+
+		DistanceThreshold = 0.001*(self.xmax - self.xmin)*UnitConverter
+		for i in range(len(self.FilamentPos)):
+			PartCount = 0
+			for j in range(len(self.FilamentPos[i])):
+				for k in range(len(TempPartPosX)):
+					PointDistance = np.sqrt((self.xdimPos[i][k] - TempPartPosX[j])**2 + (self.ydimPos[i][k] - TempPartPosY[j])**2 + (self.zdimPos[i][k] - TempPartPosZ[j])**2)
+					if PointDistance < DistanceThreshold:
+						PartCount += 1
+						TempPartPosX = np.delete(TempPartPosX, k)
+						TempPartPosY = np.delete(TempPartPosY, k)
+						TempPartPosZ = np.delete(TempPartPosZ, k)
+					else:
+						continue
+			self.Particles_per_filament.append(PartCount)
+		"""
+		for i in range(len(self.FilamentPos)):
+			PartCount = 0
+			for j in range(len(PartPosX)):
+				for k in range(len(self.FilamentPos[i])):
+					PointDistance = np.sqrt((self.xdimPos[i][k] - TempPartPosX[j])**2 + (self.ydimPos[i][k] - TempPartPosY[j])**2 + (self.zdimPos[i][k] - TempPartPosZ[j])**2)
+					if PointDistance < DistanceThreshold:
+						PartCount += 1
+
+						break
+					else:
+						continue
+		"""
+		self.Particles_per_filament = np.asarray(self.Particles_per_filament)
+		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
 
 	def Filament_Length(self, dimensions):
 		""" Computes the length of the filament """
@@ -1069,13 +1103,10 @@ class Disperse_Plotter():
 
 	def Solve(self, filename, ndim=2):
 		self.ReadFile(filename, ndim)
-		#if IncludeDMParticles == 1:
-		#	self.Read_SolveFile()
 		self.Sort_arrays(ndim)
 		self.BoundaryStuff()
 		if IncludeSlicing == 1:
 			self.Mask_slices()
-		#self.Filament_Length(ndim)
 		
 		if Comparison == 0:
 			if self.savefile == 2:
@@ -1323,9 +1354,9 @@ if __name__ == '__main__':
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
-	PlotFilaments = 1			# Set 1 to plot actual filaments
+	PlotFilaments = 0			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
+	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
@@ -1336,7 +1367,7 @@ if __name__ == '__main__':
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 1			# Set to 1 to plot histograms
+	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	
 	# Run simulation for different models. Set to 1 to run them. 
