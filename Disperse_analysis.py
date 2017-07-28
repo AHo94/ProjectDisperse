@@ -121,7 +121,7 @@ class Disperse_Plotter():
 					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
 						selt.PartPosY.append(float(data_set[1])*UnitConverter)
-				if MaskXdir == 1 and MaskXdir == 1 and MaskYdir == 1:
+				elif MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir\
 					and float(data_set[1])*UnitConverter > LowerBoundaryYDir and float(data_set[1])*UnitConverter < UpperBoundaryYDir\
 					and float(data_set[0])*UnitConverter > LowerBoundaryXDir and float(data_set[0])*UnitConverter < UpperBoundaryXDir:
@@ -757,8 +757,6 @@ class Disperse_Plotter():
 
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
-		
-
 		print 'Plotting'
 
 		if Comparison == 1:
@@ -1073,20 +1071,21 @@ class Read_solve_files():
 		with open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r') as datafiles:
 			next(datafiles)
 			for line in datafiles:
+				data_set = line.split()
 				if MaskZdir == 1:
 					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						selt.PartPosY.append(float(data_set[1])*UnitConverter)
-						self.PartPosZ.append(float(data_set[2])*UnitConverter))
-				if MaskXdir == 1 and MaskXdir == 1 and MaskYdir == 1:
+						self.PartPosY.append(float(data_set[1])*UnitConverter)
+						self.PartPosZ.append(float(data_set[2])*UnitConverter)
+				elif MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir\
 					and float(data_set[1])*UnitConverter > LowerBoundaryYDir and float(data_set[1])*UnitConverter < UpperBoundaryYDir\
 					and float(data_set[0])*UnitConverter > LowerBoundaryXDir and float(data_set[0])*UnitConverter < UpperBoundaryXDir:
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						selt.PartPosY.append(float(data_set[1])*UnitConverter)
+						self.PartPosY.append(float(data_set[1])*UnitConverter)
 						self.PartPosZ.append(float(data_set[2])*UnitConverter)
 
-		self.PartPosX = np.asarray(self.PartPosZ)
+		self.PartPosX = np.asarray(self.PartPosX)
 		self.PartPosY = np.asarray(self.PartPosY)
 		self.PartPosZ = np.asarray(self.PartPosZ)
 
@@ -1280,7 +1279,7 @@ class Histogram_Comparison2():
 		#	plt.show()
 
 if __name__ == '__main__':
-	HOMEPC = 0					# Set 1 if working in UiO terminal
+	HOMEPC = 1					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1290,14 +1289,14 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one direction.
 	MaskYdir = 0
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 1			# Set to 1 to plot histograms
+	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1314,13 +1313,17 @@ if __name__ == '__main__':
 		print 'Running program with limited amount of filaments.'
 
 	if IncludeDMParticles == 1:
+		print 'Program will read through all the dark matter particles'
 		IncludeSlicing = 1
+	else:
+		print 'Dark matter particles not included'
 
 	if IncludeSlicing == 1 and MaskXdir == 0 and MaskYdir == 0 and MaskZdir == 0:
 		raise ValueError('IncludeSlicing set to 1, but all mask direction set to 0. Set at least one of them to 1.')
 
 	UnitConverter = 256.0 if IncludeUnits == 1 else 1
 	if IncludeSlicing == 1:
+		print 'Slicing included'
 		if MaskXdir == 1:
 			LowerBoundaryXDir = 0.45*UnitConverter
 			UpperBoundaryXDir = 0.55*UnitConverter
@@ -1345,6 +1348,7 @@ if __name__ == '__main__':
 		savefile_directory = file_directory
 		IncludeDMParticles = 0
 		if LCDM_model == 1:
+			print 'Running for LCDM model'
 			#solveInstance1 = Disperse_Plotter(savefile=1, savefigDirectory='Plot_Disperse_Example/', nPart=64)
 			#solveInstance1.Plot("simu_2D.ND.NDnet_s3.up.NDskl.a.NDskl", ndim=2)
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
@@ -1377,6 +1381,7 @@ if __name__ == '__main__':
 		savefile_directory = '/uio/hume/student-u70/aleh/Masters_project/disperse_results'
 		
 		if LCDM_model == 1:
+			print 'Running for LCDM model'
 			solve_file_dir = '/lcdm_testing/'
 			solve_filename = 'lcdm_z0_test.solve'
 			if IncludeDMParticles == 1:
@@ -1403,7 +1408,7 @@ if __name__ == '__main__':
 			NConnections_512, FilLengths_512, FilPoints_512 = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDM512Periodic.a.NDskl', ndim=3)
 			"""
 			LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
