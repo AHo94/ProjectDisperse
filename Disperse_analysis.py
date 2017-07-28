@@ -773,18 +773,24 @@ class Disperse_Plotter():
 		TempPartPosZ = PartPosZ
 
 		DistanceThreshold = 0.001*(self.xmax - self.xmin)*UnitConverter
-		for i in range(len(self.FilamentPos)):
+		for i in range(len(self.zdimMasked)):
 			PartCount = 0
-			for j in range(len(self.FilamentPos[i])):
+			for j in range(len(self.zdimMasked[i])):
+				index = []
 				for k in range(len(TempPartPosX)):
-					PointDistance = np.sqrt((self.xdimPos[i][k] - TempPartPosX[j])**2 + (self.ydimPos[i][k] - TempPartPosY[j])**2 + (self.zdimPos[i][k] - TempPartPosZ[j])**2)
+					PointDistance = np.sqrt((self.MaskedFilamentSegments[i][j][0] - TempPartPosX[k])**2 + (self.MaskedFilamentSegments[i][j][1] - TempPartPosY[k])**2 \
+									+ (self.zdimMasked[i][j] - TempPartPosZ[k])**2)
 					if PointDistance < DistanceThreshold:
 						PartCount += 1
-						TempPartPosX = np.delete(TempPartPosX, k)
-						TempPartPosY = np.delete(TempPartPosY, k)
-						TempPartPosZ = np.delete(TempPartPosZ, k)
+						index.append(k)
+						#TempPartPosX = np.delete(TempPartPosX, k)
+						#TempPartPosY = np.delete(TempPartPosY, k)
+						#TempPartPosZ = np.delete(TempPartPosZ, k)
 					else:
 						continue
+				TempPartPosX = np.delete(TempPartPosX, index)
+				TempPartPosY = np.delete(TempPartPosY, index)
+				TempPartPosZ = np.delete(TempPartPosZ, index)
 			self.Particles_per_filament.append(PartCount)
 		"""
 		for i in range(len(self.FilamentPos)):
@@ -881,6 +887,17 @@ class Disperse_Plotter():
 			plt.ylabel('Number of occurances')
 			plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
 			#plt.xticks(self.NFilamentPoints)
+
+			if IncludeDMParticles == 1:
+				NPartFilBinMin = np.min(self.Particles_per_filament)
+				NPartFilBinMax = np.max(self.Particles_per_filament)
+				BinSize_NPartFil = (NPartFilBinMax - NPartFilBinMin)/(0.5) + 1
+				BinList_NPartFil = np.linspace(NPartFilBinMin, NPartFilBinMax, BinSize_NPartFil)
+				NumParticlesFilamentHist = plt.figure()
+				plt.hist(self.Particles_per_filament, align='left', rwidth=1, bins=BinList_NPartFil, normed=NormedArgument)
+				plt.xlabel('Number of particles per filament')
+				plt.ylabel('Number of occurances')
+				plt.title('Histogram of number of particles per filament with ' + self.nPart_text + '$\mathregular{^3}$ particles')
 			
 		if ndim == 2:
 			if PlotFilaments == 1:
@@ -1107,6 +1124,8 @@ class Disperse_Plotter():
 		self.BoundaryStuff()
 		if IncludeSlicing == 1:
 			self.Mask_slices()
+		if IncludeDMParticles == 1:
+			self.NumParticles_per_filament()
 		
 		if Comparison == 0:
 			if self.savefile == 2:
@@ -1367,7 +1386,7 @@ if __name__ == '__main__':
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 0			# Set to 1 to plot histograms
+	HistogramPlots = 1			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1383,7 +1402,7 @@ if __name__ == '__main__':
 	if FilamentLimit == 1:
 		print 'Running program with limited amount of filaments.'
 
-	if IncludeDMParticles == 1:
+	if IncludeDMParticles == 1 and HOMEPC == 1:
 		print 'Dark matter particles will be included'
 		IncludeSlicing = 1
 	else:
@@ -1461,6 +1480,7 @@ if __name__ == '__main__':
 				SolveReadInstance = Read_solve_files()
 				PartPosX = SolveReadInstance.PartPosX
 				PartPosY = SolveReadInstance.PartPosY
+				PartPosZ = SolveReadInstance.PartPosZ
 
 			"""
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64Periodic/'
