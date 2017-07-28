@@ -176,17 +176,17 @@ class Disperse_Plotter():
 				IDconnections = []
 				if int(stuff[0]) == 1:
 					IDS = self.CriticalPoints[i+1]
-					IDconnections.append([float(IDS[0]), float(IDS[1])])
+					IDconnections.append(np.array([float(IDS[0]), float(IDS[1])]))
 				else:	
 					for j in range(1, int(stuff[0])+1):
 						IDS = self.CriticalPoints[i+j]
-						IDconnections.append([float(IDS[0]),float(IDS[1])])
-				self.IDFilamentConnected.append(IDconnections)
+						IDconnections.append(np.array([float(IDS[0]),float(IDS[1])]))
+				self.IDFilamentConnected.append(np.asarray(IDconnections))
 			elif len(stuff) > 2:
 				InfoListTemp = []
 				for k in range(len(stuff)):
 					InfoListTemp.append(float(stuff[k]))
-				self.CritPointInfo.append(InfoListTemp)
+				self.CritPointInfo.append(np.asarray(InfoListTemp))
 
 		self.IDFilamentConnected = np.asarray(self.IDFilamentConnected)
 		self.CritPointInfo = np.asarray(self.CritPointInfo)
