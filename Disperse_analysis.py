@@ -759,6 +759,298 @@ class Disperse_Plotter():
 		self.ydimPos = np.asarray(yPosTemp)
 		self.zdimPos = np.asarray(zPosTemp)
 
+	def Check_boundary(self):
+		"""
+		This function checks whether a filament crosses the boundary or not. 
+		If a filament crosses the boundary, the filament will be split into two/three filaments, i.e different lists/arrays.
+		More details of the algorithm, see paper.
+		Function also computes the length of the filament.
+		"""
+		time_start = time.clock()
+		print 'Checking boundaries'
+		self.BoxSize = self.xmax - self.xmin
+		FilPosTemp = []
+		xPosTemp = []
+		yPosTemp = []
+		zPosTemp = []
+		self.FilLengths = []
+		self.LengthSplitFilament = []
+
+		def New_points(P1, P2, boundary_dir, boundary):
+			""" Computes the points of the two non-boundary crossing coordinates at the boundary. """
+			if boundary == 0:
+				DifferenceAdd = -self.BoxSize
+				BoxBoundary = self.xmin
+			elif boundary == 1:
+				DifferenceAdd = self.BoxSize
+				BoxBoundary = self.xmax
+
+			if boundary_dir == 'x':
+				t_variable = (BoxBoundary - P1[0])/(P2[0] - P1[0] - self.BoxSize)
+				y_coord = P1[1] + (P2[1] - P1[1])*t_variable
+				z_coord = P1[2] + (P2[2] - P1[2])*t_variable
+				print y_coord, z_coord, P1[0], P2[0]
+				return y_coord, z_coord
+			elif boundary_dir == 'y':
+				t_variable = (BoxBoundary - P1[1])/(P2[1] - P1[1] - self.BoxSize)
+				x_coord = P1[0] + (P2[0] - P1[0])*t_variable
+				z_coord = P1[2] + (P2[2] - P1[2])*t_variable
+				return x_coord, z_coord
+			elif boundary_dir == 'z':
+				t_variable = (BoxBoundary - P1[2])/(P2[2] - P1[2] - self.BoxSize)
+				x_coord = P1[0] + (P2[0] - P1[0])*t_variable
+				y_coord = P1[1] + (P2[1] - P1[1])*t_variable
+				return x_coord, y_coord
+			else:
+				raise ValueError('boundary_dir argument not set properly')
+
+		for i in range(len(self.xdimPos)):
+			SplitFilament = 0
+			xBoundary = 0
+			yBoundary = 0
+			zBoundary = 0
+			xyTemp = []
+			xTemp = []
+			yTemp = []
+			zTemp = []
+			xyNewTemp = []
+			xNewTemp = []
+			yNewTemp = []
+			zNewTemp = []
+			if SplitFilament == 2:
+				xyNewTemp2 = []
+				xNewTemp2 = []
+				yNewTemp2 = []
+				zNewTemp2 = []
+			for j in range(len(self.xdimPos[i])-1):
+				xDiff = np.abs(self.xdimPos[i][j+1] - self.xdimPos[i][j])
+				yDiff = np.abs(self.ydimPos[i][j+1] - self.ydimPos[i][j])
+				zDiff = np.abs(self.zdimPos[i][j+1] - self.zdimPos[i][j])
+
+				if SplitFilament == 0:
+					xyTemp.append(np.asarray([self.xdimPos[i][j], self.ydimPos[i][j]]))
+					xTemp.append(self.xdimPos[i][j])
+					yTemp.append(self.ydimPos[i][j])
+					zTemp.append(self.zdimPos[i][j])
+
+				elif SplitFilament == 1:
+					if xBoundary == 1 or yBoundary == 1 or zBoundary == 1:
+						Point1 = np.array([self.xdimPos[i][j-1], self.ydimPos[i][j-1], self.zdimPos[i][j-1]])
+						Point2 = np.array([self.xdimPos[i][j], self.ydimPos[i][j], self.zdimPos[i][j]])
+					if xBoundary == 1:
+						if np.abs(self.xdimPos[i][j-1] - self.xmin) < 0.5*self.BoxSize:
+							Ypoint, Zpoint = New_points(Point1, Point2, 'x', 0)
+							xyTemp.append(np.array([self.xmin, Ypoint]))
+							xTemp.append(self.xmin)
+							yTemp.append(Ypoint)
+							zTemp.append(Zpoint)
+							xyNewTemp.append(np.array([self.xmax, Ypoint]))
+							xNewTemp.append(self.xmax)
+							yNewTemp.append(Ypoint)
+							zNewTemp.append(Zpoint)			
+							xBoundary = 2
+						elif np.abs(self.xdimPos[i][j-1] - self.xmax) < 0.5*self.BoxSize:
+							Ypoint, Zpoint = New_points(Point1, Point2, 'x', 1)
+							xyTemp.append(np.array([self.xmax, Ypoint]))
+							xTemp.append(self.xmax)
+							yTemp.append(Ypoint)
+							zTemp.append(Zpoint)
+							xyNewTemp.append(np.array([self.xmin, Ypoint]))
+							xNewTemp.append(self.xmin)
+							yNewTemp.append(Ypoint)
+							zNewTemp.append(Zpoint)			
+							xBoundary = 2
+					elif yBoundary == 1:
+						if np.abs(self.ydimPos[i][j-1] - self.ymin) < 0.5*self.BoxSize:
+							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
+							xyTemp.append(np.array([Xpoint, self.ymin]))
+							xTemp.append(Xpoint)
+							xTemp.append(self.ymin)
+							zTemp.append(Zpoint)
+							xyNewTemp.append(np.array([Xpoint, self.ymax]))
+							xNewTemp.append(Xpoint)
+							yNewTemp.append(self.ymax)
+							zNewTemp.append(Zpoint)			
+							yBoundary = 2
+						elif np.abs(self.ydimPos[i][j-1] - self.ymax) < 0.5*self.BoxSize:
+							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 1)
+							xyTemp.append(np.array([Xpoint, self.ymax]))
+							xTemp.append(Xpoint)
+							yTemp.append(self.ymax)
+							zTemp.append(Zpoint)
+							xyNewTemp.append(np.array([Xpoint, self.ymin]))
+							xNewTemp.append(Xpoint)
+							yNewTemp.append(self.ymin)
+							zNewTemp.append(Zpoint)			
+							yBoundary = 2
+					elif zBoundary == 1:
+						if np.abs(self.zdimPos[i][j-1] - self.zmin) < 0.5*self.BoxSize:
+							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
+							xyTemp.append(np.array([Xpoint, Ypoint]))
+							xTemp.append(Xpoint)
+							xTemp.append(Ypoint)
+							zTemp.append(self.zmin)
+							xyNewTemp.append(np.array([Xpoint, Ypoint]))
+							xNewTemp.append(Xpoint)
+							yNewTemp.append(Ypoint)
+							zNewTemp.append(self.zmax)			
+							zBoundary = 2
+						elif np.abs(self.zdimPos[i][j-1] - self.zmax) < 0.5*self.BoxSize:
+							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 1)
+							xyTemp.append(np.array([Xpoint, Ypoint]))
+							xTemp.append(Xpoint)
+							yTemp.append(Ypoint)
+							zTemp.append(self.zmax)
+							xyNewTemp.append(np.array([Xpoint, Ypoint]))
+							xNewTemp.append(Xpoint)
+							yNewTemp.append(Ypoint)
+							zNewTemp.append(self.zmin)			
+							zBoundary = 2
+					xyNewTemp.append(np.asarray([self.xdimPos[i][j], self.ydimPos[i][j]]))
+					xNewTemp.append(self.xdimPos[i][j])
+					yNewTemp.append(self.ydimPos[i][j])
+					zNewTemp.append(self.zdimPos[i][j])
+
+				elif SplitFilament == 2:
+					if xBoundary == 1 or yBoundary == 1 or zBoundary == 1:
+						Point1 = np.array([self.xdimPos[i][j-1], self.ydimPos[i][j-1], self.zdimPos[i][j-1]])
+						Point2 = np.array([self.xdimPos[i][j], self.ydimPos[i][j], self.zdimPos[i][j]])
+					if xBoundary == 1:
+						if np.abs(self.xdimPos[i][j-1] - self.xmin) < 0.5*self.BoxSize:
+							Ypoint, Zpoint = New_points(Point1, Point2, 'x', 0)
+							xyNewTemp.append(np.array([self.xmin, Ypoint]))
+							xNewTemp.append(self.xmin)
+							yNewTemp.append(Ypoint)
+							zNewTemp.append(Zpoint)
+							xyNewTemp2.append(np.array([self.xmax, Ypoint]))
+							xNewTemp2.append(self.xmax)
+							yNewTemp2.append(Ypoint)
+							zNewTemp2.append(Zpoint)			
+							xBoundary = 2
+						elif np.abs(self.xdimPos[i][j-1] - self.xmax) < 0.5*self.BoxSize:
+							Ypoint, Zpoint = New_points(Point1, Point2, 'x', 1)
+							xyNewTemp.append(np.array([self.xmax, Ypoint]))
+							xNewTemp.append(self.xmax)
+							yNewTemp.append(Ypoint)
+							zNewTemp.append(Zpoint)
+							xyNewTemp2.append(np.array([self.xmin, Ypoint]))
+							xNewTemp2.append(self.xmin)
+							yNewTemp2.append(Ypoint)
+							zNewTemp2.append(Zpoint)			
+							xBoundary = 2
+					elif yBoundary == 1:
+						if np.abs(self.ydimPos[i][j-1] - self.ymin) < 0.5*self.BoxSize:
+							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
+							xyNewTemp.append(np.array([Xpoint, self.ymin]))
+							xNewTemp.append(Xpoint)
+							xNewTemp.append(self.ymin)
+							zNewTemp.append(Zpoint)
+							xyNewTemp2.append(np.array([Xpoint, self.ymax]))
+							xNewTemp2.append(Xpoint)
+							yNewTemp2.append(self.ymax)
+							zNewTemp2.append(Zpoint)			
+							yBoundary = 2
+						elif np.abs(self.ydimPos[i][j-1] - self.ymax) < 0.5*self.BoxSize:
+							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 1)
+							xyNewTemp.append(np.array([Xpoint, self.ymax]))
+							xNewTemp.append(Xpoint)
+							yNewTemp.append(self.ymax)
+							zNewTemp.append(Zpoint)
+							xyNewTemp2.append(np.array([Xpoint, self.ymin]))
+							xNewTemp2.append(Xpoint)
+							yNewTemp2.append(self.ymin)
+							zNewTemp2.append(Zpoint)			
+							yBoundary = 2
+					elif zBoundary == 1:
+						if np.abs(self.zdimPos[i][j-1] - self.zmin) < 0.5*self.BoxSize:
+							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
+							xyNewTemp.append(np.array([Xpoint, Ypoint]))
+							xNewTemp.append(Xpoint)
+							xNewTemp.append(Ypoint)
+							zNewTemp.append(self.zmin)
+							xyNewTemp2.append(np.array([Xpoint, Ypoint]))
+							xNewTemp2.append(Xpoint)
+							yNewTemp2.append(Ypoint)
+							zNewTemp2.append(self.zmax)			
+							zBoundary = 2
+						elif np.abs(self.zdimPos[i][j-1] - self.zmax) < 0.5*self.BoxSize:
+							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 1)
+							xyNewTemp.append(np.array([Xpoint, Ypoint]))
+							xNewTemp.append(Xpoint)
+							yNewTemp.append(Ypoint)
+							zNewTemp.append(self.zmax)
+							xyNewTemp2.append(np.array([Xpoint, Ypoint]))
+							xNewTemp2.append(Xpoint)
+							yNewTemp2.append(Ypoint)
+							zNewTemp2.append(self.zmin)			
+							zBoundary = 2
+					xyNewTemp2.append(np.asarray([self.xdimPos[i][j], self.ydimPos[i][j]]))
+					xNewTemp2.append(self.xdimPos[i][j])
+					yNewTemp2.append(self.ydimPos[i][j])
+					zNewTemp2.append(self.zdimPos[i][j])
+
+				if xDiff > 0.5*self.BoxSize:
+					if SplitFilament == 1:
+						SplitFilament = 2
+					SplitFilament += 1
+					xBoundary = 1
+				if yDiff > 0.5*self.BoxSize:
+					if SplitFilament == 1:
+						SplitFilament = 2
+					SplitFilament += 1
+					yBoundary = 1
+				if zDiff > 0.5*self.BoxSize:
+					if SplitFilament == 1:
+						SplitFilament = 2
+					SplitFilament += 1
+					zBoundary = 1
+
+			if SplitFilament == 0:
+				xyTemp.append(np.asarray([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
+				xTemp.append(self.xdimPos[i][-1])
+				yTemp.append(self.ydimPos[i][-1])
+				zTemp.append(self.zdimPos[i][-1])
+			elif SplitFilament == 1:
+				xyNewTemp.append(np.asarray([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
+				xNewTemp.append(self.xdimPos[i][-1])
+				yNewTemp.append(self.ydimPos[i][-1])
+				zNewTemp.append(self.zdimPos[i][-1])
+			elif SplitFilament == 2:
+				xyNewTemp2.append(np.asarray([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
+				xNewTemp2.append(self.xdimPos[i][-1])
+				yNewTemp2.append(self.ydimPos[i][-1])
+				zNewTemp2.append(self.zdimPos[i][-1])
+
+			TempLength = 0
+			if len(zTemp) > 1:
+				for k in range(len(zTemp)-1):
+					TempLength += np.sqrt((xyTemp[k+1][0]-xyTemp[k][0])**2 + (xyTemp[k+1][1] - xyTemp[k][1])**2 + (zTemp[k+1]-zTemp[k])**2)
+			if len(zNewTemp) > 1:
+				for k in range(len(zNewTemp)-1):
+					TempLength += np.sqrt((xyNewTemp[k+1][0]-xyNewTemp[k][0])**2 + (xyNewTemp[k+1][1] - xyNewTemp[k][1])**2 \
+										+ (zNewTemp[k+1]-zNewTemp[k])**2)
+			if SplitFilament == 2:
+				if len(zNewTemp2) > 1:
+					for k in range(len(zNewTemp2)-1):
+						TempLength += np.sqrt((xyNewTemp2[k+1][0]-xyNewTemp2[k][0])**2 + (xyNewTemp2[k+1][1] - xyNewTemp2[k][1])**2 \
+											+ (zNewTemp2[k+1]-zNewTemp2[k])**2)
+
+			self.FilLengths.append(TempLength)
+			if len(zTemp) > 1:
+				self.LengthSplitFilament.append(TempLength)
+			if len(zNewTemp) > 1: 
+				self.LengthSplitFilament.append(TempLength)
+			if SplitFilament == 2:
+				if len(zNewTemp2) > 1:
+					self.LengthSplitFilament.append(TempLength)
+				
+		
+		self.FilamentPos = np.asarray(FilPosTemp)
+		self.xdimPos = np.asarray(xPosTemp)
+		self.ydimPos = np.asarray(yPosTemp)
+		self.zdimPos = np.asarray(zPosTemp)
+		print 'Boundary check time:', time.clock() - time_start, 's'
+
 	def NumParticles_per_filament(self):
 		""" 
 		Checks the number of dark matter filaments per filament.
@@ -1122,6 +1414,7 @@ class Disperse_Plotter():
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)
 		self.BoundaryStuff()
+		#self.Check_boundary()
 		if IncludeSlicing == 1:
 			self.Mask_slices()
 		if IncludeDMParticles == 1:
@@ -1369,29 +1662,30 @@ class Histogram_Comparison2():
 		#	plt.show()
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
-	PlotFilaments = 0			# Set 1 to plot actual filaments
+	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
+	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
 	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
-	MaskXdir = 1 				# Set 1 to mask one or more directions.
-	MaskYdir = 1
+	MaskXdir = 0 				# Set 1 to mask one or more directions.
+	MaskYdir = 0
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 1			# Set to 1 to plot histograms
+	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 
 	SymmA_model = 0
+	SymmB_model = 0
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
@@ -1457,7 +1751,7 @@ if __name__ == '__main__':
 			"""
 
 			LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
 
 			Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
@@ -1467,7 +1761,12 @@ if __name__ == '__main__':
 				FilPoints_list = [NPoints_64Peri, NPoints_128Peri]
 				Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list,\
 									 FilamentLengths=FilLengths_list)
-		
+		if SymmA_model == 1:
+			print '=== Running for Symm_A model ==='
+			SymmA_z064_directory = 'SymmA_data/SymmA_z0_64Particles/'
+			SymmA_z064_instance = Disperse_Plotter(savefile=1, savefigDirectory=SymmA_z064_directory+'Plots/', nPart=64, model='SymmA', redshift=0)
+			Nconn_64PartSymmA, FilLen_64PartSymmA, NPts_64PartSymmA = SymmA_z064_instance.Solve(SymmA_z064_directory+'')
+
 	if HOMEPC == 1:
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/uio/hume/student-u70/aleh/Masters_project/disperse_results'
