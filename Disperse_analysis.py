@@ -1410,7 +1410,7 @@ class Disperse_Plotter():
 		else:
 			plt.show()
 
-	def Solve(self, filename, ndim=2):
+	def Solve(self, filename, ndim=3):
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)
 		self.BoundaryStuff()
@@ -1679,13 +1679,13 @@ if __name__ == '__main__':
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 0			# Set to 1 to plot histograms
+	HistogramPlots = 1			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	
 	# Run simulation for different models. Set to 1 to run them. 
-	LCDM_model = 1 
+	LCDM_model = 0 
 	SymmA_model = 0
-	SymmB_model = 0
+	SymmB_model = 1
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
@@ -1752,7 +1752,7 @@ if __name__ == '__main__':
 
 			LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
-			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
+			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 
 			Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
 			if Comparison == 1:
@@ -1765,7 +1765,12 @@ if __name__ == '__main__':
 			print '=== Running for Symm_A model ==='
 			SymmA_z064_directory = 'SymmA_data/SymmA_z0_64Particles/'
 			SymmA_z064_instance = Disperse_Plotter(savefile=1, savefigDirectory=SymmA_z064_directory+'Plots/', nPart=64, model='SymmA', redshift=0)
-			Nconn_64PartSymmA, FilLen_64PartSymmA, NPts_64PartSymmA = SymmA_z064_instance.Solve(SymmA_z064_directory+'')
+			Nconn_64PartSymmA, FilLen_64PartSymmA, NPts_64PartSymmA = SymmA_z064_instance.Solve(SymmA_z064_directory+'SkelconvOutput_SymmAz064Part.a.NDskl')
+
+		if SymmB_model == 1:
+			SymmB_z064_directory = 'SymmB_data/SymmB_z0_64Particles/'
+			SymmB_z064_instance = Disperse_Plotter(savefile=1, savefigDirectory=SymmB_z064_directory+'Plots/', nPart=64, model='SymmB', redshift=0)
+			Nconn_64PartSymmB, FilLen_64PartSymmB, NPts_64PartSymmB = SymmB_z064_instance.Solve(SymmB_z064_directory+'SkelconvOutput_SymmBz064Part.a.NDskl')
 
 	if HOMEPC == 1:
 		file_directory = '/mn/stornext/d5/aleh'
@@ -1801,7 +1806,7 @@ if __name__ == '__main__':
 			"""
 			LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
-			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl', ndim=3)
+			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
 			if Comparison == 1:
