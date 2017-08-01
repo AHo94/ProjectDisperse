@@ -14,6 +14,11 @@ from scipy import interpolate
 import time
 
 class Disperse_Plotter():
+	"""
+	This class does all the analysis from the data created by DisPerSE. This includes reading of filament points, critical points etc.
+	If provided, it will also analyse the dark matter particles.
+	Note that this class only solves for one model at a time. 
+	"""
 	def __init__(self, savefile, savefigDirectory, nPart, model, redshift):
 		self.savefile = savefile
 		self.PlotChecker = 0
@@ -1082,9 +1087,9 @@ class Disperse_Plotter():
 						#TempPartPosZ = np.delete(TempPartPosZ, k)
 					else:
 						continue
-				TempPartPosX = np.delete(TempPartPosX, index)
-				TempPartPosY = np.delete(TempPartPosY, index)
-				TempPartPosZ = np.delete(TempPartPosZ, index)
+				#TempPartPosX = np.delete(TempPartPosX, index)
+				#TempPartPosY = np.delete(TempPartPosY, index)
+				#TempPartPosZ = np.delete(TempPartPosZ, index)
 			self.Particles_per_filament.append(PartCount)
 		"""
 		for i in range(len(self.FilamentPos)):
@@ -1486,12 +1491,11 @@ class Read_solve_files():
 		print 'Read solve file time: ', time.clock() - time_start, 's'
 
 class Histogram_Comparison():
-	def __init__(self, savefile, savefigDirectory, redshift):
+	def __init__(self, savefile, savefigDirectory, redshift, LCDM=False, SymmA=False, SymmB=False):
 		self.savefile = savefile
-		self.ndim = ndim
-		self.LCDM = LCDM
-		self.SymmA = SymmA
-		self.SymmB = SymmB
+		self.LCDM_check = LCDM
+		self.SymmA_check = SymmA
+		self.SymmB_check = SymmB
 
 		self.ParticleComparison = False
 		self.ModelComparison = False
@@ -1500,90 +1504,113 @@ class Histogram_Comparison():
 		if not os.path.isdir(self.results_dir):
 			os.makedirs(self.results_dir)
 
-		if type(comparison) != str:
-			raise ValueError('Argument comparison must be a string!')
-
-		if LCDM_model == 1 and SymmA_model == 0 and SymmB_model == 0:
+		if LCDM and not SymmA and not SymmB:
 			self.ModelFilename = 'LCDM' + 'z' + str(redshift) + filetype
 			self.ParticleComparison = True
-		elif LCDM_model == 0 and SymmA_model == 1 and SymmB_model == 0:
+		elif not LCDM and SymmA and not SymmB:
 			self.ModelFilename = 'SymmA' + 'z' + str(redshift) + filetype
 			self.ParticleComparison = True
-		elif LCDM_model == 0 and SymmA_model == 0 and SymmB_model == 1:
+		elif not LCDM and not SymmA and SymmB:
 			self.ModelFilename = 'SymmB' + 'z' + str(redshift) + filetype
 			self.ParticleComparison = True
-		elif LCDM_model == 1 and SymmA_model == 1 and SymmB_model == 0:
+		elif LCDM and SymmA and not SymmB == 0:
 			self.ModelFilename = 'LCDM_SymmB' + 'z' + str(redshift) + filetype
 			self.ModelComparison = True
-		elif LCDM_model == 1 and SymmA_model == 0 and SymmB_model == 1:
+		elif LCDM and not SymmA and SymmB:
 			self.ModelFilename = 'LCDM_SymmB' + 'z' + str(redshift) + filetype
 			self.ModelComparison = True
-		elif LCDM_model == 1 and SymmA_model == 1 and SymmB_model == 0:
+		elif LCDM and SymmA and not SymmB:
 			self.ModelFilename = 'LCDM_SymmB' + 'z' + str(redshift) + filetype
 			self.ModelComparison = True
 		else:
 			raise ValueError('At least one model must be set to compare!')
 
 	def Run(self, NumberConnections, FilamentLengths, NPointsPerFilament):
-		if self.ParticleComparison:
-			if type(NumberConnections) != list:
-				raise ValueError('Argument NumberConnections must be a list!')
-			elif type(FilamentLengths) != list:
-				raise ValueError('Argument FilamentLengths must be a list!')
-			
-			if len(NumberConnections) < 2:
-				raise ValueError('Nothing to compare because NumberConnections has less than two arrays!')
-			elif len(FilamentLengths) < 2:
-				raise ValueError('Nothing to compare because FilamentLengths has less than two arrays!')
-
-			if len(NumberConnections) != len(FilamentLengths):
-				raise ValueError('List size of NumberConnections and FilamentLengths must be equal!')
-
-			for i in range(len(NumberConnections)-1):
-				if len(NumberConnections[i+1]) < len(NumberConnections[i]):
-					raise ValueError('List of NumberConnections must be in order to increasing number of particles')
-				elif len(FilamentLengths[i+1]) < len(FilamentLengths[i]):
-					raise ValueError('List of FilamentLengths must be in order to increasing number of particles')
+		if type(NumberConnections) != list:
+			raise ValueError('Argument NumberConnections must be a list!')
+		elif type(FilamentLengths) != list:
+			raise ValueError('Argument FilamentLengths must be a list!')
 		
+		if len(NumberConnections) < 2:
+			raise ValueError('Nothing to compare because NumberConnections has less than two arrays!')
+		elif len(FilamentLengths) < 2:
+			raise ValueError('Nothing to compare because FilamentLengths has less than two arrays!')
+
+		if len(NumberConnections) != len(FilamentLengths):
+			raise ValueError('List size of NumberConnections and FilamentLengths must be equal!')
+
+		for i in range(len(NumberConnections)-1):
+			if len(NumberConnections[i+1]) < len(NumberConnections[i]):
+				raise ValueError('List of NumberConnections must be in order to increasing number of particles')
+			elif len(FilamentLengths[i+1]) < len(FilamentLengths[i]):
+				raise ValueError('List of FilamentLengths must be in order to increasing number of particles')
+		
+
 		self.NumberConnections = NumberConnections
 		self.FilamentLengths = FilamentLengths
-		self.N = len(self.NumberConnections)
+		self.NPointsPerFilament = NPointsPerFilament
 
+		self.N = len(self.NumberConnections)
 		self.Check_Number_Comparisons()
-		self.Plot_Histograms()
+		if self.ParticleComparison:
+			self.Plot_Histograms_particleComparison()
 
 
 	def Check_Number_Comparisons(self):
-		if self.N == 2:
-			self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles']
-		elif self.N == 3:
-			self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles']
-		elif self.N == 4:
-			self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles', '$\mathregular{256^3}$ particles']
-			
-	def Plot_Histograms(self):
+		if self.ParticleComparison == 1:
+			if self.N == 2:
+				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles']
+			elif self.N == 3:
+				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles']
+			elif self.N == 4:
+				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles', '$\mathregular{256^3}$ particles']
+		elif self.ModelComparison == 1:
+			self.LegendText = []
+			if self.LCDM_check:
+				self.LegendText.append('LCDM')
+			if self.SymmA_check:
+				self.LegendText.append('Symm_A')
+			if self.SymmB_check:
+				self.LegendText.append('Symm_B')
+
+	def Plot_Histograms_particleComparison(self):
 
 		alphas = [0.4, 0.5, 0.6, 0.7]
 		
 		ConnectedHistComparison = plt.figure()
 		plt.hold("on")
 		for i in range(self.N):
-			PtsMin = min(self.NumberConnections[i])
-			PtsMax = max(self.NumberConnections[i])
-			BinSize_FilPts = (PtsMax - PtsMin)/(0.5) + 1
-			BinList_FilPts = np.linspace(PtsMin, PtsMax, BinSize_FilPts)
-			plt.hist(self.NumberConnections[i], align='mid', rwidth=1, bins=BinList_FilPts, normed=True, alpha=alphas[i])
+			DataMin = min(self.NumberConnections[i])
+			DataMax = max(self.NumberConnections[i])
+			BinSize = (DataMax - DataMin)/(0.5) + 1
+			BinList = np.linspace(DataMin, DataMax, BinSize)
+			plt.hist(self.NumberConnections[i], align='mid', rwidth=1, bins=BinList, normed=True, alpha=alphas[i])
 		plt.xlabel('Number of connected filaments')
 		plt.ylabel('Number of occurances')
 		plt.legend(self.LegendText)
+		plt.hold("off")
 	
 		LengthHistComparison = plt.figure()
 		plt.hold("on")
 		for i in range(self.N):
-			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=600, normed=True, alpha=alphas[i], histtype='step')
+			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=600, normed=True, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
 		plt.legend(self.LegendText)
+		plt.hold("off")
+
+		NPointsHistComparison = plt.figure()
+		plt.hold("on")
+		for i in range(self.N):
+			DataMin = min(self.NPointsPerFilament[i])
+			DataMax = max(self.NPointsPerFilament[i])
+			BinSize = (DataMax - DataMin)/(0.5) + 1
+			BinList = np.linspace(DataMin, DataMax, BinSize)
+			plt.hist(self.NPointsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=True, alpha=alphas[i])
+		plt.xlabel('Number of points per filament')
+		plt.ylabel('Number of occurances')
+		plt.legend(self.LegendText)
+		plt.hold("off")
 
 		if self.savefile == 1:
 			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison' + self.ModelFilename)
@@ -1720,7 +1747,7 @@ if __name__ == '__main__':
 
 	# Histogram plots
 	HistogramPlots = 1			# Set to 1 to plot histograms
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 
@@ -1826,20 +1853,31 @@ if __name__ == '__main__':
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			
-			#LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
-			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir, nPart=128, model='LCDM', redshift=0)
-			#NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDMz0128.a.NDskl')
+			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
+			LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir, nPart=128, model='LCDM', redshift=0)
+			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
+
+			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
+			LCDM_z0_256Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_256_dir, nPart=256, model='LCDM', redshift=0)
+			NumConn_256LCDM, FilLen_256LCDM, NPts_256LCDM = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl')
 			
-			Comparison_dir = 'lcdm_testing/Comparison_plots/'
+			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
+			LCDM_z0_512Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_512_dir, nPart=512, model='LCDM', redshift=0)
+			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
+			
+
+			Comparison_dir = 'lcdm_testing/Comparison_plots'
 			if Comparison == 1:
-				NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM]
-				FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM]
-				FilPoints_list = [NPts_64LCDM, NPts_128LCDM ]
-				#Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3,\
-				#					 NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
+				NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM] # , NumConn_256LCDM, NumConn_512LCDM]
+				FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM] #, FilLen_256LCDM, FilLen_512LCDM]
+				FilPoints_list = [NPts_64LCDM, NPts_128LCDM] #, NPts_256LCDM, NPts_512LCDM]
+				ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
+				ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list)
+				"""
 				ComparisonInstance = Histogram_Comparison2(savefile=0, savefigDirectory=Comparison_dir, ndim=3, model='$\mathregular{\Lambda}$CDM',\
 													 Nparticles=[64, 128])
 				ComparisonInstance.Solve('Connections', NumConnections_list)
 				ComparisonInstance.Solve('Lengths', FilLengths_list)
 				ComparisonInstance.Solve('FilamentPoints', FilPoints_list)
 				plt.show()
+				"""
