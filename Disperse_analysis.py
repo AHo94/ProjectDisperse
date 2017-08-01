@@ -1443,11 +1443,17 @@ class Read_solve_files():
 		PartVelX = []
 		PartVelY = []
 		PartVelZ = []
-		self.XYPartPos = []
+
+		self.ParticlePos = []
 		with open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r') as datafiles:
 			next(datafiles)
 			for line in datafiles:
 				data_set = line.split()
+				self.ParticlePos.append(np.array([float(data_set[0]),float(data_set[1]),float(data_set[2])])*UnitConverter)
+				#self.PartPosX.append(float(data_set[0])*UnitConverter)
+				#self.PartPosY.append(float(data_set[1])*UnitConverter)
+				#self.PartPosZ.append(float(data_set[2])*UnitConverter)
+				"""
 				if MaskXdir == 0 and MaskYdir == 0 and MaskZdir == 1:
 					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
@@ -1466,14 +1472,17 @@ class Read_solve_files():
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
 						self.PartPosY.append(float(data_set[1])*UnitConverter)
 						self.PartPosZ.append(float(data_set[2])*UnitConverter)
+				"""
 
-		self.PartPosX = np.asarray(self.PartPosX)
-		self.PartPosY = np.asarray(self.PartPosY)
-		self.PartPosZ = np.asarray(self.PartPosZ)
+		#self.PartPosX = np.asarray(self.PartPosX)
+		#self.PartPosY = np.asarray(self.PartPosY)
+		#self.PartPosZ = np.asarray(self.PartPosZ)
+		self.ParticlePos = np.asarray(self.ParticlePos)
+		mask = np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir)
 		print 'Read solve file time: ', time.clock() - time_start, 's'
 
 class Histogram_Comparison():
-	def __init__(self, savefile, savefigDirectory, ndim, NumberConnections, FilamentLengths):
+	def __init__(self, savefile, savefigDirectory, redshift, LCDM=False, SymmA=False, SymmB=False):
 		self.savefile = savefile
 		self.ndim = ndim
 		
@@ -1481,6 +1490,12 @@ class Histogram_Comparison():
 		if not os.path.isdir(self.results_dir):
 			os.makedirs(self.results_dir)
 
+		if type(comparison) != str:
+			raise ValueError('Argument comparison must be a string!')
+
+
+		
+	def Run(self, NumberConnections, FilamentLengths):
 		if type(NumberConnections) != list:
 			raise ValueError('Argument NumberConnections must be a list!')
 		elif type(FilamentLengths) != list:
@@ -1500,13 +1515,13 @@ class Histogram_Comparison():
 			elif len(FilamentLengths[i+1]) < len(FilamentLengths[i]):
 				raise ValueError('List of FilamentLengths must be in order to increasing number of particles')
 		
-
 		self.NumberConnections = NumberConnections
 		self.FilamentLengths = FilamentLengths
 		self.N = len(self.NumberConnections)
 
 		self.Check_Number_Comparisons()
 		self.Plot_Histograms()
+
 
 	def Check_Number_Comparisons(self):
 		if self.N == 2:
@@ -1515,13 +1530,6 @@ class Histogram_Comparison():
 			self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles']
 			
 	def Plot_Histograms(self):
-		if self.ndim == 2:
-			self.ModelFilename = '2D.png'
-		elif self.ndim == 3:
-			self.ModelFilename = '3D.png'
-		else:
-			raise ValueError('ndim less than 2 or greater than 3!')
-		print 'Plotting'
 
 		alphas = [0.4, 0.5, 0.6, 0.7]
 		
@@ -1668,12 +1676,12 @@ if __name__ == '__main__':
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
 	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
-	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
+	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
+	FilamentColors = 0 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
-	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
+	IncludeSlicing = 0 			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
 	MaskZdir = 1
@@ -1709,7 +1717,7 @@ if __name__ == '__main__':
 	if IncludeSlicing == 1:
 		print 'Slicing included'
 		if MaskXdir == 1:
-			LowerBoundaryXDir = 1*UnitConverter
+			LowerBoundaryXDir = LCDM_z0_128_dir*UnitConverter
 			UpperBoundaryXDir = 1*UnitConverter
 		if MaskYdir == 1:
 			LowerBoundaryYDir = 1*UnitConverter
@@ -1763,7 +1771,7 @@ if __name__ == '__main__':
 
 	if HOMEPC == 1:
 		file_directory = '/mn/stornext/d5/aleh'
-		savefile_directory = '/uio/hume/student-u70/aleh/Masters_project/disperse_results'
+		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
 		
 		if LCDM_model == 1:
 			print '=== Running for the LCDM model ==='
@@ -1771,18 +1779,22 @@ if __name__ == '__main__':
 			solve_filename = 'lcdm_z0_test.solve'
 			if IncludeDMParticles == 1:
 				SolveReadInstance = Read_solve_files()
-				PartPosX = SolveReadInstance.PartPosX
-				PartPosY = SolveReadInstance.PartPosY
-				PartPosZ = SolveReadInstance.PartPosZ
+				PartPosX = SolveReadInstance.ParticlePos[:,0]
+				PartPosY = SolveReadInstance.ParticlePos[:,1]
+				PartPosZ = SolveReadInstance.ParticlePos[:,2]
+				
+				#PartPosX = SolveReadInstance.PartPosX
+				#PartPosY = SolveReadInstance.PartPosY
+				#PartPosZ = SolveReadInstance.PartPosZ
 
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-			"""
-			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
-			LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir, nPart=128, model='LCDM', redshift=0)
-			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDMz0128.a.NDskl')
-			"""
+			
+			#LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
+			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir, nPart=128, model='LCDM', redshift=0)
+			#NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDMz0128.a.NDskl')
+			
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
 			if Comparison == 1:
 				NumConnections_list = [NConnections_64, NConnections_128]
