@@ -1049,6 +1049,8 @@ class Disperse_Plotter():
 		self.xdimPos = np.asarray(xPosTemp)
 		self.ydimPos = np.asarray(yPosTemp)
 		self.zdimPos = np.asarray(zPosTemp)
+		self.LengthSplitFilament = np.asarray(self.LengthSplitFilament)
+		self.FilLengths = np.asarray(self.FilLengths)
 		print 'Boundary check time:', time.clock() - time_start, 's'
 
 	def NumParticles_per_filament(self):
@@ -1116,28 +1118,29 @@ class Disperse_Plotter():
 		""" All plots done in this function	"""
 		print 'Plotting'
 
-		if Comparison == 1:
+		if Comparison:
 			NormedArgument = True
 		else:
 			NormedArgument = False
 
-		if FilamentColors == 1:
+		if FilamentColors:
 			ColorArray = np.linspace(0,1,110)
-			ColorMap2DCutOff = np.asarray([np.mean(zvalues) for zvalues in self.CutOffzDim])
-			ColorMap2DMasked = np.asarray([np.mean(zvalues) for zvalues in self.zdimMasked])
 			ColorMap2D = np.asarray([np.mean(zvalues) for zvalues in self.zdimPos])
-			ColorMapLengthCutOff = np.asarray([lengths for lengths in self.CutOffLengths])
-			ColorMapLengthMasked = np.asarray([lengths for lengths in self.MaskedLengths])
 			ColorMapLength = np.asarray([lengths for lengths in self.LengthSplitFilament])
+			if IncludeSlicing:
+				ColorMap2DCutOff = np.asarray([np.mean(zvalues) for zvalues in self.CutOffzDim])
+				ColorMap2DMasked = np.asarray([np.mean(zvalues) for zvalues in self.zdimMasked])
+				ColorMapLengthCutOff = np.asarray([lengths for lengths in self.CutOffLengths])
+				ColorMapLengthMasked = np.asarray([lengths for lengths in self.MaskedLengths])
 		else:
 			ColorArray = None
 		
-		if IncludeUnits == 1:
+		if IncludeUnits:
 			LegendText = ' - [Mpc/h]'
 		else:
 			LegendText = ''
 
-		if HistogramPlots == 1:
+		if HistogramPlots:
 			# Histogram of number of filament connections
 			NumMin = min(self.NumFilamentConnections)
 			NumMax = max(self.NumFilamentConnections)
@@ -1179,7 +1182,7 @@ class Disperse_Plotter():
 			plt.ylabel('Number of occurances')
 			plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
 			#plt.xticks(self.NFilamentPoints)
-
+			"""
 			if IncludeDMParticles == 1:
 				NPartFilBinMin = np.min(self.Particles_per_filament)
 				NPartFilBinMax = np.max(self.Particles_per_filament)
@@ -1190,9 +1193,10 @@ class Disperse_Plotter():
 				plt.xlabel('Number of particles per filament')
 				plt.ylabel('Number of occurances')
 				plt.title('Histogram of number of particles per filament with ' + self.nPart_text + '$\mathregular{^3}$ particles')
+			"""
 			
 		if ndim == 2:
-			if PlotFilaments == 1:
+			if PlotFilaments:
 				FilPositions = plt.figure()
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.xmax)
@@ -1202,7 +1206,7 @@ class Disperse_Plotter():
 				plt.xlabel('$\mathregular{x}$')
 				plt.ylabel('$\mathregular{y}$')
 				plt.title('Positions of the filaments with '+ self.nPart_text+ '$^3$ particles')
-			if PlotFilamentsWCritPts == 1:
+			if PlotFilamentsWCritPts:
 				FilPositions_WCritPts = plt.figure()
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.xmax)
@@ -1216,7 +1220,7 @@ class Disperse_Plotter():
 				plt.ylabel('$\mathregular{y}$')
 				plt.title('Position of the filaments with critical points shown')
 		if ndim == 3:
-			if PlotFilaments == 1:
+			if PlotFilaments:
 				FilPositions = plt.figure()
 				ax = FilPositions.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.xmax)
@@ -1228,7 +1232,7 @@ class Disperse_Plotter():
 				ax.set_ylabel('$\mathregular{y}$' + LegendText)
 				ax.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('3D Position of the filaments with '+ self.nPart_text+ '$\mathregular{^3}$ particles.')
-			if PlotFilamentsWCritPts == 1:
+			if PlotFilamentsWCritPts:
 				FilPositions_WCritPts = plt.figure()
 				ax = FilPositions_WCritPts.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.xmax)
@@ -1242,7 +1246,7 @@ class Disperse_Plotter():
 				ax.set_ylabel('$\mathregular{y}$' + LegendText)
 				ax.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('3D Position of the filaments with critical points')
-			if Projection2D == 1:
+			if Projection2D:
 				FilPositions_2DProjection = plt.figure()
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.ymax)
@@ -1252,7 +1256,7 @@ class Disperse_Plotter():
 				ax.set_xlabel('$\mathregular{x}$' + LegendText)
 				ax.set_ylabel('$\mathregular{y}$' + LegendText)
 				plt.title('2D Position projection of the filaments')
-				if ColorBarZDir == 1:
+				if ColorBarZDir:
 					FilPositions_2DProjectionColorBarZDir = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -1263,7 +1267,7 @@ class Disperse_Plotter():
 					ax.set_xlabel('$\mathregular{x}$' + LegendText)
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D Position projection of the filaments.\n Color based on average z-position')
-				if ColorBarLength == 1:
+				if ColorBarLength:
 					FilPositions_2DProjectionColobarLength = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -1275,7 +1279,7 @@ class Disperse_Plotter():
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D Position projection of the filaments.\n Color based on the lenght of the filament')
 
-			if IncludeSlicing == 1:
+			if IncludeSlicing:
 				FilamentSliced = plt.figure()
 				ax = FilamentSliced.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.xmax)
@@ -1300,7 +1304,7 @@ class Disperse_Plotter():
 				ax2.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('Sliced segment of the 3D box, with filaments cut off outside of boundary')
 				
-				if Projection2D == 1:
+				if Projection2D:
 					FilPositions_2DProjectionSliced = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -1311,7 +1315,7 @@ class Disperse_Plotter():
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D Position projection sliced box')
 
-				if ColorBarZDir == 1:
+				if ColorBarZDir:
 					FilPositions_2DSlicedProjectionColorBarZDir = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -1323,7 +1327,7 @@ class Disperse_Plotter():
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on average z-position')
 
-				if ColorBarLength == 1:
+				if ColorBarLength:
 					FilPositions_2DSlicedProjectionColorBarLen = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -1335,7 +1339,7 @@ class Disperse_Plotter():
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on filament length')
 
-				if IncludeDMParticles == 1:
+				if IncludeDMParticles:
 					DMParticleHist = plt.figure()
 					plt.hist2d(PartPosX, PartPosY, bins=100)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
@@ -1374,30 +1378,30 @@ class Disperse_Plotter():
 
 
 		if self.savefile == 1:
-			if HistogramPlots == 1:
+			if HistogramPlots:
 				ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + self.ModelFilename)
 				FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + self.ModelFilename)
 				FilamentPtsHis.savefig(self.results_dir + 'FilamentPointsHistogram' + self.ModelFilename)
-			if PlotFilaments == 1:
+			if PlotFilaments:
 				FilPositions.savefig(self.results_dir + 'FilamentPositions' + self.ModelFilename)
-			if PlotFilamentsWCritPts == 1:
+			if PlotFilamentsWCritPts:
 				FilPositions_WCritPts.savefig(self.results_dir + 'FilamentPositionsWithCritPts' + self.ModelFilename)
-			if Projection2D == 1:
+			if Projection2D:
 				FilPositions_2DProjection.savefig(self.results_dir + '2DProjectedFilamentPosition' + self.ModelFilename)
-				if ColorBarZDir == 1:
+				if ColorBarZDir:
 					FilPositions_2DProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionColorBarZDir' + self.ModelFilename)
-				if ColorBarLength == 1:
+				if ColorBarLength:
 					FilPositions_2DProjectionColobarLength.savefig(self.results_dir + '2DProjectionColobarLength' + self.ModelFilename)
-			if IncludeSlicing == 1:
+			if IncludeSlicing:
 				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + self.ModelFilename)
 				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + self.ModelFilename)
-				if Projection2D == 1:
+				if Projection2D:
 					FilPositions_2DProjectionSliced.savefig(self.results_dir + '2DProjectionSliced3dBox' + self.ModelFilename)
-				if ColorBarZDir == 1:
+				if ColorBarZDir:
 					FilPositions_2DSlicedProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionSlicedColobarZDir' + self.ModelFilename)
-				if ColorBarLength == 1:
+				if ColorBarLength:
 					FilPositions_2DSlicedProjectionColorBarLen.savefig(self.results_dir + '2DProjectionSlicedColobarLength' + self.ModelFilename)
-				if IncludeDMParticles == 1:
+				if IncludeDMParticles:
 					if MaskXdir == 0 and MaskYdir == 0 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_ZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_ZMasked' + self.ModelFilename)
@@ -1415,10 +1419,10 @@ class Disperse_Plotter():
 		self.Sort_arrays(ndim)
 		self.BoundaryStuff()
 		#self.Check_boundary()
-		if IncludeSlicing == 1:
+		if IncludeSlicing:
 			self.Mask_slices()
-		if IncludeDMParticles == 1:
-			self.NumParticles_per_filament()
+		#if IncludeDMParticles == 1:
+		#	self.NumParticles_per_filament()
 		
 		if Comparison == 0:
 			if self.savefile == 2:
@@ -1482,10 +1486,16 @@ class Read_solve_files():
 		print 'Read solve file time: ', time.clock() - time_start, 's'
 
 class Histogram_Comparison():
-	def __init__(self, savefile, savefigDirectory, redshift, LCDM=False, SymmA=False, SymmB=False):
+	def __init__(self, savefile, savefigDirectory, redshift):
 		self.savefile = savefile
 		self.ndim = ndim
-		
+		self.LCDM = LCDM
+		self.SymmA = SymmA
+		self.SymmB = SymmB
+
+		self.ParticleComparison = False
+		self.ModelComparison = False
+
 		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
 		if not os.path.isdir(self.results_dir):
 			os.makedirs(self.results_dir)
@@ -1493,27 +1503,47 @@ class Histogram_Comparison():
 		if type(comparison) != str:
 			raise ValueError('Argument comparison must be a string!')
 
+		if LCDM_model == 1 and SymmA_model == 0 and SymmB_model == 0:
+			self.ModelFilename = 'LCDM' + 'z' + str(redshift) + filetype
+			self.ParticleComparison = True
+		elif LCDM_model == 0 and SymmA_model == 1 and SymmB_model == 0:
+			self.ModelFilename = 'SymmA' + 'z' + str(redshift) + filetype
+			self.ParticleComparison = True
+		elif LCDM_model == 0 and SymmA_model == 0 and SymmB_model == 1:
+			self.ModelFilename = 'SymmB' + 'z' + str(redshift) + filetype
+			self.ParticleComparison = True
+		elif LCDM_model == 1 and SymmA_model == 1 and SymmB_model == 0:
+			self.ModelFilename = 'LCDM_SymmB' + 'z' + str(redshift) + filetype
+			self.ModelComparison = True
+		elif LCDM_model == 1 and SymmA_model == 0 and SymmB_model == 1:
+			self.ModelFilename = 'LCDM_SymmB' + 'z' + str(redshift) + filetype
+			self.ModelComparison = True
+		elif LCDM_model == 1 and SymmA_model == 1 and SymmB_model == 0:
+			self.ModelFilename = 'LCDM_SymmB' + 'z' + str(redshift) + filetype
+			self.ModelComparison = True
+		else:
+			raise ValueError('At least one model must be set to compare!')
 
-		
-	def Run(self, NumberConnections, FilamentLengths):
-		if type(NumberConnections) != list:
-			raise ValueError('Argument NumberConnections must be a list!')
-		elif type(FilamentLengths) != list:
-			raise ValueError('Argument FilamentLengths must be a list!')
-		
-		if len(NumberConnections) < 2:
-			raise ValueError('Nothing to compare because NumberConnections has less than two arrays!')
-		elif len(FilamentLengths) < 2:
-			raise ValueError('Nothing to compare because FilamentLengths has less than two arrays!')
+	def Run(self, NumberConnections, FilamentLengths, NPointsPerFilament):
+		if self.ParticleComparison:
+			if type(NumberConnections) != list:
+				raise ValueError('Argument NumberConnections must be a list!')
+			elif type(FilamentLengths) != list:
+				raise ValueError('Argument FilamentLengths must be a list!')
+			
+			if len(NumberConnections) < 2:
+				raise ValueError('Nothing to compare because NumberConnections has less than two arrays!')
+			elif len(FilamentLengths) < 2:
+				raise ValueError('Nothing to compare because FilamentLengths has less than two arrays!')
 
-		if len(NumberConnections) != len(FilamentLengths):
-			raise ValueError('List size of NumberConnections and FilamentLengths must be equal!')
+			if len(NumberConnections) != len(FilamentLengths):
+				raise ValueError('List size of NumberConnections and FilamentLengths must be equal!')
 
-		for i in range(len(NumberConnections)-1):
-			if len(NumberConnections[i+1]) < len(NumberConnections[i]):
-				raise ValueError('List of NumberConnections must be in order to increasing number of particles')
-			elif len(FilamentLengths[i+1]) < len(FilamentLengths[i]):
-				raise ValueError('List of FilamentLengths must be in order to increasing number of particles')
+			for i in range(len(NumberConnections)-1):
+				if len(NumberConnections[i+1]) < len(NumberConnections[i]):
+					raise ValueError('List of NumberConnections must be in order to increasing number of particles')
+				elif len(FilamentLengths[i+1]) < len(FilamentLengths[i]):
+					raise ValueError('List of FilamentLengths must be in order to increasing number of particles')
 		
 		self.NumberConnections = NumberConnections
 		self.FilamentLengths = FilamentLengths
@@ -1528,6 +1558,8 @@ class Histogram_Comparison():
 			self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles']
 		elif self.N == 3:
 			self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles']
+		elif self.N == 4:
+			self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles', '$\mathregular{256^3}$ particles']
 			
 	def Plot_Histograms(self):
 
@@ -1676,8 +1708,8 @@ if __name__ == '__main__':
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
 	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
-	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
-	FilamentColors = 0 			# Set to 1 to get different colors for different filaments
+	Projection2D = 1			# Set to 1 to plot a 2D projection of the 3D case
+	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
 	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
@@ -1712,6 +1744,9 @@ if __name__ == '__main__':
 
 	if IncludeSlicing == 1 and MaskXdir == 0 and MaskYdir == 0 and MaskZdir == 0:
 		raise ValueError('IncludeSlicing set to 1, but all mask direction set to 0. Set at least one of them to 1.')
+
+	if Comparison == 1:
+		print 'Will compare histograms over different models or number of particles.'
 
 	UnitConverter = 256.0 if IncludeUnits == 1 else 1
 	if IncludeSlicing == 1:
@@ -1788,7 +1823,7 @@ if __name__ == '__main__':
 				#PartPosZ = SolveReadInstance.PartPosZ
 
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			
 			#LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
@@ -1797,9 +1832,9 @@ if __name__ == '__main__':
 			
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
 			if Comparison == 1:
-				NumConnections_list = [NConnections_64, NConnections_128]
-				FilLengths_list = [FilLengths_64, FilLengths_128]
-				FilPoints_list = [FilPoints_64, FilPoints_128]
+				NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM]
+				FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM]
+				FilPoints_list = [NPts_64LCDM, NPts_128LCDM ]
 				#Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3,\
 				#					 NumberConnections=NumConnections_list, FilamentLengths=FilLengths_list)
 				ComparisonInstance = Histogram_Comparison2(savefile=0, savefigDirectory=Comparison_dir, ndim=3, model='$\mathregular{\Lambda}$CDM',\
