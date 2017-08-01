@@ -1662,7 +1662,7 @@ class Histogram_Comparison2():
 		#	plt.show()
 
 if __name__ == '__main__':
-	HOMEPC = 0					# Set 1 if working in UiO terminal
+	HOMEPC = 1					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1683,14 +1683,14 @@ if __name__ == '__main__':
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	
 	# Run simulation for different models. Set to 1 to run them. 
-	LCDM_model = 0 
+	LCDM_model = 1 
 	SymmA_model = 0
-	SymmB_model = 1
+	SymmB_model = 0
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
-	SaveAsPNG = 1 				# Set 1 to save figures as PNG
-	SaveAsPDF = 0 				# Set 1 to save figures as PDF
+	SaveAsPNG = 0 				# Set 1 to save figures as PNG
+	SaveAsPDF = 1 				# Set 1 to save figures as PDF
 
 	# Some if tests before the simulation runs
 	if FilamentLimit == 1:
@@ -1709,14 +1709,14 @@ if __name__ == '__main__':
 	if IncludeSlicing == 1:
 		print 'Slicing included'
 		if MaskXdir == 1:
-			LowerBoundaryXDir = 0.45*UnitConverter
-			UpperBoundaryXDir = 0.55*UnitConverter
+			LowerBoundaryXDir = 1*UnitConverter
+			UpperBoundaryXDir = 1*UnitConverter
 		if MaskYdir == 1:
-			LowerBoundaryYDir = 0.45*UnitConverter
-			UpperBoundaryYDir = 0.55*UnitConverter
+			LowerBoundaryYDir = 1*UnitConverter
+			UpperBoundaryYDir = 1*UnitConverter
 		if MaskZdir == 1:
-			LowerBoundaryZDir = 0.45*UnitConverter
-			UpperBoundaryZDir = 0.55*UnitConverter
+			LowerBoundaryZDir = 0.46*UnitConverter
+			UpperBoundaryZDir = 0.54*UnitConverter
 
 	if SaveAsPNG == 1 and SaveAsPDF	== 1:
 		raise ValueError('Cannot save both PDF and PNG at the same time. Only allow one at a time.')
@@ -1738,17 +1738,6 @@ if __name__ == '__main__':
 			#solveInstance1 = Disperse_Plotter(savefile=1, savefigDirectory='Plot_Disperse_Example/', nPart=64)
 			#solveInstance1.Plot("simu_2D.ND.NDnet_s3.up.NDskl.a.NDskl", ndim=2)
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
-			"""
-			LCDM_64Periodic_dir = 'lcdm_z0_testing/LCDM64_Periodic/'
-			LCDM_z0_64Peri = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_64Periodic_dir + 'Plots/', nPart=64, model='LCDM', redshift=0)
-			NConnections_64Peri, FilLengths_64Peri, NPoints_64Peri = LCDM_z0_64Peri.Solve(LCDM_64Periodic_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl',ndim=3)
-			"""
-			"""
-			LCDM_128Periodic_dir = 'lcdm_z0_testing/LCDM128_Periodic/'
-			LCDM_z0_128Peri = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_128Periodic_dir + 'Plots/', nPart=128)
-			NConnections_128Peri, FilLengths_128Peri, NPoints_128Peri =\
-							 LCDM_z0_128Peri.Solve(LCDM_128Periodic_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl',ndim=3)
-			"""
 
 			LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
@@ -1786,28 +1775,14 @@ if __name__ == '__main__':
 				PartPosY = SolveReadInstance.PartPosY
 				PartPosZ = SolveReadInstance.PartPosZ
 
+			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			"""
-			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64Periodic/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
-			NConnections_64, FilLengths_64, FilPoints_64 = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDM64Periodic.a.NDskl', ndim=3)
-			
-			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128Periodic/'
-			LCDM_z0_128Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
-			NConnections_128, FilLengths_128, FilPoints_128 = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128Periodic.a.NDskl', ndim=3)
+			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
+			LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir, nPart=128, model='LCDM', redshift=0)
+			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDMz0128.a.NDskl')
 			"""
-			"""
-			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256Periodic/'
-			LCDM_z0_256Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
-			NConnections_256, FilLengths_256, FilPoints_256 = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDM256Periodic.a.NDskl', ndim=3)
-			
-			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512Periodic/'
-			LCDM_z0_512Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
-			NConnections_512, FilLengths_512, FilPoints_512 = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDM512Periodic.a.NDskl', ndim=3)
-			"""
-			LCDM_z0_64Test2_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
-			NN, FF, FP = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
 			if Comparison == 1:
 				NumConnections_list = [NConnections_64, NConnections_128]
