@@ -8,9 +8,9 @@ from mpl_toolkits.mplot3d import Axes3D
 #from matplotlib.collections import PolyCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import os
-import scipy.stats as stats
+#import scipy.stats as stats
 from matplotlib import colors as mcolors
-from scipy import interpolate
+#from scipy import interpolate
 import time
 
 class Disperse_Plotter():
