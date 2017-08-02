@@ -1887,7 +1887,7 @@ if __name__ == '__main__':
 				#PartPosX = SolveReadInstance.PartPosX
 				#PartPosY = SolveReadInstance.PartPosY
 				#PartPosZ = SolveReadInstance.PartPosZ
-
+			"""
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
@@ -1903,7 +1903,7 @@ if __name__ == '__main__':
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 			LCDM_z0_512Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
 			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
-			"""
+			
 
 			Comparison_dir = 'lcdm_testing/Comparison_plots'
 			if Comparison == 1 and ModelCompare == 0:
