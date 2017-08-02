@@ -1418,8 +1418,8 @@ class Disperse_Plotter():
 
 		else:
 			plt.show()
-			
-		plt.clear('all')
+
+		plt.close('all')
 
 	def Solve(self, filename, ndim=3):
 		self.ReadFile(filename, ndim)
@@ -1634,7 +1634,7 @@ class Histogram_Comparison():
 			print 'Done! No histograms to plot.'
 		else:
 			plt.show()
-
+		plt.close('all')
 
 class Histogram_Comparison2():
 	def __init__(self, savefile, savefigDirectory, ndim, model, Nparticles):
