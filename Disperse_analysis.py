@@ -1080,9 +1080,9 @@ class Disperse_Plotter():
 		print 'Checking number of particles within each filament'
 		self.Particles_per_filament = []
 
-		TempPartPosX = PartPosX
-		TempPartPosY = PartPosY
-		TempPartPosZ = PartPosZ
+		TempPartPosX = self.PartPosX
+		TempPartPosY = self.PartPosY
+		TempPartPosZ = self.PartPosZ
 
 		DistanceThreshold = 0.001*(self.xmax - self.xmin)*UnitConverter
 		for i in range(len(self.zdimMasked)):
@@ -1441,6 +1441,7 @@ class Disperse_Plotter():
 		#self.Check_boundary()
 		if IncludeSlicing:
 			self.Mask_slices()
+			self.Mask_DMParticles()
 		#if IncludeDMParticles == 1:
 		#	self.NumParticles_per_filament()
 		
