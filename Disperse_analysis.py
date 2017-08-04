@@ -492,8 +492,21 @@ class Disperse_Plotter():
 		self.CutOffzDim = np.asarray(self.CutOffzDim)
 		print 'Masking time: ', time.clock() - time_start, 's'
 
+	def Mask_DMParticles(self):
+		""" Computes a mask for the dark matter particles """
+		if MaskZdir and not MaskXdir and not MaskYdir:
+			mask = np.logical_and(ParticlePos[:,2] < UpperBoundaryZDir, ParticlePos[:,2] > LowerBoundaryZDir)
+		elif MaskXdir and not MaskYdir and not MaskZdir:
+			mask = np.logical_and(ParticlePos[:,0] < UpperBoundaryZDir, ParticlePos[:,0] > LowerBoundaryZDir)
+		elif MaskYdir and not MaskXdir and not MaskZdir:
+			mask = np.logical_and(ParticlePos[:,1] < UpperBoundaryZDir, ParticlePos[:,1] > LowerBoundaryZDir)
+		
+		self.PartPosX = ParticlePos[mask,0]
+		self.PartPosY = ParticlePos[mask,1]
+			
 	def BoundaryStuff(self):
 		"""
+		###### CURRENTLY NOT USED BECAUSE THE ALGORITHM IS WRONG #######
 		This function checks whether a filament crosses the boundary or not. 
 		If a filament crosses the boundary, the filament will be split into two/three filaments, i.e different lists/arrays.
 		The algorithm of splitting the filament:
@@ -1346,7 +1359,7 @@ class Disperse_Plotter():
 
 				if IncludeDMParticles:
 					DMParticleHist = plt.figure()
-					plt.hist2d(PartPosX, PartPosY, bins=100)
+					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter density field over a segment of the particle box.')
@@ -1359,7 +1372,7 @@ class Disperse_Plotter():
 					line_segmentsDM = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMap2DCutOff, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsDM)
 					DMParticleHistwFilaments.colorbar(line_segmentsDM)
-					plt.hist2d(PartPosX, PartPosY, bins=100)
+					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.hold("off")
@@ -1374,7 +1387,7 @@ class Disperse_Plotter():
 					line_segmentsDMlen = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsDMlen)
 					DMParticleHistwFilamentsLengthCbar.colorbar(line_segmentsDMlen)
-					plt.hist2d(PartPosX, PartPosY, bins=100)
+					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.hold("off")
@@ -1489,7 +1502,7 @@ class Read_solve_files():
 		#self.PartPosY = np.asarray(self.PartPosY)
 		#self.PartPosZ = np.asarray(self.PartPosZ)
 		self.ParticlePos = np.asarray(self.ParticlePos)
-		mask = np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir)
+		#mask = np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir)
 		print 'Read solve file time: ', time.clock() - time_start, 's'
 
 class Histogram_Comparison():
@@ -1648,6 +1661,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 class Histogram_Comparison2():
+	### Currently unused ###
 	def __init__(self, savefile, savefigDirectory, ndim, model, Nparticles):
 		self.savefile = savefile
 		self.ndim = ndim
@@ -1876,6 +1890,7 @@ if __name__ == '__main__':
 			Nconn_64PartSymmA, FilLen_64PartSymmA, NPts_64PartSymmA = SymmA_z064_instance.Solve(SymmA_z064_directory+'SkelconvOutput_SymmAz064Part.a.NDskl')
 
 		if SymmB_model:
+			print '=== Running for Symm_B model ==='
 			SymmB_z064_directory = 'SymmB_data/SymmB_z0_64Particles/'
 			SymmB_z064_instance = Disperse_Plotter(savefile=1, savefigDirectory=SymmB_z064_directory+'Plots/', nPart=64, model='SymmB', redshift=0)
 			Nconn_64PartSymmB, FilLen_64PartSymmB, NPts_64PartSymmB = SymmB_z064_instance.Solve(SymmB_z064_directory+'SkelconvOutput_SymmBz064Part.a.NDskl')
@@ -1917,22 +1932,22 @@ if __name__ == '__main__':
 			solve_filename = 'lcdm_z0_test.solve'
 			if IncludeDMParticles == 1:
 				SolveReadInstance = Read_solve_files()
-				PartPosX = SolveReadInstance.ParticlePos[:,0]
-				PartPosY = SolveReadInstance.ParticlePos[:,1]
-				PartPosZ = SolveReadInstance.ParticlePos[:,2]
-				
+				#PartPosX = SolveReadInstance.ParticlePos[:,0]
+				#PartPosY = SolveReadInstance.ParticlePos[:,1]
+				#PartPosZ = SolveReadInstance.ParticlePos[:,2]
+				ParticlePos = SolveReadInstance.ParticlePos
 				#PartPosX = SolveReadInstance.PartPosX
 				#PartPosY = SolveReadInstance.PartPosY
 				#PartPosZ = SolveReadInstance.PartPosZ
-			"""
+			
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-			
+			"""
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
 			LCDM_z0_128Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
-			"""
+			
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_256Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
 			NumConn_256LCDM, FilLen_256LCDM, NPts_256LCDM = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl')
@@ -1940,8 +1955,7 @@ if __name__ == '__main__':
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 			LCDM_z0_512Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
 			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
-			
-
+			"""
 			Comparison_dir = 'lcdm_testing/Comparison_plots'
 			if Comparison == 1 and ModelCompare == 0:
 				NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM] # , NumConn_256LCDM, NumConn_512LCDM]
