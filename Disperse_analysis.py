@@ -1493,7 +1493,7 @@ class Read_solve_files():
 		print 'Read solve file time: ', time.clock() - time_start, 's'
 
 class Histogram_Comparison():
-	def __init__(self, savefile, savefigDirectory, redshift, LCDM=False, SymmA=False, SymmB=False):
+	def __init__(self, savefile, savefigDirectory, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
 		self.savefile = savefile
 		self.LCDM_check = LCDM
 		self.SymmA_check = SymmA
@@ -1501,6 +1501,7 @@ class Histogram_Comparison():
 
 		self.ParticleComparison = False
 		self.ModelComparison = False
+		self.SigmaComparison = False
 
 		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
 		if not os.path.isdir(self.results_dir):
@@ -1529,8 +1530,12 @@ class Histogram_Comparison():
 		else:
 			raise ValueError('At least one model must be set to compare!')
 
-	def Run(self, NumberConnections, FilamentLengths, NPointsPerFilament, nPart=False):
+		if nsigComparison:
+			self.ModelComparison = 0
+			self.ParticleComparison = 0
+			self.SigmaComparison = 1
 
+	def Run(self, NumberConnections, FilamentLengths, NPointsPerFilament, nPart=False):
 		if not nPart:
 			self.ModelFilename += filetype
 		elif nPart == 64:
@@ -1555,12 +1560,15 @@ class Histogram_Comparison():
 		if len(NumberConnections) != len(FilamentLengths):
 			raise ValueError('List size of NumberConnections and FilamentLengths must be equal!')
 
-		for i in range(len(NumberConnections)-1):
-			if len(NumberConnections[i+1]) < len(NumberConnections[i]):
-				raise ValueError('List of NumberConnections must be in order to increasing number of particles')
-			elif len(FilamentLengths[i+1]) < len(FilamentLengths[i]):
-				raise ValueError('List of FilamentLengths must be in order to increasing number of particles')
-		
+		if not self.SigmaComparison:
+			for i in range(len(NumberConnections)-1):
+				if len(NumberConnections[i+1]) < len(NumberConnections[i]):
+					raise ValueError('List of NumberConnections must be in order to increasing number of particles')
+				elif len(FilamentLengths[i+1]) < len(FilamentLengths[i]):
+					raise ValueError('List of FilamentLengths must be in order to increasing number of particles')
+				elif len(NPointsPerFilament[i+1]) < len(NPointsPerFilament[i]):
+					raise ValueError('List of Number of points per filament must be in order to increasing number of particles')
+				
 
 		self.NumberConnections = NumberConnections
 		self.FilamentLengths = FilamentLengths
@@ -1573,14 +1581,14 @@ class Histogram_Comparison():
 
 
 	def Check_Number_Comparisons(self):
-		if self.ParticleComparison == 1:
+		if self.ParticleComparison:
 			if self.N == 2:
 				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles']
 			elif self.N == 3:
 				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles']
 			elif self.N == 4:
 				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles', '$\mathregular{256^3}$ particles']
-		elif self.ModelComparison == 1:
+		elif self.ModelComparison:
 			self.LegendText = []
 			if self.LCDM_check:
 				self.LegendText.append('LCDM')
@@ -1588,6 +1596,9 @@ class Histogram_Comparison():
 				self.LegendText.append('Symm_A')
 			if self.SymmB_check:
 				self.LegendText.append('Symm_B')
+		elif self.SigmaComparison:
+			self.LegendText = ['$\mathregular{\sigma=3}$', '$\mathregular{\sigma=4}$', '$\mathregular{\sigma=5}$']
+
 
 	def Plot_Histograms_particleComparison(self):
 		alphas = [0.3, 0.4, 0.5, 0.6]
@@ -1744,7 +1755,7 @@ class Histogram_Comparison2():
 		#	plt.show()
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1762,8 +1773,10 @@ if __name__ == '__main__':
 
 	# Histogram plots
 	HistogramPlots = 1			# Set to 1 to plot histograms
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
+	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 
@@ -1772,8 +1785,8 @@ if __name__ == '__main__':
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
-	SaveAsPNG = 0 				# Set 1 to save figures as PNG
-	SaveAsPDF = 1 				# Set 1 to save figures as PDF
+	SaveAsPNG = 1 				# Set 1 to save figures as PNG
+	SaveAsPDF = 0 				# Set 1 to save figures as PDF
 
 	# Some if tests before the simulation runs
 	if FilamentLimit == 1:
@@ -1831,44 +1844,68 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_2D.ND.NDnet_s3.up.NDskl.a.NDskl", ndim=2)
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
-			LCDM_z0_64Test2_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Test2Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64Test2_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
-			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Test2Instance.Solve(LCDM_z0_64Test2_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-
+			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+			if SigmaComparison:
+				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0)
+				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0)
+				NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
+				NConn_nsig5, FilLen_nsig5, NPts_nsig5 = LCDM_nsig5Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig5.a.NDskl')
+				
 			Comparison_dir = 'lcdm_z0_testing/Comparison_plots/'
 			if Comparison == 1 and ModelCompare == 0:
-				NumConnections_list = [NConnections_64Peri, NConnections_128Peri]
-				FilLengths_list = [FilLengths_64Peri, FilLengths_128Peri]
-				FilPoints_list = [NPoints_64Peri, NPoints_128Peri]
-				Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, ndim=3, NumberConnections=NumConnections_list,\
-									 FilamentLengths=FilLengths_list)
-		if SymmA_model == 1:
+				if SigmaComparison:
+					NumConnections_list = [NConn_64PartLCDM, NConn_nsig4, NConn_nsig5]
+					FilLengths_list = [FilLen_64PartLCDM, FilLen_nsig4, FilLen_nsig5]
+					FilPoints_list = [NPts_64PartLCDM, NPts_nsig4, NPts_nsig5]
+					Histogram_instance = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir+'SigmaComparisons/',\
+									 redshift=0, LCDM=1, nsigComparison=1)
+					Histogram_instance.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=64)
+				else:
+					NumConnections_list = [NConnections_64Peri, NConnections_128Peri]
+					FilLengths_list = [FilLengths_64Peri, FilLengths_128Peri]
+					FilPoints_list = [NPoints_64Peri, NPoints_128Peri]
+					Histogram_instance = Histogram_Comparison(savefile=0, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
+					Histogram_instance.Run(NumConnections_list, FilLengths_list, FilPoints_list)
+
+		if SymmA_model:
 			print '=== Running for Symm_A model ==='
 			SymmA_z064_directory = 'SymmA_data/SymmA_z0_64Particles/'
 			SymmA_z064_instance = Disperse_Plotter(savefile=1, savefigDirectory=SymmA_z064_directory+'Plots/', nPart=64, model='SymmA', redshift=0)
 			Nconn_64PartSymmA, FilLen_64PartSymmA, NPts_64PartSymmA = SymmA_z064_instance.Solve(SymmA_z064_directory+'SkelconvOutput_SymmAz064Part.a.NDskl')
 
-		if SymmB_model == 1:
+		if SymmB_model:
 			SymmB_z064_directory = 'SymmB_data/SymmB_z0_64Particles/'
 			SymmB_z064_instance = Disperse_Plotter(savefile=1, savefigDirectory=SymmB_z064_directory+'Plots/', nPart=64, model='SymmB', redshift=0)
 			Nconn_64PartSymmB, FilLen_64PartSymmB, NPts_64PartSymmB = SymmB_z064_instance.Solve(SymmB_z064_directory+'SkelconvOutput_SymmBz064Part.a.NDskl')
 
-		ModelComparisonDir = 'Model_comparisons/'
-		ModelsFolder = ''
-		if LCDM_model:
-			ModelsFolder += 'LCDM'
-		if SymmA_model:
-			ModelsFolder += 'SymmA'
-		if SymmB_model:
-			ModelsFolder += 'SymmB'
+		if ModelCompare:
+			if LCDM and not SymmA and not SymmB:
+				raise ValueError('Only LCDM model is ticked on. Cannot compare models if SymmA and/or SymmB is ticked as well')
 
-		NumConnectionsModels_list = [NConn_64PartLCDM, Nconn_64PartSymmA, Nconn_64PartSymmB]
-		FilLengthsModels_list = [FilLen_64PartLCDM, FilLen_64PartSymmA, FilLen_64PartSymmB]
-		FilPointsModels_list = [NPts_64PartLCDM, NPts_64PartSymmA, NPts_64PartSymmB]
+			elif not LCDM and SymmA and not SymmB:
+				raise ValueError('Only SymmA model is ticked on. Cannot compare models if LCDM and/or SymmB is ticked as well')
 
-		ModelCompareInstance = Histogram_Comparison(savefile=1, savefigDirectory=ModelComparisonDir+ModelsFolder+'Plots/', redshift=0,\
-						LCDM=LCDM_model, SymmA=SymmA_model, SymmB=SymmB_model)
-		ModelCompareInstance.Run(NumConnectionsModels_list, FilLengthsModels_list, FilPointsModels_list, 64)
+			elif not LCDM and not SymmA and SymmB:
+				raise ValueError('Only SymmB model is ticked on. Cannot compare models if LCDM and/or SymmA is ticked as well')
+
+			ModelComparisonDir = 'Model_comparisons/'
+			ModelsFolder = ''
+			if LCDM_model:
+				ModelsFolder += 'LCDM'
+			if SymmA_model:
+				ModelsFolder += 'SymmA'
+			if SymmB_model:
+				ModelsFolder += 'SymmB'
+
+			NumConnectionsModels_list = [NConn_64PartLCDM, Nconn_64PartSymmA, Nconn_64PartSymmB]
+			FilLengthsModels_list = [FilLen_64PartLCDM, FilLen_64PartSymmA, FilLen_64PartSymmB]
+			FilPointsModels_list = [NPts_64PartLCDM, NPts_64PartSymmA, NPts_64PartSymmB]
+
+			ModelCompareInstance = Histogram_Comparison(savefile=1, savefigDirectory=ModelComparisonDir+ModelsFolder+'Plots/', redshift=0,\
+							LCDM=LCDM_model, SymmA=SymmA_model, SymmB=SymmB_model)
+			ModelCompareInstance.Run(NumConnectionsModels_list, FilLengthsModels_list, FilPointsModels_list, 64)
 
 	if HOMEPC == 1:
 		file_directory = '/mn/stornext/d5/aleh'
