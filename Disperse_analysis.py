@@ -1441,6 +1441,7 @@ class Disperse_Plotter():
 		#self.Check_boundary()
 		if IncludeSlicing:
 			self.Mask_slices()
+		if IncludeSlicing and IncludeDMParticles:
 			self.Mask_DMParticles()
 		#if IncludeDMParticles == 1:
 		#	self.NumParticles_per_filament()
