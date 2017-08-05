@@ -1773,24 +1773,24 @@ if __name__ == '__main__':
 	HOMEPC = 1					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
-	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
+	FilamentLimit = 100			# Limits the number of lines read from file. Reads all if 0
 	PlotFilaments = 1			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
 	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 0			# Set to 1 to plot histograms
+	HistogramPlots = 1			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1882,7 +1882,7 @@ if __name__ == '__main__':
 					FilLengths_list = [FilLengths_64Peri, FilLengths_128Peri]
 					FilPoints_list = [NPoints_64Peri, NPoints_128Peri]
 					Histogram_instance = Histogram_Comparison(savefile=0, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
-					Histogram_instance.Run(NumConnections_list, FilLengths_list, FilPoints_list)
+					Histogram_instance.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=64)
 
 		if SymmA_model:
 			print '=== Running for Symm_A model ==='
@@ -1940,11 +1940,11 @@ if __name__ == '__main__':
 				#PartPosX = SolveReadInstance.PartPosX
 				#PartPosY = SolveReadInstance.PartPosY
 				#PartPosZ = SolveReadInstance.PartPosZ
-			
+			"""
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-			"""
+			
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
 			LCDM_z0_128Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
@@ -1952,18 +1952,31 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_256Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
 			NumConn_256LCDM, FilLen_256LCDM, NPts_256LCDM = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl')
-			
-			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
-			LCDM_z0_512Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
-			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
 			"""
+			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
+			LCDM_z0_512Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
+			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
+			if SigmaComparison:
+				LCDM512_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Sigma4/', nPart=512, model='LCDM', redshift=0)
+				LCDM512_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Sigma5/', nPart=512, model='LCDM', redshift=0)
+				NConn_512nsig4, FilLen_512nsig4, NPts_512nsig4 =LCDM512_instance_nsig4.Solve(LCDM_z0_512_dir+'Sigma4/SkelconvOutput_LCDMz0512_nsig4.a.NDskl')
+				NConn_512nsig5, FilLen_512nsig5, NPts_512nsig5 =LCDM512_instance_nsig5.Solve(LCDM_z0_512_dir+'Sigma5/SkelconvOutput_LCDMz0512_nsig5.a.NDskl')
+				
 			Comparison_dir = 'lcdm_testing/Comparison_plots'
 			if Comparison == 1 and ModelCompare == 0:
-				NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM] # , NumConn_256LCDM, NumConn_512LCDM]
-				FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM] #, FilLen_256LCDM, FilLen_512LCDM]
-				FilPoints_list = [NPts_64LCDM, NPts_128LCDM] #, NPts_256LCDM, NPts_512LCDM]
-				ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
-				ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list)
+				if SigmaComparison:
+					NumConnections_list = [NumConn_512LCDM, NConn_512nsig4, NConn_512nsig5]
+					FilLengths_list = [FilLen_512LCDM, FilLen_512nsig4, FilLen_512nsig5]
+					FilPoints_list = [NPts_512LCDM, NPts_512nsig4, NPts_512nsig5]
+					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, redshift=0, LCDM=1, nsigComparison=1)
+					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
+				else:
+					NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM] # , NumConn_256LCDM, NumConn_512LCDM]
+					FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM] #, FilLen_256LCDM, FilLen_512LCDM]
+					FilPoints_list = [NPts_64LCDM, NPts_128LCDM] #, NPts_256LCDM, NPts_512LCDM]
+					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
+					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
+					
 				"""
 				ComparisonInstance = Histogram_Comparison2(savefile=0, savefigDirectory=Comparison_dir, ndim=3, model='$\mathregular{\Lambda}$CDM',\
 													 Nparticles=[64, 128])
