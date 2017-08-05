@@ -1789,7 +1789,7 @@ if __name__ == '__main__':
 
 	# Histogram plots
 	HistogramPlots = 1			# Set to 1 to plot histograms
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
@@ -1969,7 +1969,8 @@ if __name__ == '__main__':
 					NumConnections_list = [NumConn_512LCDM, NConn_512nsig4, NConn_512nsig5]
 					FilLengths_list = [FilLen_512LCDM, FilLen_512nsig4, FilLen_512nsig5]
 					FilPoints_list = [NPts_512LCDM, NPts_512nsig4, NPts_512nsig5]
-					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, redshift=0, LCDM=1, nsigComparison=1)
+					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir+'SigmaComparisons/',\
+										 redshift=0, LCDM=1, nsigComparison=1)
 					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
 				else:
 					NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM] # , NumConn_256LCDM, NumConn_512LCDM]
