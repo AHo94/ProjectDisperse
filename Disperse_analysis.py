@@ -165,6 +165,9 @@ class Disperse_Plotter():
 						#PartVelY.append(float(data_set[4]))
 						#PartVelZ.append(float(data_set[5]))
 		"""
+		self.PartPosX = np.asarray(self.PartPosX)
+		self.PartPosY = np.asarray(self.PartPosY)
+		self.PartPosZ = np.asarray(self.PartPosZ)
 		datafiles.close()
 
 	def Sort_arrays(self, dimensions):
@@ -284,10 +287,10 @@ class Disperse_Plotter():
 					ytemp.append(yPos)
 					ztemp.append(zPos)		
 				self.NFilamentPoints.append(int(Filstuff[-1]))
-				self.FilamentPos.append(np.asarray(TempPositions))
-				self.xdimPos.append(np.asarray(xtemp))
-				self.ydimPos.append(np.asarray(ytemp))
-				self.zdimPos.append(np.asarray(ztemp))
+				self.FilamentPos.append(np.array(TempPositions))
+				self.xdimPos.append(np.array(xtemp))
+				self.ydimPos.append(np.array(ytemp))
+				self.zdimPos.append(np.array(ztemp))
 				k += int(Filstuff[-1])+1
 
 				if FilamentLimit != 0:
@@ -295,12 +298,12 @@ class Disperse_Plotter():
 						self.NFils = len(self.xdimPos)
 						break
 
-		self.FilamentPos = np.asarray(self.FilamentPos)
-		self.NFilamentPoints = np.asarray(self.NFilamentPoints)
-		self.xdimPos = np.asarray(self.xdimPos)
-		self.ydimPos = np.asarray(self.ydimPos)
+		self.FilamentPos = np.array(self.FilamentPos)
+		self.NFilamentPoints = np.array(self.NFilamentPoints)
+		self.xdimPos = np.array(self.xdimPos)
+		self.ydimPos = np.array(self.ydimPos)
 		if dimensions == 3:
-			self.zdimPos = np.asarray(self.zdimPos)
+			self.zdimPos = np.array(self.zdimPos)
 
 		print 'Array sorting time: ', time.clock() - time_start, 's'
 
@@ -319,7 +322,6 @@ class Disperse_Plotter():
 		self.CutOffFilamentSegments = []
 		self.CutOffzDim = []
 		self.CutOffLengths = []
-
 		# Mask Z direction only
 		if MaskZdir == 1 and MaskXdir == 0 and MaskYdir == 0:
 			for i in range(len(self.zdimPos)):
@@ -335,7 +337,7 @@ class Disperse_Plotter():
 					zDimTemp = []
 					for idx in Indices:
 						zDimTemp.append(self.zdimPos[i][idx])
-						FilSegmentTemp.append([self.xdimPos[i][idx], self.ydimPos[i][idx]])
+						FilSegmentTemp.append(np.array([self.xdimPos[i][idx], self.ydimPos[i][idx]]))
 					self.CutOffFilamentSegments.append(FilSegmentTemp)
 					self.CutOffzDim.append(zDimTemp)
 					TempLen = 0
@@ -514,6 +516,7 @@ class Disperse_Plotter():
 		
 		self.PartPosX = ParticlePos[mask,0]
 		self.PartPosY = ParticlePos[mask,1]
+		self.PartPosZ = ParticlePos[mask,2]
 			
 	def BoundaryStuff(self):
 		"""
@@ -818,7 +821,6 @@ class Disperse_Plotter():
 				t_variable = (BoxBoundary - P1[0])/(P2[0] - P1[0] - self.BoxSize)
 				y_coord = P1[1] + (P2[1] - P1[1])*t_variable
 				z_coord = P1[2] + (P2[2] - P1[2])*t_variable
-				print y_coord, z_coord, P1[0], P2[0]
 				return y_coord, z_coord
 			elif boundary_dir == 'y':
 				t_variable = (BoxBoundary - P1[1])/(P2[1] - P1[1] - self.BoxSize)
@@ -894,7 +896,7 @@ class Disperse_Plotter():
 							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
 							xyTemp.append(np.array([Xpoint, self.ymin]))
 							xTemp.append(Xpoint)
-							xTemp.append(self.ymin)
+							yTemp.append(self.ymin)
 							zTemp.append(Zpoint)
 							xyNewTemp.append(np.array([Xpoint, self.ymax]))
 							xNewTemp.append(Xpoint)
@@ -917,7 +919,7 @@ class Disperse_Plotter():
 							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
 							xyTemp.append(np.array([Xpoint, Ypoint]))
 							xTemp.append(Xpoint)
-							xTemp.append(Ypoint)
+							yTemp.append(Ypoint)
 							zTemp.append(self.zmin)
 							xyNewTemp.append(np.array([Xpoint, Ypoint]))
 							xNewTemp.append(Xpoint)
@@ -972,7 +974,7 @@ class Disperse_Plotter():
 							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
 							xyNewTemp.append(np.array([Xpoint, self.ymin]))
 							xNewTemp.append(Xpoint)
-							xNewTemp.append(self.ymin)
+							yNewTemp.append(self.ymin)
 							zNewTemp.append(Zpoint)
 							xyNewTemp2.append(np.array([Xpoint, self.ymax]))
 							xNewTemp2.append(Xpoint)
@@ -995,7 +997,7 @@ class Disperse_Plotter():
 							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
 							xyNewTemp.append(np.array([Xpoint, Ypoint]))
 							xNewTemp.append(Xpoint)
-							xNewTemp.append(Ypoint)
+							yNewTemp.append(Ypoint)
 							zNewTemp.append(self.zmin)
 							xyNewTemp2.append(np.array([Xpoint, Ypoint]))
 							xNewTemp2.append(Xpoint)
@@ -1018,6 +1020,7 @@ class Disperse_Plotter():
 					yNewTemp2.append(self.ydimPos[i][j])
 					zNewTemp2.append(self.zdimPos[i][j])
 
+				# Check if boundary has been crossed
 				if xDiff > 0.5*self.BoxSize:
 					if SplitFilament == 1:
 						SplitFilament = 2
@@ -1034,6 +1037,7 @@ class Disperse_Plotter():
 					SplitFilament += 1
 					zBoundary = 1
 
+			# Adds final points to the positions
 			if SplitFilament == 0:
 				xyTemp.append(np.asarray([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
 				xTemp.append(self.xdimPos[i][-1])
@@ -1049,6 +1053,25 @@ class Disperse_Plotter():
 				xNewTemp2.append(self.xdimPos[i][-1])
 				yNewTemp2.append(self.ydimPos[i][-1])
 				zNewTemp2.append(self.zdimPos[i][-1])
+
+			# Adds positions to temporary arrays
+			if len(zTemp) > 1:
+				FilPosTemp.append(xyTemp)
+				xPosTemp.append(xTemp)
+				yPosTemp.append(yTemp)
+				zPosTemp.append(zTemp)
+			if SplitFilament == 1:
+				if len(zNewTemp) > 1:
+					FilPosTemp.append(xyNewTemp)
+					xPosTemp.append(xNewTemp)
+					yPosTemp.append(yNewTemp)
+					zPosTemp.append(zNewTemp)
+			if SplitFilament == 2:
+				if len(zNewTemp2) > 1:
+					FilPosTemp.append(xyNewTemp2)
+					xPosTemp.append(xNewTemp2)
+					yPosTemp.append(yNewTemp2)
+					zPosTemp.append(zNewTemp2)
 
 			TempLength = 0
 			if len(zTemp) > 1:
@@ -1080,6 +1103,7 @@ class Disperse_Plotter():
 		self.zdimPos = np.asarray(zPosTemp)
 		self.LengthSplitFilament = np.asarray(self.LengthSplitFilament)
 		self.FilLengths = np.asarray(self.FilLengths)
+
 		print 'Boundary check time:', time.clock() - time_start, 's'
 
 	def NumParticles_per_filament(self):
@@ -1095,7 +1119,21 @@ class Disperse_Plotter():
 		TempPartPosY = self.PartPosY
 		TempPartPosZ = self.PartPosZ
 
-		DistanceThreshold = 0.001*(self.xmax - self.xmin)*UnitConverter
+		DistanceThreshold = 0.001*(self.xmax - self.xmin)
+		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
+		DM_tree = spatial.KDTree(DM_points[0])
+
+		for i in range(len(self.zdimMasked)):
+			PartCount = 0
+			Fil_pts = np.dstack((np.array(self.MaskedFilamentSegments[i])[:,0].ravel(), np.array(self.MaskedFilamentSegments[i])[:,1].ravel(), self.zdimMasked[i]))
+			Fil_tree = spatial.KDTree(Fil_pts[0])
+			nearest_pts = DM_tree.query_ball_tree(Fil_tree, DistanceThreshold)
+			for j in nearest_pts:
+				if not len(j) == 0:
+					PartCount += len(j)
+			self.Particles_per_filament.append(PartCount)
+
+		"""
 		for i in range(len(self.zdimMasked)):
 			PartCount = 0
 			for j in range(len(self.zdimMasked[i])):
@@ -1116,18 +1154,7 @@ class Disperse_Plotter():
 				#TempPartPosZ = np.delete(TempPartPosZ, index)
 			self.Particles_per_filament.append(PartCount)
 		"""
-		for i in range(len(self.FilamentPos)):
-			PartCount = 0
-			for j in range(len(PartPosX)):
-				for k in range(len(self.FilamentPos[i])):
-					PointDistance = np.sqrt((self.xdimPos[i][k] - TempPartPosX[j])**2 + (self.ydimPos[i][k] - TempPartPosY[j])**2 + (self.zdimPos[i][k] - TempPartPosZ[j])**2)
-					if PointDistance < DistanceThreshold:
-						PartCount += 1
 
-						break
-					else:
-						continue
-		"""
 		self.Particles_per_filament = np.asarray(self.Particles_per_filament)
 		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
 
@@ -1448,8 +1475,8 @@ class Disperse_Plotter():
 	def Solve(self, filename, ndim=3):
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)
-		self.BoundaryStuff()
-		#self.Check_boundary()
+		#self.BoundaryStuff()
+		self.Check_boundary()
 		if IncludeSlicing:
 			self.Mask_slices()
 		if IncludeSlicing and IncludeDMParticles:
