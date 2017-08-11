@@ -12,6 +12,7 @@ import os
 from matplotlib import colors as mcolors
 #from scipy import interpolate
 import time
+from scipy import spatial
 
 class Disperse_Plotter():
 	"""
@@ -19,7 +20,7 @@ class Disperse_Plotter():
 	If provided, it will also analyse the dark matter particles.
 	Note that this class only solves for one model at a time. 
 	"""
-	def __init__(self, savefile, savefigDirectory, nPart, model, redshift):
+	def __init__(self, savefile, savefigDirectory, nPart, model, redshift, SigmaArg=False):
 		self.savefile = savefile
 		self.PlotChecker = 0
 		self.nPart = nPart
@@ -54,6 +55,13 @@ class Disperse_Plotter():
 			self.ModelFilename = 'SymmB' + 'z' + str(redshift) + filetype
 		else:
 			raise ValueError('Model name not properly set')
+
+		self.SigmaTitle = ''
+		if SigmaComparison:
+			if not SigmaArg:
+				self.SigmaTitle = '\mathregular{\sigma} = 3'
+			else:
+				self.SigmaTitle = '\mathregular{\sigma} = ' + str(SigmaArg)
 
 	def ReadFile(self, filename, dimensions):
 		""" Reads the data from the skeleton file from Disperse """
@@ -117,7 +125,7 @@ class Disperse_Plotter():
 		#datafiles = open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r')
 		self.PartPosX = []
 		self.PartPosY = []
-		PartPosZ = []
+		self.PartPosZ = []
 		
 		PartVelX = []
 		PartVelY = []
@@ -126,16 +134,19 @@ class Disperse_Plotter():
 		with open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r') as datafiles:
 			next(datafiles)
 			for line in datafiles:
-				if MaskZdir == 1:
+				data_set = line.split()
+				if MaskZdir and not MaskYdir and not MaskXdir:
 					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						selt.PartPosY.append(float(data_set[1])*UnitConverter)
+						self.PartPosY.append(float(data_set[1])*UnitConverter)
+						self.PartPosZ.append(float(data_set[2])*UnitConverter)
 				elif MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir\
 					and float(data_set[1])*UnitConverter > LowerBoundaryYDir and float(data_set[1])*UnitConverter < UpperBoundaryYDir\
 					and float(data_set[0])*UnitConverter > LowerBoundaryXDir and float(data_set[0])*UnitConverter < UpperBoundaryXDir:
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						selt.PartPosY.append(float(data_set[1])*UnitConverter)
+						self.PartPosY.append(float(data_set[1])*UnitConverter)
+						self.PartPosZ.append(float(data_set[2])*UnitConverter)
 
 		"""
 		SkipFirstLine = 0
@@ -1200,18 +1211,18 @@ class Disperse_Plotter():
 			plt.ylabel('Number of occurances')
 			plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
 			#plt.xticks(self.NFilamentPoints)
-			"""
+			
 			if IncludeDMParticles == 1:
 				NPartFilBinMin = np.min(self.Particles_per_filament)
 				NPartFilBinMax = np.max(self.Particles_per_filament)
 				BinSize_NPartFil = (NPartFilBinMax - NPartFilBinMin)/(0.5) + 1
 				BinList_NPartFil = np.linspace(NPartFilBinMin, NPartFilBinMax, BinSize_NPartFil)
 				NumParticlesFilamentHist = plt.figure()
-				plt.hist(self.Particles_per_filament, align='left', rwidth=1, bins=BinList_NPartFil, normed=NormedArgument)
+				plt.hist(self.Particles_per_filament, align='left', rwidth=1, bins=600, normed=NormedArgument)
 				plt.xlabel('Number of particles per filament')
 				plt.ylabel('Number of occurances')
 				plt.title('Histogram of number of particles per filament with ' + self.nPart_text + '$\mathregular{^3}$ particles')
-			"""
+			
 			
 		if ndim == 2:
 			if PlotFilaments:
@@ -1297,7 +1308,7 @@ class Disperse_Plotter():
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D Position projection of the filaments.\n Color based on the lenght of the filament')
 
-			if IncludeSlicing:
+			if IncludeSlicing and PlotFilaments:
 				FilamentSliced = plt.figure()
 				ax = FilamentSliced.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.xmax)
@@ -1442,7 +1453,9 @@ class Disperse_Plotter():
 		if IncludeSlicing:
 			self.Mask_slices()
 		if IncludeSlicing and IncludeDMParticles:
-			self.Mask_DMParticles()
+			self.Read_SolveFile()
+			#self.Mask_DMParticles()
+			self.NumParticles_per_filament()
 		#if IncludeDMParticles == 1:
 		#	self.NumParticles_per_filament()
 		
@@ -1789,9 +1802,9 @@ if __name__ == '__main__':
 
 	# Histogram plots
 	HistogramPlots = 1			# Set to 1 to plot histograms
-	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1823,6 +1836,7 @@ if __name__ == '__main__':
 		print 'Will compare histograms over different models or number of particles.'
 
 	UnitConverter = 256.0 if IncludeUnits == 1 else 1
+	### Slice selection can be chosen here
 	if IncludeSlicing == 1:
 		print 'Slicing included'
 		if MaskXdir == 1:
@@ -1834,8 +1848,8 @@ if __name__ == '__main__':
 			UpperBoundaryYDir = 1*UnitConverter
 			print 'Masking Y direction'
 		if MaskZdir == 1:
-			LowerBoundaryZDir = 0.46*UnitConverter
-			UpperBoundaryZDir = 0.54*UnitConverter
+			LowerBoundaryZDir = 0.47*UnitConverter
+			UpperBoundaryZDir = 0.53*UnitConverter
 			print 'Masking Z direction'
 
 	if SaveAsPNG == 1 and SaveAsPDF	== 1:
@@ -1864,8 +1878,8 @@ if __name__ == '__main__':
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			if SigmaComparison:
-				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0)
-				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0)
+				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
+				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
 				NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				NConn_nsig5, FilLen_nsig5, NPts_nsig5 = LCDM_nsig5Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig5.a.NDskl')
 				
@@ -1932,6 +1946,7 @@ if __name__ == '__main__':
 			print '=== Running for the LCDM model ==='
 			solve_file_dir = '/lcdm_testing/'
 			solve_filename = 'lcdm_z0_test.solve'
+			"""
 			if IncludeDMParticles == 1:
 				SolveReadInstance = Read_solve_files()
 				#PartPosX = SolveReadInstance.ParticlePos[:,0]
@@ -1942,10 +1957,11 @@ if __name__ == '__main__':
 				#PartPosY = SolveReadInstance.PartPosY
 				#PartPosZ = SolveReadInstance.PartPosZ
 			"""
-			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
-			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			
+			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+			"""
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
 			LCDM_z0_128Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
@@ -1953,13 +1969,14 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_256Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
 			NumConn_256LCDM, FilLen_256LCDM, NPts_256LCDM = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl')
-			"""
+			
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 			LCDM_z0_512Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
 			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
+			"""
 			if SigmaComparison:
-				LCDM512_instance_nsig4 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Sigma4/', nPart=512, model='LCDM', redshift=0)
-				LCDM512_instance_nsig5 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Sigma5/', nPart=512, model='LCDM', redshift=0)
+				LCDM512_instance_nsig4 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Sigma4/', nPart=512, model='LCDM', redshift=0, SigmaArg=4)
+				LCDM512_instance_nsig5 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Sigma5/', nPart=512, model='LCDM', redshift=0, SigmaArg=5)
 				NConn_512nsig4, FilLen_512nsig4, NPts_512nsig4 =LCDM512_instance_nsig4.Solve(LCDM_z0_512_dir+'Sigma4/SkelconvOutput_LCDMz0512_nsig4.a.NDskl')
 				NConn_512nsig5, FilLen_512nsig5, NPts_512nsig5 =LCDM512_instance_nsig5.Solve(LCDM_z0_512_dir+'Sigma5/SkelconvOutput_LCDMz0512_nsig5.a.NDskl')
 				
