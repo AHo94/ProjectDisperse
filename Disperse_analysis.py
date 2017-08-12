@@ -1438,6 +1438,8 @@ class Disperse_Plotter():
 				ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + self.ModelFilename)
 				FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + self.ModelFilename)
 				FilamentPtsHis.savefig(self.results_dir + 'FilamentPointsHistogram' + self.ModelFilename)
+				if IncludeDMParticles:
+					NumParticlesFilamentHist.savefig(self.results_dir + 'NumParticlesPerFilament' + self.ModelFilename)
 			if PlotFilaments:
 				FilPositions.savefig(self.results_dir + 'FilamentPositions' + self.ModelFilename)
 			if PlotFilamentsWCritPts:
