@@ -1448,7 +1448,7 @@ class Disperse_Plotter():
 					FilPositions_2DProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionColorBarZDir' + self.ModelFilename)
 				if ColorBarLength:
 					FilPositions_2DProjectionColobarLength.savefig(self.results_dir + '2DProjectionColobarLength' + self.ModelFilename)
-			if IncludeSlicing:
+			if IncludeSlicing and PlotFilaments:
 				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + self.ModelFilename)
 				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + self.ModelFilename)
 				if Projection2D:
@@ -1986,7 +1986,7 @@ if __name__ == '__main__':
 			"""
 			
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			"""
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
