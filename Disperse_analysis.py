@@ -1499,9 +1499,14 @@ class Disperse_Plotter():
 class Read_solve_files():
 	def __init__(self):
 		self.read_solvefile()
+		self.Create_Mask()
+		self.Create_KDTree()
 
 	def read_solvefile(self):
-		""" Reads the .solve file which contains dark matter particle positions and velocities """
+		""" 
+		Reads the .solve file which contains dark matter particle positions and velocities
+		Saves all the particles which is later masked
+		"""
 		time_start = time.clock()
 		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
 		self.PartPosX = []
@@ -1521,33 +1526,30 @@ class Read_solve_files():
 				#self.PartPosX.append(float(data_set[0])*UnitConverter)
 				#self.PartPosY.append(float(data_set[1])*UnitConverter)
 				#self.PartPosZ.append(float(data_set[2])*UnitConverter)
-				"""
-				if MaskXdir == 0 and MaskYdir == 0 and MaskZdir == 1:
-					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
-						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						self.PartPosY.append(float(data_set[1])*UnitConverter)
-						self.PartPosZ.append(float(data_set[2])*UnitConverter)
-				elif MaskXdir == 0 and MaskYdir == 1 and MaskZdir == 1:
-					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir\
-					and float(data_set[1])*UnitConverter > LowerBoundaryYDir and float(data_set[1])*UnitConverter < UpperBoundaryYDir:
-						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						self.PartPosY.append(float(data_set[1])*UnitConverter)
-						self.PartPosZ.append(float(data_set[2])*UnitConverter)
-				elif MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
-					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir\
-					and float(data_set[1])*UnitConverter > LowerBoundaryYDir and float(data_set[1])*UnitConverter < UpperBoundaryYDir\
-					and float(data_set[0])*UnitConverter > LowerBoundaryXDir and float(data_set[0])*UnitConverter < UpperBoundaryXDir:
-						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						self.PartPosY.append(float(data_set[1])*UnitConverter)
-						self.PartPosZ.append(float(data_set[2])*UnitConverter)
-				"""
-
+			
 		#self.PartPosX = np.asarray(self.PartPosX)
 		#self.PartPosY = np.asarray(self.PartPosY)
 		#self.PartPosZ = np.asarray(self.PartPosZ)
 		self.ParticlePos = np.asarray(self.ParticlePos)
 		#mask = np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir)
 		print 'Read solve file time: ', time.clock() - time_start, 's'
+
+	def Create_Mask(self):
+		""" Creates a mask for the dark matter particles """
+		if not MaskXdir and not MaskYdir and MaskZdir:
+			self.mask = np.logical_and(ParticlePos[:,2] < UpperBoundaryZDir, ParticlePos[:,2] > LowerBoundaryZDir)
+		elif not MaskXdir and MaskYdir and not MaskZdir:
+			self.mask = np.logical_and(ParticlePos[:,0] < UpperBoundaryXDir, ParticlePos[:,0] > LowerBoundaryXDir)
+		elif not MaskYdir and MaskYdir and not MaskZdir:
+			self.mask = np.logical_and(ParticlePos[:,1] < UpperBoundaryYDir, ParticlePos[:,1] > LowerBoundaryYDir)
+		
+	def Create_KDTree(self):
+		""" Creates a KDTree of the masked dark matter particles """
+		self.PartPosX = self.ParticlePos[:,0]
+		self.PartPosY = self.ParticlePos[:,1]
+		self.PartPosZ = self.ParticlePos[:,1]
+		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
+		self.DM_tree = spatial.KDTree(DM_points[0])
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
