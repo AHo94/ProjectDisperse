@@ -1269,12 +1269,28 @@ class Read_solve_files():
 			self.mask = np.logical_and(ParticlePos[:,0] < UpperBoundaryXDir, ParticlePos[:,0] > LowerBoundaryXDir)
 		elif not MaskYdir and MaskYdir and not MaskZdir:
 			self.mask = np.logical_and(ParticlePos[:,1] < UpperBoundaryYDir, ParticlePos[:,1] > LowerBoundaryYDir)
-		
+		elif MaskXdir and not MaskYdir and MaskZdir:
+			self.mask = np.logical_and(np.logical_and(ParticlePos[:,2] < UpperBoundaryZDir, ParticlePos[:,2] > LowerBoundaryZDir),\
+									   np.logical_and(ParticlePos[:,0] < UpperBoundaryXDir, ParticlePos[:,0] > LowerBoundaryXDir))
+		elif MaskXdir and MaskYdir and not MaskZdir:
+			self.mask = np.logical_and(np.logical_and(ParticlePos[:,1] < UpperBoundaryYDir, ParticlePos[:,1] > LowerBoundaryYDir),\
+									   np.logical_and(ParticlePos[:,0] < UpperBoundaryXDir, ParticlePos[:,0] > LowerBoundaryXDir))
+		elif not MaskXdir and MaskYdir and MaskZdir:
+			self.mask = np.logical_and(np.logical_and(ParticlePos[:,2] < UpperBoundaryZDir, ParticlePos[:,2] > LowerBoundaryZDir),\
+									   np.logical_and(ParticlePos[:,1] < UpperBoundaryYDir, ParticlePos[:,1] > LowerBoundaryYDir))
+		else:
+			self.mask = False
+
 	def Create_KDTree(self):
 		""" Creates a KDTree of the masked dark matter particles """
-		self.PartPosX = self.ParticlePos[:,0]
-		self.PartPosY = self.ParticlePos[:,1]
-		self.PartPosZ = self.ParticlePos[:,1]
+		if self.mask:
+			self.PartPosX = self.ParticlePos[self.mask,0]
+			self.PartPosY = self.ParticlePos[self.mask,1]
+			self.PartPosZ = self.ParticlePos[self.mask,1]
+		else:
+			self.PartPosX = self.ParticlePos[:,0]
+			self.PartPosY = self.ParticlePos[:,1]
+			self.PartPosZ = self.ParticlePos[:,1]
 		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
 		self.DM_tree = spatial.KDTree(DM_points[0])
 
@@ -1434,7 +1450,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1525,7 +1541,7 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
