@@ -1120,8 +1120,8 @@ class Disperse_Plotter():
 		TempPartPosZ = self.PartPosZ
 
 		DistanceThreshold = 0.001*(self.xmax - self.xmin)
-		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
-		DM_tree = spatial.KDTree(DM_points[0])
+		#DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
+		#DM_tree = spatial.KDTree(DM_points[0])
 
 		for i in range(len(self.zdimMasked)):
 			PartCount = 0
@@ -1703,114 +1703,6 @@ class Histogram_Comparison():
 		else:
 			plt.show()
 		plt.close('all')
-
-class Histogram_Comparison2():
-	### Currently unused ###
-	def __init__(self, savefile, savefigDirectory, ndim, model, Nparticles):
-		self.savefile = savefile
-		self.ndim = ndim
-		self.model = model
-		self.Nparticles = Nparticles
-		self.alphas = [0.4, 0.5, 0.6, 0.7]
-		
-		if type(Nparticles) != list:
-			raise ValueError('Argument Nparticles must be a list!')
-		if type(model) != str:
-			raise ValueError('Argument model must be a string!')
-
-		if self.ndim == 2:
-			self.self.ModelFilename = '2D.png'
-		elif self.ndim == 3:
-			self.self.ModelFilename = '3D.png'
-		else:
-			raise ValueError('ndim less than 2 or greater than 3!')
-		print 'Plotting histogram comparisons'
-
-		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
-		if not os.path.isdir(self.results_dir):
-			os.makedirs(self.results_dir)
-
-		self.Check_Number_Comparisons()
-
-	def Check_Number_Comparisons(self):
-		self.LegendText = []
-		for particles in self.Nparticles:
-			if particles == 64:
-				self.LegendText.append('$\mathregular{64^3}$ particles')
-			elif particles == 128:
-				self.LegendText.append('$\mathregular{128^3}$ particles')
-			elif particles == 256:
-				self.LegendText.append('$\mathregular{256^3}$ particles')
-			elif particles == 512:
-				self.LegendText.append('$\mathregular{512^3}$ particles')
-			else:
-				raise ValueError('Invalid argument: particles = ' + str(particles))
-
-	def Plot_Filament_Connections(self, histograms):
-		ConnectedHistComparison = plt.figure()
-		plt.hold("on")
-		for i in range(len(histograms)):
-			NumMin = min(histograms[i])
-			NumMax = max(histograms[i])
-			BinSize = (NumMax - NumMin)/(0.5) + 1
-			Bin_list = np.linspace(NumMin, NumMax, BinSize)
-			plt.hist(histograms[i], align='mid', rwidth=1, bins=50, normed=True, alpha=self.alphas[i])
-		plt.xlabel('Number of connected filaments')
-		plt.legend(self.LegendText)
-		plt.title('Comparison of number of connected points for the model: ' + self.model)
-		if self.savefile == 1:
-			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison' + self.self.ModelFilename)
-		
-	def Plot_Filament_Lengths(self, histograms):
-		LengthHistComparison = plt.figure()
-		plt.hold("on")
-		for i in range(len(histograms)):
-			plt.hist(histograms[i], align='mid', rwidth=1, bins=600, normed=True, alpha=self.alphas[i], histtype='step')
-		plt.xlabel('Filament lengths')
-		plt.ylabel('Number of occurances')
-		plt.legend(self.LegendText)
-		plt.title('Comparison of filament lengths for the model: ' + self.model)
-		if self.savefile == 1:
-			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison' + self.self.ModelFilename)
-
-	def Plot_Filament_Points(self, histograms):
-		FilPointsHistComparison = plt.figure()
-		plt.hold("on")
-		for i in range(len(histograms)):
-			NumMin = min(histograms[i])
-			NumMax = max(histograms[i])
-			BinSize = (NumMax - NumMin)/(0.5) + 1
-			Bin_list = np.linspace(NumMin, NumMax, BinSize)
-			#fit = stats.norm.pdf(sorted(histograms[i]), np.mean(sorted(histograms[i])), np.std(sorted(histograms[i])))
-			#plt.plot(sorted(histograms[i]), fit)
-			plt.hist(histograms[i], align='mid', rwidth=1, bins=Bin_list, normed=True, alpha=self.alphas[i])
-		plt.xlabel('Number of points in a filament')
-		plt.legend(self.LegendText)
-		plt.title('Comparison of number of points in a filament for model: ' + self.model)
-		if self.savefile == 1:
-			FilPointsHistComparison.savefig(self.results_dir + 'HisFilamentPointsComparison' + self.self.ModelFilename)
-
-	def Solve(self, FilamentProperty, FilamentPropertyList):
-		if len(FilamentPropertyList) < 2:
-			raise ValueError('Less than two histograms to compare! Stopping program.')
-
-		if FilamentProperty == 'Connections':
-			self.Plot_Filament_Connections(FilamentPropertyList)
-		elif FilamentProperty == 'Lengths':
-			self.Plot_Filament_Lengths(FilamentPropertyList)
-		elif FilamentProperty == 'FilamentPoints':
-			self.Plot_Filament_Points(FilamentPropertyList)
-		else:
-			print 'Arguments not properly set! Try the following (arguments must be string):'
-			print "FilamentProperty = 'Connections'"
-			print "FilamentProperty = 'Lengths'"
-			print "FilamentProperty = 'FilamentPoints'"
-			return
-
-		if self.savefile == 2:
-			print 'Done! Nothing saved.'
-		#else:
-		#	plt.show()
 
 if __name__ == '__main__':
 	HOMEPC = 1					# Set 1 if working in UiO terminal
