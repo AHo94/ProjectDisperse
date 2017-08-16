@@ -121,6 +121,7 @@ class Disperse_Plotter():
 		print 'Time elapsed for filament data reading: ', time.clock() - time_start, 's'
 
 	def Read_SolveFile(self):
+		time_start = time.clock()
 		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
 		#datafiles = open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r')
 		self.PartPosX = []
@@ -169,6 +170,7 @@ class Disperse_Plotter():
 		self.PartPosY = np.asarray(self.PartPosY)
 		self.PartPosZ = np.asarray(self.PartPosZ)
 		datafiles.close()
+		print 'Read solve file time: ', time.clock() - time_start, 's'
 
 	def Sort_arrays(self, dimensions):
 		""" 
@@ -849,7 +851,8 @@ class Disperse_Plotter():
 		DistanceThreshold = 0.001*(self.xmax - self.xmin)
 		#DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
 		#DM_tree = spatial.KDTree(DM_points[0])
-
+		print np.array(self.MaskedFilamentSegments[0])[:,0].ravel()
+		print self.zdimMasked[0]
 		for i in range(len(self.zdimMasked)):
 			PartCount = 0
 			Fil_pts = np.dstack((np.array(self.MaskedFilamentSegments[i])[:,0].ravel(), np.array(self.MaskedFilamentSegments[i])[:,1].ravel(), self.zdimMasked[i]))
@@ -1253,6 +1256,7 @@ class Read_solve_files():
 				#self.PartPosX.append(float(data_set[0])*UnitConverter)
 				#self.PartPosY.append(float(data_set[1])*UnitConverter)
 				#self.PartPosZ.append(float(data_set[2])*UnitConverter)
+				
 			
 		#self.PartPosX = np.asarray(self.PartPosX)
 		#self.PartPosY = np.asarray(self.PartPosY)
@@ -1264,35 +1268,38 @@ class Read_solve_files():
 	def Create_Mask(self):
 		""" Creates a mask for the dark matter particles """
 		if not MaskXdir and not MaskYdir and MaskZdir:
-			self.mask = np.logical_and(ParticlePos[:,2] < UpperBoundaryZDir, ParticlePos[:,2] > LowerBoundaryZDir)
+			self.mask = np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir)
 		elif not MaskXdir and MaskYdir and not MaskZdir:
-			self.mask = np.logical_and(ParticlePos[:,0] < UpperBoundaryXDir, ParticlePos[:,0] > LowerBoundaryXDir)
+			self.mask = np.logical_and(self.ParticlePos[:,0] < UpperBoundaryXDir, self.ParticlePos[:,0] > LowerBoundaryXDir)
 		elif not MaskYdir and MaskYdir and not MaskZdir:
-			self.mask = np.logical_and(ParticlePos[:,1] < UpperBoundaryYDir, ParticlePos[:,1] > LowerBoundaryYDir)
+			self.mask = np.logical_and(self.ParticlePos[:,1] < UpperBoundaryYDir, self.ParticlePos[:,1] > LowerBoundaryYDir)
 		elif MaskXdir and not MaskYdir and MaskZdir:
-			self.mask = np.logical_and(np.logical_and(ParticlePos[:,2] < UpperBoundaryZDir, ParticlePos[:,2] > LowerBoundaryZDir),\
-									   np.logical_and(ParticlePos[:,0] < UpperBoundaryXDir, ParticlePos[:,0] > LowerBoundaryXDir))
+			self.mask = np.logical_and(np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir),\
+									   np.logical_and(self.ParticlePos[:,0] < UpperBoundaryXDir, self.ParticlePos[:,0] > LowerBoundaryXDir))
 		elif MaskXdir and MaskYdir and not MaskZdir:
-			self.mask = np.logical_and(np.logical_and(ParticlePos[:,1] < UpperBoundaryYDir, ParticlePos[:,1] > LowerBoundaryYDir),\
-									   np.logical_and(ParticlePos[:,0] < UpperBoundaryXDir, ParticlePos[:,0] > LowerBoundaryXDir))
+			self.mask = np.logical_and(np.logical_and(self.ParticlePos[:,1] < UpperBoundaryYDir, self.ParticlePos[:,1] > LowerBoundaryYDir),\
+									   np.logical_and(self.ParticlePos[:,0] < UpperBoundaryXDir, self.ParticlePos[:,0] > LowerBoundaryXDir))
 		elif not MaskXdir and MaskYdir and MaskZdir:
-			self.mask = np.logical_and(np.logical_and(ParticlePos[:,2] < UpperBoundaryZDir, ParticlePos[:,2] > LowerBoundaryZDir),\
-									   np.logical_and(ParticlePos[:,1] < UpperBoundaryYDir, ParticlePos[:,1] > LowerBoundaryYDir))
+			self.mask = np.logical_and(np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir),\
+									   np.logical_and(self.ParticlePos[:,1] < UpperBoundaryYDir, self.ParticlePos[:,1] > LowerBoundaryYDir))
 		else:
 			self.mask = False
 
 	def Create_KDTree(self):
 		""" Creates a KDTree of the masked dark matter particles """
-		if self.mask:
+		time_start = time.clock()
+		if self.mask is not False:
 			self.PartPosX = self.ParticlePos[self.mask,0]
 			self.PartPosY = self.ParticlePos[self.mask,1]
-			self.PartPosZ = self.ParticlePos[self.mask,1]
+			self.PartPosZ = self.ParticlePos[self.mask,2]
 		else:
 			self.PartPosX = self.ParticlePos[:,0]
 			self.PartPosY = self.ParticlePos[:,1]
 			self.PartPosZ = self.ParticlePos[:,1]
+
 		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
 		self.DM_tree = spatial.KDTree(DM_points[0])
+		print 'Dark matter particle KDTRee creation time: ', time.clock() - time_start, 's'
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
@@ -1450,7 +1457,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 if __name__ == '__main__':
-	HOMEPC = 0					# Set 1 if working in UiO terminal
+	HOMEPC = 1					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1618,10 +1625,10 @@ if __name__ == '__main__':
 				#PartPosX = SolveReadInstance.ParticlePos[:,0]
 				#PartPosY = SolveReadInstance.ParticlePos[:,1]
 				#PartPosZ = SolveReadInstance.ParticlePos[:,2]
-				ParticlePos = SolveReadInstance.ParticlePos
-				#PartPosX = SolveReadInstance.PartPosX
-				#PartPosY = SolveReadInstance.PartPosY
-				#PartPosZ = SolveReadInstance.PartPosZ
+				#ParticlePos = SolveReadInstance.ParticlePos
+				PartPosX = SolveReadInstance.PartPosX
+				PartPosY = SolveReadInstance.PartPosY
+				PartPosZ = SolveReadInstance.PartPosZ
 			"""
 			
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
