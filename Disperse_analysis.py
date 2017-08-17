@@ -1426,7 +1426,7 @@ class Histogram_Comparison():
 		LengthHistComparison = plt.figure()
 		plt.hold("on")
 		for i in range(self.N):
-			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=600, normed=True, histtype='step')
+			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=400, normed=True, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
 		plt.legend(self.LegendText)
