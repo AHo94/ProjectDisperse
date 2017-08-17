@@ -1,6 +1,6 @@
 ### Set comment on the two below to plot. Only use if running on papsukal, nekkar etc. 
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -1163,6 +1163,7 @@ class Disperse_Plotter():
 
 
 		if self.savefile == 1:
+			print '--- SAVING IN: ', self.results_dir, ' ---'
 			if HistogramPlots:
 				ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + self.ModelFilename)
 				FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + self.ModelFilename)
@@ -1299,6 +1300,86 @@ class Read_solve_files():
 		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
 		self.DM_tree = spatial.KDTree(DM_points[0])
 		print 'Dark matter particle KDTRee creation time: ', time.clock() - time_start, 's'
+
+class Read_Gadget_file():
+	def __init__(self):
+		self.read_file()
+		self.Create_Mask()
+
+	def read_file(self):
+		""" 
+		Reads the gadget files from RAMSES 
+		Code by Bridget Falck
+		"""
+		numfiles = 512
+		nparticles = 512
+		datadir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/lcdm/z0.000/data/gadgetfiles/'
+		filename = datadir+'gadget.'
+
+		self.PartPos = np.empty((nparticles**3,3),np.float32)
+		self.PartVel = np.empty((nparticles**3,3),np.float32)
+		self.PartIDs = np.empty((nparticles**3),np.int32)
+		istart = 0
+		for i in np.arange(0, numfiles):
+		    file=filename+str(i)
+		    f=open(file, 'rb')
+		    
+		    header_size = np.fromfile(f,np.int32,1)[0] # = 256: error catch here?
+		    numpart = np.fromfile(f,np.int32,6)
+		    npart = numpart[1] # number of particles in this file
+		    mass = np.fromfile(f,np.float64,6)
+		    pmass = mass[1] # in units of 10^10 solar masses?
+		    scalefact,redshift = np.fromfile(f,np.float64,2)
+		    flag_sfr,flag_feedback = np.fromfile(f,np.int32,2)
+		    numpart_tot = np.fromfile(f,np.int32,6)
+		    ntotal = numpart_tot[1]
+		    flag_cooling,num_files = np.fromfile(f,np.int32,2)
+		    boxsize,omega0,omegal,hubble = np.fromfile(f,np.float64,4)
+		    flag_stellarage,flag_metals,hashtabsize = np.fromfile(f,np.int32,3)
+		    # read rest of header_size + 2 dummy integers:
+		    dummy = np.fromfile(f,np.int32,23)
+		    
+		    thispos = np.fromfile(f,np.float32,3*npart)
+		    thispos = np.reshape(thispos, [npart, 3])
+		    
+		    # read velocities
+		    dummy = np.fromfile(f,np.int32,2)
+		    thisvel = np.fromfilef,np.float32,3*npart)
+		    thisvel = np.reshape(thisvel, [npart, 3])
+
+		    # read IDs
+		    dummy = np.fromfile(f,np.int32,2)
+		    thisID = np.fromfile(f,np.int32,npart)
+		    f.close()
+		    
+		    self.PartPos[istart:(istart+npart),:] = thispos
+		    self.PartVel[istart:(istart+npart),:] = thisvel
+		    self.PartIDs[istart:(istart+npart)] = thisID
+
+		    istart = istart + npart
+
+		print 'finished reading particles'
+
+	def Create_Mask(self):
+		""" Creates a mask for the dark matter particles """
+		if not MaskXdir and not MaskYdir and MaskZdir:
+			self.mask = np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir)
+		elif not MaskXdir and MaskYdir and not MaskZdir:
+			self.mask = np.logical_and(self.ParticlePos[:,0] < UpperBoundaryXDir, self.ParticlePos[:,0] > LowerBoundaryXDir)
+		elif not MaskYdir and MaskYdir and not MaskZdir:
+			self.mask = np.logical_and(self.ParticlePos[:,1] < UpperBoundaryYDir, self.ParticlePos[:,1] > LowerBoundaryYDir)
+		elif MaskXdir and not MaskYdir and MaskZdir:
+			self.mask = np.logical_and(np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir),\
+									   np.logical_and(self.ParticlePos[:,0] < UpperBoundaryXDir, self.ParticlePos[:,0] > LowerBoundaryXDir))
+		elif MaskXdir and MaskYdir and not MaskZdir:
+			self.mask = np.logical_and(np.logical_and(self.ParticlePos[:,1] < UpperBoundaryYDir, self.ParticlePos[:,1] > LowerBoundaryYDir),\
+									   np.logical_and(self.ParticlePos[:,0] < UpperBoundaryXDir, self.ParticlePos[:,0] > LowerBoundaryXDir))
+		elif not MaskXdir and MaskYdir and MaskZdir:
+			self.mask = np.logical_and(np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir),\
+									   np.logical_and(self.ParticlePos[:,1] < UpperBoundaryYDir, self.ParticlePos[:,1] > LowerBoundaryYDir))
+		else:
+			self.mask = False
+
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
@@ -1457,7 +1538,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1550,6 +1631,12 @@ if __name__ == '__main__':
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+
+
+			LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
+			LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
+			NConn_128PartLCDM, FilLen_128PartLCDM, NPts_128PartLCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
+
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
@@ -1566,11 +1653,11 @@ if __name__ == '__main__':
 									 redshift=0, LCDM=1, nsigComparison=1)
 					Histogram_instance.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=64)
 				else:
-					NumConnections_list = [NConnections_64Peri, NConnections_128Peri]
-					FilLengths_list = [FilLengths_64Peri, FilLengths_128Peri]
-					FilPoints_list = [NPoints_64Peri, NPoints_128Peri]
-					Histogram_instance = Histogram_Comparison(savefile=0, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
-					Histogram_instance.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=64)
+					NumConnections_list = [NConn_64PartLCDM, NConn_128PartLCDM]
+					FilLengths_list = [FilLen_64PartLCDM, FilLen_128PartLCDM]
+					FilPoints_list = [NPts_64PartLCDM, NPts_128PartLCDM]
+					Histogram_instance = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
+					Histogram_instance.Run(NumConnections_list, FilLengths_list, FilPoints_list)
 
 		if SymmA_model:
 			print '=== Running for Symm_A model ==='
