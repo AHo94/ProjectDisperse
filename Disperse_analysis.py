@@ -1,6 +1,6 @@
 ### Set comment on the two below to plot. Only use if running on papsukal, nekkar etc. 
-#import matplotlib
-#matplotlib.use('Agg')
+import matplotlib
+matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -887,6 +887,27 @@ class Disperse_Plotter():
 		self.Particles_per_filament = np.asarray(self.Particles_per_filament)
 		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
 
+	def NumParticles_per_filament_v2(self):
+		""" 
+		Checks the number of dark matter filaments per filament.
+		The allowed distance between a particle and filament is arbitrarily chosen.
+		"""
+		time_start = time.clock()
+		print 'Checking number of particles within each filament'
+		self.Particles_per_filament = []
+
+		TempPartPosX = PartPosX
+		TempPartPosY = PartPosY
+		TempPartPosZ = PartPosZ
+
+		DistanceThreshold = 0.001*(self.xmax - self.xmin)
+		for i in range(self.NFils-1):
+			for j in range(self.xdimPos[i]):
+				SegmentLen = np.sqrt((self.xdimPos[i][j+1] - self.xdimPos[i][j])**2 + (self.ydimPos[i][j+1] - self.ydimPos[i][j])**2 \
+									+ (self.zdimPos[i][j+1] - self.zdimPos[i][j])**2)
+
+		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
+
 	def Filament_Length(self, dimensions):
 		""" Computes the length of the filament """
 		print 'Computing filament lengths'
@@ -902,7 +923,6 @@ class Disperse_Plotter():
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
 		print 'Plotting'
-
 		if Comparison:
 			#NormedArgument = True
 			NormedArgument = False
@@ -1135,6 +1155,10 @@ class Disperse_Plotter():
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter density field over a segment of the particle box.')
 
+					ONEDHistX = plt.figure()
+					plt.hist(self.PartPosX, bins=100)
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+
 					DMParticleHistwFilaments = plt.figure()
 					plt.hold("on")
 					ax = plt.axes()
@@ -1197,6 +1221,7 @@ class Disperse_Plotter():
 					if MaskXdir == 0 and MaskYdir == 0 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_ZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_ZMasked' + self.ModelFilename)
+						ONEDHistX.savefig(self.results_dir + 'DMParticle1DHistogramXposition' + self.ModelFilename)
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
@@ -1215,11 +1240,12 @@ class Disperse_Plotter():
 		self.Check_boundary()
 		if IncludeSlicing:
 			self.Mask_slices()
+			#self.Mask_slices_vectorized()
 		"""
 		if IncludeSlicing and IncludeDMParticles and not Comparison:
 			self.Read_SolveFile()
 			#self.Mask_DMParticles()
-			self.NumParticles_per_filament()
+			#self.NumParticles_per_filament()
 		"""
 		
 		if Comparison == 0:
@@ -1360,11 +1386,12 @@ class Read_Gadget_file():
 		    self.PartPos[istart:(istart+npart),:] = thispos
 		    self.PartVel[istart:(istart+npart),:] = thisvel
 		    self.PartIDs[istart:(istart+npart)] = thisID
-
 		    istart = istart + npart
 
 		print 'finished reading particles, '
+		self.PartPos = self.PartPos/1000.0
 
+		
 	def Create_Mask(self):
 		""" Creates a mask for the dark matter particles """
 		if not MaskXdir and not MaskYdir and MaskZdir:
@@ -1386,9 +1413,9 @@ class Read_Gadget_file():
 			self.mask = False
 
 		if self.mask is not False:
-			self.PartPosX = self.PartPos[self.mask,0]/1000.0
-			self.PartPosY = self.PartPos[self.mask,1]/1000.0
-			self.PartPosZ = self.PartPos[self.mask,2]/1000.0
+			self.PartPosX = self.PartPos[self.mask,0]
+			self.PartPosY = self.PartPos[self.mask,1]
+			self.PartPosZ = self.PartPos[self.mask,2]
 		else:
 			self.PartPosX = self.PartPos[:,0]
 			self.PartPosY = self.PartPos[:,1]
@@ -1489,7 +1516,7 @@ class Histogram_Comparison():
 			elif self.N == 3:
 				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles']
 			elif self.N == 4:
-				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles', '$\mathregular{256^3}$ particles']
+				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles', '$\mathregular{512^3}$ particles']
 		elif self.ModelComparison:
 			self.LegendText = []
 			if self.LCDM_check:
@@ -1503,7 +1530,8 @@ class Histogram_Comparison():
 
 
 	def Plot_Histograms_particleComparison(self):
-		alphas = [0.3, 0.4, 0.5, 0.6]
+		#alphas = [0.3, 0.4, 0.5, 0.6]
+		alphas = [0.6, 0.5, 0.4, 0.3]
 		ConnectedHistComparison = plt.figure()
 		plt.hold("on")
 		for i in range(self.N):
@@ -1569,7 +1597,7 @@ if __name__ == '__main__':
 
 	# Histogram plots
 	HistogramPlots = 0			# Set to 1 to plot histograms
-	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
@@ -1730,16 +1758,15 @@ if __name__ == '__main__':
 				PartPosX = SolveReadInstance.PartPosX
 				PartPosY = SolveReadInstance.PartPosY
 				PartPosZ = SolveReadInstance.PartPosZ
-			
-			
+
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-			
+			"""
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
 			LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
-			"""
+			
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_256Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
 			NumConn_256LCDM, FilLen_256LCDM, NPts_256LCDM = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl')
@@ -1764,10 +1791,10 @@ if __name__ == '__main__':
 										 redshift=0, LCDM=1, nsigComparison=1)
 					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
 				else:
-					NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM ]#, NumConn_256LCDM, NumConn_512LCDM]
-					FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM]#, FilLen_256LCDM, FilLen_512LCDM]
-					FilPoints_list = [NPts_64LCDM, NPts_128LCDM]#, NPts_256LCDM, NPts_512LCDM]
-					ComparisonInstance_LCDM = Histogram_Comparison(savefile=0, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
+					NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM , NumConn_256LCDM, NumConn_512LCDM]
+					FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM, FilLen_256LCDM, FilLen_512LCDM]
+					FilPoints_list = [NPts_64LCDM, NPts_128LCDM, NPts_256LCDM, NPts_512LCDM]
+					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
 					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list)
 					
 				"""
