@@ -344,7 +344,7 @@ class Disperse_Plotter():
 					self.CutOffzDim.append(zDimTemp)
 					TempLen = 0
 					for j in range(len(zDimTemp)-1):
-						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2 + (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
 								 + (zDimTemp[j+1] - zDimTemp[j])**2)
 					self.CutOffLengths.append(TempLen)
 
@@ -368,7 +368,7 @@ class Disperse_Plotter():
 					self.CutOffzDim.append(zDimTemp)
 					TempLen = 0
 					for j in range(len(zDimTemp)-1):
-						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2 + (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
 								 + (zDimTemp[j+1] - zDimTemp[j])**2)
 					self.CutOffLengths.append(TempLen)
 		# Mask Y direction only		
@@ -391,7 +391,7 @@ class Disperse_Plotter():
 					self.CutOffzDim.append(zDimTemp)
 					TempLen = 0
 					for j in range(len(zDimTemp)-1):
-						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2 + (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
 								 + (zDimTemp[j+1] - zDimTemp[j])**2)
 					self.CutOffLengths.append(TempLen)
 
@@ -417,7 +417,7 @@ class Disperse_Plotter():
 					self.CutOffzDim.append(zDimTemp)
 					TempLen = 0
 					for j in range(len(zDimTemp)-1):
-						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2 + (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
 								 + (zDimTemp[j+1] - zDimTemp[j])**2)
 					self.CutOffLengths.append(TempLen)
 		# Mask Y and Z direction
@@ -442,7 +442,7 @@ class Disperse_Plotter():
 					self.CutOffzDim.append(zDimTemp)
 					TempLen = 0
 					for j in range(len(zDimTemp)-1):
-						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2 + (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
 								 + (zDimTemp[j+1] - zDimTemp[j])**2)
 					self.CutOffLengths.append(TempLen)
 		# Mask X and Z direction
@@ -467,7 +467,7 @@ class Disperse_Plotter():
 					self.CutOffzDim.append(zDimTemp)
 					TempLen = 0
 					for j in range(len(zDimTemp)-1):
-						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2 + (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
 								 + (zDimTemp[j+1] - zDimTemp[j])**2)
 					self.CutOffLengths.append(TempLen)
 		# Mask all directions
@@ -495,7 +495,7 @@ class Disperse_Plotter():
 					self.CutOffzDim.append(zDimTemp)
 					TempLen = 0
 					for j in range(len(zDimTemp)-1):
-						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2+ (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+						TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2 + (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
 								 + (zDimTemp[j+1] - zDimTemp[j])**2)
 					self.CutOffLengths.append(TempLen)
 
@@ -1248,7 +1248,7 @@ class Disperse_Plotter():
 			#self.NumParticles_per_filament()
 		"""
 		
-		if Comparison == 0:
+		if not Comparison or not SigmaComparison:
 			if self.savefile == 2:
 				print 'Done! No files saved.'
 			else:
@@ -1464,6 +1464,8 @@ class Histogram_Comparison():
 			self.ParticleComparison = 0
 			self.SigmaComparison = 1
 
+			self.ModelFilename += 'SigmaCompare'
+
 	def Run(self, NumberConnections, FilamentLengths, NPointsPerFilament, nPart=False):
 		if not nPart:
 			self.ModelFilename += filetype
@@ -1505,7 +1507,6 @@ class Histogram_Comparison():
 
 		self.N = len(self.NumberConnections)
 		self.Check_Number_Comparisons()
-		#if self.ParticleComparison:
 		self.Plot_Histograms_particleComparison()
 
 
@@ -1578,6 +1579,60 @@ class Histogram_Comparison():
 			plt.show()
 		plt.close('all')
 
+	def Convergence_tests(self, Nconnections, FilLengths, NptsPerFilament):
+		if len(Nconnections) != len(FilLengths) or len(Nconnections) != len(NPointsPerFilament) or len(FilLengths) != len(NPointsPerFilament):
+			raise ValueError('Lists containing the histograms are not of equal length!')
+
+		alpas = [0.65, 0.6, 0.55, 0.5, 0.45, 0.4]
+		Legends = ['$\mathregular{\sigma=5}, 64^3$ part', '$\mathregular{\sigma=4}, 64^3$ part', '$\mathregular{\sigma=3}, 64^3$ part'\
+					'$\mathregular{\sigma=5}, 512^3$ part', '$\mathregular{\sigma=4}, 512^3$ part', '$\mathregular{\sigma=3}, 512^3$ part']
+		N = len(Nconnections)
+		ConnectedHistComparison = plt.figure()
+		plt.hold("on")
+		for i in range(N):
+			DataMin = min(Nconnections[i])
+			DataMax = max(Nconnections[i])
+			BinSize = (DataMax - DataMin)/(0.5) + 1
+			BinList = np.linspace(DataMin, DataMax, BinSize)
+			plt.hist(Nconnections[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
+		plt.xlabel('Number of connected filaments')
+		plt.ylabel('Number of occurances')
+		plt.legend(Legends)
+		plt.hold("off")
+
+		LengthHistComparison = plt.figure()
+		plt.hold("on")
+		for i in range(N):
+			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
+		plt.xlabel('Filament lengths')
+		plt.ylabel('Number of occurances')
+		plt.legend(LegendText)
+		plt.hold("off")
+
+		NPointsHistComparison = plt.figure()
+		plt.hold("on")
+		for i in range(N):
+			DataMin = min(NptsPerFilament[i])
+			DataMax = max(NptsPerFilament[i])
+			BinSize = (DataMax - DataMin)/(0.5) + 1
+			BinList = np.linspace(DataMin, DataMax, BinSize)
+			plt.hist(NptsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
+		plt.xlabel('Number of points per filament')
+		plt.ylabel('Number of occurances')
+		plt.legend(LegendText)
+		plt.hold("off")
+
+		if self.savefile == 1:
+			print '--- SAVING IN: ', self.results_dir, ' ---'
+			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison_64and512Part' + self.ModelFilename)
+			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison_64and512Part' + self.ModelFilename)
+			NPointsHistComparison.savefig(self.results_dir + 'HistNPointsComparison_64and512Part' + self.ModelFilename)
+		elif self.savefile == 2:
+			print 'Done! No histograms to plot.'
+		else:
+			plt.show()
+		plt.close('all')
+
 if __name__ == '__main__':
 	HOMEPC = 1					# Set 1 if working in UiO terminal
 
@@ -1589,7 +1644,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1599,7 +1654,7 @@ if __name__ == '__main__':
 	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1760,7 +1815,7 @@ if __name__ == '__main__':
 				PartPosZ = SolveReadInstance.PartPosZ
 
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			"""
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
@@ -1770,12 +1825,17 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_256Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
 			NumConn_256LCDM, FilLen_256LCDM, NPts_256LCDM = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl')
-			
+			"""
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 			LCDM_z0_512Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
 			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
-			"""
+			
 			if SigmaComparison:
+				LCDM64_instance_nsig4 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
+				LCDM64_instance_nsig5 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
+				NConn_64nsig4, FilLen_64nsig4, NPts_64nsig4 =LCDM64_instance_nsig4.Solve(LCDM_z0_64_dir+'Sigma4/SkelconvOutput_LCDMz064_nsig4.a.NDskl')
+				NConn_64nsig5, FilLen_64nsig5, NPts_64nsig5 =LCDM64_instance_nsig5.Solve(LCDM_z0_64_dir+'Sigma5/SkelconvOutput_LCDMz064_nsig5.a.NDskl')
+
 				LCDM512_instance_nsig4 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Sigma4/', nPart=512, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM512_instance_nsig5 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Sigma5/', nPart=512, model='LCDM', redshift=0, SigmaArg=5)
 				NConn_512nsig4, FilLen_512nsig4, NPts_512nsig4 =LCDM512_instance_nsig4.Solve(LCDM_z0_512_dir+'Sigma4/SkelconvOutput_LCDMz0512_nsig4.a.NDskl')
@@ -1784,12 +1844,19 @@ if __name__ == '__main__':
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
 			if Comparison == 1 and ModelCompare == 0:
 				if SigmaComparison:
-					NumConnections_list = [NumConn_512LCDM, NConn_512nsig4, NConn_512nsig5]
-					FilLengths_list = [FilLen_512LCDM, FilLen_512nsig4, FilLen_512nsig5]
-					FilPoints_list = [NPts_512LCDM, NPts_512nsig4, NPts_512nsig5]
+					NumConnections_list = [NConn_512nsig5, NConn_512nsig4, NumConn_512LCDM]
+					FilLengths_list = [FilLen_512nsig5, FilLen_512nsig4, FilLen_512LCDM]
+					FilPoints_list = [NPts_512nsig5, NPts_512nsig4, NPts_512LCDM]
+
+					NumConnections_list_expanded = [NConn_64nsig5, NConn_64nsig4, NumConn_64LCDM ,NConn_512nsig5, NConn_512nsig4, NumConn_512LCDM]
+					FilLengths_list_expanded = [FilLen_64LCDM, FilLen_64nsig4, FilLen_64nsig5, FilLen_512LCDM, FilLen_512nsig4, FilLen_512nsig5]
+					FilPoints_list_expanded = [NPts_64LCDM, NPts_64nsig4, NPts_64nsig5, NPts_512LCDM, NPts_512nsig4, NPts_512nsig5]
+
 					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir+'SigmaComparisons/',\
 										 redshift=0, LCDM=1, nsigComparison=1)
 					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
+					ComparisonInstance.Convergence_tests(NumConnections_list_expanded, FilLengths_list_expanded, FilPoints_list_expanded)
+
 				else:
 					NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM , NumConn_256LCDM, NumConn_512LCDM]
 					FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM, FilLen_256LCDM, FilLen_512LCDM]
