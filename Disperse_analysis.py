@@ -249,13 +249,14 @@ class Disperse_Plotter():
 		self.ydimPos = []
 		self.NFilamentPoints = []
 		k = 1
+		NewID = 1
 		if dimensions == 2:
 			for i in range(1, self.NFils):
 				Filstuff = self.Filaments[k]	# Contains info on filament ID, num crit pts etc.
 				TempPositions = []
 				xtemp = []
 				ytemp = []
-				self.FilID.append(float(Filstuff[0]))
+				self.FilID.append(NewID)
 				for j in range(1, int(Filstuff[-1])+1):
 					xPos = float(self.Filaments[k+j][0])*UnitConverter
 					yPos = float(self.Filaments[k+j][1])*UnitConverter
@@ -266,6 +267,7 @@ class Disperse_Plotter():
 				self.xdimPos.append(np.asarray(xtemp))
 				self.ydimPos.append(np.asarray(ytemp))
 				k += int(Filstuff[-1])+1
+				NewID += 1
 				if FilamentLimit != 0:
 					if k > FilamentLimit:
 						break
@@ -277,7 +279,7 @@ class Disperse_Plotter():
 				xtemp = []
 				ytemp = []
 				ztemp = []
-				self.FilID.append(float(Filstuff[0]))
+				self.FilID.append(NewID)
 				for j in range(1, int(Filstuff[-1])+1):
 					if k+j >= len(self.Filaments):
 						break
@@ -294,7 +296,7 @@ class Disperse_Plotter():
 				self.ydimPos.append(np.array(ytemp))
 				self.zdimPos.append(np.array(ztemp))
 				k += int(Filstuff[-1])+1
-
+				NewID += 1
 				if FilamentLimit != 0:
 					if k >= FilamentLimit:
 						self.NFils = len(self.xdimPos)
@@ -915,26 +917,53 @@ class Disperse_Plotter():
 				particle_z.append(PartPosZ[id2])
 			
 			ParticlePoints = np.dstack((np.array(particle_x).ravel(), np.array(particle_y).ravel(), np.array(particle_z).ravel()))[0]
-			SegmentLength = np.linalg.norm()
-
+			SegmentLength = np.linalg.norm(np.concatenate([FilamentPos1, FilamentPos2]))
+			for PartCoord in ParticlePoints:
+				Distance1 = np.linalg.norm(np.concatenate([FilamentPos1, PartCoord]))
+				Distance2 = np.linalg.norm(np.concatenate([FilamentPos2, PartCoord]))
+				Angle = 
 		BoxSize = self.xmax-self.xmin
 		DistanceThreshold = 0.001*BoxSize
-
+	
 		if MaskXdir or MaskYdir or MaskZdir:
 			a = 1 # Implement same stuff but for masked filaments
 		else:
 			# Computes for all filaments
-			DuplicateCount = 0				
-			#for i in range(len(self.FilamentIDs)-1):
-			#	if abs(self.FilamentIDs[i+1]-self.FilamentIDs[i]) < 1e-5:	# Require a tolerance as IDs are set as float numbers
-
-			for i in range(self.NFils):
-				FilamentPoints = np.dstack((self.xdimPos[i].ravel(), self.ydimPos[i].ravel(), self.zdimPos[i].ravel()))
-				Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
-
+			DuplicateCount_array = np.histogram(self.FilamentIDs, bins=np.arange(1, self.NFils+1))[0]
+			while i < len(self.FilamentIDs):
+				DuplicateCount = DuplicateCount_array[i]
+				if DuplicateCount == 0:
+					FilamentPoints = np.dstack((self.xdimPos[i].ravel(), self.ydimPos[i].ravel(), self.zdimPos[i].ravel()))
+					Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
+				else:
+					xTemp = xdimPos[i]
+					yTemp = ydimPos[i]
+					zTemp = zdimPos[i]
+					for k in range(1,DuplicateCount+1):
+						xTemp = np.concatenate([xTemp, xdimPos[i+k]])
+						yTemp = np.concatenate([yTemp, ydimPos[i+k]])
+						zTemp = np.concatenate([zTemp, zdimPos[i+k]])
+					FilamentPoints = np.dstack((self.xTemp.ravel(), self.yTemp.ravel(), self.zTemp.ravel()))
+					Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
+					# Indices to be removed in case of duplicate particles!
 				for j in range(len(FilamentPoints)-1):
 					Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices[j], Neighbours_indices[j+1])
 
+				i += DuplicateCount + 1
+			"""
+			for i in range(self.NFils):
+				DuplicateCount = DuplicateCount_array[i]
+				if DuplicateCount == 0:
+					FilamentPoints = np.dstack((self.xdimPos[i].ravel(), self.ydimPos[i].ravel(), self.zdimPos[i].ravel()))
+					Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
+				else:
+					xTemp = np.array([])
+					for k in range(DuplicateCount):
+						#xTemp = np.concatenate([xTemp, xdimPos[]])
+						a=1
+				for j in range(len(FilamentPoints)-1):
+					Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices[j], Neighbours_indices[j+1])
+			"""
 		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
 
 	def Filament_Length(self, dimensions):
@@ -1514,7 +1543,7 @@ class Histogram_Comparison():
 			self.ModelFilename += '256Part' + filetype
 		elif nPart == 512:
 			self.ModelFilename += '512Part' + filetype
-		self.nParticls = nPart
+		self.nParticles = nPart
 
 		if type(NumberConnections) != list:
 			raise ValueError('Argument NumberConnections must be a list!')
