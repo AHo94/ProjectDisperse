@@ -536,6 +536,7 @@ class Disperse_Plotter():
 		zPosTemp = []
 		self.FilLengths = []
 		self.LengthSplitFilament = []
+		self.FilamentIDs = []
 
 		def New_points(P1, P2, boundary_dir, boundary):
 			""" Computes the points of the two non-boundary crossing coordinates at the boundary. """
@@ -783,20 +784,23 @@ class Disperse_Plotter():
 				yNewTemp2.append(self.ydimPos[i][-1])
 				zNewTemp2.append(self.zdimPos[i][-1])
 
-			# Adds positions to temporary arrays
+			# Adds positions to temporary arrays. Also adds ID to array
 			if len(zTemp) > 1:
+				self.FilamentIDs.append(self.FilID[i])
 				FilPosTemp.append(xyTemp)
 				xPosTemp.append(xTemp)
 				yPosTemp.append(yTemp)
 				zPosTemp.append(zTemp)
 			if SplitFilament == 1:
 				if len(zNewTemp) > 1:
+					self.FilamentIDs.append(self.FilID[i])
 					FilPosTemp.append(xyNewTemp)
 					xPosTemp.append(xNewTemp)
 					yPosTemp.append(yNewTemp)
 					zPosTemp.append(zNewTemp)
 			if SplitFilament == 2:
 				if len(zNewTemp2) > 1:
+					self.FilamentIDs.append(self.FilID[i])
 					FilPosTemp.append(xyNewTemp2)
 					xPosTemp.append(xNewTemp2)
 					yPosTemp.append(yNewTemp2)
@@ -826,6 +830,7 @@ class Disperse_Plotter():
 					self.LengthSplitFilament.append(TempLength)
 				
 		
+		self.FilamentIDS = np.asarray(self.FilamentIDs)
 		self.FilamentPos = np.asarray(FilPosTemp)
 		self.xdimPos = np.asarray(xPosTemp)
 		self.ydimPos = np.asarray(yPosTemp)
@@ -896,15 +901,39 @@ class Disperse_Plotter():
 		print 'Checking number of particles within each filament'
 		self.Particles_per_filament = []
 
-		TempPartPosX = PartPosX
-		TempPartPosY = PartPosY
-		TempPartPosZ = PartPosZ
+		def Find_distance(FilamentPos1, FilamentPos2, PartNeighbourID1, PartNeighbourID2):
+			particle_x = []
+			particle_y = []
+			particle_z = []
+			for id1 in PartNeighbourID1:
+				particle_x.append(PartPosX[id1])
+				particle_y.append(PartPosY[id1])
+				particle_z.append(PartPosZ[id1])
+			for id2 in PartNeighbourID2:
+				particle_x.append(PartPosX[id2])
+				particle_y.append(PartPosY[id2])
+				particle_z.append(PartPosZ[id2])
+			
+			ParticlePoints = np.dstack((np.array(particle_x).ravel(), np.array(particle_y).ravel(), np.array(particle_z).ravel()))[0]
+			SegmentLength = np.linalg.norm()
 
-		DistanceThreshold = 0.001*(self.xmax - self.xmin)
-		for i in range(self.NFils-1):
-			for j in range(self.xdimPos[i]):
-				SegmentLen = np.sqrt((self.xdimPos[i][j+1] - self.xdimPos[i][j])**2 + (self.ydimPos[i][j+1] - self.ydimPos[i][j])**2 \
-									+ (self.zdimPos[i][j+1] - self.zdimPos[i][j])**2)
+		BoxSize = self.xmax-self.xmin
+		DistanceThreshold = 0.001*BoxSize
+
+		if MaskXdir or MaskYdir or MaskZdir:
+			a = 1 # Implement same stuff but for masked filaments
+		else:
+			# Computes for all filaments
+			DuplicateCount = 0				
+			#for i in range(len(self.FilamentIDs)-1):
+			#	if abs(self.FilamentIDs[i+1]-self.FilamentIDs[i]) < 1e-5:	# Require a tolerance as IDs are set as float numbers
+
+			for i in range(self.NFils):
+				FilamentPoints = np.dstack((self.xdimPos[i].ravel(), self.ydimPos[i].ravel(), self.zdimPos[i].ravel()))
+				Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
+
+				for j in range(len(FilamentPoints)-1):
+					Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices[j], Neighbours_indices[j+1])
 
 		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
 
@@ -1234,6 +1263,7 @@ class Disperse_Plotter():
 		plt.close('all')
 
 	def Solve(self, filename, ndim=3):
+		""" Runs the whole thing """
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)
 		#self.BoundaryStuff()
@@ -1248,7 +1278,7 @@ class Disperse_Plotter():
 			#self.NumParticles_per_filament()
 		"""
 		
-		if not Comparison or not SigmaComparison:
+		if not Comparison:
 			if self.savefile == 2:
 				print 'Done! No files saved.'
 			else:
@@ -1335,6 +1365,7 @@ class Read_Gadget_file():
 	def __init__(self):
 		self.read_file()
 		self.Create_Mask()
+		self.Create_KDTree()
 
 	def read_file(self):
 		""" 
@@ -1421,6 +1452,12 @@ class Read_Gadget_file():
 			self.PartPosY = self.PartPos[:,1]
 			self.PartPosZ = self.PartPos[:,2]
 
+	def Create_KDTree(self):
+		""" Creates a KDTree of all the dark matter particles """
+		DM_points = np.dstack((self.PartPos[:,0].ravel(), self.PartPos[:,1].ravel(), self.PartPos[:,2].ravel()))
+		self.DM_tree = spatial.KDTree(DM_points[0])
+		print 'Dark matter particle KDTRee creation time: ', time.clock() - time_start, 's'
+
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
 		self.savefile = savefile
@@ -1477,6 +1514,7 @@ class Histogram_Comparison():
 			self.ModelFilename += '256Part' + filetype
 		elif nPart == 512:
 			self.ModelFilename += '512Part' + filetype
+		self.nParticls = nPart
 
 		if type(NumberConnections) != list:
 			raise ValueError('Argument NumberConnections must be a list!')
@@ -1543,6 +1581,7 @@ class Histogram_Comparison():
 			plt.hist(self.NumberConnections[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of connected filaments')
 		plt.ylabel('Number of occurances')
+		plt.title('Histogram comparison of number filament connections \n with '+str(self.nParticles) + '\mathregular{^3} particles')		
 		plt.legend(self.LegendText)
 		plt.hold("off")
 	
@@ -1552,6 +1591,7 @@ class Histogram_Comparison():
 			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
+		plt.title('Histogram comparison of filament length \n with' +str(self.nParticles) + '\mathregular{^3} particles')
 		plt.legend(self.LegendText)
 		plt.hold("off")
 
@@ -1565,6 +1605,7 @@ class Histogram_Comparison():
 			plt.hist(self.NPointsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of points per filament')
 		plt.ylabel('Number of occurances')
+		plt.title('Histogram comparison of number of datapoints per filament \n with' +str(self.nParticles) + '\mathregular{^3} particles')
 		plt.legend(self.LegendText)
 		plt.hold("off")
 
@@ -1580,10 +1621,10 @@ class Histogram_Comparison():
 		plt.close('all')
 
 	def Convergence_tests(self, Nconnections, FilLengths, NptsPerFilament):
-		if len(Nconnections) != len(FilLengths) or len(Nconnections) != len(NPointsPerFilament) or len(FilLengths) != len(NPointsPerFilament):
+		if len(Nconnections) != len(FilLengths) or len(Nconnections) != len(NptsPerFilament) or len(FilLengths) != len(NptsPerFilament):
 			raise ValueError('Lists containing the histograms are not of equal length!')
 
-		alpas = [0.65, 0.6, 0.55, 0.5, 0.45, 0.4]
+		alphas = [0.65, 0.6, 0.55, 0.5, 0.45, 0.4]
 		Legends = ['$\mathregular{\sigma=5}, 64^3$ part', '$\mathregular{\sigma=4}, 64^3$ part', '$\mathregular{\sigma=3}, 64^3$ part'\
 					'$\mathregular{\sigma=5}, 512^3$ part', '$\mathregular{\sigma=4}, 512^3$ part', '$\mathregular{\sigma=3}, 512^3$ part']
 		N = len(Nconnections)
@@ -1597,6 +1638,7 @@ class Histogram_Comparison():
 			plt.hist(Nconnections[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of connected filaments')
 		plt.ylabel('Number of occurances')
+		plt.title('Histogram comparison of number connections per filament')
 		plt.legend(Legends)
 		plt.hold("off")
 
@@ -1606,7 +1648,8 @@ class Histogram_Comparison():
 			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
-		plt.legend(LegendText)
+		plt.title('Histogram comparison of filament lengths')
+		plt.legend(Legends)
 		plt.hold("off")
 
 		NPointsHistComparison = plt.figure()
@@ -1619,7 +1662,8 @@ class Histogram_Comparison():
 			plt.hist(NptsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of points per filament')
 		plt.ylabel('Number of occurances')
-		plt.legend(LegendText)
+		plt.title('Histogram comparison of number data points per filament')
+		plt.legend(Legends)
 		plt.hold("off")
 
 		if self.savefile == 1:
@@ -1652,7 +1696,7 @@ if __name__ == '__main__':
 
 	# Histogram plots
 	HistogramPlots = 0			# Set to 1 to plot histograms
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
@@ -1806,13 +1850,11 @@ if __name__ == '__main__':
 			if IncludeDMParticles == 1:
 				#SolveReadInstance = Read_solve_files()
 				SolveReadInstance = Read_Gadget_file()
-				#PartPosX = SolveReadInstance.ParticlePos[:,0]
-				#PartPosY = SolveReadInstance.ParticlePos[:,1]
-				#PartPosZ = SolveReadInstance.ParticlePos[:,2]
 				#ParticlePos = SolveReadInstance.ParticlePos
 				PartPosX = SolveReadInstance.PartPosX
 				PartPosY = SolveReadInstance.PartPosY
 				PartPosZ = SolveReadInstance.PartPosZ
+				DM_KDTree = SolveReadInstance.DM_tree
 
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
@@ -1831,13 +1873,13 @@ if __name__ == '__main__':
 			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
 			
 			if SigmaComparison:
-				LCDM64_instance_nsig4 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
-				LCDM64_instance_nsig5 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
+				LCDM64_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma4/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
+				LCDM64_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma5/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
 				NConn_64nsig4, FilLen_64nsig4, NPts_64nsig4 =LCDM64_instance_nsig4.Solve(LCDM_z0_64_dir+'Sigma4/SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				NConn_64nsig5, FilLen_64nsig5, NPts_64nsig5 =LCDM64_instance_nsig5.Solve(LCDM_z0_64_dir+'Sigma5/SkelconvOutput_LCDMz064_nsig5.a.NDskl')
 
-				LCDM512_instance_nsig4 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Sigma4/', nPart=512, model='LCDM', redshift=0, SigmaArg=4)
-				LCDM512_instance_nsig5 = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_512_dir+'Sigma5/', nPart=512, model='LCDM', redshift=0, SigmaArg=5)
+				LCDM512_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Sigma4/', nPart=512, model='LCDM', redshift=0, SigmaArg=4)
+				LCDM512_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Sigma5/', nPart=512, model='LCDM', redshift=0, SigmaArg=5)
 				NConn_512nsig4, FilLen_512nsig4, NPts_512nsig4 =LCDM512_instance_nsig4.Solve(LCDM_z0_512_dir+'Sigma4/SkelconvOutput_LCDMz0512_nsig4.a.NDskl')
 				NConn_512nsig5, FilLen_512nsig5, NPts_512nsig5 =LCDM512_instance_nsig5.Solve(LCDM_z0_512_dir+'Sigma5/SkelconvOutput_LCDMz0512_nsig5.a.NDskl')
 				
@@ -1848,14 +1890,14 @@ if __name__ == '__main__':
 					FilLengths_list = [FilLen_512nsig5, FilLen_512nsig4, FilLen_512LCDM]
 					FilPoints_list = [NPts_512nsig5, NPts_512nsig4, NPts_512LCDM]
 
-					NumConnections_list_expanded = [NConn_64nsig5, NConn_64nsig4, NumConn_64LCDM ,NConn_512nsig5, NConn_512nsig4, NumConn_512LCDM]
-					FilLengths_list_expanded = [FilLen_64LCDM, FilLen_64nsig4, FilLen_64nsig5, FilLen_512LCDM, FilLen_512nsig4, FilLen_512nsig5]
-					FilPoints_list_expanded = [NPts_64LCDM, NPts_64nsig4, NPts_64nsig5, NPts_512LCDM, NPts_512nsig4, NPts_512nsig5]
+					NumConnections_list_expanded = [NConn_64nsig5, NConn_64nsig4, NumConn_64LCDM]# ,NConn_512nsig5, NConn_512nsig4, NumConn_512LCDM]
+					FilLengths_list_expanded = [FilLen_64LCDM, FilLen_64nsig4, FilLen_64nsig5]#, FilLen_512LCDM, FilLen_512nsig4, FilLen_512nsig5]
+					FilPoints_list_expanded = [NPts_64LCDM, NPts_64nsig4, NPts_64nsig5]#, NPts_512LCDM, NPts_512nsig4, NPts_512nsig5]
 
 					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir+'SigmaComparisons/',\
 										 redshift=0, LCDM=1, nsigComparison=1)
 					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
-					ComparisonInstance.Convergence_tests(NumConnections_list_expanded, FilLengths_list_expanded, FilPoints_list_expanded)
+					ComparisonInstance_LCDM.Convergence_tests(NumConnections_list_expanded, FilLengths_list_expanded, FilPoints_list_expanded)
 
 				else:
 					NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM , NumConn_256LCDM, NumConn_512LCDM]
