@@ -921,7 +921,8 @@ class Disperse_Plotter():
 			for PartCoord in ParticlePoints:
 				Distance1 = np.linalg.norm(np.concatenate([FilamentPos1, PartCoord]))
 				Distance2 = np.linalg.norm(np.concatenate([FilamentPos2, PartCoord]))
-				Angle = 
+				Angle = 1
+
 		BoxSize = self.xmax-self.xmin
 		DistanceThreshold = 0.001*BoxSize
 	
@@ -1610,7 +1611,7 @@ class Histogram_Comparison():
 			plt.hist(self.NumberConnections[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of connected filaments')
 		plt.ylabel('Number of occurances')
-		plt.title('Histogram comparison of number filament connections \n with '+str(self.nParticles) + '\mathregular{^3} particles')		
+		plt.title('Histogram comparison of number filament connections \n with '+str(self.nParticles) + '$\mathregular{^3}$ particles')		
 		plt.legend(self.LegendText)
 		plt.hold("off")
 	
@@ -1620,7 +1621,7 @@ class Histogram_Comparison():
 			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
-		plt.title('Histogram comparison of filament length \n with' +str(self.nParticles) + '\mathregular{^3} particles')
+		plt.title('Histogram comparison of filament length \n with' +str(self.nParticles) + '$\mathregular{^3}$ particles')
 		plt.legend(self.LegendText)
 		plt.hold("off")
 
@@ -1634,7 +1635,7 @@ class Histogram_Comparison():
 			plt.hist(self.NPointsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of points per filament')
 		plt.ylabel('Number of occurances')
-		plt.title('Histogram comparison of number of datapoints per filament \n with' +str(self.nParticles) + '\mathregular{^3} particles')
+		plt.title('Histogram comparison of number of datapoints per filament \n with' +str(self.nParticles) + '$\mathregular{^3}$ particles')
 		plt.legend(self.LegendText)
 		plt.hold("off")
 
@@ -1919,9 +1920,9 @@ if __name__ == '__main__':
 					FilLengths_list = [FilLen_512nsig5, FilLen_512nsig4, FilLen_512LCDM]
 					FilPoints_list = [NPts_512nsig5, NPts_512nsig4, NPts_512LCDM]
 
-					NumConnections_list_expanded = [NConn_64nsig5, NConn_64nsig4, NumConn_64LCDM]# ,NConn_512nsig5, NConn_512nsig4, NumConn_512LCDM]
-					FilLengths_list_expanded = [FilLen_64LCDM, FilLen_64nsig4, FilLen_64nsig5]#, FilLen_512LCDM, FilLen_512nsig4, FilLen_512nsig5]
-					FilPoints_list_expanded = [NPts_64LCDM, NPts_64nsig4, NPts_64nsig5]#, NPts_512LCDM, NPts_512nsig4, NPts_512nsig5]
+					NumConnections_list_expanded = [NConn_64nsig5, NConn_64nsig4, NumConn_64LCDM ,NConn_512nsig5, NConn_512nsig4, NumConn_512LCDM]
+					FilLengths_list_expanded = [FilLen_64LCDM, FilLen_64nsig4, FilLen_64nsig5, FilLen_512LCDM, FilLen_512nsig4, FilLen_512nsig5]
+					FilPoints_list_expanded = [NPts_64LCDM, NPts_64nsig4, NPts_64nsig5, NPts_512LCDM, NPts_512nsig4, NPts_512nsig5]
 
 					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir+'SigmaComparisons/',\
 										 redshift=0, LCDM=1, nsigComparison=1)
