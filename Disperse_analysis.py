@@ -1320,7 +1320,7 @@ class Read_solve_files():
 	def __init__(self):
 		self.read_solvefile()
 		self.Create_Mask()
-		self.Create_KDTree()
+		#self.Create_KDTree()
 
 	def read_solvefile(self):
 		""" 
