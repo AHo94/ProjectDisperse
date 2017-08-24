@@ -1377,7 +1377,7 @@ class Read_solve_files():
 
 	def Create_KDTree(self):
 		""" Creates a KDTree of the masked dark matter particles """
-		time_start = time.clock()
+		#time_start = time.clock()
 		if self.mask is not False:
 			self.PartPosX = self.ParticlePos[self.mask,0]
 			self.PartPosY = self.ParticlePos[self.mask,1]
@@ -1389,7 +1389,8 @@ class Read_solve_files():
 
 		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
 		self.DM_tree = spatial.KDTree(DM_points[0])
-		print 'Dark matter particle KDTRee creation time: ', time.clock() - time_start, 's'
+		print 'Finished creating dark matter KD tree'
+		#print 'Dark matter particle KDTRee creation time: ', time.clock() - time_start, 's'
 
 class Read_Gadget_file():
 	def __init__(self):
