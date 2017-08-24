@@ -903,7 +903,7 @@ class Disperse_Plotter():
 		print 'Checking number of particles within each filament'
 		self.Particles_per_filament = []
 
-		def Find_distance(FilamentPos1, FilamentPos2, PartNeighbourID1, PartNeighbourID2):
+		def Find_distance(FilamentPos1, FilamentPos2, PartNeighbourIDs):
 			particle_x = []
 			particle_y = []
 			particle_z = []
@@ -911,10 +911,6 @@ class Disperse_Plotter():
 				particle_x.append(PartPosX[id1])
 				particle_y.append(PartPosY[id1])
 				particle_z.append(PartPosZ[id1])
-			for id2 in PartNeighbourID2:
-				particle_x.append(PartPosX[id2])
-				particle_y.append(PartPosY[id2])
-				particle_z.append(PartPosZ[id2])
 			
 			ParticlePoints = np.dstack((np.array(particle_x).ravel(), np.array(particle_y).ravel(), np.array(particle_z).ravel()))[0]
 			SegmentLength = np.linalg.norm(np.concatenate([FilamentPos1, FilamentPos2]))
@@ -946,9 +942,10 @@ class Disperse_Plotter():
 						zTemp = np.concatenate([zTemp, zdimPos[i+k]])
 					FilamentPoints = np.dstack((self.xTemp.ravel(), self.yTemp.ravel(), self.zTemp.ravel()))
 					Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
-					# Indices to be removed in case of duplicate particles!
+					Neighbours_indices = np.unique(np.concatenate(Neighbours_indices, axis=0))
+
 				for j in range(len(FilamentPoints)-1):
-					Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices[j], Neighbours_indices[j+1])
+					Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices)
 
 				i += DuplicateCount + 1
 			"""
@@ -1600,8 +1597,8 @@ class Histogram_Comparison():
 
 
 	def Plot_Histograms_particleComparison(self):
-		#alphas = [0.3, 0.4, 0.5, 0.6]
-		alphas = [0.6, 0.5, 0.4, 0.3]
+		alphas = [0.4, 0.5, 0.6, 0.7]
+		#alphas = [0.6, 0.5, 0.4, 0.3]
 		ConnectedHistComparison = plt.figure()
 		plt.hold("on")
 		for i in range(self.N):
@@ -1656,7 +1653,7 @@ class Histogram_Comparison():
 			raise ValueError('Lists containing the histograms are not of equal length!')
 
 		alphas = [0.65, 0.6, 0.55, 0.5, 0.45, 0.4]
-		Legends = ['$\mathregular{\sigma=5}, 64^3$ part', '$\mathregular{\sigma=4}, 64^3$ part', '$\mathregular{\sigma=3}, 64^3$ part'\
+		Legends = ['$\mathregular{\sigma=5}, 64^3$ part', '$\mathregular{\sigma=4}, 64^3$ part', '$\mathregular{\sigma=3}, 64^3$ part', \
 					'$\mathregular{\sigma=5}, 512^3$ part', '$\mathregular{\sigma=4}, 512^3$ part', '$\mathregular{\sigma=3}, 512^3$ part']
 		N = len(Nconnections)
 		ConnectedHistComparison = plt.figure()
