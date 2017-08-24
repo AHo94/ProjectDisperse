@@ -904,6 +904,11 @@ class Disperse_Plotter():
 		self.Particles_per_filament = []
 
 		def Find_distance(FilamentPos1, FilamentPos2, PartNeighbourIDs):
+			""" 
+			Computes the distances of the particle to the filament
+			Order of the distance list corresponds to the ID of the particle
+			"""
+			Particle_distances = []
 			particle_x = []
 			particle_y = []
 			particle_z = []
@@ -917,7 +922,10 @@ class Disperse_Plotter():
 			for PartCoord in ParticlePoints:
 				Distance1 = np.linalg.norm(np.concatenate([FilamentPos1, PartCoord]))
 				Distance2 = np.linalg.norm(np.concatenate([FilamentPos2, PartCoord]))
-				Angle = 1
+				Angle = np.arccos((SegmentLength**2 + Distance1**2 - Distance2**2)/(2*SegmentLength*Distance2))
+				Distance = Distance2*np.sin(Angle)
+				Particle_distances.append(Distance)
+			return Particle_distances
 
 		BoxSize = self.xmax-self.xmin
 		DistanceThreshold = 0.001*BoxSize
@@ -932,6 +940,8 @@ class Disperse_Plotter():
 				if DuplicateCount == 0:
 					FilamentPoints = np.dstack((self.xdimPos[i].ravel(), self.ydimPos[i].ravel(), self.zdimPos[i].ravel()))
 					Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
+					Neighbours_indices = np.unique(np.concatenate(Neighbours_indices, axis=0))
+
 				else:
 					xTemp = xdimPos[i]
 					yTemp = ydimPos[i]
@@ -945,8 +955,8 @@ class Disperse_Plotter():
 					Neighbours_indices = np.unique(np.concatenate(Neighbours_indices, axis=0))
 
 				for j in range(len(FilamentPoints)-1):
-					Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices)
-
+					Distances = Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices)
+					
 				i += DuplicateCount + 1
 			"""
 			for i in range(self.NFils):
