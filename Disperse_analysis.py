@@ -906,7 +906,7 @@ class Disperse_Plotter():
 		def Find_distance(FilamentPos1, FilamentPos2, PartNeighbourIDs):
 			""" 
 			Computes the distances of the particle to the filament
-			Order of the distance list corresponds to the ID of the particle
+			Order of the distance array corresponds to the ID of the particle
 			"""
 			Particle_distances = []
 			particle_x = []
@@ -919,13 +919,16 @@ class Disperse_Plotter():
 			
 			ParticlePoints = np.dstack((np.array(particle_x).ravel(), np.array(particle_y).ravel(), np.array(particle_z).ravel()))[0]
 			SegmentLength = np.linalg.norm(np.concatenate([FilamentPos1, FilamentPos2]))
+			Distance1 = []
+			Distance2 = []
 			for PartCoord in ParticlePoints:
-				Distance1 = np.linalg.norm(np.concatenate([FilamentPos1, PartCoord]))
-				Distance2 = np.linalg.norm(np.concatenate([FilamentPos2, PartCoord]))
-				Angle = np.arccos((SegmentLength**2 + Distance1**2 - Distance2**2)/(2*SegmentLength*Distance2))
-				Distance = Distance2*np.sin(Angle)
-				Particle_distances.append(Distance)
-			return Particle_distances
+				Distance1.append(np.linalg.norm(np.concatenate([FilamentPos1, PartCoord])))
+				Distance2.append(np.linalg.norm(np.concatenate([FilamentPos2, PartCoord])))
+			
+			Angle = np.arccos((SegmentLength**2 + np.array(Distance1)**2 - np.array(Distance2)**2)/(2*SegmentLength*np.array(Distance2)))
+			Distance = np.array(Distance2)*np.sin(Angle)
+			Particle_distances.append(Distance)
+			return np.array(Particle_distances)
 
 		BoxSize = self.xmax-self.xmin
 		DistanceThreshold = 0.001*BoxSize
@@ -939,9 +942,6 @@ class Disperse_Plotter():
 				DuplicateCount = DuplicateCount_array[i]
 				if DuplicateCount == 0:
 					FilamentPoints = np.dstack((self.xdimPos[i].ravel(), self.ydimPos[i].ravel(), self.zdimPos[i].ravel()))
-					Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
-					Neighbours_indices = np.unique(np.concatenate(Neighbours_indices, axis=0))
-
 				else:
 					xTemp = xdimPos[i]
 					yTemp = ydimPos[i]
@@ -951,14 +951,19 @@ class Disperse_Plotter():
 						yTemp = np.concatenate([yTemp, ydimPos[i+k]])
 						zTemp = np.concatenate([zTemp, zdimPos[i+k]])
 					FilamentPoints = np.dstack((self.xTemp.ravel(), self.yTemp.ravel(), self.zTemp.ravel()))
-					Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
-					Neighbours_indices = np.unique(np.concatenate(Neighbours_indices, axis=0))
+
+				Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
+				Neighbours_indices = np.unique(np.concatenate(Neighbours_indices, axis=0))
+				Accepted_IDs = np.array([])
 
 				for j in range(len(FilamentPoints)-1):
 					Distances = Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices)
+					Distance_masking = Distances >= DistanceThreshold
+					Accepted_IDs = np.concatenate([Accepted_IDs, Neighbours_indices[Distance_masking])
 
+				self.Particles_per_filament.append(len(np.unique(Accepted_IDs)))
 				i += DuplicateCount + 1
-			
+				
 		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
 
 	def Filament_Length(self, dimensions):
