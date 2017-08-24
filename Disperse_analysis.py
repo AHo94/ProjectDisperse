@@ -956,22 +956,9 @@ class Disperse_Plotter():
 
 				for j in range(len(FilamentPoints)-1):
 					Distances = Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices)
-					
+
 				i += DuplicateCount + 1
-			"""
-			for i in range(self.NFils):
-				DuplicateCount = DuplicateCount_array[i]
-				if DuplicateCount == 0:
-					FilamentPoints = np.dstack((self.xdimPos[i].ravel(), self.ydimPos[i].ravel(), self.zdimPos[i].ravel()))
-					Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
-				else:
-					xTemp = np.array([])
-					for k in range(DuplicateCount):
-						#xTemp = np.concatenate([xTemp, xdimPos[]])
-						a=1
-				for j in range(len(FilamentPoints)-1):
-					Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices[j], Neighbours_indices[j+1])
-			"""
+			
 		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
 
 	def Filament_Length(self, dimensions):
