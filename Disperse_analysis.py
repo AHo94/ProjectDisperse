@@ -959,7 +959,7 @@ class Disperse_Plotter():
 				for j in range(len(FilamentPoints)-1):
 					Distances = Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices)
 					Distance_masking = Distances >= DistanceThreshold
-					Accepted_IDs = np.concatenate([Accepted_IDs, Neighbours_indices[Distance_masking])
+					Accepted_IDs = np.concatenate([Accepted_IDs, Neighbours_indices[Distance_masking]])
 
 				self.Particles_per_filament.append(len(np.unique(Accepted_IDs)))
 				i += DuplicateCount + 1
