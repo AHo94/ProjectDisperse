@@ -792,7 +792,7 @@ class Disperse_Plotter():
 				yNewTemp2.append(y2)
 				zNewTemp2.append(z2)
 
-		for i in range(len(self.xdimPos)):
+		for i in range(self.NFils-1):
 			SplitFilament = 0
 			xBoundary = 0
 			yBoundary = 0
@@ -826,40 +826,25 @@ class Disperse_Plotter():
 						Point1 = np.array([self.xdimPos[i][j-1], self.ydimPos[i][j-1], self.zdimPos[i][j-1]])
 						Point2 = np.array([self.xdimPos[i][j], self.ydimPos[i][j], self.zdimPos[i][j]])
 					if xBoundary == 1:
-						if np.abs(self.xdimPos[i][j-1] - self.xmin) < 0.5*self.BoxSize:
-							Ypoint, Zpoint = New_points(Point1, Point2, 'x', 0)
-							Xpoint1 = self.xmin
-							Xpoint2 = self.xmax
-							xBoundary = 2
-						elif np.abs(self.xdimPos[i][j-1] - self.xmax) < 0.5*self.BoxSize:
-							Ypoint, Zpoint = New_points(Point1, Point2, 'x', 1)
-							Xpoint1 = self.xmax
-							Xpoint2 = self.xmin	
-							xBoundary = 2
+						Boundary_check = np.abs(self.xdimPos[i][j-1] - self.xmin) < 0.5*self.BoxSize
+						Ypoint, Zpoint = New_points(Point1, Point2, 'x', 0)
+						Xpoint1 = self.xmin if Boundary_check else self.xmax
+						Xpoint2 = self.xmax if Boundary_check else self.xmin
+						xBoundary = 2
 						Append_points(Xpoint1, Xpoint2, Ypoint, Ypoint, Zpoint, Zpoint)
 					elif yBoundary == 1:
-						if np.abs(self.ydimPos[i][j-1] - self.ymin) < 0.5*self.BoxSize:
-							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
-							Ypoint1 = self.ymin
-							Ypoint2 = self.ymax	
-							yBoundary = 2
-						elif np.abs(self.ydimPos[i][j-1] - self.ymax) < 0.5*self.BoxSize:
-							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 1)	
-							Ypoint1 = self.ymax
-							Ypoint2 = self.ymin	
-							yBoundary = 2
+						Boundary_check = np.abs(self.ydimPos[i][j-1] - self.ymin) < 0.5*self.BoxSize
+						Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
+						Ypoint1 = self.ymin if Boundary_check else self.ymax
+						Ypoint2 = self.ymax	if Boundary_check else self.ymin
+						yBoundary = 2
 						Append_points(Xpoint, Xpoint, Ypoint1, Ypoint2, Zpoint, Zpoint)
 					elif zBoundary == 1:
-						if np.abs(self.zdimPos[i][j-1] - self.zmin) < 0.5*self.BoxSize:
-							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
-							Zpoint1 = self.zmin
-							Zpoint2 = self.zmax		
-							zBoundary = 2
-						elif np.abs(self.zdimPos[i][j-1] - self.zmax) < 0.5*self.BoxSize:
-							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 1)
-							Zpoint1 = self.zmax
-							Zpoint2 = self.zmin			
-							zBoundary = 2	
+						Boundary_check = np.abs(self.zdimPos[i][j-1] - self.zmin) < 0.5*self.BoxSize
+						Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
+						Zpoint1 = self.zmin if Boundary_check else self.zmax
+						Zpoint2 = self.zmax	if Boundary_check else self.zmin
+						zBoundary = 2
 						Append_points(Xpoint, Xpoint, Ypoint, Ypoint, Zpoint1, Zpoint2)
 					xyNewTemp.append(np.asarray([self.xdimPos[i][j], self.ydimPos[i][j]]))
 					xNewTemp.append(self.xdimPos[i][j])
@@ -871,40 +856,25 @@ class Disperse_Plotter():
 						Point1 = np.array([self.xdimPos[i][j-1], self.ydimPos[i][j-1], self.zdimPos[i][j-1]])
 						Point2 = np.array([self.xdimPos[i][j], self.ydimPos[i][j], self.zdimPos[i][j]])
 					if xBoundary == 1:
-						if np.abs(self.xdimPos[i][j-1] - self.xmin) < 0.5*self.BoxSize:
-							Ypoint, Zpoint = New_points(Point1, Point2, 'x', 0)
-							Xpoint1 = self.xmin
-							Xpoint2 = self.xmax		
-							xBoundary = 2
-						elif np.abs(self.xdimPos[i][j-1] - self.xmax) < 0.5*self.BoxSize:
-							Ypoint, Zpoint = New_points(Point1, Point2, 'x', 1)
-							Xpoint1 = self.xmax
-							Xpoint2 = self.xmin		
-							xBoundary = 2
+						Boundary_check = np.abs(self.xdimPos[i][j-1] - self.xmin) < 0.5*self.BoxSize
+						Ypoint, Zpoint = New_points(Point1, Point2, 'x', 0)
+						Xpoint1 = self.xmin if Boundary_check else self.xmax
+						Xpoint2 = self.xmax	if Boundary_check else self.xmin
+						xBoundary = 2
 						Append_points(Xpoint1, Xpoint2, Ypoint, Ypoint, Zpoint, Zpoint)
 					elif yBoundary == 1:
-						if np.abs(self.ydimPos[i][j-1] - self.ymin) < 0.5*self.BoxSize:
-							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
-							Ypoint1 = self.ymin
-							Ypoint2 = self.ymax	
-							yBoundary = 2
-						elif np.abs(self.ydimPos[i][j-1] - self.ymax) < 0.5*self.BoxSize:
-							Xpoint, Zpoint = New_points(Point1, Point2, 'y', 1)
-							Ypoint1 = self.ymax
-							Ypoint2 = self.ymin		
-							yBoundary = 2
+						Boundary_check = np.abs(self.ydimPos[i][j-1] - self.ymin) < 0.5*self.BoxSize
+						Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
+						Ypoint1 = self.ymin if Boundary_check else self.ymax
+						Ypoint2 = self.ymax	if Boundary_check else self.ymin
+						yBoundary = 2
 						Append_points(Xpoint, Xpoint, Ypoint1, Ypoint2, Zpoint, Zpoint)
 					elif zBoundary == 1:
-						if np.abs(self.zdimPos[i][j-1] - self.zmin) < 0.5*self.BoxSize:
-							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
-							Zpoint1 = self.zmin
-							Zpoint2 = self.zmax
-							zBoundary = 2
-						elif np.abs(self.zdimPos[i][j-1] - self.zmax) < 0.5*self.BoxSize:
-							Xpoint, Ypoint = New_points(Point1, Point2, 'z', 1)
-							Zpoint1 = self.zmax
-							Zpoint2 = self.zmin
-							zBoundary = 2
+						Boundary_check = np.abs(self.zdimPos[i][j-1] - self.zmin) < 0.5*self.BoxSize
+						Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
+						Zpoint1 = self.zmin if Boundary_check else self.zmax
+						Zpoint2 = self.zmax if Boundary_check else self.zmin
+						zBoundary = 2
 						Append_points(Xpoint, Xpoint, Ypoint, Ypoint, Zpoint1, Zpoint2)
 					xyNewTemp2.append(np.asarray([self.xdimPos[i][j], self.ydimPos[i][j]]))
 					xNewTemp2.append(self.xdimPos[i][j])
@@ -1883,8 +1853,8 @@ if __name__ == '__main__':
 	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
-	MaskYdir = 1
-	MaskZdir = 0
+	MaskYdir = 0
+	MaskZdir = 1
 
 	# Histogram plots
 	HistogramPlots = 0			# Set to 1 to plot histograms
