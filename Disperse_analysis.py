@@ -123,7 +123,6 @@ class Disperse_Plotter():
 	def Read_SolveFile(self):
 		time_start = time.clock()
 		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
-		#datafiles = open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r')
 		self.PartPosX = []
 		self.PartPosY = []
 		self.PartPosZ = []
@@ -148,24 +147,6 @@ class Disperse_Plotter():
 						self.PartPosX.append(float(data_set[0])*UnitConverter)
 						self.PartPosY.append(float(data_set[1])*UnitConverter)
 						self.PartPosZ.append(float(data_set[2])*UnitConverter)
-
-		"""
-		SkipFirstLine = 0
-		for line in datafiles:
-			data_set = line.split()
-			if IncludeSlicing == 1:
-				if SkipFirstLine == 0:
-					SkipFirstLine = 1
-				else:
-					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
-						#self.XYPartPos.append([float(data_set[0]), float(data_set[1])])
-						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						self.PartPosY.append(float(data_set[1])*UnitConverter)
-						#PartPosZ.append(float(data_set[2]))
-						#PartVelX.append(float(data_set[3]))
-						#PartVelY.append(float(data_set[4]))
-						#PartVelZ.append(float(data_set[5]))
-		"""
 		self.PartPosX = np.asarray(self.PartPosX)
 		self.PartPosY = np.asarray(self.PartPosY)
 		self.PartPosZ = np.asarray(self.PartPosZ)
