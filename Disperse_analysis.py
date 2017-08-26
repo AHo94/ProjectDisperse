@@ -1,6 +1,6 @@
 ### Set comment on the two below to plot. Only use if running on papsukal, nekkar etc. 
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -509,6 +509,93 @@ class Disperse_Plotter():
 		self.CutOffzDim = np.asarray(self.CutOffzDim)
 		print 'Masking time: ', time.clock() - time_start, 's'
 
+
+	def Mask_slices_compactified(self):
+		"""
+		Creates a mask to plot a slice of the filament box. Boundary of slice chosen arbitrarily.
+		The masking includes filaments that are within the given boundary.
+		Also includes masking where the filament are cut off outside the boundary. 
+		"""
+		time_start = time.clock()
+		print 'Computing masks'
+		self.zdimMasked = []
+		self.MaskedFilamentSegments = []
+		self.MaskedLengths = []
+
+		self.CutOffFilamentSegments = []
+		self.CutOffzDim = []
+		self.CutOffLengths = []
+
+		XCheck = True if MaskXdir else False
+		Ycheck = True if MaskYdir else False
+		Zcheck = True if MaskZdir else False
+
+		def Add_filament(index):
+			self.zdimMasked.append(self.zdimPos[index])
+			self.MaskedFilamentSegments.append(self.FilamentPos[index])
+			self.MaskedLengths.append(self.LengthSplitFilament[index])
+
+		def Cutoff_filaments(Indices_list, index):
+			FilSegmentTemp = []
+			zDimTemp = []
+			for idx in Indices_list:
+				zDimTemp.append(self.zdimPos[index][idx])
+				FilSegmentTemp.append(np.array([self.xdimPos[index][idx], self.ydimPos[index][idx]]))
+			self.CutOffFilamentSegments.append(FilSegmentTemp)
+			self.CutOffzDim.append(zDimTemp)
+			TempLen = 0
+			for j in range(len(zDimTemp)-1):
+				TempLen += np.sqrt((FilSegmentTemp[j+1][0] - FilSegmentTemp[j][0])**2 + (FilSegmentTemp[j+1][1] - FilSegmentTemp[j][1])**2\
+						 + (zDimTemp[j+1] - zDimTemp[j])**2)
+			self.CutOffLengths.append(TempLen)
+		
+		for i in range(self.NFils):
+			if MaskXdir and not MaskYdir and not MaskZdir:
+				Indices = np.where(np.logical_and(np.greater(self.xdimPos[i], LowerBoundaryXDir), np.less(self.xdimPos[i], UpperBoundaryXDir)))[0]
+				Segment_check = (np.array(self.xdimPos[i]) > LowerBoundaryXDir).any() and (np.array(self.xdimPos[i]) < UpperBoundaryXDir).any()
+			elif not MaskXdir and MaskYdir and not MaskZdir:
+				Indices = np.where(np.logical_and(np.greater(self.ydimPos[i], LowerBoundaryYDir), np.less(self.ydimPos[i], UpperBoundaryYDir)))[0]
+				Segment_check = (np.array(self.ydimPos[i]) > LowerBoundaryYDir).any() and (np.array(self.ydimPos[i]) < UpperBoundaryYDir).any()
+			elif not MaskXdir and not MaskYdir and MaskZdir:
+				Indices = np.where(np.logical_and(np.greater(self.zdimPos[i], LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir)))[0]
+				Segment_check = (np.array(self.zdimPos[i]) > LowerBoundaryZDir).any() and (np.array(self.zdimPos[i]) < UpperBoundaryZDir).any()
+			elif MaskXdir and MaskYdir and not MaskZdir:
+				Indices = np.where(np.logical_and(np.logical_and(np.greater(self.xdimPos[i], LowerBoundaryXDir), np.less(self.xdimPos[i], UpperBoundaryXDir)),\
+						np.logical_and(np.greater(self.ydimPos[i], LowerBoundaryYDir), np.less(self.ydimPos[i], UpperBoundaryYDir))))[0]
+				Segment_check = (np.array(self.xdimPos[i]) > LowerBoundaryXDir).any() and (np.array(self.xdimPos[i]) < UpperBoundaryXDir).any() \
+								and (np.array(self.ydimPos[i]) > LowerBoundaryYDir).any() and (np.array(self.ydimPos[i]) < UpperBoundaryYDir).any()
+			elif MaskXdir and not MaskYdir and MaskZdir:
+				Indices = np.where(np.logical_and(np.logical_and(np.greater(self.xdimPos[i], LowerBoundaryXDir), np.less(self.xdimPos[i], UpperBoundaryXDir)),\
+						np.logical_and(np.greater(self.zdimPos[i], LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir))))[0]
+				Segment_check = (np.array(self.xdimPos[i]) > LowerBoundaryXDir).any() and (np.array(self.xdimPos[i]) < UpperBoundaryXDir).any() \
+								and (np.array(self.zdimPos[i]) > LowerBoundaryZDir).any() and (np.array(self.zdimPos[i]) < UpperBoundaryZDir).any()
+			elif not MaskXdir and MaskYdir and MaskZdir:
+				Indices = np.where(np.logical_and(np.logical_and(np.greater(self.zdimPos[i]. LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir)),\
+						np.logical_and(np.greater(self.ydimPos[i], LowerBoundaryYDir), np.less(self.ydimPos[i], UpperBoundaryYDir))))[0]
+				Segment_check = (np.array(self.zdimPos[i]) > LowerBoundaryZDir).any() and (np.array(self.zdimPos[i]) < UpperBoundaryZDir).any() \
+								and (np.array(self.ydimPos[i]) > LowerBoundaryYDir).any() and (np.array(self.ydimPos[i]) < UpperBoundaryYDir).any()
+			elif MaskXdir and MaskYdir and MaskZdir:
+				Indices = np.where(
+					np.logical_and(np.logical_and(np.greater(self.ydimPos[i], LowerBoundaryYDir), np.less(self.ydimPos[i], UpperBoundaryYDir)),
+					np.logical_and(np.logical_and(np.greater(self.zdimPos[i], LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir)),\
+					np.logical_and(np.greater(self.xdimPos[i], LowerBoundaryXDir), np.less(self.xdimPos[i], UpperBoundaryXDir)))))[0]
+				Segment_check = (np.array(self.xdimPos[i]) > LowerBoundaryXDir).any() and (np.array(self.xdimPos[i]) < UpperBoundaryXDir).any() \
+								and (np.array(self.ydimPos[i]) > LowerBoundaryYDir).any() and (np.array(self.ydimPos[i]) < UpperBoundaryYDir).any() \
+								and (np.array(self.zdimPos[i]) > LowerBoundaryZDir).any() and (np.array(self.zdimPos[i]) < UpperBoundaryZDir).any()
+			if Segment_check:
+				Add_filament(i)
+			if not len(Indices) == 0:
+				Cutoff_filaments(Indices, i)
+
+		self.MaskedFilamentSegments = np.asarray(self.MaskedFilamentSegments)
+		self.MaskedLengths = np.asarray(self.MaskedLengths)
+		self.zdimMasked = np.asarray(self.zdimMasked)
+		self.CutOffFilamentSegments = np.asarray(self.CutOffFilamentSegments)
+		self.CutOffLengths = np.asarray(self.CutOffLengths)
+		self.CutOffzDim = np.asarray(self.CutOffzDim)
+		print 'Masking time: ', time.clock() - time_start, 's'
+
+
 	def Mask_DMParticles(self):
 		""" Computes a mask for the dark matter particles """
 		if MaskZdir and not MaskXdir and not MaskYdir:
@@ -933,11 +1020,12 @@ class Disperse_Plotter():
 		BoxSize = self.xmax-self.xmin
 		DistanceThreshold = 0.001*BoxSize
 	
-		if MaskXdir or MaskYdir or MaskZdir:
-			a = 1 # Implement same stuff but for masked filaments
+		DuplicateCount_array = np.histogram(self.FilamentIDs, bins=np.arange(1, self.NFils+1))[0]
+		if not MaskXdir or not MaskYdir or MaskZdir:
+			a = 1
+			#while i < len(self.FilamentIDs)
 		else:
 			# Computes for all filaments
-			DuplicateCount_array = np.histogram(self.FilamentIDs, bins=np.arange(1, self.NFils+1))[0]
 			while i < len(self.FilamentIDs):
 				DuplicateCount = DuplicateCount_array[i]
 				if DuplicateCount == 0:
@@ -1298,11 +1386,11 @@ class Disperse_Plotter():
 		#self.BoundaryStuff()
 		self.Check_boundary()
 		if IncludeSlicing:
-			self.Mask_slices()
-			#self.Mask_slices_vectorized()
+			#self.Mask_slices()
+			self.Mask_slices_compactified()
 
-		if IncludeSlicing and IncludeDMParticles and not Comparison:
-			self.NumParticles_per_filament_v2()
+		#if IncludeSlicing and IncludeDMParticles and not Comparison:
+		#	self.NumParticles_per_filament_v2()
 		"""
 		if IncludeSlicing and IncludeDMParticles and not Comparison:
 			self.Read_SolveFile()
@@ -1711,7 +1799,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1724,11 +1812,11 @@ if __name__ == '__main__':
 	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1 			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
-	MaskYdir = 0
-	MaskZdir = 1
+	MaskYdir = 1
+	MaskZdir = 0
 
 	# Histogram plots
-	HistogramPlots = 1			# Set to 1 to plot histograms
+	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
@@ -1766,13 +1854,19 @@ if __name__ == '__main__':
 	### Slice selection can be chosen here
 	if IncludeSlicing == 1:
 		print 'Slicing included'
+		LowerBoundaryXDir = 0
+		LowerBoundaryYDir = 0
+		LowerBoundaryZDir = 0
+		UpperBoundaryXDir = 0
+		UpperBoundaryYDir = 0
+		UpperBoundaryZDir = 0
 		if MaskXdir == 1:
-			LowerBoundaryXDir = 1*UnitConverter
-			UpperBoundaryXDir = 1*UnitConverter
+			LowerBoundaryXDir = 0.45*UnitConverter
+			UpperBoundaryXDir = 0.55*UnitConverter
 			print 'Masking X direction'
 		if MaskYdir == 1:
-			LowerBoundaryYDir = 1*UnitConverter
-			UpperBoundaryYDir = 1*UnitConverter
+			LowerBoundaryYDir = 0.45*UnitConverter
+			UpperBoundaryYDir = 0.55*UnitConverter
 			print 'Masking Y direction'
 		if MaskZdir == 1:
 			LowerBoundaryZDir = 0.45*UnitConverter
@@ -1805,10 +1899,9 @@ if __name__ == '__main__':
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 
-
-			LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
-			LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
-			NConn_128PartLCDM, FilLen_128PartLCDM, NPts_128PartLCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
+			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
+			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
+			#NConn_128PartLCDM, FilLen_128PartLCDM, NPts_128PartLCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
 
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
