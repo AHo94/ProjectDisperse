@@ -372,14 +372,14 @@ class Disperse_Plotter():
 			if not len(Indices) == 0:
 				Cutoff_filaments(Indices, i)
 
-		self.MaskedFilamentSegments = np.asarray(self.MaskedFilamentSegments)
-		self.MaskedLengths = np.asarray(self.MaskedLengths)
-		self.zdimMasked = np.asarray(self.zdimMasked)
-		self.CutOffFilamentSegments = np.asarray(self.CutOffFilamentSegments)
-		self.CutOffLengths = np.asarray(self.CutOffLengths)
-		self.CutOffzDim = np.asarray(self.CutOffzDim)
+		self.MaskedFilamentSegments = np.array(self.MaskedFilamentSegments)
+		self.MaskedLengths = np.array(self.MaskedLengths)
+		self.zdimMasked = np.array(self.zdimMasked)
+		self.CutOffFilamentSegments = np.array(self.CutOffFilamentSegments)
+		self.CutOffLengths = np.array(self.CutOffLengths)
+		self.CutOffzDim = np.array(self.CutOffzDim)
 		print 'Masking time: ', time.clock() - time_start, 's'
-
+		return self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim
 
 	def Mask_DMParticles(self):
 		""" Computes a mask for the dark matter particles """
@@ -949,15 +949,15 @@ class Disperse_Plotter():
 				if len(zNewTemp2) > 1:
 					self.LengthSplitFilament.append(TempLength)
 				
-		self.FilamentIDS = np.asarray(self.FilamentIDs)
-		self.FilamentPos = np.asarray(FilPosTemp)
-		self.xdimPos = np.asarray(xPosTemp)
-		self.ydimPos = np.asarray(yPosTemp)
-		self.zdimPos = np.asarray(zPosTemp)
-		self.LengthSplitFilament = np.asarray(self.LengthSplitFilament)
+		self.FilamentIDs = np.array(self.FilamentIDs)
+		self.FilamentPos = np.array(FilPosTemp)
+		self.xdimPos = np.array(xPosTemp)
+		self.ydimPos = np.array(yPosTemp)
+		self.zdimPos = np.array(zPosTemp)
+		self.LengthSplitFilament = np.array(self.LengthSplitFilament)
 		self.FilLengths = np.asarray(self.FilLengths)
 		print 'Boundary check time:', time.clock() - time_start, 's'
-		
+		return self.FilamentIDs, self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths
 	
 	def NumParticles_per_filament(self):
 		""" 
@@ -1411,27 +1411,32 @@ class Disperse_Plotter():
 
 	def Solve(self, filename, ndim=3):
 		""" Runs the whole thing """
-		Cache_directory = savefile_directory+'/Cache/'+'npart'+str(self.nPart)
+		Cache_directory = 'npart'+str(self.nPart)
 		if self.SigmaArg:
 			Cache_directory += 'nsig'+str(self.SigmaArg)
-		mem = Memory(cachedir=Cache_directory)
-
-		readfile = mem.cache(self.ReadFile)
-		sort_array = mem.cache(self.Sort_arrays)
+		else:
+			Cache_directory += 'nsig3'
+		mem = Memory(cachedir='/PythonCaches/'+Cache_directory)
+		
+		self.ReadFile(filename, ndim)
+		self.Sort_arrays(ndim)		
+		#readfile = mem.cache(self.ReadFile)
+		#sort_array = mem.cache(self.Sort_arrays)
 		boundary_check = mem.cache(self.Check_boundary_compact)
-		readfile(filename, ndim)
-		sort_array(ndim)
-		boundary_check()
+		#readfile(filename, ndim)
+		#sort_array(ndim)
+		self.FilamentIDs, self.FilamentPos, self.xdimPos, self.yDimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths = boundary_check()
 		if IncludeSlicing:
 			mask_slice = mem.cache(self.Mask_slices)
-			mask_slice()
+			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim = mask_slice()
+		
 		"""
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)
 		#self.Check_boundary()
-		self.Check_boundary_compact()
+		self.FilamentIDs, self.FilamentPos, self.xdimPos, self.yDimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths = self.Check_boundary_compact()
 		if IncludeSlicing:
-			self.Mask_slices()
+			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim = self.Mask_slices()
 		"""
 		#if IncludeSlicing and IncludeDMParticles and not Comparison:
 		#	self.NumParticles_per_filament_v2()
