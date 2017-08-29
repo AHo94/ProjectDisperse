@@ -13,6 +13,7 @@ from matplotlib import colors as mcolors
 #from scipy import interpolate
 import time
 from scipy import spatial
+from joblib import Memory
 
 class Disperse_Plotter():
 	"""
@@ -62,6 +63,12 @@ class Disperse_Plotter():
 				self.SigmaTitle = '\mathregular{\sigma} = 3'
 			else:
 				self.SigmaTitle = '\mathregular{\sigma} = ' + str(SigmaArg)
+
+
+		if SigmaArg:
+			self.SigmaArg = SigmaArg
+		else:
+			self.SigmaArg = False
 
 	def ReadFile(self, filename, dimensions):
 		""" Reads the data from the skeleton file from Disperse """
@@ -1403,14 +1410,28 @@ class Disperse_Plotter():
 
 	def Solve(self, filename, ndim=3):
 		""" Runs the whole thing """
+		Cache_directory = savefile_directory+'/Cache/'+'npart'+str(self.nPart)
+		if self.SigmaArg:
+			Cache_directory += 'nsig'+str(self.SigmaArg)
+		mem = Memory(cachedir=Cache_directory)
+
+		readfile = mem.cache(self.ReadFile)
+		sort_array = mem.cache(self.Sort_arrays)
+		boundary_check = mem.cache(self.Check_boundary_compact)
+		readfile(filename, ndim)
+		sort_array(ndim)
+		boundary_check()
+		if IncludeSlicing:
+			mask_slice = mem.cache(self.Mask_slices)
+			mask_slice()
+		"""
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)
 		#self.Check_boundary()
 		self.Check_boundary_compact()
 		if IncludeSlicing:
 			self.Mask_slices()
-			#self.Mask_slices_compactified()
-
+		"""
 		#if IncludeSlicing and IncludeDMParticles and not Comparison:
 		#	self.NumParticles_per_filament_v2()
 		"""
