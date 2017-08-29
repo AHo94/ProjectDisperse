@@ -957,6 +957,7 @@ class Disperse_Plotter():
 		self.LengthSplitFilament = np.asarray(self.LengthSplitFilament)
 		self.FilLengths = np.asarray(self.FilLengths)
 		print 'Boundary check time:', time.clock() - time_start, 's'
+		
 	
 	def NumParticles_per_filament(self):
 		""" 
