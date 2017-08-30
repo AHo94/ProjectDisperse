@@ -372,14 +372,14 @@ class Disperse_Plotter():
 			if not len(Indices) == 0:
 				Cutoff_filaments(Indices, i)
 
-		self.MaskedFilamentSegments = np.array(self.MaskedFilamentSegments)
-		self.MaskedLengths = np.array(self.MaskedLengths)
-		self.zdimMasked = np.array(self.zdimMasked)
-		self.CutOffFilamentSegments = np.array(self.CutOffFilamentSegments)
-		self.CutOffLengths = np.array(self.CutOffLengths)
-		self.CutOffzDim = np.array(self.CutOffzDim)
+		MaskedFilamentSegments = np.array(self.MaskedFilamentSegments)
+		MaskedLengths = np.array(self.MaskedLengths)
+		zdimMasked = np.array(self.zdimMasked)
+		CutOffFilamentSegments = np.array(self.CutOffFilamentSegments)
+		CutOffLengths = np.array(self.CutOffLengths)
+		CutOffzDim = np.array(self.CutOffzDim)
 		print 'Masking time: ', time.clock() - time_start, 's'
-		return self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim
+		return MaskedFilamentSegments, MaskedLengths, zdimMasked, CutOffFilamentSegments, CutOffLengths, CutOffzDim
 
 	def Mask_DMParticles(self):
 		""" Computes a mask for the dark matter particles """
@@ -949,15 +949,15 @@ class Disperse_Plotter():
 				if len(zNewTemp2) > 1:
 					self.LengthSplitFilament.append(TempLength)
 				
-		self.FilamentIDs = np.array(self.FilamentIDs)
-		self.FilamentPos = np.array(FilPosTemp)
-		self.xdimPos = np.array(xPosTemp)
-		self.ydimPos = np.array(yPosTemp)
-		self.zdimPos = np.array(zPosTemp)
-		self.LengthSplitFilament = np.array(self.LengthSplitFilament)
-		self.FilLengths = np.asarray(self.FilLengths)
+		FilamentIDs = np.array(self.FilamentIDs)
+		FilamentPos = np.array(FilPosTemp)
+		xdimPos = np.array(xPosTemp)
+		ydimPos = np.array(yPosTemp)
+		zdimPos = np.array(zPosTemp)
+		LengthSplitFilament = np.array(self.LengthSplitFilament)
+		FilLengths = np.asarray(self.FilLengths)
 		print 'Boundary check time:', time.clock() - time_start, 's'
-		return self.FilamentIDs, self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths
+		return FilamentIDs, FilamentPos, xdimPos, ydimPos, zdimPos, LengthSplitFilament, FilLengths
 	
 	def NumParticles_per_filament(self):
 		""" 
