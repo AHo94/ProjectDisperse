@@ -1090,16 +1090,16 @@ class Disperse_Plotter():
 
 	def Solve(self, filename, ndim=3):
 		""" Runs the whole thing """
-		Cache_directory = 'npart'+str(self.nPart)
+		cachedir_foldername_extra = 'npart'+str(self.nPart)
 		if self.SigmaArg:
-			Cache_directory += 'nsig'+str(self.SigmaArg)
+			cachedir_foldername_extra += 'nsig'+str(self.SigmaArg)
 		else:
-			Cache_directory += 'nsig3'
+			cachedir_foldername_extra += 'nsig3'
 
 		if HOMEPC == 0:
-			cachedir='/PythonCaches/'+Cache_directory+'/'
+			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
 		else:
-			cachedir='/mn/stornext/u3/aleh/Masters_project/PythonCaches/' + Cache_directory + '/'
+			cachedir='/mn/stornext/u3/aleh/Masters_project/PythonCaches/' + cachedir_foldername_extra + '/'
 
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)		
