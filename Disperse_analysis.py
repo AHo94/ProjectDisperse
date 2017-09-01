@@ -1099,7 +1099,7 @@ class Disperse_Plotter():
 		if HOMEPC == 0:
 			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
 		else:
-			cachedir='/mn/stornext/u3/aleh/Masters_project/PythonCaches/' + cachedir_foldername_extra + '/'
+			cachedir='/mn/stornext/u3/aleh/Masters_project/PythonCaches/Disperse_analysis/' + cachedir_foldername_extra + '/'
 
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)		
@@ -1554,7 +1554,7 @@ class Histogram_Comparison():
 			raise ValueError('Lists containing the histograms are not of equal length!')
 
 		Legends = ['$64^3$ part subsample', '$128^3$ part subsample', '$256^3$ part subsample', '$512^3$ particles']
-		alphas  [0.7, 0.6, 0.5, 0.4]
+		alphas = [0.7, 0.6, 0.5, 0.4]
 		N = len(Nconnections)
 		ConnectedHistComparison = plt.figure()
 		plt.hold("on")
@@ -1596,9 +1596,9 @@ class Histogram_Comparison():
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
-			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison_AllParticles' + self.ModelFilename)
-			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison_AllParticles' + self.ModelFilename)
-			NPointsHistComparison.savefig(self.results_dir + 'HistNPointsComparison_AllParticles' + self.ModelFilename)
+			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison_AllParticles_nsig' + str(nsigma) + self.ModelFilename)
+			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison_AllParticles_nsig' + str(nsigma) + self.ModelFilename)
+			NPointsHistComparison.savefig(self.results_dir + 'HistNPointsComparison_AllParticles_nsig' + str(nsigma) + self.ModelFilename)
 		elif self.savefile == 2:
 			print 'Done! No histograms to plot.'
 		else:
