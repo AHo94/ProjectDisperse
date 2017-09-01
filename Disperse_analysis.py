@@ -1860,12 +1860,3 @@ if __name__ == '__main__':
 					FilPoints_list = [NPts_64LCDM, NPts_128LCDM, NPts_256LCDM, NPts_512LCDM]
 					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
 					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list)
-					
-				"""
-				ComparisonInstance = Histogram_Comparison2(savefile=0, savefigDirectory=Comparison_dir, ndim=3, model='$\mathregular{\Lambda}$CDM',\
-													 Nparticles=[64, 128])
-				ComparisonInstance.Solve('Connections', NumConnections_list)
-				ComparisonInstance.Solve('Lengths', FilLengths_list)
-				ComparisonInstance.Solve('FilamentPoints', FilPoints_list)
-				plt.show()
-				"""
