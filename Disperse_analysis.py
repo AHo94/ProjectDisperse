@@ -1596,9 +1596,9 @@ class Histogram_Comparison():
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
-			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison_AllParticles_nsig' + str(nsigma) + self.ModelFilename)
-			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison_AllParticles_nsig' + str(nsigma) + self.ModelFilename)
-			NPointsHistComparison.savefig(self.results_dir + 'HistNPointsComparison_AllParticles_nsig' + str(nsigma) + self.ModelFilename)
+			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison_AllParticles_nsig' + str(nsigma) + filetype)
+			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison_AllParticles_nsig' + str(nsigma) + filetype)
+			NPointsHistComparison.savefig(self.results_dir + 'HistNPointsComparison_AllParticles_nsig' + str(nsigma) + filetype)
 		elif self.savefile == 2:
 			print 'Done! No histograms to plot.'
 		else:
@@ -1849,11 +1849,11 @@ if __name__ == '__main__':
 
 					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir+'SigmaComparisons/',\
 										 redshift=0, LCDM=1, nsigComparison=1)
-					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
 					ComparisonInstance_LCDM.Convergence_tests(NumConnections_list_expanded, FilLengths_list_expanded, FilPoints_list_expanded)
 					ComparisonInstance_LCDM.Sigma_plot_comparison(Nconnections_list_nsig3, FilLengths_list_nsig3, FilPoints_list_nsig3, 3)
 					ComparisonInstance_LCDM.Sigma_plot_comparison(Nconnections_list_nsig4, FilLengths_list_nsig4, FilPoints_list_nsig5, 4)
 					ComparisonInstance_LCDM.Sigma_plot_comparison(Nconnections_list_nsig5, FilLengths_list_nsig5, FilPoints_list_nsig4, 5)
+					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
 				else:
 					NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM , NumConn_256LCDM, NumConn_512LCDM]
 					FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM, FilLen_256LCDM, FilLen_512LCDM]
