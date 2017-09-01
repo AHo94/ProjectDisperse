@@ -1438,6 +1438,11 @@ class Histogram_Comparison():
 	def Plot_Histograms_particleComparison(self):
 		alphas = [0.4, 0.5, 0.6, 0.7]
 		#alphas = [0.6, 0.5, 0.4, 0.3]
+		if self.nParticles == 512:
+			subsample_text = 's'
+		else:
+			subsample_text = ' subsample'
+
 		ConnectedHistComparison = plt.figure()
 		plt.hold("on")
 		for i in range(self.N):
@@ -1448,7 +1453,7 @@ class Histogram_Comparison():
 			plt.hist(self.NumberConnections[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of connected filaments')
 		plt.ylabel('Number of occurances')
-		plt.title('Histogram comparison of number filament connections \n with '+str(self.nParticles) + '$\mathregular{^3}$ particles')		
+		plt.title('Histogram comparison of number filament connections \n with '+str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)		
 		plt.legend(self.LegendText)
 		plt.hold("off")
 	
@@ -1458,7 +1463,7 @@ class Histogram_Comparison():
 			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
-		plt.title('Histogram comparison of filament length \n with' +str(self.nParticles) + '$\mathregular{^3}$ particles')
+		plt.title('Histogram comparison of filament length \n with' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
 		plt.legend(self.LegendText)
 		plt.hold("off")
 
@@ -1472,7 +1477,7 @@ class Histogram_Comparison():
 			plt.hist(self.NPointsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of points per filament')
 		plt.ylabel('Number of occurances')
-		plt.title('Histogram comparison of number of datapoints per filament \n with' +str(self.nParticles) + '$\mathregular{^3}$ particles')
+		plt.title('Histogram comparison of number of datapoints per filament \n with' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
 		plt.legend(self.LegendText)
 		plt.hold("off")
 
@@ -1492,7 +1497,7 @@ class Histogram_Comparison():
 			raise ValueError('Lists containing the histograms are not of equal length!')
 
 		alphas = [0.65, 0.6, 0.55, 0.5, 0.45, 0.4]
-		Legends = ['$\mathregular{\sigma=5}, 64^3$ part', '$\mathregular{\sigma=4}, 64^3$ part', '$\mathregular{\sigma=3}, 64^3$ part', \
+		Legends = ['$\mathregular{\sigma=5}, 64^3$ part subsample', '$\mathregular{\sigma=4}, 64^3$ part subsample', '$\mathregular{\sigma=3}, 64^3$ part subsample', \
 					'$\mathregular{\sigma=5}, 512^3$ part', '$\mathregular{\sigma=4}, 512^3$ part', '$\mathregular{\sigma=3}, 512^3$ part']
 		N = len(Nconnections)
 		ConnectedHistComparison = plt.figure()
@@ -1544,8 +1549,64 @@ class Histogram_Comparison():
 			plt.show()
 		plt.close('all')
 
+	def Sigma_plot_comparison(self, Nconnections, FilLengths, NptsPerFilament, nsigma):
+		if len(Nconnections) != len(FilLengths) or len(Nconnections) != len(NptsPerFilament) or len(FilLengths) != len(NptsPerFilament):
+			raise ValueError('Lists containing the histograms are not of equal length!')
+
+		Legends = ['$64^3$ part subsample', '$128^3$ part subsample', '$256^3$ part subsample', '$512^3$ particles']
+		alphas  [0.7, 0.6, 0.5, 0.4]
+		N = len(Nconnections)
+		ConnectedHistComparison = plt.figure()
+		plt.hold("on")
+		for i in range(N):
+			DataMin = min(Nconnections[i])
+			DataMax = max(Nconnections[i])
+			BinSize = (DataMax - DataMin)/(0.5) + 1
+			BinList = np.linspace(DataMin, DataMax, BinSize)
+			plt.hist(Nconnections[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
+		plt.xlabel('Number of connected filaments')
+		plt.ylabel('Number of occurances')
+		plt.title('Histogram comparison of number connections per filament for $\mathregular{\sigma=}$' + str(nsigma))
+		plt.legend(Legends)
+		plt.hold("off")
+
+		LengthHistComparison = plt.figure()
+		plt.hold("on")
+		for i in range(N):
+			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
+		plt.xlabel('Filament lengths')
+		plt.ylabel('Number of occurances')
+		plt.title('Histogram comparison of filament lengths for $\mathregular{\sigma=}$' + str(nsigma))
+		plt.legend(Legends)
+		plt.hold("off")
+
+		NPointsHistComparison = plt.figure()
+		plt.hold("on")
+		for i in range(N):
+			DataMin = min(NptsPerFilament[i])
+			DataMax = max(NptsPerFilament[i])
+			BinSize = (DataMax - DataMin)/(0.5) + 1
+			BinList = np.linspace(DataMin, DataMax, BinSize)
+			plt.hist(NptsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
+		plt.xlabel('Number of points per filament')
+		plt.ylabel('Number of occurances')
+		plt.title('Histogram comparison of number data points per filament for $\mathregular{\sigma=}$' + str(nsigma))
+		plt.legend(Legends)
+		plt.hold("off")
+
+		if self.savefile == 1:
+			print '--- SAVING IN: ', self.results_dir, ' ---'
+			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison_AllParticles' + self.ModelFilename)
+			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison_AllParticles' + self.ModelFilename)
+			NPointsHistComparison.savefig(self.results_dir + 'HistNPointsComparison_AllParticles' + self.ModelFilename)
+		elif self.savefile == 2:
+			print 'Done! No histograms to plot.'
+		else:
+			plt.show()
+		plt.close('all')
+
 if __name__ == '__main__':
-	HOMEPC = 0					# Set 1 if working in UiO terminal
+	HOMEPC = 1					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1556,16 +1617,16 @@ if __name__ == '__main__':
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
 	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
-	IncludeSlicing = 1 			# Set 1 to include slices of the box
+	IncludeSlicing = 0 			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
 	MaskZdir = 1
 
 	# Histogram plots
 	HistogramPlots = 0			# Set to 1 to plot histograms
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1731,7 +1792,7 @@ if __name__ == '__main__':
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-			"""
+			
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
 			LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
@@ -1739,7 +1800,7 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_256Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
 			NumConn_256LCDM, FilLen_256LCDM, NPts_256LCDM = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl')
-			"""
+			
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 			LCDM_z0_512Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
 			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
@@ -1747,13 +1808,23 @@ if __name__ == '__main__':
 			if SigmaComparison:
 				LCDM64_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma4/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM64_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma5/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
-				NConn_64nsig4, FilLen_64nsig4, NPts_64nsig4 =LCDM64_instance_nsig4.Solve(LCDM_z0_64_dir+'Sigma4/SkelconvOutput_LCDMz064_nsig4.a.NDskl')
-				NConn_64nsig5, FilLen_64nsig5, NPts_64nsig5 =LCDM64_instance_nsig5.Solve(LCDM_z0_64_dir+'Sigma5/SkelconvOutput_LCDMz064_nsig5.a.NDskl')
+				NConn_64nsig4, FilLen_64nsig4, NPts_64nsig4 = LCDM64_instance_nsig4.Solve(LCDM_z0_64_dir+'Sigma4/SkelconvOutput_LCDMz064_nsig4.a.NDskl')
+				NConn_64nsig5, FilLen_64nsig5, NPts_64nsig5 = LCDM64_instance_nsig5.Solve(LCDM_z0_64_dir+'Sigma5/SkelconvOutput_LCDMz064_nsig5.a.NDskl')
+
+				LCDM128_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Sigma4/', nPart=128, model='LCDM', redshift=0, SigmaArg=4)
+				LCDM128_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Sigma5/', nPart=128, model='LCDM', redshift=0, SigmaArg=5)
+				NConn_128nsig4, FilLen_128nsig4, NPts_128nsig4 = LCDM128_instance_nsig4.Solve(LCDM_z0_128_dir+'Sigma4/SkelconvOutput_LCDMz0128_nsig4.a.NDskl')
+				NConn_128nsig5, FilLen_128nsig5, NPts_128nsig5 = LCDM128_instance_nsig5.Solve(LCDM_z0_128_dir+'Sigma5/SkelconvOutput_LCDMz0128_nsig5.a.NDskl')
+
+				LCDM256_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_256_dir+'Sigma4/', nPart=256, model='LCDM', redshift=0, SigmaArg=4)
+				LCDM256_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_256_dir+'Sigma5/', nPart=256, model='LCDM', redshift=0, SigmaArg=5)
+				NConn_256nsig4, FilLen_256nsig4, NPts_256nsig4 = LCDM256_instance_nsig4.Solve(LCDM_z0_256_dir+'Sigma4/SkelconvOutput_LCDMz0256_nsig4.a.NDskl')
+				NConn_256nsig5, FilLen_256nsig5, NPts_256nsig5 = LCDM256_instance_nsig5.Solve(LCDM_z0_256_dir+'Sigma5/SkelconvOutput_LCDMz0256_nsig5.a.NDskl')
 
 				LCDM512_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Sigma4/', nPart=512, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM512_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Sigma5/', nPart=512, model='LCDM', redshift=0, SigmaArg=5)
-				NConn_512nsig4, FilLen_512nsig4, NPts_512nsig4 =LCDM512_instance_nsig4.Solve(LCDM_z0_512_dir+'Sigma4/SkelconvOutput_LCDMz0512_nsig4.a.NDskl')
-				NConn_512nsig5, FilLen_512nsig5, NPts_512nsig5 =LCDM512_instance_nsig5.Solve(LCDM_z0_512_dir+'Sigma5/SkelconvOutput_LCDMz0512_nsig5.a.NDskl')
+				NConn_512nsig4, FilLen_512nsig4, NPts_512nsig4 = LCDM512_instance_nsig4.Solve(LCDM_z0_512_dir+'Sigma4/SkelconvOutput_LCDMz0512_nsig4.a.NDskl')
+				NConn_512nsig5, FilLen_512nsig5, NPts_512nsig5 = LCDM512_instance_nsig5.Solve(LCDM_z0_512_dir+'Sigma5/SkelconvOutput_LCDMz0512_nsig5.a.NDskl')
 				
 			Comparison_dir = 'lcdm_testing/Comparison_plots/'
 			if Comparison == 1 and ModelCompare == 0:
@@ -1766,11 +1837,23 @@ if __name__ == '__main__':
 					FilLengths_list_expanded = [FilLen_64LCDM, FilLen_64nsig4, FilLen_64nsig5, FilLen_512LCDM, FilLen_512nsig4, FilLen_512nsig5]
 					FilPoints_list_expanded = [NPts_64LCDM, NPts_64nsig4, NPts_64nsig5, NPts_512LCDM, NPts_512nsig4, NPts_512nsig5]
 
+					Nconnections_list_nsig3 = [NumConn_64LCDM, NumConn_128LCDM, NumConn_256LCDM, NumConn_512LCDM]
+					Nconnections_list_nsig4 = [NConn_64nsig4, NConn_128nsig4, NConn_256nsig4, NConn_512nsig4]
+					Nconnections_list_nsig5 = [NConn_64nsig5, NConn_128nsig5, NConn_256nsig5, NConn_512nsig5]
+					FilLengths_list_nsig3 = [FilLen_64LCDM, FilLen_128LCDM, FilLen_256LCDM, FilLen_512LCDM]
+					FilLengths_list_nsig4 = [FilLen_64nsig4, FilLen_128nsig4, FilLen_256nsig4, FilLen_512nsig4]
+					FilLengths_list_nsig5 = [FilLen_64nsig5, FilLen_128nsig5, FilLen_256nsig5, FilLen_512nsig5]
+					FilPoints_list_nsig3 = [NPts_64LCDM, NPts_128LCDM, NPts_256LCDM, NPts_512LCDM]
+					FilPoints_list_nsig4 = [NPts_64nsig4, NPts_128nsig4, NPts_256nsig4, NPts_512nsig4]
+					FilPoints_list_nsig5 = [NPts_64nsig5, NPts_128nsig5, NPts_256nsig5, NPts_512nsig5]					
+
 					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir+'SigmaComparisons/',\
 										 redshift=0, LCDM=1, nsigComparison=1)
 					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
 					ComparisonInstance_LCDM.Convergence_tests(NumConnections_list_expanded, FilLengths_list_expanded, FilPoints_list_expanded)
-
+					ComparisonInstance_LCDM.Sigma_plot_comparison(Nconnections_list_nsig3, FilLengths_list_nsig3, FilPoints_list_nsig3, 3)
+					ComparisonInstance_LCDM.Sigma_plot_comparison(Nconnections_list_nsig4, FilLengths_list_nsig4, FilPoints_list_nsig5, 4)
+					ComparisonInstance_LCDM.Sigma_plot_comparison(Nconnections_list_nsig5, FilLengths_list_nsig5, FilPoints_list_nsig4, 5)
 				else:
 					NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM , NumConn_256LCDM, NumConn_512LCDM]
 					FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM, FilLen_256LCDM, FilLen_512LCDM]
