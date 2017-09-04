@@ -439,18 +439,6 @@ class Disperse_Plotter():
 				
 		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
 
-	def Filament_Length(self, dimensions):
-		""" Computes the length of the filament """
-		print 'Computing filament lengths'
-		if dimensions == 3:
-			self.FilLengths = []
-			for i in range(self.NFils-1):
-				TempLength = 0
-				for j in range(len(self.xdimPos[i])-1):
-					TempLength += np.sqrt((self.xdimPos[i][j+1] - self.xdimPos[i][j])**2.0 + (self.ydimPos[i][j+1] - self.ydimPos[i][j])**2.0\
-								 + (self.zdimPos[i][j+1] - self.zdimPos[i][j])**2.0)
-				self.FilLengths.append(TempLength)
-
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
 		print 'Plotting'
