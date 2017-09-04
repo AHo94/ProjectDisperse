@@ -14,6 +14,7 @@ from matplotlib import colors as mcolors
 import time
 from scipy import spatial
 import cPickle as pickle
+import BoundaryChecker
 
 class Disperse_Plotter():
 	"""
@@ -1110,14 +1111,16 @@ class Disperse_Plotter():
 		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
 		if os.path.isfile(Boundary_check_cachefn):
 			print "reading from boundary check pickle file..."
-			BC_checker = pickle.load(open(Boundary_check_cachefn, 'rb'))
+			BC_instance_variables = pickle.load(open(Boundary_check_cachefn, 'rb'))
 		else:
-			BC_checker = self.Check_boundary()
-			pickle.dump(BC_checker, open(Boundary_check_cachefn, 'wb'))
-		self.FilamentIDs, self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths = BC_checker
+			BC_instance = BoundaryChecker.BoundaryChecker(self.xmin, self.xmax, self.xdimPos, self.ydimPos, self.zdimPos, self.FilID, self.NFils)
+			BC_instance_variables = BC_instance.Get_periodic_boundary()
+			#BC_checker = self.Check_boundary()
+			pickle.dump(BC_instance_variables, open(Boundary_check_cachefn, 'wb'))
+		self.FilamentIDs, self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths = BC_instance_variables
 
 		if IncludeSlicing:
-			Mask_slice_cachefn = cachedir + "mask_slice.p"		
+			Mask_slice_cachefn = cachedir + "mask_slice.p"
 			if os.path.isfile(Mask_slice_cachefn):
 				print "reading from mask_slice pickle file..."
 				Mask_checker = pickle.load(open(Mask_slice_cachefn, 'rb'))
@@ -1606,7 +1609,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1617,16 +1620,16 @@ if __name__ == '__main__':
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
 	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
-	IncludeSlicing = 0 			# Set 1 to include slices of the box
+	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
 	MaskZdir = 1
 
 	# Histogram plots
 	HistogramPlots = 0			# Set to 1 to plot histograms
-	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1703,7 +1706,7 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
