@@ -847,7 +847,11 @@ class Disperse_Plotter():
 		plt.close('all')
 
 	def Solve(self, filename, ndim=3):
-		""" Runs the whole thing """
+		""" 
+		Runs the whole thing.
+		Creates a pickle file of certain data unless it already exist
+		"""
+
 		cachedir_foldername_extra = 'npart'+str(self.nPart)
 		if self.SigmaArg:
 			cachedir_foldername_extra += 'nsig'+str(self.SigmaArg)
@@ -858,33 +862,41 @@ class Disperse_Plotter():
 			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
 		else:
 			cachedir='/mn/stornext/u3/aleh/Masters_project/PythonCaches/Disperse_analysis/' + cachedir_foldername_extra + '/'
-
+		if not os.path.isdir(cachedir):
+			os.makedirs(cachedir)
+		
+		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
+		Mask_slice_cachefn = cachedir + "mask_slice.p"
+		Mask_check_fn = cachedir + 'masking_check.p'
+		
 		self.ReadFile(filename, ndim)
 		self.Sort_arrays(ndim)		
 		
-		if not os.path.isdir(cachedir):
-			os.makedirs(cachedir)
+		if os.path.isfile(Mask_check_fn):
+			Masking_pickle = pickle.load(open(Mask_check_fn, 'rb'))
+			if not MaskXdir == Masking_pickle[0] or not MaskYdir == Masking_pickle[1] or not MaskZdir == Masking_pickle[2]:	
+				print 'Mask directions changed. Removing old pickle files'
+				os.remove(Boundary_check_cachefn)
+				os.remove(Mask_slice_cachefn)
+		else:
+			pickle.dump([MaskXdir, MaskYdir, MaskZdir], open(Mask_check_fn,'wb'))
 
-		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
 		if os.path.isfile(Boundary_check_cachefn):
 			print "reading from boundary check pickle file..."
 			BC_instance_variables = pickle.load(open(Boundary_check_cachefn, 'rb'))
 		else:
 			BC_instance = BoundaryChecker.BoundaryChecker(self.xmin, self.xmax, self.xdimPos, self.ydimPos, self.zdimPos, self.FilID, self.NFils)
 			BC_instance_variables = BC_instance.Get_periodic_boundary()
-			#BC_checker = self.Check_boundary()
 			pickle.dump(BC_instance_variables, open(Boundary_check_cachefn, 'wb'))
 		self.FilamentIDs, self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths = BC_instance_variables
 
 		if IncludeSlicing:
-			Mask_slice_cachefn = cachedir + "mask_slice.p"
 			if os.path.isfile(Mask_slice_cachefn):
 				print "reading from mask_slice pickle file..."
 				Mask_instance_variables = pickle.load(open(Mask_slice_cachefn, 'rb'))
 			else:
-				#Mask_checker = self.Mask_slices()
 				Mask_instance = FilamentMasking.FilamentMasking(self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,\
-												 self.Nfils, Mask_direction_check, Mask_boundary_list)
+												self.LengthSplitFilament , self.NFils, Mask_direction_check, Mask_boundary_list)
 				Mask_instance_variables = Mask_instance.Mask_slices()
 				pickle.dump(Mask_instance_variables, open(Mask_slice_cachefn, 'wb'))
 			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
@@ -1469,7 +1481,7 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
