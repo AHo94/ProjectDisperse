@@ -109,3 +109,6 @@ ENV/
 *.out
 *.gz
 *.tex
+
+# Python compiler files
+*.pyc
