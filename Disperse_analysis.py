@@ -5,16 +5,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d import Axes3D
-#from matplotlib.collections import PolyCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import os
 #import scipy.stats as stats
 from matplotlib import colors as mcolors
-#from scipy import interpolate
 import time
 from scipy import spatial
 import cPickle as pickle
+
+# Own modules
 import BoundaryChecker
+import FilamentMasking
 
 class Disperse_Plotter():
 	"""
@@ -879,11 +880,14 @@ class Disperse_Plotter():
 			Mask_slice_cachefn = cachedir + "mask_slice.p"
 			if os.path.isfile(Mask_slice_cachefn):
 				print "reading from mask_slice pickle file..."
-				Mask_checker = pickle.load(open(Mask_slice_cachefn, 'rb'))
+				Mask_instance_variables = pickle.load(open(Mask_slice_cachefn, 'rb'))
 			else:
-				Mask_checker = self.Mask_slices()
-				pickle.dump(Mask_checker, open(Mask_slice_cachefn, 'wb'))
-			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim = Mask_checker
+				#Mask_checker = self.Mask_slices()
+				Mask_instance = FilamentMasking.FilamentMasking(self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,\
+												 self.Nfils, Mask_direction_check, Mask_boundary_list)
+				Mask_instance_variables = Mask_instance.Mask_slices()
+				pickle.dump(Mask_instance_variables, open(Mask_slice_cachefn, 'wb'))
+			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
 
 		
 		"""
@@ -1438,6 +1442,9 @@ if __name__ == '__main__':
 			LowerBoundaryZDir = 0.45*UnitConverter
 			UpperBoundaryZDir = 0.55*UnitConverter
 			print 'Masking Z direction'
+
+	Mask_boundary_list = [UpperBoundaryXDir, UpperBoundaryYDir, UpperBoundaryZDir, LowerBoundaryXDir, LowerBoundaryYDir, LowerBoundaryZDir]
+	Mask_direction_check = [MaskXdir, MaskYdir, MaskZdir]
 
 	if SaveAsPNG == 1 and SaveAsPDF	== 1:
 		raise ValueError('Cannot save both PDF and PNG at the same time. Only allow one at a time.')
