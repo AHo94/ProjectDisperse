@@ -755,7 +755,8 @@ class Disperse_Plotter():
 	def Solve(self, filename, ndim=3):
 		""" 
 		Runs the whole thing.
-		Creates a pickle file of certain data unless it already exist
+		Creates a pickle file of certain data unless it already exist.
+		Removes the old pickle files if any of the mask directions are changed.
 		"""
 
 		cachedir_foldername_extra = 'npart'+str(self.nPart)
@@ -807,15 +808,6 @@ class Disperse_Plotter():
 				pickle.dump(Mask_instance_variables, open(Mask_slice_cachefn, 'wb'))
 			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
 
-		
-		"""
-		self.ReadFile(filename, ndim)
-		self.Sort_arrays(ndim)
-		#self.Check_boundary()
-		self.FilamentIDs, self.FilamentPos, self.xdimPos, self.yDimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths = self.Check_boundary_compact()
-		if IncludeSlicing:
-			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim = self.Mask_slices()
-		"""
 		#if IncludeSlicing and IncludeDMParticles and not Comparison:
 		#	self.NumParticles_per_filament_v2()
 		"""
