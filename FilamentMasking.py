@@ -1,7 +1,8 @@
 import numpy as np
+import time
 
 class FilamentMasking():
-	def __init__(self, FilamentPos, xpoints, ypoints, zpoints, NumFilaments, mask_dir, boundaries):
+	def __init__(self, FilamentPos, xpoints, ypoints, zpoints, lengths, NumFilaments, mask_dir, boundaries):
 		self.FilamentPos = FilamentPos
 		self.xdimPos = xpoints
 		self.ydimPos = ypoints
@@ -9,6 +10,7 @@ class FilamentMasking():
 		self.NFils = NumFilaments
 		self.Boundary_list = boundaries
 		self.Masking_directions = mask_dir
+		self.LengthSplitFilament = lengths
 
 	def Mask_slices(self):
 		"""
