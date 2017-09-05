@@ -80,6 +80,8 @@ class Disperse_Plotter():
 		datafiles = open(os.path.join(file_directory, filename), 'r')
 		self.CriticalPoints = []
 		self.Filaments = []
+		self.CriticalPointsData = []
+		self.FilamentsData = []
 
 		for line in datafiles:
 			data_set = line.split()
@@ -123,11 +125,23 @@ class Disperse_Plotter():
 						SETLIMIT += 1
 
 			if '[CRITICAL POINTS DATA]' in line:
-				break
+				for lineCritPtsData in datafiles:
+					dataCritPtsData = lineCritPtsData.split()
+					if '[FILAMENTS DATA]' in lineCritPtsData:
+						line = lineCritPtsData
+						break
+					else:
+						self.CriticalPointsData.append(dataCritPtsData)
+			if '[FILAMENTS DATA]' in line:
+				for lineFilData in datafiles:
+					dataFilData = lineFilData.split()
+					self.FilamentsData.append(dataFilData)
 
 		datafiles.close()
 		self.CriticalPoints = np.asarray(self.CriticalPoints)
 		self.Filaments = np.asarray(self.Filaments)
+		self.CriticalPointsData = np.asarray(self.CriticalPointsData)
+		self.FilamentsData = np.asarray(self.FilamentsData)
 		print 'Time elapsed for filament data reading: ', time.clock() - time_start, 's'
 
 	def Read_SolveFile(self):
@@ -1470,7 +1484,7 @@ if __name__ == '__main__':
 				DM_KDTree = SolveReadInstance.DM_tree
 				"""
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			"""
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
