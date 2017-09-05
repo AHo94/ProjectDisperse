@@ -326,8 +326,48 @@ class Disperse_Plotter():
 		Sorts the data of the filaments and critical points.
 		Data to be sorted includes: Persistence, persistence pairs, persistence ratios, field values, etc.
 		"""
-		h = 111
+		print 'Sorting data of filaments and critical points'
+		header_count_critpoint = int(self.CriticalPointsData[0][0])
+		self.Persistence_ratio = []
+		self.Persistence_nsigmas = []
+		self.Persistence = []
+		self.Persistence_pair = []
+		self.Parent_index = []
+		self.Parent_log_index = []
+		self.log_CritPoint_field_value = []
+		self.CritPoint_field_value = []
+		self.CritPoint_cell = []
 
+		for i in range(1, len(self.CriticalPointsData)):
+			if i <= header_count_critpoint:
+				continue
+			else:
+				self.Persistence_ratio.append(float(self.CriticalPointsData[i][0]))
+				self.Persistence_nsigmas.append(float(self.CriticalPointsData[i][1]))
+				self.Persistence.append(float(self.CriticalPointsData[i][2]))
+				self.Persistence_pair.append(int(self.CriticalPointsData[i][3]))
+				self.Parent_index.append(int(self.CriticalPointsData[i][4]))
+				self.Parent_log_index.append(int(self.CriticalPointsData[i][5]))
+				self.log_CritPoint_field_value.append(float(self.CriticalPointsData[i][6]))
+				self.CritPoint_field_value.append(float(self.CriticalPointsData[i][7]))
+				self.CritPoint_cell.append(float(self.CriticalPointsData[i][8]))
+
+		header_count_filament = int(self.FilamentsData[0][0])
+		self.Filament_field_value = []
+		self.orientation = []
+		self.Filament_cell = []
+		self.log_Filament_field_value = []
+		self.Filament_type = []
+
+		for j in range(1, len(self.FilamentsData)):
+			if j <= header_count_filament:
+				continue
+			else:
+				self.Filament_field_value.append(float(self.FilamentsData[i][0]))
+				self.orientation.append(int(self.FilamentsData[i][1]))
+				self.Filament_cell.append(float(self.FilamentsData[i][2]))
+				self.log_Filament_field_value.append(float(self.FilamentsData[i][3]))
+				self.Filament_type.append(int(self.FilamentsData[i][4]))
 
 	def Mask_DMParticles(self):
 		""" Computes a mask for the dark matter particles """
@@ -798,7 +838,7 @@ class Disperse_Plotter():
 
 		if robustness:
 			cachedir_foldername_extra += 'TRIM'
-			
+
 		if HOMEPC == 0:
 			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
 		else:
@@ -812,7 +852,8 @@ class Disperse_Plotter():
 		Mask_check_fn = cachedir + 'masking_check.p'
 		
 		self.ReadFile(filename, ndim)
-		self.Sort_filament_coordinates(ndim)		
+		self.Sort_filament_coordinates(ndim)
+		self.Sort_filament_data()	
 		
 		if os.path.isfile(Mask_check_fn):
 			Masking_pickle = pickle.load(open(Mask_check_fn, 'rb'))
@@ -1227,14 +1268,14 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 1			# Set to 1 to plot histograms
+	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
@@ -1425,9 +1466,9 @@ if __name__ == '__main__':
 			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
 			"""
 
-			LCDM_z0_64_Robustness_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/Robustness_argument/'
-			LCDM_z0_64_RobustnessInstance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_Robustness_dir+'Plots_Robustness/', nPart=64, model='LCDM', redshift=0)
-			NumConn_64LCDM_rob, FilLen_64LCDM_rob, NPts_64LCDM_rob = LCDM_z0_64_RobustnessInstance.Solve(LCDM_z0_64_Robustness_dir+'SkelconvOutput_LCDMz064_robustness3.TRIM.a.NDskl', robustness=True)
+			#LCDM_z0_64_Robustness_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/Robustness_argument/'
+			#LCDM_z0_64_RobustnessInstance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_Robustness_dir+'Plots_Robustness/', nPart=64, model='LCDM', redshift=0)
+			#NumConn_64LCDM_rob, FilLen_64LCDM_rob, NPts_64LCDM_rob = LCDM_z0_64_RobustnessInstance.Solve(LCDM_z0_64_Robustness_dir+'SkelconvOutput_LCDMz064_robustness3.TRIM.a.NDskl', robustness=True)
 
 			if SigmaComparison:
 				LCDM64_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma4/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
