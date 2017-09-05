@@ -108,9 +108,11 @@ class Read_Gadget_file():
 		DM_points = np.dstack((self.PartPos[:,0].ravel(), self.PartPos[:,1].ravel(), self.PartPos[:,2].ravel()))
 		self.DM_tree = spatial.KDTree(DM_points[0])
 
-	def Get_particles(self):
+	def Get_particles(self, includeKDTree=True):
 		self.read_file()
 		self.Create_Mask()
-		self.Create_KDTree()
-
+		if includeKDTree:
+			self.Create_KDTree()
+		else:
+			self.DM_tree = None
 		return self.PartPosX, self.PartPosY, self.PartPosZ, self.DM_tree
