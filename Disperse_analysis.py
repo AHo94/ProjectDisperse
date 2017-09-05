@@ -1,21 +1,22 @@
-### Set comment on the two below to plot. Only use if running on papsukal, nekkar etc. 
+### Set comment on the two below to plot. Only use if running on euclid21 or other institute computers. 
 #import matplotlib
 #matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.collections import LineCollection
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.colors import ListedColormap, BoundaryNorm
-import os
-#import scipy.stats as stats
 from matplotlib import colors as mcolors
-import time
+from matplotlib.collections import LineCollection
+from matplotlib.colors import ListedColormap, BoundaryNorm
+from mpl_toolkits.mplot3d import Axes3D
+#import scipy.stats as stats
 from scipy import spatial
+import os
+import time
 import cPickle as pickle
 
 # Own modules
 import BoundaryChecker
 import FilamentMasking
+import ReadGadgetFile
 
 class Disperse_Plotter():
 	"""
@@ -1457,6 +1458,8 @@ if __name__ == '__main__':
 			solve_filename = 'lcdm_z0_test.solve'
 			
 			if IncludeDMParticles == 1:
+				PartPosX, PartPosY, PartPosZ, DM_KDTree = ReadGadgetFile.Read_Gadget_file(Mask_direction_check)
+				"""
 				#SolveReadInstance = Read_solve_files()
 				SolveReadInstance = Read_Gadget_file()
 				#ParticlePos = SolveReadInstance.ParticlePos
@@ -1464,7 +1467,7 @@ if __name__ == '__main__':
 				PartPosY = SolveReadInstance.PartPosY
 				PartPosZ = SolveReadInstance.PartPosZ
 				DM_KDTree = SolveReadInstance.DM_tree
-
+				"""
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
