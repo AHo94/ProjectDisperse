@@ -1,13 +1,10 @@
 import numpy as np
+from scipy import spatial
 
 class Read_Gadget_file():
-	def __init__(self, mask_check):
-		self.read_file()
-		self.Create_Mask()
-		self.Create_KDTree()
+	def __init__(self, mask_check, boundary_list):
 		self.Mask_check_list = mask_check
-
-		return self.PartPosX, self.PartPosY, self.PartPosZ, self.DM_tree
+		self.Boundary_list = boundary_list
 
 	def read_file(self):
 		""" 
@@ -70,6 +67,13 @@ class Read_Gadget_file():
 		MaskXdir = self.Mask_check_list[0]
 		MaskYdir = self.Mask_check_list[1]
 		MaskZdir = self.Mask_check_list[2]
+		UpperBoundaryXDir = self.Boundary_list[0]
+		UpperBoundaryYDir = self.Boundary_list[1]
+		UpperBoundaryZDir = self.Boundary_list[2]
+		LowerBoundaryXDir = self.Boundary_list[3]
+		LowerBoundaryYDir = self.Boundary_list[4]
+		LowerBoundaryZDir = self.Boundary_list[5]
+
 		if not MaskXdir and not MaskYdir and MaskZdir:
 			self.mask = np.logical_and(self.PartPos[:,2] < UpperBoundaryZDir, self.PartPos[:,2] > LowerBoundaryZDir)
 		elif not MaskXdir and MaskYdir and not MaskZdir:
@@ -101,3 +105,10 @@ class Read_Gadget_file():
 		""" Creates a KDTree of all the dark matter particles """
 		DM_points = np.dstack((self.PartPos[:,0].ravel(), self.PartPos[:,1].ravel(), self.PartPos[:,2].ravel()))
 		self.DM_tree = spatial.KDTree(DM_points[0])
+
+	def Get_particles(self):
+		self.read_file()
+		self.Create_Mask()
+		self.Create_KDTree()
+
+		return self.PartPosX, self.PartPosY, self.PartPosZ, self.DM_tree
