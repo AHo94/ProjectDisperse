@@ -1,10 +1,11 @@
 import numpy as np
 
 class Read_Gadget_file():
-	def __init__(self):
+	def __init__(self, mask_check):
 		self.read_file()
 		self.Create_Mask()
 		self.Create_KDTree()
+		self.Mask_check_list = mask_check
 
 		return self.PartPosX, self.PartPosY, self.PartPosZ, self.DM_tree
 
@@ -66,6 +67,9 @@ class Read_Gadget_file():
 		
 	def Create_Mask(self):
 		""" Creates a mask for the dark matter particles """
+		MaskXdir = self.Mask_check_list[0]
+		MaskYdir = self.Mask_check_list[1]
+		MaskZdir = self.Mask_check_list[2]
 		if not MaskXdir and not MaskYdir and MaskZdir:
 			self.mask = np.logical_and(self.PartPos[:,2] < UpperBoundaryZDir, self.PartPos[:,2] > LowerBoundaryZDir)
 		elif not MaskXdir and MaskYdir and not MaskZdir:
