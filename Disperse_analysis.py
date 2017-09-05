@@ -13,6 +13,11 @@ import os
 import time
 import cPickle as pickle
 
+# Disable warnings from matplotlib	
+import warnings
+import matplotlib.cbook
+warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
+
 # Own modules
 import BoundaryChecker
 import FilamentMasking
@@ -177,13 +182,13 @@ class Disperse_Plotter():
 		datafiles.close()
 		print 'Read solve file time: ', time.clock() - time_start, 's'
 
-	def Sort_arrays(self, dimensions):
+	def Sort_filament_coordinates(self, dimensions):
 		""" 
-		Sorts data to their respective arrays 
-		Data to be sorted: Critical points, ID of filament and filament points
+		Sorts the coordinates of the filaments and critical points to their respective arrays 
+		Data to be sorted: Critical points coordinate, ID of filament and filament coordinates
 		"""
 		time_start = time.clock()
-		print 'Sorting data ...'
+		print 'Sorting filament and critical point positions ...'
 		if FilamentLimit == 0:
 			self.NFils = int(self.Filaments[0][0])
 		else:
@@ -315,6 +320,14 @@ class Disperse_Plotter():
 			self.zdimPos = np.array(self.zdimPos)
 
 		print 'Array sorting time: ', time.clock() - time_start, 's'
+
+	def Sort_filament_data(self):
+		""" 
+		Sorts the data of the filaments and critical points.
+		Data to be sorted includes: Persistence, persistence pairs, persistence ratios, field values, etc.
+		"""
+		h = 111
+
 
 	def Mask_DMParticles(self):
 		""" Computes a mask for the dark matter particles """
@@ -553,12 +566,13 @@ class Disperse_Plotter():
 				ax.set_ylim(self.ymin, self.ymax)
 				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection(line_segments)
-				plt.hold("on")
+				plt.hold(True)
 				plt.plot(self.CritPointXpos, self.CritPointYpos, 'ro', alpha=0.7, markersize=3)
 				#plt.plot(self.CritPointXposNOTCON, self.CritPointYposNOTCON, 'go', alpha=0.7, markersize=3)
 				plt.xlabel('$\mathregular{x}$')
 				plt.ylabel('$\mathregular{y}$')
 				plt.title('Position of the filaments with critical points shown')
+				plt.hold(False)
 		if ndim == 3:
 			if PlotFilaments:
 				FilPositions = plt.figure()
@@ -580,12 +594,13 @@ class Disperse_Plotter():
 				ax.set_zlim(self.zmin, self.zmax)
 				line_segments = LineCollection(self.FilamentPos, linestyle='solid', array=ColorArray, cmap=plt.cm.gist_ncar)
 				ax.add_collection3d(line_segments, self.zdimPos, zdir='z')
-				plt.hold("on")
+				plt.hold(True)
 				ax.plot(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos, 'ro', alpha=0.7, markersize=3)
 				ax.set_xlabel('$\mathregular{x}$' + LegendText)
 				ax.set_ylabel('$\mathregular{y}$' + LegendText)
 				ax.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('3D Position of the filaments with critical points')
+				plt.hold(False)
 			if Projection2D:
 				FilPositions_2DProjection = plt.figure()
 				ax = plt.axes()
@@ -694,7 +709,7 @@ class Disperse_Plotter():
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 
 					DMParticleHistwFilaments = plt.figure()
-					plt.hold("on")
+					plt.hold(True)
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.xmax)
 					ax.set_ylim(self.ymin, self.ymax)
@@ -707,9 +722,10 @@ class Disperse_Plotter():
 					plt.hold("off")
 					plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar.'\
 							+ 'Colors indicate average z-value.')
+					plt.hold(False)
 
 					DMParticleHistwFilamentsLengthCbar = plt.figure()
-					plt.hold("on")
+					plt.hold(True)
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.xmax)
 					ax.set_ylim(self.ymin, self.ymax)
@@ -719,7 +735,7 @@ class Disperse_Plotter():
 					plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
-					plt.hold("off")
+					plt.hold(False)
 					plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar.'\
 							 +'Colors indicate length of a filament.')
 
@@ -783,7 +799,8 @@ class Disperse_Plotter():
 		if HOMEPC == 0:
 			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
 		else:
-			cachedir='/mn/stornext/u3/aleh/Masters_project/PythonCaches/Disperse_analysis/' + cachedir_foldername_extra + '/'
+			#cachedir='/mn/stornext/u3/aleh/Masters_project/PythonCaches/Disperse_analysis/' + cachedir_foldername_extra + '/'
+			cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis' + cachedir_foldername_extra + '/'
 		if not os.path.isdir(cachedir):
 			os.makedirs(cachedir)
 		
@@ -792,7 +809,7 @@ class Disperse_Plotter():
 		Mask_check_fn = cachedir + 'masking_check.p'
 		
 		self.ReadFile(filename, ndim)
-		self.Sort_arrays(ndim)		
+		self.Sort_filament_coordinates(ndim)		
 		
 		if os.path.isfile(Mask_check_fn):
 			Masking_pickle = pickle.load(open(Mask_check_fn, 'rb'))
@@ -1132,7 +1149,7 @@ class Histogram_Comparison():
 			subsample_text = ' subsample'
 
 		ConnectedHistComparison = plt.figure()
-		plt.hold("on")
+		plt.hold(True)
 		for i in range(self.N):
 			DataMin = min(self.NumberConnections[i])
 			DataMax = max(self.NumberConnections[i])
@@ -1143,20 +1160,20 @@ class Histogram_Comparison():
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram comparison of number filament connections \n with '+str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)		
 		plt.legend(self.LegendText)
-		plt.hold("off")
+		plt.hold(False)
 	
 		LengthHistComparison = plt.figure()
-		plt.hold("on")
+		plt.hold(True)
 		for i in range(self.N):
 			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram comparison of filament length \n with' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
 		plt.legend(self.LegendText)
-		plt.hold("off")
+		plt.hold(False)
 
 		NPointsHistComparison = plt.figure()
-		plt.hold("on")
+		plt.hold(True)
 		for i in range(self.N):
 			DataMin = min(self.NPointsPerFilament[i])
 			DataMax = max(self.NPointsPerFilament[i])
@@ -1167,7 +1184,7 @@ class Histogram_Comparison():
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram comparison of number of datapoints per filament \n with' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
 		plt.legend(self.LegendText)
-		plt.hold("off")
+		plt.hold(False)
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -1189,7 +1206,7 @@ class Histogram_Comparison():
 					'$\mathregular{\sigma=5}, 512^3$ part', '$\mathregular{\sigma=4}, 512^3$ part', '$\mathregular{\sigma=3}, 512^3$ part']
 		N = len(Nconnections)
 		ConnectedHistComparison = plt.figure()
-		plt.hold("on")
+		plt.hold(True)
 		for i in range(N):
 			DataMin = min(Nconnections[i])
 			DataMax = max(Nconnections[i])
@@ -1200,20 +1217,20 @@ class Histogram_Comparison():
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram comparison of number connections per filament')
 		plt.legend(Legends)
-		plt.hold("off")
+		plt.hold(False)
 
 		LengthHistComparison = plt.figure()
-		plt.hold("on")
+		plt.hold(True)
 		for i in range(N):
 			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram comparison of filament lengths')
 		plt.legend(Legends)
-		plt.hold("off")
+		plt.hold(False)
 
 		NPointsHistComparison = plt.figure()
-		plt.hold("on")
+		plt.hold(True)
 		for i in range(N):
 			DataMin = min(NptsPerFilament[i])
 			DataMax = max(NptsPerFilament[i])
@@ -1224,7 +1241,7 @@ class Histogram_Comparison():
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram comparison of number data points per filament')
 		plt.legend(Legends)
-		plt.hold("off")
+		plt.hold(False)
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -1245,7 +1262,7 @@ class Histogram_Comparison():
 		alphas = [0.7, 0.6, 0.5, 0.4]
 		N = len(Nconnections)
 		ConnectedHistComparison = plt.figure()
-		plt.hold("on")
+		plt.hold(True)
 		for i in range(N):
 			DataMin = min(Nconnections[i])
 			DataMax = max(Nconnections[i])
@@ -1256,20 +1273,20 @@ class Histogram_Comparison():
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram comparison of number connections per filament for $\mathregular{\sigma=}$' + str(nsigma))
 		plt.legend(Legends)
-		plt.hold("off")
+		plt.hold(False)
 
 		LengthHistComparison = plt.figure()
-		plt.hold("on")
+		plt.hold(True)
 		for i in range(N):
 			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram comparison of filament lengths for $\mathregular{\sigma=}$' + str(nsigma))
 		plt.legend(Legends)
-		plt.hold("off")
+		plt.hold(False)
 
 		NPointsHistComparison = plt.figure()
-		plt.hold("on")
+		plt.hold(True)
 		for i in range(N):
 			DataMin = min(NptsPerFilament[i])
 			DataMax = max(NptsPerFilament[i])
@@ -1280,7 +1297,7 @@ class Histogram_Comparison():
 		plt.ylabel('Number of occurances')
 		plt.title('Histogram comparison of number data points per filament for $\mathregular{\sigma=}$' + str(nsigma))
 		plt.legend(Legends)
-		plt.hold("off")
+		plt.hold(False)
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -1473,7 +1490,7 @@ if __name__ == '__main__':
 			
 			if IncludeDMParticles == 1:
 				Gadget_instance = ReadGadgetFile.Read_Gadget_file(Mask_direction_check, Mask_boundary_list)
-				PartPosX, PartPosY, PartPosZ, DM_KDTree = Gadget_instance.Get_particles()
+				PartPosX, PartPosY, PartPosZ, DM_KDTree = Gadget_instance.Get_particles(includeKDTree=False)
 				"""
 				#SolveReadInstance = Read_solve_files()
 				SolveReadInstance = Read_Gadget_file()
