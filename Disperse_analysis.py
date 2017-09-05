@@ -535,7 +535,7 @@ class Disperse_Plotter():
 			plt.ylabel('Number of occurances')
 			plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
 			#plt.xticks(self.NFilamentPoints)
-			
+			"""
 			if IncludeDMParticles == 1:
 				NPartFilBinMin = np.min(self.Particles_per_filament)
 				NPartFilBinMax = np.max(self.Particles_per_filament)
@@ -546,7 +546,7 @@ class Disperse_Plotter():
 				plt.xlabel('Number of particles per filament')
 				plt.ylabel('Number of occurances')
 				plt.title('Histogram of number of particles per filament with ' + self.nPart_text + '$\mathregular{^3}$ particles')
-			
+			"""
 			
 		if ndim == 2:
 			if PlotFilaments:
@@ -746,8 +746,8 @@ class Disperse_Plotter():
 				ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + self.ModelFilename)
 				FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + self.ModelFilename)
 				FilamentPtsHis.savefig(self.results_dir + 'FilamentPointsHistogram' + self.ModelFilename)
-				if IncludeDMParticles:
-					NumParticlesFilamentHist.savefig(self.results_dir + 'NumParticlesPerFilament' + self.ModelFilename)
+				#if IncludeDMParticles:
+				#	NumParticlesFilamentHist.savefig(self.results_dir + 'NumParticlesPerFilament' + self.ModelFilename)
 			if PlotFilaments:
 				FilPositions.savefig(self.results_dir + 'FilamentPositions' + self.ModelFilename)
 			if PlotFilamentsWCritPts:
@@ -783,7 +783,7 @@ class Disperse_Plotter():
 
 		plt.close('all')
 
-	def Solve(self, filename, ndim=3):
+	def Solve(self, filename, ndim=3, robustness=False):
 		""" 
 		Runs the whole thing.
 		Creates a pickle file of certain data unless it already exist.
@@ -796,6 +796,9 @@ class Disperse_Plotter():
 		else:
 			cachedir_foldername_extra += 'nsig3'
 
+		if robustness:
+			cachedir_foldername_extra += 'TRIM'
+			
 		if HOMEPC == 0:
 			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
 		else:
@@ -1231,7 +1234,7 @@ if __name__ == '__main__':
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 0			# Set to 1 to plot histograms
+	HistogramPlots = 1			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
@@ -1403,9 +1406,11 @@ if __name__ == '__main__':
 				PartPosZ = SolveReadInstance.PartPosZ
 				DM_KDTree = SolveReadInstance.DM_tree
 				"""
+			
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+			
 			"""
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
 			LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
@@ -1419,6 +1424,11 @@ if __name__ == '__main__':
 			LCDM_z0_512Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
 			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
 			"""
+
+			LCDM_z0_64_Robustness_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/Robustness_argument/'
+			LCDM_z0_64_RobustnessInstance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_Robustness_dir+'Plots_Robustness/', nPart=64, model='LCDM', redshift=0)
+			NumConn_64LCDM_rob, FilLen_64LCDM_rob, NPts_64LCDM_rob = LCDM_z0_64_RobustnessInstance.Solve(LCDM_z0_64_Robustness_dir+'SkelconvOutput_LCDMz064_robustness3.TRIM.a.NDskl', robustness=True)
+
 			if SigmaComparison:
 				LCDM64_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma4/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM64_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma5/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
