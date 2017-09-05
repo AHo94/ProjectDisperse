@@ -64,6 +64,7 @@ class Read_Gadget_file():
 		
 	def Create_Mask(self):
 		""" Creates a mask for the dark matter particles """
+		print 'Masking dark matter particles'
 		MaskXdir = self.Mask_check_list[0]
 		MaskYdir = self.Mask_check_list[1]
 		MaskZdir = self.Mask_check_list[2]
@@ -103,6 +104,7 @@ class Read_Gadget_file():
 
 	def Create_KDTree(self):
 		""" Creates a KDTree of all the dark matter particles """
+		print 'Creating a KDTree for the dark matter particles'
 		DM_points = np.dstack((self.PartPos[:,0].ravel(), self.PartPos[:,1].ravel(), self.PartPos[:,2].ravel()))
 		self.DM_tree = spatial.KDTree(DM_points[0])
 
