@@ -12,6 +12,7 @@ from scipy import spatial
 import os
 import time
 import cPickle as pickle
+from collections import Counter
 
 # Disable warnings from matplotlib	
 import warnings
@@ -198,7 +199,28 @@ class Disperse_Plotter():
 		self.NumFilamentConnections = []
 		self.IDFilamentConnected = []
 		self.CritPointInfo = []
+
+		self.CritPointXpos = []
+		self.CritPointYpos = []
+		self.CritPointZpos = []
 		############ UNIT CONVERSION NOT FIXED HERE!!!! 
+		self.NcritPts = int(self.CriticalPoints[0][0])
+		self.Critpts_filamentID = []
+		i = 1
+		while i < len(self.CriticalPoints):
+			Info = self.CriticalPoints[i]	# Type, value and neighbouring CP not saved
+			self.CritPointXpos = float(Info[1])
+			self.CritPointYpos = float(Info[2])
+			self.CritPointZpos = float(Info[3])
+			Filament_connections = int(self.CriticalPoints[i+1][0])
+			Temp_filID = []
+			if Filament_connections != 0:
+				for j in range(1,Filament_connections+1):
+					Temp_filID.append(int(self.CriticalPoints[i+j+1][1]))
+				self.Critpts_filamentID.append(np.array(Temp_filID))
+
+			i += 2 + Filament_connections
+		"""
 		self.NcritPts = int(self.CriticalPoints[0][0])
 		for i in range(1, len(self.CriticalPoints)-1):
 			stuff = self.CriticalPoints[i]
@@ -218,43 +240,15 @@ class Disperse_Plotter():
 				for k in range(len(stuff)):
 					InfoListTemp.append(float(stuff[k]))
 				self.CritPointInfo.append(np.asarray(InfoListTemp))
-
+		"""
 		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
 		self.IDFilamentConnected = np.asarray(self.IDFilamentConnected)
 		self.CritPointInfo = np.asarray(self.CritPointInfo)
-			
-		"""
-		# Data for non-connected critical points
-		self.CriticalPointPosition = []
-		self.CritPointXpos = []
-		self.CritPointYpos = []
-		self.CritPointZpos = []
-		self.CritPointXposNOTCON = []
-		self.CritPointYposNOTCON = []
-		self.CritPointZposNOTCON = []
-		if dimensions == 2:
-			for i in range(self.NcritPts):
-				if int(self.CritPointInfo[i][0]) == 0:
-					self.CritPointXposNOTCON.append(float(self.CritPointInfo[i][1]))
-					self.CritPointYposNOTCON.append(float(self.CritPointInfo[i][2]))
-				else:
-					self.CritPointXpos.append(float(self.CritPointInfo[i][1]))
-					self.CritPointYpos.append(float(self.CritPointInfo[i][2]))
-		elif dimensions == 3:
-			for i in range(self.NcritPts):
-				if int(self.CritPointInfo[i][0]) == 0:
-					self.CritPointXposNOTCON.append(float(self.CritPointInfo[i][1]))
-					self.CritPointYposNOTCON.append(float(self.CritPointInfo[i][2]))
-					self.CritPointZposNOTCON.append(float(self.CritPointInfo[i][3]))
-				else:
-					self.CritPointXpos.append(float(self.CritPointInfo[i][1]))
-					self.CritPointYpos.append(float(self.CritPointInfo[i][2]))
-					self.CritPointZpos.append(float(self.CritPointInfo[i][3]))
-		"""
 
 		# Filament positions etc
 		self.FilamentPos = []
 		self.FilID = []
+		self.PairIDS = []
 		self.xdimPos = []
 		self.ydimPos = []
 		self.NFilamentPoints = []
@@ -267,6 +261,7 @@ class Disperse_Plotter():
 				xtemp = []
 				ytemp = []
 				self.FilID.append(NewID)
+				self.PairIDS.append(np.array([Filstuff[0], Filstuff[1]]))
 				for j in range(1, int(Filstuff[-1])+1):
 					xPos = float(self.Filaments[k+j][0])*UnitConverter
 					yPos = float(self.Filaments[k+j][1])*UnitConverter
@@ -290,6 +285,7 @@ class Disperse_Plotter():
 				ytemp = []
 				ztemp = []
 				self.FilID.append(NewID)
+				self.PairIDS.append(np.array([int(Filstuff[0]), int(Filstuff[1])]))
 				for j in range(1, int(Filstuff[-1])+1):
 					if k+j >= len(self.Filaments):
 						break
@@ -316,6 +312,7 @@ class Disperse_Plotter():
 		self.NFilamentPoints = np.array(self.NFilamentPoints)
 		self.xdimPos = np.array(self.xdimPos)
 		self.ydimPos = np.array(self.ydimPos)
+		self.Critpts_filamentID = np.asarray(self.Critpts_filamentID)
 		if dimensions == 3:
 			self.zdimPos = np.array(self.zdimPos)
 
@@ -342,15 +339,16 @@ class Disperse_Plotter():
 			if i <= header_count_critpoint:
 				continue
 			else:
-				self.Persistence_ratio.append(float(self.CriticalPointsData[i][0]))
-				self.Persistence_nsigmas.append(float(self.CriticalPointsData[i][1]))
-				self.Persistence.append(float(self.CriticalPointsData[i][2]))
-				self.Persistence_pair.append(int(self.CriticalPointsData[i][3]))
-				self.Parent_index.append(int(self.CriticalPointsData[i][4]))
-				self.Parent_log_index.append(int(self.CriticalPointsData[i][5]))
-				self.log_CritPoint_field_value.append(float(self.CriticalPointsData[i][6]))
-				self.CritPoint_field_value.append(float(self.CriticalPointsData[i][7]))
-				self.CritPoint_cell.append(float(self.CriticalPointsData[i][8]))
+				if i <= len(self.Critpts_filamentID):
+					self.Persistence_ratio.append(float(self.CriticalPointsData[i][0]))
+					self.Persistence_nsigmas.append(float(self.CriticalPointsData[i][1]))
+					self.Persistence.append(float(self.CriticalPointsData[i][2]))
+					self.Persistence_pair.append(int(self.CriticalPointsData[i][3]))
+					self.Parent_index.append(int(self.CriticalPointsData[i][4]))
+					self.Parent_log_index.append(int(self.CriticalPointsData[i][5]))
+					self.log_CritPoint_field_value.append(float(self.CriticalPointsData[i][6]))
+					self.CritPoint_field_value.append(float(self.CriticalPointsData[i][7]))
+					self.CritPoint_cell.append(float(self.CriticalPointsData[i][8]))
 
 		header_count_filament = int(self.FilamentsData[0][0])
 		self.Filament_field_value = []
@@ -368,6 +366,27 @@ class Disperse_Plotter():
 				self.Filament_cell.append(float(self.FilamentsData[i][2]))
 				self.log_Filament_field_value.append(float(self.FilamentsData[i][3]))
 				self.Filament_type.append(int(self.FilamentsData[i][4]))
+
+		self.Persistence_nsigmas = np.asarray(self.Persistence_nsigmas)
+
+	def Filter_filaments(self, Sigma_threshold):
+		Filament_indices = np.where(self.Persistence_nsigmas <= Sigma_threshold)[0]
+		Filaments_to_be_deleted = []
+		for index in Filament_indices:
+			Filament_IDS = self.Critpts_filamentID[index]
+			for IDs in Filament_IDS:
+				Filaments_to_be_deleted.append(IDs)
+
+		# Check duplicates
+		Duplicates = [k for k,v in Counter(Filaments_to_be_deleted).items() if v>1]
+		Duplicate_indices = np.where()
+
+		self.xdimPos = np.delete(self.xdimPos, Filaments_to_be_deleted)
+		self.ydimPos = np.delete(self.ydimPos, Filaments_to_be_deleted)
+		self.zdimPos = np.delete(self.zdimPos, Filaments_to_be_deleted)
+		self.FilamentPos = np.delete(self.FilamentPos, Filaments_to_be_deleted)
+
+		self.NFils = len(self.xdimPos)
 
 	def Mask_DMParticles(self):
 		""" Computes a mask for the dark matter particles """
@@ -535,6 +554,7 @@ class Disperse_Plotter():
 
 		if HistogramPlots:
 			# Histogram of number of filament connections
+			###### NEEDS FIXING!!
 			NumMin = min(self.NumFilamentConnections)
 			NumMax = max(self.NumFilamentConnections)
 			BinSize = (NumMax - NumMin)/(0.5) + 1
@@ -823,13 +843,12 @@ class Disperse_Plotter():
 
 		plt.close('all')
 
-	def Solve(self, filename, ndim=3, robustness=False):
+	def Solve(self, filename, ndim=3, Sigma_threshold = False, robustness=False):
 		""" 
 		Runs the whole thing.
 		Creates a pickle file of certain data unless it already exist.
 		Removes the old pickle files if any of the mask directions are changed.
 		"""
-
 		cachedir_foldername_extra = 'npart'+str(self.nPart)
 		if self.SigmaArg:
 			cachedir_foldername_extra += 'nsig'+str(self.SigmaArg)
@@ -849,20 +868,24 @@ class Disperse_Plotter():
 		
 		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
 		Mask_slice_cachefn = cachedir + "mask_slice.p"
-		Mask_check_fn = cachedir + 'masking_check.p'
+		Pickle_check_fn = cachedir + 'masking_check.p'
 		
 		self.ReadFile(filename, ndim)
 		self.Sort_filament_coordinates(ndim)
-		self.Sort_filament_data()	
+		self.Sort_filament_data()
+		if Sigma_threshold:
+			self.Filter_filaments(Sigma_threshold)
 		
-		if os.path.isfile(Mask_check_fn):
-			Masking_pickle = pickle.load(open(Mask_check_fn, 'rb'))
-			if not MaskXdir == Masking_pickle[0] or not MaskYdir == Masking_pickle[1] or not MaskZdir == Masking_pickle[2]:	
+		if os.path.isfile(Pickle_check_fn):
+			Pickle_check = pickle.load(open(Pickle_check_fn, 'rb'))
+			if not MaskXdir == Pickle_check[0] or not MaskYdir == Pickle_check[1] or not MaskZdir == Pickle_check[2]\
+				 or not Sigma_threshold == Pickle_check[3]:	
 				print 'Mask directions changed. Removing old pickle files'
 				os.remove(Boundary_check_cachefn)
 				os.remove(Mask_slice_cachefn)
+				pickle.dump([MaskXdir, MaskYdir, MaskZdir, Sigma_threshold], open(Pickle_check_fn,'wb'))
 		else:
-			pickle.dump([MaskXdir, MaskYdir, MaskZdir], open(Mask_check_fn,'wb'))
+			pickle.dump([MaskXdir, MaskYdir, MaskZdir, Sigma_threshold], open(Pickle_check_fn,'wb'))
 
 		if os.path.isfile(Boundary_check_cachefn):
 			print "reading from boundary check pickle file..."
@@ -883,7 +906,7 @@ class Disperse_Plotter():
 				Mask_instance_variables = Mask_instance.Mask_slices()
 				pickle.dump(Mask_instance_variables, open(Mask_slice_cachefn, 'wb'))
 			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
-
+		
 		#if IncludeSlicing and IncludeDMParticles and not Comparison:
 		#	self.NumParticles_per_filament_v2()
 		"""
@@ -1258,7 +1281,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1358,13 +1381,13 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
-			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
+			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			#NConn_128PartLCDM, FilLen_128PartLCDM, NPts_128PartLCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
-
+			
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
