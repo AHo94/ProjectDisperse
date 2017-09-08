@@ -196,31 +196,43 @@ class Disperse_Plotter():
 			self.NFils = FilamentLimit
 
 		# General data
-		self.NumFilamentConnections = []
-		self.IDFilamentConnected = []
-		self.CritPointInfo = []
-
+		# Critical points
 		self.CritPointXpos = []
 		self.CritPointYpos = []
 		self.CritPointZpos = []
-		############ UNIT CONVERSION NOT FIXED HERE!!!! 
 		self.NcritPts = int(self.CriticalPoints[0][0])
 		self.Critpts_filamentID = []
+		self.Neighbours_CP = []
+		self.CP_id_of_connecting_filament = []
+		self.Number_filaments_connecting_to_CP = []
 		i = 1
+		counter = 0
 		while i < len(self.CriticalPoints):
 			Info = self.CriticalPoints[i]	# Type, value and neighbouring CP not saved
-			self.CritPointXpos = float(Info[1])
-			self.CritPointYpos = float(Info[2])
-			self.CritPointZpos = float(Info[3])
+			self.CritPointXpos.append(float(Info[1])*UnitConverter)
+			self.CritPointYpos.append(float(Info[2])*UnitConverter)
+			self.CritPointZpos.append(float(Info[3])*UnitConverter)
+			self.Neighbours_CP.append(int(Info[5]))
 			Filament_connections = int(self.CriticalPoints[i+1][0])
+			self.Number_filaments_connecting_to_CP.append(Filament_connections)
 			Temp_filID = []
+			Temp_CPID = []
 			if Filament_connections != 0:
 				for j in range(1,Filament_connections+1):
+					Temp_CPID.append(int(self.CriticalPoints[i+j+1][0]))
 					Temp_filID.append(int(self.CriticalPoints[i+j+1][1]))
 				self.Critpts_filamentID.append(np.array(Temp_filID))
-
+				self.CP_id_of_connecting_filament.append(np.array(Temp_CPID))
+			#else:
+			#	break
+			counter += 1
 			i += 2 + Filament_connections
+
 		"""
+		self.NumFilamentConnections = []
+		self.IDFilamentConnected = []
+		self.CritPointInfo = []
+		############ UNIT CONVERSION NOT FIXED HERE!!!! 
 		self.NcritPts = int(self.CriticalPoints[0][0])
 		for i in range(1, len(self.CriticalPoints)-1):
 			stuff = self.CriticalPoints[i]
@@ -240,10 +252,11 @@ class Disperse_Plotter():
 				for k in range(len(stuff)):
 					InfoListTemp.append(float(stuff[k]))
 				self.CritPointInfo.append(np.asarray(InfoListTemp))
-		"""
+
 		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
 		self.IDFilamentConnected = np.asarray(self.IDFilamentConnected)
 		self.CritPointInfo = np.asarray(self.CritPointInfo)
+		"""
 
 		# Filament positions etc
 		self.FilamentPos = []
@@ -308,11 +321,13 @@ class Disperse_Plotter():
 						self.NFils = len(self.xdimPos)
 						break
 
+
 		self.FilamentPos = np.array(self.FilamentPos)
 		self.NFilamentPoints = np.array(self.NFilamentPoints)
 		self.xdimPos = np.array(self.xdimPos)
 		self.ydimPos = np.array(self.ydimPos)
 		self.Critpts_filamentID = np.asarray(self.Critpts_filamentID)
+		print self.NFils, 'NUMBER OF FILAMENTS'
 		if dimensions == 3:
 			self.zdimPos = np.array(self.zdimPos)
 
@@ -339,7 +354,8 @@ class Disperse_Plotter():
 			if i <= header_count_critpoint:
 				continue
 			else:
-				if i <= len(self.Critpts_filamentID):
+				if i <= len(self.Critpts_filamentID)+header_count_critpoint:
+					# Do not include critical points that are not connected to filaments
 					self.Persistence_ratio.append(float(self.CriticalPointsData[i][0]))
 					self.Persistence_nsigmas.append(float(self.CriticalPointsData[i][1]))
 					self.Persistence.append(float(self.CriticalPointsData[i][2]))
@@ -370,16 +386,37 @@ class Disperse_Plotter():
 		self.Persistence_nsigmas = np.asarray(self.Persistence_nsigmas)
 
 	def Filter_filaments(self, Sigma_threshold):
-		Filament_indices = np.where(self.Persistence_nsigmas <= Sigma_threshold)[0]
+		CP_indices_to_be_deleted = np.where(self.Persistence_nsigmas <= Sigma_threshold)[0]
+		
+		CP_persistence_pairs = []
+		for CP_index in CP_indices_to_be_deleted:
+			Ppair = self.Neighbours_CP[CP_index]
+			if self.Number_filaments_connecting_to_CP[Ppair] != 0:
+				CP_persistence_pairs.append(Ppair)
+		#CP_persistence_pairs = np.array(self.Neighbours_CP)[CP_indices_to_be_deleted]		
+		CP_indices_to_be_deleted = np.unique(np.concatenate([CP_indices_to_be_deleted, CP_persistence_pairs]))
 		Filaments_to_be_deleted = []
-		for index in Filament_indices:
-			Filament_IDS = self.Critpts_filamentID[index]
-			for IDs in Filament_IDS:
+		
+		for indices in CP_indices_to_be_deleted:
+			CP_IDs = self.CP_id_of_connecting_filament[indices]
+			for IDs in CP_IDs:
+				if IDs == self.Neighbours_CP[indices]:
+					Filament_ID_deleted = self.Critpts_filamentID[indices][np.where(self.CP_id_of_connecting_filament[indices] == IDs)[0]][0]
+					Filaments_to_be_deleted.append(Filament_ID_deleted)
+	
+		"""
+		for indices in CP_indices_to_be_deleted:
+			Fil_IDs = self.Critpts_filamentID[indices]
+			for IDs in Fil_IDs:
 				Filaments_to_be_deleted.append(IDs)
-
+		"""
 		# Check duplicates
-		Duplicates = [k for k,v in Counter(Filaments_to_be_deleted).items() if v>1]
-		Duplicate_indices = np.where()
+		#Duplicates = [k for k,v in Counter(Filaments_to_be_deleted).items() if v>1]
+		#Duplicate_indices = np.where()
+		#print Duplicate_indices
+		#print len(Duplicates)
+		Filaments_to_be_deleted = np.unique(np.array(Filaments_to_be_deleted))
+		print len(Filaments_to_be_deleted)
 
 		self.xdimPos = np.delete(self.xdimPos, Filaments_to_be_deleted)
 		self.ydimPos = np.delete(self.ydimPos, Filaments_to_be_deleted)
@@ -525,6 +562,17 @@ class Disperse_Plotter():
 				i += DuplicateCount + 1
 				
 		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
+
+	def Number_filament_connections(self):
+		""" Computes the number of filament connections one filament has"""
+		self.NumFilamentConnections = []
+		for Connected_CP in self.PairIDS:
+			counter = 0
+			for CP_ids in Connected_CP:
+				counter += self.Number_filaments_connecting_to_CP[CP_ids]
+			self.NumFilamentConnections.append(counter)
+
+		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
 
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
@@ -873,6 +921,8 @@ class Disperse_Plotter():
 		self.ReadFile(filename, ndim)
 		self.Sort_filament_coordinates(ndim)
 		self.Sort_filament_data()
+		self.Number_filament_connections()
+
 		if Sigma_threshold:
 			self.Filter_filaments(Sigma_threshold)
 		
@@ -1388,6 +1438,9 @@ if __name__ == '__main__':
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			#NConn_128PartLCDM, FilLen_128PartLCDM, NPts_128PartLCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
 			
+			#LCDM_nsig4Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
+			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
+				
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
@@ -1472,7 +1525,7 @@ if __name__ == '__main__':
 				"""
 			
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			
 			"""
