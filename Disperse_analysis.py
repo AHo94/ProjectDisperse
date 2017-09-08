@@ -150,39 +150,6 @@ class Disperse_Plotter():
 		self.FilamentsData = np.asarray(self.FilamentsData)
 		print 'Time elapsed for filament data reading: ', time.clock() - time_start, 's'
 
-	def Read_SolveFile(self):
-		time_start = time.clock()
-		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
-		self.PartPosX = []
-		self.PartPosY = []
-		self.PartPosZ = []
-		
-		PartVelX = []
-		PartVelY = []
-		PartVelZ = []
-		self.XYPartPos = []
-		with open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r') as datafiles:
-			next(datafiles)
-			for line in datafiles:
-				data_set = line.split()
-				if MaskZdir and not MaskYdir and not MaskXdir:
-					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir:
-						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						self.PartPosY.append(float(data_set[1])*UnitConverter)
-						self.PartPosZ.append(float(data_set[2])*UnitConverter)
-				elif MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
-					if float(data_set[2])*UnitConverter > LowerBoundaryZDir and float(data_set[2])*UnitConverter < UpperBoundaryZDir\
-					and float(data_set[1])*UnitConverter > LowerBoundaryYDir and float(data_set[1])*UnitConverter < UpperBoundaryYDir\
-					and float(data_set[0])*UnitConverter > LowerBoundaryXDir and float(data_set[0])*UnitConverter < UpperBoundaryXDir:
-						self.PartPosX.append(float(data_set[0])*UnitConverter)
-						self.PartPosY.append(float(data_set[1])*UnitConverter)
-						self.PartPosZ.append(float(data_set[2])*UnitConverter)
-		self.PartPosX = np.asarray(self.PartPosX)
-		self.PartPosY = np.asarray(self.PartPosY)
-		self.PartPosZ = np.asarray(self.PartPosZ)
-		datafiles.close()
-		print 'Read solve file time: ', time.clock() - time_start, 's'
-
 	def Sort_filament_coordinates(self, dimensions):
 		""" 
 		Sorts the coordinates of the filaments and critical points to their respective arrays 
@@ -425,19 +392,6 @@ class Disperse_Plotter():
 
 		self.NFils = len(self.xdimPos)
 
-	def Mask_DMParticles(self):
-		""" Computes a mask for the dark matter particles """
-		if MaskZdir and not MaskXdir and not MaskYdir:
-			mask = np.logical_and(ParticlePos[:,2] < UpperBoundaryZDir, ParticlePos[:,2] > LowerBoundaryZDir)
-		elif MaskXdir and not MaskYdir and not MaskZdir:
-			mask = np.logical_and(ParticlePos[:,0] < UpperBoundaryZDir, ParticlePos[:,0] > LowerBoundaryZDir)
-		elif MaskYdir and not MaskXdir and not MaskZdir:
-			mask = np.logical_and(ParticlePos[:,1] < UpperBoundaryZDir, ParticlePos[:,1] > LowerBoundaryZDir)
-		
-		self.PartPosX = ParticlePos[mask,0]
-		self.PartPosY = ParticlePos[mask,1]
-		self.PartPosZ = ParticlePos[mask,2]
-		
 	def NumParticles_per_filament(self):
 		""" 
 		Checks the number of dark matter filaments per filament.
