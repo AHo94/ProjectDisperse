@@ -18,16 +18,8 @@ class FilamentMasking():
 		The masking includes filaments that are within the given boundary.
 		Also includes masking where the filament are cut off outside the boundary. 
 		"""
-		UpperBoundaryXDir = self.Boundary_list[0]
-		UpperBoundaryYDir = self.Boundary_list[1]
-		UpperBoundaryZDir = self.Boundary_list[2]
-		LowerBoundaryXDir = self.Boundary_list[3]
-		LowerBoundaryYDir = self.Boundary_list[4]
-		LowerBoundaryZDir = self.Boundary_list[5]
-
-		MaskXdir = self.Masking_directions[0]
-		MaskYdir = self.Masking_directions[1]
-		MaskZdir = self.Masking_directions[2] 
+		UpperBoundaryXDir, UpperBoundaryYDir, UpperBoundaryZDir, LowerBoundaryXDir, LowerBoundaryYDir, LowerBoundaryZDir = self.Boundary_list
+		MaskXdir, MaskYdir, MaskZdir = self.Masking_directions 
 
 		time_start = time.clock()
 		print 'Computing masks'
@@ -79,7 +71,7 @@ class FilamentMasking():
 				Segment_check = (np.array(self.xdimPos[i]) > LowerBoundaryXDir).any() and (np.array(self.xdimPos[i]) < UpperBoundaryXDir).any() \
 								and (np.array(self.zdimPos[i]) > LowerBoundaryZDir).any() and (np.array(self.zdimPos[i]) < UpperBoundaryZDir).any()
 			elif not MaskXdir and MaskYdir and MaskZdir:
-				Indices = np.where(np.logical_and(np.logical_and(np.greater(self.zdimPos[i]. LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir)),\
+				Indices = np.where(np.logical_and(np.logical_and(np.greater(self.zdimPos[i], LowerBoundaryZDir), np.less(self.zdimPos[i], UpperBoundaryZDir)),\
 						np.logical_and(np.greater(self.ydimPos[i], LowerBoundaryYDir), np.less(self.ydimPos[i], UpperBoundaryYDir))))[0]
 				Segment_check = (np.array(self.zdimPos[i]) > LowerBoundaryZDir).any() and (np.array(self.zdimPos[i]) < UpperBoundaryZDir).any() \
 								and (np.array(self.ydimPos[i]) > LowerBoundaryYDir).any() and (np.array(self.ydimPos[i]) < UpperBoundaryYDir).any()
