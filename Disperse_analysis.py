@@ -23,6 +23,7 @@ warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 import BoundaryChecker
 import FilamentMasking
 import ReadGadgetFile
+import MaskCritPts
 
 class Disperse_Plotter():
 	"""
@@ -293,7 +294,10 @@ class Disperse_Plotter():
 		self.NFilamentPoints = np.array(self.NFilamentPoints)
 		self.xdimPos = np.array(self.xdimPos)
 		self.ydimPos = np.array(self.ydimPos)
-		self.Critpts_filamentID = np.asarray(self.Critpts_filamentID)
+		self.Critpts_filamentID = np.array(self.Critpts_filamentID)
+		self.CritPointXpos = np.asarray(self.CritPointXpos)
+		self.CritPointYpos = np.asarray(self.CritPointYpos)
+		self.CritPointZpos = np.asarray(self.CritPointZpos)
 		print self.NFils, 'NUMBER OF FILAMENTS'
 		if dimensions == 3:
 			self.zdimPos = np.array(self.zdimPos)
@@ -756,6 +760,19 @@ class Disperse_Plotter():
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on filament length')
 
+					FilPositions_2DSlicedProjection_Cbar_CritPts = plt.figure()
+					plt.hold(True)
+					ax = plt.axes()
+					ax.set_xlim(self.xmin, self.ymax)
+					ax.set_ylim(self.ymin, self.ymax)
+					line_segmentsCbar = LineCollection(self.MaskedFilamentSegments, array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
+					ax.add_collection(line_segmentsCbar)
+					FilPositions_2DSlicedProjectionColorBarLen.colorbar(line_segmentsCbar)
+					plt.plot(self.MaskedXCP, self.MaskedYCP, 'ro')
+					ax.set_xlabel('$\mathregular{x}$' + LegendText)
+					ax.set_ylabel('$\mathregular{y}$' + LegendText)
+					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on filament length. Includes Masked Crit points.')
+
 				if IncludeDMParticles:
 					self.PartPosX = PartPosX
 					self.PartPosY = PartPosY
@@ -829,6 +846,7 @@ class Disperse_Plotter():
 					FilPositions_2DSlicedProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionSlicedColobarZDir' + self.ModelFilename)
 				if ColorBarLength:
 					FilPositions_2DSlicedProjectionColorBarLen.savefig(self.results_dir + '2DProjectionSlicedColobarLength' + self.ModelFilename)
+					FilPositions_2DSlicedProjection_Cbar_CritPts.savefig(self.results_dir + '2DProjectionSliced_CbarLength_CritPts' + self.ModelFilename)
 				if IncludeDMParticles:
 					if MaskXdir == 0 and MaskYdir == 0 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_ZMasked' + self.ModelFilename)
@@ -876,6 +894,8 @@ class Disperse_Plotter():
 		self.Sort_filament_coordinates(ndim)
 		self.Sort_filament_data()
 		self.Number_filament_connections()
+		self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
+																 Mask_boundary_list, Mask_direction_check)
 
 		if Sigma_threshold:
 			self.Filter_filaments(Sigma_threshold)
@@ -1302,7 +1322,7 @@ if __name__ == '__main__':
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 0			# Set to 1 to plot histograms
+	HistogramPlots = 1			# Set to 1 to plot histograms
 	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
@@ -1392,8 +1412,8 @@ if __name__ == '__main__':
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			#NConn_128PartLCDM, FilLen_128PartLCDM, NPts_128PartLCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
 			
-			#LCDM_nsig4Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
-			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
+			LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4PlotsTest/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
+			NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
