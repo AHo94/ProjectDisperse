@@ -767,7 +767,7 @@ class Disperse_Plotter():
 					ax.set_ylim(self.ymin, self.ymax)
 					line_segmentsCbar = LineCollection(self.MaskedFilamentSegments, array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
 					ax.add_collection(line_segmentsCbar)
-					FilPositions_2DSlicedProjectionColorBarLen.colorbar(line_segmentsCbar)
+					FilPositions_2DSlicedProjection_Cbar_CritPts.colorbar(line_segmentsCbar)
 					plt.plot(self.MaskedXCP, self.MaskedYCP, 'ro')
 					ax.set_xlabel('$\mathregular{x}$' + LegendText)
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
@@ -1412,8 +1412,8 @@ if __name__ == '__main__':
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			#NConn_128PartLCDM, FilLen_128PartLCDM, NPts_128PartLCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
 			
-			LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4PlotsTest/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
-			NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
+			#LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4PlotsTest/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
+			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
