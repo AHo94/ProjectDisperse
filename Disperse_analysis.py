@@ -836,7 +836,7 @@ class Disperse_Plotter():
 
 					# Interpolated smoothed out 2D histogram of dark matter particles
 					Interpolated_DM_particles_figure = plt.figure()
-					ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal'\
+					ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal',\
 									xlim=DMBinXedges[[0,-1]], ylim=DMBinYedges[[0,-1]])
 					im = mpl.image.NonUniformImage(ax, interpolation='bilinear')
 					xcenters = (DMBinXedges[:-1] + DMBinYedges[1:])/2.0
