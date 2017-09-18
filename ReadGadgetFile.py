@@ -112,7 +112,7 @@ class Read_Gadget_file():
 		self.DM_tree = spatial.KDTree(DM_points[0])
 
 	def Histogram_and_bins(self):
-		Hist, xedges, yedges = np.histogram2d(self.PartPosX, self.PartPosY, bins=50)
+		Hist, xedges, yedges = np.histogram2d(self.PartPosX, self.PartPosY, bins=30)
 		Hist = Hist.T
 		return Hist, xedges, yedges
 
