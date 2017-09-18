@@ -850,14 +850,14 @@ class Disperse_Plotter():
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter particle density field, interpolated')
 					
-
+					"""
 					Interpolated_DM_particles_figure_IMSHOW = plt.figure()
 					plt.clf()
 					plt.imshow(DMHistogram, origin='lower', interpolation='bilinear')			
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter particle density field, interpolated with Imshow')
-
+					"""
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -894,7 +894,7 @@ class Disperse_Plotter():
 						ONEDHistX.savefig(self.results_dir + 'DMParticle1DHistogramXposition' + self.ModelFilename)
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
 						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMParticleHistogram_interpolated' + self.ModelFilename)
-						Interpolated_DM_particles_figure_IMSHOW.savefig(self.results_dir + 'DMParticleHistogram_interpolated_IMSHOW' + self.ModelFilename)
+						#Interpolated_DM_particles_figure_IMSHOW.savefig(self.results_dir + 'DMParticleHistogram_interpolated_IMSHOW' + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
