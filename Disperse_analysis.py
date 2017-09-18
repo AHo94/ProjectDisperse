@@ -1343,7 +1343,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1516,6 +1516,7 @@ if __name__ == '__main__':
 			if IncludeDMParticles == 1:
 				Gadget_instance = ReadGadgetFile.Read_Gadget_file(Mask_direction_check, Mask_boundary_list)
 				PartPosX, PartPosY, PartPosZ, DMHistogram, DMBinXedges, DMBinYedges, DM_KDTree = Gadget_instance.Get_particles(includeKDTree=False)
+				print DMBinXedges
 				"""
 				#SolveReadInstance = Read_solve_files()
 				SolveReadInstance = Read_Gadget_file()
@@ -1525,7 +1526,6 @@ if __name__ == '__main__':
 				PartPosZ = SolveReadInstance.PartPosZ
 				DM_KDTree = SolveReadInstance.DM_tree
 				"""
-			print DMBinXedges
 			"""
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
