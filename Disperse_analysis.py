@@ -615,6 +615,7 @@ class Disperse_Plotter():
 			"""
 			
 		if ndim == 2:
+			# Plots for 2D dataset. Currently not used.
 			if PlotFilaments:
 				FilPositions = plt.figure()
 				ax = plt.axes()
@@ -640,7 +641,9 @@ class Disperse_Plotter():
 				plt.title('Position of the filaments with critical points shown')
 				plt.hold(False)
 		if ndim == 3:
+			# Plots of 3D datasets.
 			if PlotFilaments:
+				# Plots the filaments in a 3D box
 				FilPositions = plt.figure()
 				ax = FilPositions.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.xmax)
@@ -653,6 +656,7 @@ class Disperse_Plotter():
 				ax.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('3D Position of the filaments with '+ self.nPart_text+ '$\mathregular{^3}$ particles.')
 			if PlotFilamentsWCritPts:
+				# Plots the filaments, including the critical points, in a 3D box
 				FilPositions_WCritPts = plt.figure()
 				ax = FilPositions_WCritPts.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.xmax)
@@ -668,6 +672,7 @@ class Disperse_Plotter():
 				plt.title('3D Position of the filaments with critical points')
 				plt.hold(False)
 			if Projection2D:
+				# Creates a 2D projection onto the X-Y plane of the 3D box
 				FilPositions_2DProjection = plt.figure()
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.ymax)
@@ -678,6 +683,7 @@ class Disperse_Plotter():
 				ax.set_ylabel('$\mathregular{y}$' + LegendText)
 				plt.title('2D Position projection of the filaments')
 				if ColorBarZDir:
+					# 2D projection where the colorbar shows the value of the -average- z-value
 					FilPositions_2DProjectionColorBarZDir = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -689,6 +695,7 @@ class Disperse_Plotter():
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D Position projection of the filaments.\n Color based on average z-position')
 				if ColorBarLength:
+					# 2D projection where the colorbar shows the length of the filament
 					FilPositions_2DProjectionColobarLength = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -701,6 +708,7 @@ class Disperse_Plotter():
 					plt.title('2D Position projection of the filaments.\n Color based on the lenght of the filament')
 
 			if IncludeSlicing and PlotFilaments:
+				# 3D box where filaments are masked over a slice of the box.
 				FilamentSliced = plt.figure()
 				ax = FilamentSliced.gca(projection='3d')
 				ax.set_xlim(self.xmin, self.xmax)
@@ -712,7 +720,7 @@ class Disperse_Plotter():
 				ax.set_ylabel('$\mathregular{y}$' + LegendText)
 				ax.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('Sliced segment of the 3D box')
-
+				# 3D box where filaments are masked. Filaments will be 'cut off' if it goes outside the masking boundary.
 				FilamentCutOff = plt.figure()
 				ax2 = FilamentCutOff.gca(projection='3d')
 				ax2.set_xlim(self.xmin, self.xmax)
@@ -726,6 +734,7 @@ class Disperse_Plotter():
 				plt.title('Sliced segment of the 3D box, with filaments cut off outside of boundary')
 				
 				if Projection2D:
+					# 2D projection onto the X-Y plane with masked filaments
 					FilPositions_2DProjectionSliced = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -737,6 +746,7 @@ class Disperse_Plotter():
 					plt.title('2D Position projection sliced box')
 
 				if ColorBarZDir:
+					# 2D projection onto the X-Y plane with masked filaments. Colorbar based on -average- z-value
 					FilPositions_2DSlicedProjectionColorBarZDir = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -749,6 +759,7 @@ class Disperse_Plotter():
 					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on average z-position')
 
 				if ColorBarLength:
+					# 2D projection onto the X-Y plane with masked filaments. Colorbar based on filament length
 					FilPositions_2DSlicedProjectionColorBarLen = plt.figure()
 					ax = plt.axes()
 					ax.set_xlim(self.xmin, self.ymax)
@@ -759,7 +770,7 @@ class Disperse_Plotter():
 					ax.set_xlabel('$\mathregular{x}$' + LegendText)
 					ax.set_ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on filament length')
-
+					# Same as above, but now including masked critical point over the same masked region
 					FilPositions_2DSlicedProjection_Cbar_CritPts = plt.figure()
 					plt.hold(True)
 					ax = plt.axes()
@@ -774,6 +785,7 @@ class Disperse_Plotter():
 					plt.title('2D projection of the filaments in a sliced segment of the box.\n Color based on filament length. Includes Masked Crit points.')
 
 				if IncludeDMParticles:
+					# Plots a 2D histogram of the masked dark matter particles
 					self.PartPosX = PartPosX
 					self.PartPosY = PartPosY
 					self.PartPosZ = PartPosZ
@@ -783,10 +795,12 @@ class Disperse_Plotter():
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter density field over a segment of the particle box.')
 
+					# One dimensional histogram of x-position of the masked dark matter particles. Only for testing purposes
 					ONEDHistX = plt.figure()
 					plt.hist(self.PartPosX, bins=100)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 
+					# 2D histogram of masked dark matter particles overplotted with masked filaments in the X-Y plane.
 					DMParticleHistwFilaments = plt.figure()
 					plt.hold(True)
 					ax = plt.axes()
@@ -803,6 +817,7 @@ class Disperse_Plotter():
 							+ 'Colors indicate average z-value.')
 					plt.hold(False)
 
+					# 2D histogram of masked dark matter particles overplotted with masked filaments in the X-Y plane. Colorbar based on filament length.
 					DMParticleHistwFilamentsLengthCbar = plt.figure()
 					plt.hold(True)
 					ax = plt.axes()
@@ -869,6 +884,7 @@ class Disperse_Plotter():
 		Creates a pickle file of certain data unless it already exist.
 		Removes the old pickle files if any of the mask directions are changed.
 		"""
+		# Determines folder name of pickle files
 		cachedir_foldername_extra = 'npart'+str(self.nPart)
 		if self.SigmaArg:
 			cachedir_foldername_extra += 'nsig'+str(self.SigmaArg)
@@ -885,7 +901,7 @@ class Disperse_Plotter():
 			cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/' + cachedir_foldername_extra + '/'
 		if not os.path.isdir(cachedir):
 			os.makedirs(cachedir)
-		
+		# Pickle filenames and folder directory
 		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
 		Mask_slice_cachefn = cachedir + "mask_slice.p"
 		Pickle_check_fn = cachedir + 'masking_check.p'
@@ -894,13 +910,20 @@ class Disperse_Plotter():
 		self.Sort_filament_coordinates(ndim)
 		self.Sort_filament_data()
 		self.Number_filament_connections()
+		# Get masked critical points
 		self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
 																 Mask_boundary_list, Mask_direction_check)
 
 		if Sigma_threshold:
+			# Filters filament based on a given sigma threshold. Still work in progress
 			self.Filter_filaments(Sigma_threshold)
-		
+
 		if os.path.isfile(Pickle_check_fn):
+			"""
+			Check if pickle file exist. If it exists, it will read from the existing pickle file and get data from there.
+			The pickle file will check if the masking conditions are changed or not. If it is changed, will recalculate stuff.
+			If pickle file does not exist, then the program will calculate stuff. 
+			"""
 			Pickle_check = pickle.load(open(Pickle_check_fn, 'rb'))
 			if not MaskXdir == Pickle_check[0] or not MaskYdir == Pickle_check[1] or not MaskZdir == Pickle_check[2]\
 				 or not Sigma_threshold == Pickle_check[3]:	
@@ -1487,7 +1510,7 @@ if __name__ == '__main__':
 			
 			if IncludeDMParticles == 1:
 				Gadget_instance = ReadGadgetFile.Read_Gadget_file(Mask_direction_check, Mask_boundary_list)
-				PartPosX, PartPosY, PartPosZ, DM_KDTree = Gadget_instance.Get_particles(includeKDTree=False)
+				PartPosX, PartPosY, PartPosZ, DMHistogram, DMBinXedges, DMBinYedges, DM_KDTree = Gadget_instance.Get_particles(includeKDTree=False)
 				"""
 				#SolveReadInstance = Read_solve_files()
 				SolveReadInstance = Read_Gadget_file()
