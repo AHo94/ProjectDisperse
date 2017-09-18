@@ -3,6 +3,7 @@
 #matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from matplotlib import colors as mcolors
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
@@ -835,8 +836,13 @@ class Disperse_Plotter():
 
 					# Interpolated smoothed out 2D histogram of dark matter particles
 					Interpolated_DM_particles_figure = plt.figure()
-					#ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal'\
-					#				xlim=)
+					ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal'\
+									xlim=DMBinXedges[[0,-1]], ylim=DMBinYedges[[0,-1]])
+					im = mpl.image.NonUniformImage(ax, interpolation='bilinear')
+					xcenters = (DMBinXedges[:-1] + DMBinYedges[1:])/2.0
+					ycenters = (DMBinYedges[:-1] + DMBinYedges[1:])/2.0
+					im.set_data(xcenters, ycenters, DMHistogram)
+					ax.images.append(im)
 
 
 		if self.savefile == 1:
@@ -873,6 +879,7 @@ class Disperse_Plotter():
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_ZMasked' + self.ModelFilename)
 						ONEDHistX.savefig(self.results_dir + 'DMParticle1DHistogramXposition' + self.ModelFilename)
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
+						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMPartickeHistogram_interpolated' + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
@@ -1516,7 +1523,6 @@ if __name__ == '__main__':
 			if IncludeDMParticles == 1:
 				Gadget_instance = ReadGadgetFile.Read_Gadget_file(Mask_direction_check, Mask_boundary_list)
 				PartPosX, PartPosY, PartPosZ, DMHistogram, DMBinXedges, DMBinYedges, DM_KDTree = Gadget_instance.Get_particles(includeKDTree=False)
-				print DMBinXedges
 				"""
 				#SolveReadInstance = Read_solve_files()
 				SolveReadInstance = Read_Gadget_file()
@@ -1526,12 +1532,11 @@ if __name__ == '__main__':
 				PartPosZ = SolveReadInstance.PartPosZ
 				DM_KDTree = SolveReadInstance.DM_tree
 				"""
-			"""
+			
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-			
-			
+			"""
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
 			LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
