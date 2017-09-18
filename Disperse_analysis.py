@@ -840,7 +840,7 @@ class Disperse_Plotter():
 					#				xlim=DMBinXedges[[0,-1]], ylim=DMBinYedges[[0,-1]])
 					ax.set_xlim(DMBinXedges[0], DMBinXedges[-1])
 					ax.set_ylim(DMBinYedges[0], DMBinYedges[-1])
-					im = mpl.image.NonUniformImage(ax, interpolation='cubic')
+					im = mpl.image.NonUniformImage(ax, interpolation='bilinear')
 					xcenters = (DMBinXedges[:-1] + DMBinYedges[1:])/2.0
 					ycenters = (DMBinYedges[:-1] + DMBinYedges[1:])/2.0
 					im.set_data(xcenters, ycenters, DMHistogram)
