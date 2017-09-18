@@ -937,7 +937,9 @@ class Disperse_Plotter():
 			The pickle file will check if the masking conditions are changed or not. If it is changed, will recalculate stuff.
 			If pickle file does not exist, then the program will calculate stuff. 
 			"""
+			print 'Checking masking conditions from pickle file'
 			Pickle_check = pickle.load(open(Pickle_check_fn, 'rb'))
+			print Pickle_check
 			if not MaskXdir == Pickle_check[0] or not MaskYdir == Pickle_check[1] or not MaskZdir == Pickle_check[2]\
 				 or not Sigma_threshold == Pickle_check[3]:	
 				print 'Mask directions changed. Removing old pickle files'
