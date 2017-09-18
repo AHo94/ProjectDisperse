@@ -836,13 +836,18 @@ class Disperse_Plotter():
 
 					# Interpolated smoothed out 2D histogram of dark matter particles
 					Interpolated_DM_particles_figure = plt.figure()
-					ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal',\
-									xlim=DMBinXedges[[0,-1]], ylim=DMBinYedges[[0,-1]])
-					im = mpl.image.NonUniformImage(ax, interpolation='bilinear')
+					#ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal',\
+					#				xlim=DMBinXedges[[0,-1]], ylim=DMBinYedges[[0,-1]])
+					ax.set_xlim(DMBinXedges[0], DMBinXedges[-1])
+					ax.set_ylim(DMBinYedges[0], DMBinYedges[-1])
+					im = mpl.image.NonUniformImage(ax, interpolation='cubic')
 					xcenters = (DMBinXedges[:-1] + DMBinYedges[1:])/2.0
 					ycenters = (DMBinYedges[:-1] + DMBinYedges[1:])/2.0
 					im.set_data(xcenters, ycenters, DMHistogram)
 					ax.images.append(im)
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+					plt.ylabel('$\mathregular{y}$' + LegendText)
+					plt.title('Dark matter particle density field, interpolated')
 
 
 		if self.savefile == 1:
@@ -879,7 +884,7 @@ class Disperse_Plotter():
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_ZMasked' + self.ModelFilename)
 						ONEDHistX.savefig(self.results_dir + 'DMParticle1DHistogramXposition' + self.ModelFilename)
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
-						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMPartickeHistogram_interpolated' + self.ModelFilename)
+						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMParticleHistogram_interpolated' + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
@@ -939,7 +944,6 @@ class Disperse_Plotter():
 			"""
 			print 'Checking masking conditions from pickle file'
 			Pickle_check = pickle.load(open(Pickle_check_fn, 'rb'))
-			print Pickle_check
 			if not MaskXdir == Pickle_check[0] or not MaskYdir == Pickle_check[1] or not MaskZdir == Pickle_check[2]\
 				 or not Sigma_threshold == Pickle_check[3]:	
 				print 'Mask directions changed. Removing old pickle files'
