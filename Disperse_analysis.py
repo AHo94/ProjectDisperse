@@ -833,6 +833,11 @@ class Disperse_Plotter():
 					plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar.'\
 							 +'Colors indicate length of a filament.')
 
+					# Interpolated smoothed out 2D histogram of dark matter particles
+					Interpolated_DM_particles_figure = plt.figure()
+					#ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal'\
+					#				xlim=)
+
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -1328,7 +1333,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 if __name__ == '__main__':
-	HOMEPC = 0					# Set 1 if working in UiO terminal
+	HOMEPC = 1					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1520,12 +1525,13 @@ if __name__ == '__main__':
 				PartPosZ = SolveReadInstance.PartPosZ
 				DM_KDTree = SolveReadInstance.DM_tree
 				"""
-			
+			print DMBinXedges
+			"""
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plots/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			
-			"""
+			
 			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
 			LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
