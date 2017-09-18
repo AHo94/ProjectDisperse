@@ -103,16 +103,25 @@ class Read_Gadget_file():
 			self.PartPosZ = self.PartPos[:,2]
 
 	def Create_KDTree(self):
-		""" Creates a KDTree of all the dark matter particles """
+		""" 
+		Creates a KDTree of all the dark matter particles 
+		This process takes a very long time!
+		"""
 		print 'Creating a KDTree for the dark matter particles'
 		DM_points = np.dstack((self.PartPos[:,0].ravel(), self.PartPos[:,1].ravel(), self.PartPos[:,2].ravel()))
 		self.DM_tree = spatial.KDTree(DM_points[0])
 
+	def Histogram_and_bins(self):
+		Hist, xedges, yedges = np.histogram2d(self.PartPosX, self.PartPosY, bins=50)
+		Hist = Hist.T
+		return Hist, xedges, yedges
+
 	def Get_particles(self, includeKDTree=True):
 		self.read_file()
 		self.Create_Mask()
+		Histogram, xedges, yedges = self.Histogram_and_bins()
 		if includeKDTree:
 			self.Create_KDTree()
 		else:
 			self.DM_tree = None
-		return self.PartPosX, self.PartPosY, self.PartPosZ, self.DM_tree
+		return self.PartPosX, self.PartPosY, self.PartPosZ, Histogram, xedges, yedges, self.DM_tree
