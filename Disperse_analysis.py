@@ -836,18 +836,27 @@ class Disperse_Plotter():
 
 					# Interpolated smoothed out 2D histogram of dark matter particles
 					Interpolated_DM_particles_figure = plt.figure()
+					ax_interpolated = plt.axes()
 					#ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal',\
 					#				xlim=DMBinXedges[[0,-1]], ylim=DMBinYedges[[0,-1]])
-					ax.set_xlim(DMBinXedges[0], DMBinXedges[-1])
-					ax.set_ylim(DMBinYedges[0], DMBinYedges[-1])
-					im = mpl.image.NonUniformImage(ax, interpolation='bilinear')
+					ax_interpolated.set_xlim(DMBinXedges[0], DMBinXedges[-1])
+					ax_interpolated.set_ylim(DMBinYedges[0], DMBinYedges[-1])
+					im = mpl.image.NonUniformImage(ax_interpolated, interpolation='bilinear')
 					xcenters = (DMBinXedges[:-1] + DMBinYedges[1:])/2.0
 					ycenters = (DMBinYedges[:-1] + DMBinYedges[1:])/2.0
 					im.set_data(xcenters, ycenters, DMHistogram)
-					ax.images.append(im)
+					ax_interpolated.images.append(im)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter particle density field, interpolated')
+					
+
+					Interpolated_DM_particles_figure_IMSHOW = plt.figure()
+					plt.clf()
+					plt.imshow(DMHistogram, origin='lower', interpolation='bilinear')			
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+					plt.ylabel('$\mathregular{y}$' + LegendText)
+					plt.title('Dark matter particle density field, interpolated with Imshow')
 
 
 		if self.savefile == 1:
@@ -885,6 +894,7 @@ class Disperse_Plotter():
 						ONEDHistX.savefig(self.results_dir + 'DMParticle1DHistogramXposition' + self.ModelFilename)
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
 						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMParticleHistogram_interpolated' + self.ModelFilename)
+						Interpolated_DM_particles_figure_IMSHOW.savefig(self.results_dir + 'DMParticleHistogram_interpolated_IMSHOW' + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
