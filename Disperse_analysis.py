@@ -10,6 +10,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 from mpl_toolkits.mplot3d import Axes3D
 #import scipy.stats as stats
 from scipy import spatial
+from scipy.interpolate import griddata
 import os
 import time
 import cPickle as pickle
@@ -850,6 +851,13 @@ class Disperse_Plotter():
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter particle density field, interpolated')
 					
+					Points = np.column_stack((PartPosX, PartPosY))
+					grid_x, grid_y = np.mgrid[self.xmin:self.xmax:100j, self.xmin:self.xmax:100j]
+					grid_z = griddata(Points, DMHistogram, (grid_x, grid_y), method='linear')
+					Interpolated_DM_particles_figure_griddata = plt.figure()
+					plt.imshow(grid_z.T, extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
+					plt.title('Dark matter particle density field, interpolated with griddata')
+
 					"""
 					Interpolated_DM_particles_figure_IMSHOW = plt.figure()
 					plt.clf()
@@ -895,6 +903,7 @@ class Disperse_Plotter():
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
 						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMParticleHistogram_interpolated' + self.ModelFilename)
 						#Interpolated_DM_particles_figure_IMSHOW.savefig(self.results_dir + 'DMParticleHistogram_interpolated_IMSHOW' + self.ModelFilename)
+						Interpolated_DM_particles_figure_griddata(self.results_dir + 'DMParticleHistogram_interpolated_griddata' + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
