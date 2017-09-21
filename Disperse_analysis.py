@@ -851,12 +851,35 @@ class Disperse_Plotter():
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.title('Dark matter particle density field, interpolated')
 					
+
+					# Values in griddata = mass. Currently normalized to 1.
+					# Compute mass as 0.23*rho_{crit,0}*Volume_box/Num_particles
+					# See discussion with Max
+					Mpc = 3.08568025e22
+					G_grav = 6.67258e-11
+					H_0 = 0.7*100*1e3/Mpc
+					mass = 0.23*(3*H_0**2/(8*np.pi*G_grav))*(256.0*Mpc/0.7)**3/(512.0)**3
+
 					Points = np.column_stack((PartPosX, PartPosY))
-					grid_x, grid_y = np.mgrid[self.xmin:self.xmax:100j, self.xmin:self.xmax:100j]
-					grid_z = griddata(Points, DMHistogram, (grid_x, grid_y), method='linear')
+					grid_x, grid_y = np.mgrid[self.xmin:self.xmax:400j, self.xmin:self.xmax:400j]
+					grid_z_nearest = griddata(Points, np.ones(len(Points))*mass, (grid_x, grid_y), method='nearest')
+					grid_z_linear = griddata(Points, np.ones(len(Points))*mass, (grid_x, grid_y), method='linear')
+					grid_z_cubic = griddata(Points, np.ones(len(Points))*mass, (grid_x, grid_y), method='cubic')
 					Interpolated_DM_particles_figure_griddata = plt.figure()
-					plt.imshow(grid_z.T, extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
-					plt.title('Dark matter particle density field, interpolated with griddata')
+					plt.subplot(221)
+					plt.imshow(np.ones((400,400)), extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
+					plt.plot(PartPosX, PartPosY, 'k.', ms=1)
+					plt.title('Original')
+					plt.subplot(222)
+					plt.imshow(grid_z_nearest.T, extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
+					plt.title('Nearest')
+					plt.subplot(223)
+					plt.imshow(grid_z_linear.T, extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
+					plt.title('Linear')
+					plt.subplot(224)
+					plt.imshow(grid_z_cubic.T, extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
+					plt.title('Cubic')
+					#plt.title('Dark matter particle density field, interpolated with griddata')
 
 					"""
 					Interpolated_DM_particles_figure_IMSHOW = plt.figure()
@@ -903,7 +926,7 @@ class Disperse_Plotter():
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
 						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMParticleHistogram_interpolated' + self.ModelFilename)
 						#Interpolated_DM_particles_figure_IMSHOW.savefig(self.results_dir + 'DMParticleHistogram_interpolated_IMSHOW' + self.ModelFilename)
-						Interpolated_DM_particles_figure_griddata(self.results_dir + 'DMParticleHistogram_interpolated_griddata' + self.ModelFilename)
+						Interpolated_DM_particles_figure_griddata.savefig(self.results_dir + 'DMParticleHistogram_interpolated_griddata' + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
