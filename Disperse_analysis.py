@@ -68,6 +68,7 @@ class Disperse_Plotter():
 			self.ModelFilename = 'SymmB' + 'z' + str(redshift) + filetype
 		else:
 			raise ValueError('Model name not properly set')
+		self.model = model
 
 		self.SigmaTitle = ''
 		if SigmaComparison:
@@ -944,7 +945,7 @@ class Disperse_Plotter():
 		Removes the old pickle files if any of the mask directions are changed.
 		"""
 		# Determines folder name of pickle files
-		cachedir_foldername_extra = 'npart'+str(self.nPart)
+		cachedir_foldername_extra = self.model + 'npart'+str(self.nPart)
 		if self.SigmaArg:
 			cachedir_foldername_extra += 'nsig'+str(self.SigmaArg)
 		else:
@@ -952,6 +953,7 @@ class Disperse_Plotter():
 
 		if robustness:
 			cachedir_foldername_extra += 'TRIM'
+
 
 		if HOMEPC == 0:
 			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
@@ -1246,7 +1248,7 @@ class Histogram_Comparison():
 			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
 		plt.ylabel('Number of occurances')
-		plt.title('Histogram comparison of filament length \n with' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
+		plt.title('Histogram comparison of filament length \n with ' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
 		plt.legend(self.LegendText)
 		plt.hold(False)
 
@@ -1260,7 +1262,7 @@ class Histogram_Comparison():
 			plt.hist(self.NPointsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of points per filament')
 		plt.ylabel('Number of occurances')
-		plt.title('Histogram comparison of number of datapoints per filament \n with' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
+		plt.title('Histogram comparison of number of datapoints per filament \n with ' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
 		plt.legend(self.LegendText)
 		plt.hold(False)
 
@@ -1389,7 +1391,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	HOMEPC = 0					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1407,15 +1409,15 @@ if __name__ == '__main__':
 
 	# Histogram plots
 	HistogramPlots = 1			# Set to 1 to plot histograms
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
+	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	ModelCompare = 1 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 
-	SymmA_model = 0
-	SymmB_model = 0
+	SymmA_model = 1
+	SymmB_model = 1
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
@@ -1524,23 +1526,23 @@ if __name__ == '__main__':
 		if SymmA_model:
 			print '=== Running for Symm_A model ==='
 			SymmA_z064_directory = 'SymmA_data/SymmA_z0_64Particles/'
-			SymmA_z064_instance = Disperse_Plotter(savefile=1, savefigDirectory=SymmA_z064_directory+'Plots/', nPart=64, model='SymmA', redshift=0)
+			SymmA_z064_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_z064_directory+'Plots/', nPart=64, model='SymmA', redshift=0)
 			Nconn_64PartSymmA, FilLen_64PartSymmA, NPts_64PartSymmA = SymmA_z064_instance.Solve(SymmA_z064_directory+'SkelconvOutput_SymmAz064Part.a.NDskl')
 
 		if SymmB_model:
 			print '=== Running for Symm_B model ==='
 			SymmB_z064_directory = 'SymmB_data/SymmB_z0_64Particles/'
-			SymmB_z064_instance = Disperse_Plotter(savefile=1, savefigDirectory=SymmB_z064_directory+'Plots/', nPart=64, model='SymmB', redshift=0)
+			SymmB_z064_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmB_z064_directory+'Plots/', nPart=64, model='SymmB', redshift=0)
 			Nconn_64PartSymmB, FilLen_64PartSymmB, NPts_64PartSymmB = SymmB_z064_instance.Solve(SymmB_z064_directory+'SkelconvOutput_SymmBz064Part.a.NDskl')
 
 		if ModelCompare:
-			if LCDM and not SymmA and not SymmB:
+			if LCDM_model and not SymmA_model and not SymmB_model:
 				raise ValueError('Only LCDM model is ticked on. Cannot compare models if SymmA and/or SymmB is ticked as well')
 
-			elif not LCDM and SymmA and not SymmB:
+			elif not LCDM_model and SymmA_model and not SymmB_model:
 				raise ValueError('Only SymmA model is ticked on. Cannot compare models if LCDM and/or SymmB is ticked as well')
 
-			elif not LCDM and not SymmA and SymmB:
+			elif not LCDM_model and not SymmA_model and SymmB_model:
 				raise ValueError('Only SymmB model is ticked on. Cannot compare models if LCDM and/or SymmA is ticked as well')
 
 			ModelComparisonDir = 'Model_comparisons/'
