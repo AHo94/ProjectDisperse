@@ -50,7 +50,7 @@ class FilamentMasking():
 						 + (zDimTemp[j+1] - zDimTemp[j])**2)
 			self.CutOffLengths.append(TempLen)
 		
-		for i in range(self.NFils):
+		for i in range(len(self.xdimPos)):
 			if MaskXdir and not MaskYdir and not MaskZdir:
 				Indices = np.where(np.logical_and(np.greater(self.xdimPos[i], LowerBoundaryXDir), np.less(self.xdimPos[i], UpperBoundaryXDir)))[0]
 				Segment_check = (np.array(self.xdimPos[i]) > LowerBoundaryXDir).any() and (np.array(self.xdimPos[i]) < UpperBoundaryXDir).any()
