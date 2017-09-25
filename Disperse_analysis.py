@@ -8,7 +8,7 @@ from matplotlib import colors as mcolors
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
 from mpl_toolkits.mplot3d import Axes3D
-#import scipy.stats as stats
+from scipy import stats
 from scipy import spatial
 from scipy.interpolate import griddata
 import os
@@ -856,11 +856,12 @@ class Disperse_Plotter():
 					# Values in griddata = mass. Currently normalized to 1.
 					# Compute mass as 0.23*rho_{crit,0}*Volume_box/Num_particles
 					# See discussion with Max
+					"""
 					Mpc = 3.08568025e22
 					G_grav = 6.67258e-11
 					H_0 = 0.7*100*1e3/Mpc
 					mass = 0.23*(3*H_0**2/(8*np.pi*G_grav))*(256.0*Mpc/0.7)**3/(512.0)**3
-
+					
 					Points = np.column_stack((PartPosX, PartPosY))
 					grid_x, grid_y = np.mgrid[self.xmin:self.xmax:400j, self.xmin:self.xmax:400j]
 					grid_z_nearest = griddata(Points, np.ones(len(Points))*mass, (grid_x, grid_y), method='nearest')
@@ -881,15 +882,19 @@ class Disperse_Plotter():
 					plt.imshow(grid_z_cubic.T, extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
 					plt.title('Cubic')
 					#plt.title('Dark matter particle density field, interpolated with griddata')
+					"""
 
-					"""
-					Interpolated_DM_particles_figure_IMSHOW = plt.figure()
-					plt.clf()
-					plt.imshow(DMHistogram, origin='lower', interpolation='bilinear')			
-					plt.xlabel('$\mathregular{x}$' + LegendText)
-					plt.ylabel('$\mathregular{y}$' + LegendText)
-					plt.title('Dark matter particle density field, interpolated with Imshow')
-					"""
+					# Using gaussian kernel to plot density field of DM particle positions
+					X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
+					positions = np.vstack([X.ravel(), Y.ravel()])
+					values = np.vstack([PartPosX, PartPosY])
+					kernel = stats.gaussian_kde(values)
+					Z = np.reshape(kernel(positions).T, X.shape)
+					DMParticles_kernelPlot, ax_kernel = plt.subplots()
+					ax_kernel.imshow(np.rot90(Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					ax_kernel.set_xlim([self.xmin, self.xmax])
+					ax_kernel.set_ylim([self.ymin, self.ymax])
+
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -926,8 +931,8 @@ class Disperse_Plotter():
 						ONEDHistX.savefig(self.results_dir + 'DMParticle1DHistogramXposition' + self.ModelFilename)
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
 						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMParticleHistogram_interpolated' + self.ModelFilename)
-						#Interpolated_DM_particles_figure_IMSHOW.savefig(self.results_dir + 'DMParticleHistogram_interpolated_IMSHOW' + self.ModelFilename)
 						Interpolated_DM_particles_figure_griddata.savefig(self.results_dir + 'DMParticleHistogram_interpolated_griddata' + self.ModelFilename)
+						DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot' + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
@@ -1391,7 +1396,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 if __name__ == '__main__':
-	HOMEPC = 0					# Set 1 if working in UiO terminal
+	HOMEPC = 1					# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1408,16 +1413,16 @@ if __name__ == '__main__':
 	MaskZdir = 1
 
 	# Histogram plots
-	HistogramPlots = 1			# Set to 1 to plot histograms
-	Comparison = 1				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	ModelCompare = 1 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
+	HistogramPlots = 0			# Set to 1 to plot histograms
+	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 
-	SymmA_model = 1
-	SymmB_model = 1
+	SymmA_model = 0
+	SymmB_model = 0
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
