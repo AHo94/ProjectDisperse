@@ -14,6 +14,7 @@ from scipy.interpolate import griddata
 import os
 import time
 import cPickle as pickle
+import argparse
 from collections import Counter
 
 # Disable warnings from matplotlib	
@@ -888,7 +889,7 @@ class Disperse_Plotter():
 					X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
 					positions = np.vstack([X.ravel(), Y.ravel()])
 					values = np.vstack([PartPosX, PartPosY])
-					kernel = stats.gaussian_kde(values)
+					kernel = stats.gaussian_kde(values, bw_method=parsed_arguments.bw_m)
 					Z = np.reshape(kernel(positions).T, X.shape)
 					DMParticles_kernelPlot, ax_kernel = plt.subplots()
 					ax_kernel.imshow(np.rot90(Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
@@ -1395,8 +1396,23 @@ class Histogram_Comparison():
 			plt.show()
 		plt.close('all')
 
+
+def Argument_parser():
+	""" Parses optional argument when program is run from the command line """
+    print 'Run python code with --help argument for extra arguments'
+    
+    parser = argparse.ArgumentParser()
+    # Optional arguments
+    parser_add_argument("-hp", "--HOMEPC", help="Determines if program is run in UiO or laptop. Set 1 if run in UiO. 0 by default", type=int, default=0)
+    parser_add_argument("-bw_m", "--bwMethod", help="Sets bw_method argument of scipy.stats.gaussian_kde. None (Scott) by default", type=float, default=None)
+
+    # Parse arguments
+    args = parser.parse_args()
+    return args
+
 if __name__ == '__main__':
-	HOMEPC = 1					# Set 1 if working in UiO terminal
+	parsed_arguments = Argument_parser()
+	HOMEPC = parsed_arguments.HOMEPC	# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1608,7 +1624,8 @@ if __name__ == '__main__':
 
 			#LCDM_z0_64_Robustness_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/Robustness_argument/'
 			#LCDM_z0_64_RobustnessInstance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_Robustness_dir+'Plots_Robustness/', nPart=64, model='LCDM', redshift=0)
-			#NumConn_64LCDM_rob, FilLen_64LCDM_rob, NPts_64LCDM_rob = LCDM_z0_64_RobustnessInstance.Solve(LCDM_z0_64_Robustness_dir+'SkelconvOutput_LCDMz064_robustness3.TRIM.a.NDskl', robustness=True)
+			#NumConn_64LCDM_rob, FilLen_64LCDM_rob, NPts_64LCDM_rob = \
+			#  LCDM_z0_64_RobustnessInstance.Solve(LCDM_z0_64_Robustness_dir+'SkelconvOutput_LCDMz064_robustness3.TRIM.a.NDskl', robustness=True)
 
 			if SigmaComparison:
 				LCDM64_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma4/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
