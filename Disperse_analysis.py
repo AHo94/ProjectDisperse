@@ -889,7 +889,7 @@ class Disperse_Plotter():
 					X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
 					positions = np.vstack([X.ravel(), Y.ravel()])
 					values = np.vstack([PartPosX, PartPosY])
-					kernel = stats.gaussian_kde(values, bw_method=parsed_arguments.bw_m)
+					kernel = stats.gaussian_kde(values, bw_method=parsed_arguments.bwMethod)
 					Z = np.reshape(kernel(positions).T, X.shape)
 					DMParticles_kernelPlot, ax_kernel = plt.subplots()
 					ax_kernel.imshow(np.rot90(Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
