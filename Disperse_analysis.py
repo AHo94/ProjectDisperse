@@ -1399,7 +1399,7 @@ class Histogram_Comparison():
 
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
-	print 'Run python code with --help argument for extra arguments'
+	print 'Run python code with -h argument for extra arguments'
 
 	parser = argparse.ArgumentParser()
 	# Optional arguments
