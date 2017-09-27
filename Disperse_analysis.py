@@ -933,8 +933,8 @@ class Disperse_Plotter():
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
 						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMParticleHistogram_interpolated' + self.ModelFilename)
 						#Interpolated_DM_particles_figure_griddata.savefig(self.results_dir + 'DMParticleHistogram_interpolated_griddata' + self.ModelFilename)
-						filename_bwmethod = '' if parsed_arguments.bwMethod == None else '0' + str(int(parsed_arguments.bwMethod*10))
-						DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot' + filename_bwmethod + self.ModelFilename)
+						#filename_bwmethod = '' if parsed_arguments.bwMethod == None else '0' + str(int(parsed_arguments.bwMethod*10))
+						DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot' + str(parsed_arguments.bwMethod) + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
