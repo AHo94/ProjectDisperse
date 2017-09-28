@@ -895,7 +895,19 @@ class Disperse_Plotter():
 					ax_kernel.imshow(np.rot90(Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					ax_kernel.set_xlim([self.xmin, self.xmax])
 					ax_kernel.set_ylim([self.ymin, self.ymax])
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+					plt.ylabel('$\mathregular{y}$' + LegendText)
 
+					# Overplot with filaments on the gaussian kernel plots
+					DMParticles_kernelPlot_wFilaments, ax_kernel_wfil = plt.subplots()
+					ax_kernel_wfil.imshow(np.rot90(Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
+					ax_kernel_wfil.set_ylim([self.ymin, self.ymax])
+					ax_kernel_wfil.add_collection(line_segmentsDMlen)
+					DMParticles_kernelPlot_wFilaments.colorbar(line_segmentsDMlen)
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+					plt.ylabel('$\mathregular{y}$' + LegendText)
+					
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -935,6 +947,8 @@ class Disperse_Plotter():
 						#Interpolated_DM_particles_figure_griddata.savefig(self.results_dir + 'DMParticleHistogram_interpolated_griddata' + self.ModelFilename)
 						#filename_bwmethod = '' if parsed_arguments.bwMethod == None else '0' + str(int(parsed_arguments.bwMethod*10))
 						DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot' + str(parsed_arguments.bwMethod) + self.ModelFilename)
+						DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments' \
+																	+ str(parsed_arguments.bwMethod) + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
@@ -1022,7 +1036,8 @@ class Disperse_Plotter():
 												self.LengthSplitFilament , self.NFils, Mask_direction_check, Mask_boundary_list)
 				Mask_instance_variables = Mask_instance.Mask_slices()
 				pickle.dump(Mask_instance_variables, open(Mask_slice_cachefn, 'wb'))
-			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
+			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments\
+							, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
 		
 		#if IncludeSlicing and IncludeDMParticles and not Comparison:
 		#	self.NumParticles_per_filament_v2()
@@ -1214,7 +1229,8 @@ class Histogram_Comparison():
 			elif self.N == 3:
 				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles']
 			elif self.N == 4:
-				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', '$\mathregular{256^3}$ particles', '$\mathregular{512^3}$ particles']
+				self.LegendText = ['$\mathregular{64^3}$ particles', '$\mathregular{128^3}$ particles', \
+									'$\mathregular{256^3}$ particles', '$\mathregular{512^3}$ particles']
 		elif self.ModelComparison:
 			self.LegendText = []
 			if self.LCDM_check:
@@ -1289,7 +1305,8 @@ class Histogram_Comparison():
 			raise ValueError('Lists containing the histograms are not of equal length!')
 
 		alphas = [0.65, 0.6, 0.55, 0.5, 0.45, 0.4]
-		Legends = ['$\mathregular{\sigma=5}, 64^3$ part subsample', '$\mathregular{\sigma=4}, 64^3$ part subsample', '$\mathregular{\sigma=3}, 64^3$ part subsample', \
+		Legends = ['$\mathregular{\sigma=5}, 64^3$ part subsample', '$\mathregular{\sigma=4},\
+					 64^3$ part subsample', '$\mathregular{\sigma=3}, 64^3$ part subsample', \
 					'$\mathregular{\sigma=5}, 512^3$ part', '$\mathregular{\sigma=4}, 512^3$ part', '$\mathregular{\sigma=3}, 512^3$ part']
 		N = len(Nconnections)
 		ConnectedHistComparison = plt.figure()
@@ -1624,10 +1641,10 @@ if __name__ == '__main__':
 			"""
 
 			#LCDM_z0_64_Robustness_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/Robustness_argument/'
-			#LCDM_z0_64_RobustnessInstance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_Robustness_dir+'Plots_Robustness/', nPart=64, model='LCDM', redshift=0)
+			#LCDM_z0_64_RobustnessInstance = Disperse_Plotter(savefile=1, \
+			#	savefigDirectory=LCDM_z0_64_Robustness_dir+'Plots_Robustness/', nPart=64, model='LCDM', redshift=0)
 			#NumConn_64LCDM_rob, FilLen_64LCDM_rob, NPts_64LCDM_rob = \
 			#  LCDM_z0_64_RobustnessInstance.Solve(LCDM_z0_64_Robustness_dir+'SkelconvOutput_LCDMz064_robustness3.TRIM.a.NDskl', robustness=True)
-
 			if SigmaComparison:
 				LCDM64_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma4/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM64_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma5/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
