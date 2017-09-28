@@ -904,7 +904,7 @@ class Disperse_Plotter():
 					ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
 					ax_kernel_wfil.set_ylim([self.ymin, self.ymax])
 					line_segmentsDMlen_kernel = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
-					ax_kernel_wfil.add_collection(line_segmentsDMlen)
+					ax_kernel_wfil.add_collection(line_segmentsDMlen_kernel)
 					DMParticles_kernelPlot_wFilaments.colorbar(line_segmentsDMlen_kernel)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
