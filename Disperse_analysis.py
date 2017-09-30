@@ -549,7 +549,7 @@ class Disperse_Plotter():
 		# Scikit kernel stuff
 		kde = KernelDensity(bandwidth=parsed_arguments.bwMethod, kernel=parsed_arguments.KernelMethod)
 		kde.fit(values)
-	 	self.Interpolated_Z = kde.score_samples(positions)
+	 	self.Interpolated_Z = kde.score_samples(values)
 
 	 	print X.shape()
 	 	print self.Interpolated_Z.shape()
