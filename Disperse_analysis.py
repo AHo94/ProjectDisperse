@@ -16,6 +16,7 @@ import time
 import cPickle as pickle
 import argparse
 from collections import Counter
+from sklearn.neighbors import KernelDensity
 
 # Disable warnings from matplotlib	
 import warnings
@@ -536,6 +537,23 @@ class Disperse_Plotter():
 
 		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
 
+	def Interpolate_DM_particles(self):
+		X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
+		positions = np.vstack([X.ravel(), Y.ravel()])
+		values = np.vstack([PartPosX, PartPosY])
+
+		# Scipy kernel stuff
+		#kernel = stats.gaussian_kde(values, bw_method=parsed_arguments.bwMethod)
+		#self.Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
+
+		# Scikit kernel stuff
+		kde = KernelDensity(bandwidth=parsed_arguments.bwMethod, kernel=parsed_arguments.KernelMethod)
+		kde.fit(values)
+	 	self.Interpolated_Z = kde.score_samples(positions)
+
+	 	print X.shape()
+	 	print self.Interpolated_Z.shape()
+	 	
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
 		print 'Plotting'
@@ -886,13 +904,8 @@ class Disperse_Plotter():
 					"""
 
 					# Using gaussian kernel to plot density field of DM particle positions
-					X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
-					positions = np.vstack([X.ravel(), Y.ravel()])
-					values = np.vstack([PartPosX, PartPosY])
-					kernel = stats.gaussian_kde(values, bw_method=parsed_arguments.bwMethod)
-					Z = np.reshape(kernel(positions).T, X.shape)
 					DMParticles_kernelPlot, ax_kernel = plt.subplots()
-					ax_kernel.imshow(np.rot90(Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					ax_kernel.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					ax_kernel.set_xlim([self.xmin, self.xmax])
 					ax_kernel.set_ylim([self.ymin, self.ymax])
 					plt.xlabel('$\mathregular{x}$' + LegendText)
@@ -900,7 +913,7 @@ class Disperse_Plotter():
 
 					# Overplot with filaments on the gaussian kernel plots
 					DMParticles_kernelPlot_wFilaments, ax_kernel_wfil = plt.subplots()
-					ax_kernel_wfil.imshow(np.rot90(Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
 					ax_kernel_wfil.set_ylim([self.ymin, self.ymax])
 					line_segmentsDMlen_kernel = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
@@ -1423,6 +1436,9 @@ def Argument_parser():
 	parser = argparse.ArgumentParser()
 	# Optional arguments
 	parser.add_argument("-hp", "--HOMEPC", help="Determines if program is run in UiO or laptop. Set 1 if run in UiO. 0 by default", type=int, default=0)
+	parser.add_argument("-kernel", "--KernelMethod", help="Selects different kernels for interpolation. Default = gaussian. tp = tophat, "\
+						, type=str, default=None)
+
 	parser.add_argument("-bw_m", "--bwMethod", help="Sets bw_method argument of scipy.stats.gaussian_kde. None (Scott) by default", type=float, default=None)
 
 	# Parse arguments
