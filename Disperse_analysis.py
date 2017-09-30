@@ -540,13 +540,14 @@ class Disperse_Plotter():
 	def Interpolate_DM_particles(self):
 		X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
 		positions = np.vstack([X.ravel(), Y.ravel()])
-		values = np.vstack([PartPosX, PartPosY])
+		#values = np.vstack([PartPosX, PartPosY])
 
 		# Scipy kernel stuff
 		#kernel = stats.gaussian_kde(values, bw_method=parsed_arguments.bwMethod)
 		#self.Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
 
 		# Scikit kernel stuff
+		values = np.column_stack([PartPosX, PartPosY])
 		kde = KernelDensity(bandwidth=parsed_arguments.bwMethod, kernel=parsed_arguments.KernelMethod)
 		kde.fit(values)
 	 	self.Interpolated_Z = kde.score_samples(values)
