@@ -551,8 +551,8 @@ class Disperse_Plotter():
 		kde.fit(values)
 	 	self.Interpolated_Z = kde.score_samples(values)
 
-	 	print X.shape()
-	 	print self.Interpolated_Z.shape()
+	 	print X.shape
+	 	print self.Interpolated_Z.shape
 
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
