@@ -1007,6 +1007,7 @@ class Disperse_Plotter():
 		self.Sort_filament_coordinates(ndim)
 		self.Sort_filament_data()
 		self.Number_filament_connections()
+		self.Interpolate_DM_particles()
 		# Get masked critical points
 		self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
 																 Mask_boundary_list, Mask_direction_check)
