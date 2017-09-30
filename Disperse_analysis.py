@@ -553,7 +553,7 @@ class Disperse_Plotter():
 
 	 	print X.shape()
 	 	print self.Interpolated_Z.shape()
-	 	
+
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
 		print 'Plotting'
@@ -1437,7 +1437,7 @@ def Argument_parser():
 	# Optional arguments
 	parser.add_argument("-hp", "--HOMEPC", help="Determines if program is run in UiO or laptop. Set 1 if run in UiO. 0 by default", type=int, default=0)
 	parser.add_argument("-kernel", "--KernelMethod", help="Selects different kernels for interpolation. Default = gaussian. tp = tophat, "\
-						, type=str, default=None)
+						, type=str, default='gaussian')
 
 	parser.add_argument("-bw_m", "--bwMethod", help="Sets bw_method argument of scipy.stats.gaussian_kde. None (Scott) by default", type=float, default=None)
 
