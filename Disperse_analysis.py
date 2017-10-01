@@ -528,6 +528,7 @@ class Disperse_Plotter():
 
 	def Number_filament_connections(self):
 		""" Computes the number of filament connections one filament has"""
+		print 'Computing number connections'
 		self.NumFilamentConnections = []
 		for Connected_CP in self.PairIDS:
 			counter = 0
@@ -538,6 +539,7 @@ class Disperse_Plotter():
 		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
 
 	def Interpolate_DM_particles(self):
+		print 'Interpolating DM particle densities'
 		X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
 		positions = np.vstack([X.ravel(), Y.ravel()])
 		#values = np.vstack([PartPosX, PartPosY])
@@ -1008,7 +1010,8 @@ class Disperse_Plotter():
 		self.Sort_filament_coordinates(ndim)
 		self.Sort_filament_data()
 		self.Number_filament_connections()
-		self.Interpolate_DM_particles()
+		if HOMEPC == 1 and IncludeDMParticles:
+			self.Interpolate_DM_particles()
 		# Get masked critical points
 		self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
 																 Mask_boundary_list, Mask_direction_check)
