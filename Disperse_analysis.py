@@ -542,21 +542,27 @@ class Disperse_Plotter():
 		print 'Interpolating DM particle densities'
 		X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
 		positions = np.vstack([X.ravel(), Y.ravel()])
-		#values = np.vstack([PartPosX, PartPosY])
+		values = np.vstack([PartPosX, PartPosY])
 
 		# Scipy kernel stuff
-		#kernel = stats.gaussian_kde(values, bw_method=parsed_arguments.bwMethod)
-		#self.Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
+		if type(parsed_arguments.bwMethod) != list:
+			kernel = stats.gaussian_kde(values)
+			self.Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
+		else:
+			self.Interpolated_Z = []
+			for bw_args in parsed_arguments.bwMethod
+				kernel = stats.gaussian_kde(values)
+				Density = np.reshape(kernel(positions).T, X.shape)
+				self.Interpolated_Z.append(Density)
 
 		# Scikit kernel stuff
+		# Takes too long for unknown reasons
+		"""
 		values = np.column_stack([PartPosX, PartPosY])
 		kde = KernelDensity(bandwidth=parsed_arguments.bwMethod, kernel=parsed_arguments.KernelMethod)
 		kde.fit(values)
 	 	self.Interpolated_Z = kde.score_samples(values)
-
-	 	print X.shape
-	 	print self.Interpolated_Z.shape
-
+	 	"""
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
 		print 'Plotting'
@@ -905,26 +911,54 @@ class Disperse_Plotter():
 					plt.title('Cubic')
 					#plt.title('Dark matter particle density field, interpolated with griddata')
 					"""
-
+					if len(self.Interpolated_Z) <= 2:
+						Column = 2
+						Row = 1
+					elif len(self.Interpolated_Z) > 2 and len(self.Interpolated_Z) <= 4:
+						Column = 2
+						Row = 2
+					elif len(Interpolated_Z) > 4 and len(self.Interpolated_Z) <= 6
+						Column = 3
+						Row = 2
+					elif len(Interpolated_Z) > 6 and len(self.Interpolated_Z) <= 9
+						Column = 3
+						Row = 3
 					# Using gaussian kernel to plot density field of DM particle positions
 					DMParticles_kernelPlot, ax_kernel = plt.subplots()
-					ax_kernel.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					if type(self.Interpolated_Z) != list:
+						ax_kernel.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+						plt.title('Bandwidth = Scott')
+					elif len(self.Interpolated_Z) == 1:
+						ax_kernel.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+						plt.title('Bandwidth = ' + parsed_arguments.bwMethod) 
+					else:
+						for j in range(1,len(self.Interpolated_Z)+1):
+							plt.subplots(Column, Row, j)
+							ax_kernel.imshow(np.rot90(self.Interpolated_Z[j-1]))
+							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1])
 					ax_kernel.set_xlim([self.xmin, self.xmax])
 					ax_kernel.set_ylim([self.ymin, self.ymax])
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
-
-					# Overplot with filaments on the gaussian kernel plots
-					DMParticles_kernelPlot_wFilaments, ax_kernel_wfil = plt.subplots()
-					ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-					ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
-					ax_kernel_wfil.set_ylim([self.ymin, self.ymax])
-					line_segmentsDMlen_kernel = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
-					ax_kernel_wfil.add_collection(line_segmentsDMlen_kernel)
-					DMParticles_kernelPlot_wFilaments.colorbar(line_segmentsDMlen_kernel)
-					plt.xlabel('$\mathregular{x}$' + LegendText)
-					plt.ylabel('$\mathregular{y}$' + LegendText)
 					
+					# Overplot with filaments on the gaussian kernel plots
+					# Only done if input parameters for bw_method is none or only one scalar
+					if type(self.Interpolated_Z) != list or len(self.Interpolated_Z) == 1:
+						DMParticles_kernelPlot_wFilaments, ax_kernel_wfil = plt.subplots()
+						if type(self.Interpolated_Z) != list:
+							ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+							plt.title('Bandwidth = Scott')
+						elif len(self.Interpolated_Z) == 1:
+							ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+							plt.title('Bandwidth = ' + parsed_arguments.bwMethod) 
+						ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
+						ax_kernel_wfil.set_ylim([self.ymin, self.ymax])
+						line_segmentsDMlen_kernel = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
+						ax_kernel_wfil.add_collection(line_segmentsDMlen_kernel)
+						DMParticles_kernelPlot_wFilaments.colorbar(line_segmentsDMlen_kernel)
+						plt.xlabel('$\mathregular{x}$' + LegendText)
+						plt.ylabel('$\mathregular{y}$' + LegendText)
+						
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -962,10 +996,16 @@ class Disperse_Plotter():
 						DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_ZMasked' + self.ModelFilename)
 						Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMParticleHistogram_interpolated' + self.ModelFilename)
 						#Interpolated_DM_particles_figure_griddata.savefig(self.results_dir + 'DMParticleHistogram_interpolated_griddata' + self.ModelFilename)
-						#filename_bwmethod = '' if parsed_arguments.bwMethod == None else '0' + str(int(parsed_arguments.bwMethod*10))
-						DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot' + str(parsed_arguments.bwMethod) + self.ModelFilename)
-						DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments' \
-																	+ str(parsed_arguments.bwMethod) + self.ModelFilename)
+						if type(self.Interpolated_Z) != list:
+							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott' + self.ModelFilename)
+						elif len(self.Interpolated_Z) == 1:
+							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot' + parsed_arguments.bwMethod[0] + self.ModelFilename)
+						else:
+							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_subplots' + self.ModelFilename)
+						
+						if type(self.Interpolated_Z) != list or len(self.Interpolated_Z) == 1:
+							DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments' \
+																		+ str(parsed_arguments.bwMethod) + self.ModelFilename)
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
@@ -1444,8 +1484,9 @@ def Argument_parser():
 	parser.add_argument("-kernel", "--KernelMethod", help="Selects different kernels for interpolation. Default = gaussian. tp = tophat, "\
 						, type=str, default='gaussian')
 
-	parser.add_argument("-bw_m", "--bwMethod", help="Sets bw_method argument of scipy.stats.gaussian_kde. None (Scott) by default", type=float, default=None)
-
+	#parser.add_argument("-bw_m", "--bwMethod", help="Sets bw_method argument of scipy.stats.gaussian_kde. None (Scott) by default", type=float, default=None)
+	parser.add_argument("-bw_m", "--bwMethod", nargs='*', help="Sets bw_method argument of scipy.stats_gaussian_kde. " \
+					+  "Scott by default. Input arguments must be float values, can be multiple.", default=None)
 	# Parse arguments
 	args = parser.parse_args()
 	return args
