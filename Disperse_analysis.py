@@ -917,10 +917,10 @@ class Disperse_Plotter():
 					elif len(self.Interpolated_Z) > 2 and len(self.Interpolated_Z) <= 4:
 						Column = 2
 						Row = 2
-					elif len(Interpolated_Z) > 4 and len(self.Interpolated_Z) <= 6:
+					elif len(self.Interpolated_Z) > 4 and len(self.Interpolated_Z) <= 6:
 						Column = 3
 						Row = 2
-					elif len(Interpolated_Z) > 6 and len(self.Interpolated_Z) <= 9:
+					elif len(self.Interpolated_Z) > 6 and len(self.Interpolated_Z) <= 9:
 						Column = 3
 						Row = 3
 					# Using gaussian kernel to plot density field of DM particle positions
@@ -930,7 +930,7 @@ class Disperse_Plotter():
 						plt.title('Bandwidth = Scott')
 					elif len(self.Interpolated_Z) == 1:
 						ax_kernel.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-						plt.title('Bandwidth = ' + parsed_arguments.bwMethod) 
+						plt.title('Bandwidth = ' + parsed_arguments.bwMethod[0]) 
 					else:
 						for j in range(1,len(self.Interpolated_Z)+1):
 							plt.subplots(Column, Row, j)
@@ -950,7 +950,7 @@ class Disperse_Plotter():
 							plt.title('Bandwidth = Scott')
 						elif len(self.Interpolated_Z) == 1:
 							ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-							plt.title('Bandwidth = ' + parsed_arguments.bwMethod) 
+							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[0]) 
 						ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
 						ax_kernel_wfil.set_ylim([self.ymin, self.ymax])
 						line_segmentsDMlen_kernel = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
