@@ -550,7 +550,7 @@ class Disperse_Plotter():
 			self.Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
 		else:
 			self.Interpolated_Z = []
-			for bw_args in parsed_arguments.bwMethod
+			for bw_args in parsed_arguments.bwMethod:
 				kernel = stats.gaussian_kde(values)
 				Density = np.reshape(kernel(positions).T, X.shape)
 				self.Interpolated_Z.append(Density)
@@ -917,10 +917,10 @@ class Disperse_Plotter():
 					elif len(self.Interpolated_Z) > 2 and len(self.Interpolated_Z) <= 4:
 						Column = 2
 						Row = 2
-					elif len(Interpolated_Z) > 4 and len(self.Interpolated_Z) <= 6
+					elif len(Interpolated_Z) > 4 and len(self.Interpolated_Z) <= 6:
 						Column = 3
 						Row = 2
-					elif len(Interpolated_Z) > 6 and len(self.Interpolated_Z) <= 9
+					elif len(Interpolated_Z) > 6 and len(self.Interpolated_Z) <= 9:
 						Column = 3
 						Row = 3
 					# Using gaussian kernel to plot density field of DM particle positions
