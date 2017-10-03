@@ -16,18 +16,20 @@ import time
 import cPickle as pickle
 import argparse
 from collections import Counter
-from sklearn.neighbors import KernelDensity
+import multiprocessing as mp
+#from sklearn.neighbors import KernelDensity
 
 # Disable warnings from matplotlib	
 import warnings
 import matplotlib.cbook
-warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
+#warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 
 # Own modules
 import BoundaryChecker
 import FilamentMasking
 import ReadGadgetFile
 import MaskCritPts
+import FilamentsPerSigma
 
 class Disperse_Plotter():
 	"""
@@ -539,21 +541,27 @@ class Disperse_Plotter():
 		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
 
 	def Interpolate_DM_particles(self):
+		time_start = time.clock()
 		print 'Interpolating DM particle densities'
 		X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
 		positions = np.vstack([X.ravel(), Y.ravel()])
 		values = np.vstack([PartPosX, PartPosY])
 
 		# Scipy kernel stuff
-		if type(parsed_arguments.bwMethod) != list:
+		if parsed_arguments.bwMethod == 'Scott':
+			print 'Interpolating with bandwidth = Scott'
 			kernel = stats.gaussian_kde(values)
 			self.Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
+			self.Logarithmic_density = np.log(self.Interpolated_Z/np.average(self.Interpolated_Z))
 		else:
 			self.Interpolated_Z = []
+			self.Logarithmic_density = []
 			for bw_args in parsed_arguments.bwMethod:
-				kernel = stats.gaussian_kde(values)
+				print 'Interpolating with bandwidth = ' + bw_args
+				kernel = stats.gaussian_kde(values, bw_method=float(bw_args))
 				Density = np.reshape(kernel(positions).T, X.shape)
 				self.Interpolated_Z.append(Density)
+				self.Logarithmic_density.append(np.log(self.Interpolated_Z/np.average(self.Interpolated_Z)))
 
 		# Scikit kernel stuff
 		# Takes too long for unknown reasons
@@ -563,6 +571,9 @@ class Disperse_Plotter():
 		kde.fit(values)
 	 	self.Interpolated_Z = kde.score_samples(values)
 	 	"""
+	 	print 'Interpolation time = ', time.clock() - time_start, 's'
+
+
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
 		print 'Plotting'
@@ -911,7 +922,7 @@ class Disperse_Plotter():
 					plt.title('Cubic')
 					#plt.title('Dark matter particle density field, interpolated with griddata')
 					"""
-					if len(self.Interpolated_Z) <= 2:
+					if len(self.Interpolated_Z) == 2:
 						Column = 2
 						Row = 1
 					elif len(self.Interpolated_Z) > 2 and len(self.Interpolated_Z) <= 4:
@@ -934,10 +945,30 @@ class Disperse_Plotter():
 					else:
 						for j in range(1,len(self.Interpolated_Z)+1):
 							plt.subplots(Column, Row, j)
-							ax_kernel.imshow(np.rot90(self.Interpolated_Z[j-1]))
+							plt.imshow(np.rot90(self.Interpolated_Z[j-1]))
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1])
 					ax_kernel.set_xlim([self.xmin, self.xmax])
 					ax_kernel.set_ylim([self.ymin, self.ymax])
+					plt.colorbar()
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+					plt.ylabel('$\mathregular{y}$' + LegendText)
+
+					# Plotting logarithmic value of the density
+					DMParticles_kernelPlot_logarithmic, ax_kernel_log = plt.subplots()
+					if type(self.Interpolated_Z) != list:
+						ax_kernel_log.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+						plt.title('Bandwidth = Scott. Logarithmic')
+					elif len(self.Interpolated_Z) == 1:
+						ax_kernel_log.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+						plt.title('Bandwidth = ' + parsed_arguments.bwMethod[0] + '. Logarithmic') 
+					else:
+						for j in range(1,len(self.Logarithmic_density)+1):
+							plt.subplots(Column, Row, j)
+							plt.imshow(np.rot90(self.Logarithmic_density[j-1]))
+							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1] + '. Logarithmic')
+					ax_kernel_log.set_xlim([self.xmin, self.xmax])
+					ax_kernel_log.set_ylim([self.ymin, self.ymax])
+					plt.colorbar()
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					
@@ -998,14 +1029,17 @@ class Disperse_Plotter():
 						#Interpolated_DM_particles_figure_griddata.savefig(self.results_dir + 'DMParticleHistogram_interpolated_griddata' + self.ModelFilename)
 						if type(self.Interpolated_Z) != list:
 							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott' + self.ModelFilename)
+							DMParticles_kernelPlot_logarithmic.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott_logarithmic' + self.ModelFilename)
+							DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott_wFilaments'+ self.ModelFilename)
 						elif len(self.Interpolated_Z) == 1:
 							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot' + parsed_arguments.bwMethod[0] + self.ModelFilename)
+							DMParticles_kernelPlot_logarithmic.savefig(self.results_dir + 'DMParticles_kernelPlot_logarithmic' + parsed_arguments.bwMethod[0] + self.ModelFilename)
+							DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments' \
+																		+ str(parsed_arguments.bwMethod[0]) + self.ModelFilename)
 						else:
 							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_subplots' + self.ModelFilename)
-						
-						if type(self.Interpolated_Z) != list or len(self.Interpolated_Z) == 1:
-							DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments' \
-																		+ str(parsed_arguments.bwMethod) + self.ModelFilename)
+							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_subplots_logarithmic' + self.ModelFilename)
+
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
 						DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments_XYZMasked' + self.ModelFilename)
@@ -1032,7 +1066,6 @@ class Disperse_Plotter():
 		if robustness:
 			cachedir_foldername_extra += 'TRIM'
 
-
 		if HOMEPC == 0:
 			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
 		else:
@@ -1050,7 +1083,8 @@ class Disperse_Plotter():
 		self.Sort_filament_coordinates(ndim)
 		self.Sort_filament_data()
 		self.Number_filament_connections()
-		if HOMEPC == 1 and IncludeDMParticles:
+		self.Filaments_per_sigma()
+		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
 			self.Interpolate_DM_particles()
 		# Get masked critical points
 		self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
@@ -1474,6 +1508,10 @@ class Histogram_Comparison():
 		plt.close('all')
 
 
+def Multiprocess_FilamentsPerSigma(argument):
+	""" Multiprocess function to compute filaments as a function of sigmas """
+
+
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
 	print 'Run python code with -h argument for extra arguments'
@@ -1483,10 +1521,13 @@ def Argument_parser():
 	parser.add_argument("-hp", "--HOMEPC", help="Determines if program is run in UiO or laptop. Set 1 if run in UiO. 0 by default", type=int, default=0)
 	parser.add_argument("-kernel", "--KernelMethod", help="Selects different kernels for interpolation. Default = gaussian. tp = tophat, "\
 						, type=str, default='gaussian')
-
-	#parser.add_argument("-bw_m", "--bwMethod", help="Sets bw_method argument of scipy.stats.gaussian_kde. None (Scott) by default", type=float, default=None)
 	parser.add_argument("-bw_m", "--bwMethod", nargs='*', help="Sets bw_method argument of scipy.stats_gaussian_kde. " \
-					+  "Scott by default. Input arguments must be float values, can be multiple.", default=None)
+					+  "Input arguments can be float values, may be multiple. If using default scipy settings, set argument Scott")
+	parser.add_argument("-Nproc", "--NumProcesses", help="Sets the number of processes for multiprocessing module. Default to 4", type=int, default=4)
+	parser.add_argument("-comp", "--Comparisons", help="If set to 1, compares different particle subsamples and/or gravity models. Default to 0", type=int, default=0)
+	parser.add_argument("-hpart", "--HigherPart", help="Includes particles of larger subsamples if set to 1."\
+					+ "Aimed to include seperate simulations for larger number of particles. Defalult to 0 (only runs 64^3 particles)", type=int, default=0)
+
 	# Parse arguments
 	args = parser.parse_args()
 	return args
@@ -1503,7 +1544,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1511,7 +1552,7 @@ if __name__ == '__main__':
 
 	# Histogram plots
 	HistogramPlots = 0			# Set to 1 to plot histograms
-	Comparison = 0				# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
+	Comparison = parsed_arguments.Comparisons	# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
@@ -1526,6 +1567,7 @@ if __name__ == '__main__':
 	SaveAsPNG = 1				# Set 1 to save figures as PNG
 	SaveAsPDF = 0 				# Set 1 to save figures as PDF
 
+	print '=== INFORMATION ==='
 	# Some if tests before the simulation runs
 	if FilamentLimit == 1:
 		print 'Running program with limited amount of filaments.'
@@ -1687,27 +1729,29 @@ if __name__ == '__main__':
 				"""
 			
 			LCDM_z0_64_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
+			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
+			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
+			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
+
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-			"""
-			LCDM_z0_128_dir = 'lcdm_testing/LCDM_z0_128PeriodicTesting/'
-			LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
-			NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
-			
-			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
-			LCDM_z0_256Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
-			NumConn_256LCDM, FilLen_256LCDM, NPts_256LCDM = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl')
-			
-			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
-			LCDM_z0_512Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
-			NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
-			"""
+			if HigherPart:
+				LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
+				NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
+				
+				LCDM_z0_256Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_256_dir+'Plots/', nPart=256, model='LCDM', redshift=0)
+				NumConn_256LCDM, FilLen_256LCDM, NPts_256LCDM = LCDM_z0_256Instance.Solve(LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl')
+				
+				LCDM_z0_512Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_512_dir+'Plots/', nPart=512, model='LCDM', redshift=0)
+				NumConn_512LCDM, FilLen_512LCDM, NPts_512LCDM = LCDM_z0_512Instance.Solve(LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl')
+				
 
 			#LCDM_z0_64_Robustness_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/Robustness_argument/'
 			#LCDM_z0_64_RobustnessInstance = Disperse_Plotter(savefile=1, \
 			#	savefigDirectory=LCDM_z0_64_Robustness_dir+'Plots_Robustness/', nPart=64, model='LCDM', redshift=0)
 			#NumConn_64LCDM_rob, FilLen_64LCDM_rob, NPts_64LCDM_rob = \
 			#  LCDM_z0_64_RobustnessInstance.Solve(LCDM_z0_64_Robustness_dir+'SkelconvOutput_LCDMz064_robustness3.TRIM.a.NDskl', robustness=True)
+
 			if SigmaComparison:
 				LCDM64_instance_nsig4 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma4/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM64_instance_nsig5 = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Sigma5/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
@@ -1757,9 +1801,14 @@ if __name__ == '__main__':
 					ComparisonInstance_LCDM.Sigma_plot_comparison(Nconnections_list_nsig4, FilLengths_list_nsig4, FilPoints_list_nsig5, 4)
 					ComparisonInstance_LCDM.Sigma_plot_comparison(Nconnections_list_nsig5, FilLengths_list_nsig5, FilPoints_list_nsig4, 5)
 					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list, nPart=512)
-				else:
+				elif parsed_arguments.HigherPart:
 					NumConnections_list = [NumConn_64LCDM, NumConn_128LCDM , NumConn_256LCDM, NumConn_512LCDM]
 					FilLengths_list = [FilLen_64LCDM, FilLen_128LCDM, FilLen_256LCDM, FilLen_512LCDM]
 					FilPoints_list = [NPts_64LCDM, NPts_128LCDM, NPts_256LCDM, NPts_512LCDM]
 					ComparisonInstance_LCDM = Histogram_Comparison(savefile=1, savefigDirectory=Comparison_dir, redshift=0, LCDM=1)
 					ComparisonInstance_LCDM.Run(NumConnections_list, FilLengths_list, FilPoints_list)
+				else:
+					SkeletonFiles = [LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl',\
+									LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl', LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl']
+					for files in SkeletonFiles:
+						
