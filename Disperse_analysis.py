@@ -1824,6 +1824,8 @@ if __name__ == '__main__':
 						os.makedirs(results_dir)
 
 					Result = Instance.Filaments_per_sigma(sigma_values)
-					fig = plt.figure()
+					print Result
+					fig22 = plt.figure()
 					plt.plot(sigma_values, Result)
-					fig.savefig(results_dir + 'Fil_per_sig_test.png')
+					print 'saving in', results_dir
+					fig22.savefig(results_dir + 'Fil_per_sig_test.png')
