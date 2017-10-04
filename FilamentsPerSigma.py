@@ -183,9 +183,9 @@ class FilamentsPerSigma():
 					Filaments.append(self.Critpts_filamentID[i][Fil_included_index[0]])
 			Unique_filaments = np.unique(np.array(Filaments))
 			fil_per_sig.append(len(Unique_filaments))
-			print len(Temporary_sigmas)
-			print len(self.Neighbours_CP)
-			print len(self.CP_id_of_connecting_filament)
+			#print len(Temporary_sigmas)
+			#print len(self.Neighbours_CP)
+			#print len(self.CP_id_of_connecting_filament)
 			Temporary_sigmas = Temporary_sigmas[CPs_included]
 			#self.Neighbours_CP = self.Neighbours_CP[CPs_included]
 			#self.CP_id_of_connecting_filament = self.CP_id_of_connecting_filament[CPs_included]
