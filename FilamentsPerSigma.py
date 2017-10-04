@@ -112,7 +112,7 @@ class FilamentsPerSigma():
 			i += 2 + Filament_connections
 
 		self.CP_id_of_connecting_filament = np.asarray(self.CP_id_of_connecting_filament)
-		self.Neighbours_CP = np.asarray(self.CP_id_of_connecting_filament)
+		self.Neighbours_CP = np.asarray(Neighbours_CP)
 
 	def Sort_filament_data(self):
 		""" 
@@ -165,7 +165,7 @@ class FilamentsPerSigma():
 
 		self.Persistence_nsigmas = np.asarray(self.Persistence_nsigmas)
 		print self.Neighbours_CP[:10]
-		print self.CP_id_of_connecting_filament[:10]
+		print self.CP_id_of_connecting_filament[:10	]
 
 	def Filaments_per_sigma(self, sigma_array):
 		""" Checks number of existing filaments based on sigma value """
@@ -178,6 +178,7 @@ class FilamentsPerSigma():
 			for i in CPs_included:
 				Fil_included_index = np.where(np.array(self.Neighbours_CP)[i] == np.array(self.CP_id_of_connecting_filament)[i])[0]
 				print Fil_included_index
+				print aa
 				Filaments.append(self.Critpts_filamentID[i][Fil_included_index])
 			Unique_filaments = np.unique(np.array(Filaments))
 			fil_per_sig.append(len(Unique_filaments))
