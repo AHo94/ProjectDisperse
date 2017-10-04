@@ -10,8 +10,8 @@ class FilamentsPerSigma():
 
 	def ReadFile(self, filename, dimensions=3):
 		""" Reads the data from the skeleton file from Disperse """
-		#datafiles = open(os.path.join(file_directory, filename), 'r')
-		datafiles = open(filename, 'r')
+		datafiles = open(os.path.join(file_directory, filename), 'r')
+		#datafiles = open(filename, 'r')
 		self.CriticalPoints = []
 		self.Filaments = []
 		self.CriticalPointsData = []
@@ -180,7 +180,7 @@ class FilamentsPerSigma():
 			Unique_filaments = np.unique(np.array(Filaments))
 			fil_per_sig.append(len(Unique_filaments))
 			Temporary_sigmas = Temporary_sigmas[CPs_included]
-			
+
 		return fil_per_sig
 		
 
