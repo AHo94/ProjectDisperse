@@ -1515,6 +1515,7 @@ def Multiprocess_FilamentsPerSigma(filename, sigmas):
 	print sigmas
 	Instance = FilamentsPerSigma.FilamentsPerSigma(filename)
 	Filament_count = Instance.Filaments_per_sigma(sigmas)
+	print Filament_count
 	return Filament_count
 
 def Argument_parser():
@@ -1820,7 +1821,7 @@ if __name__ == '__main__':
 					if not os.path.isdir(results_dir_filpersig):
 						os.makedirs(results_dir_filpersig)
 					
-					p = mp.Pool(4)
+					p = mp.Pool(1)
 					sigma_values = np.linspace(3, 10, 200)
 					#Instance = FilamentsPerSigma.FilamentsPerSigma(file_directory+'/'+LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 					#Results = Instance.Filaments_per_sigma(sigma_values)
