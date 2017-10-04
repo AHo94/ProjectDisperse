@@ -164,6 +164,8 @@ class FilamentsPerSigma():
 				self.Filament_type.append(int(self.FilamentsData[i][4]))
 
 		self.Persistence_nsigmas = np.asarray(self.Persistence_nsigmas)
+		print self.Neighbours_CP[:10]
+		print self.CP_id_of_connecting_filament[:10]
 
 	def Filaments_per_sigma(self, sigma_array):
 		""" Checks number of existing filaments based on sigma value """
