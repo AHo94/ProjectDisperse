@@ -175,8 +175,8 @@ class FilamentsPerSigma():
 			CPs_included = np.where(Temporary_sigmas >= sigmas)[0]
 			for i in CPs_included:
 				Fil_included_index = np.where(np.array(self.Neighbours_CP)[i] == np.array(self.CP_id_of_connecting_filament)[i])[0]
+				print Fil_included_index
 				Filaments.append(self.Critpts_filamentID[i][Fil_included_index])
-			print Filaments
 			Unique_filaments = np.unique(np.array(Filaments))
 			fil_per_sig.append(len(Unique_filaments))
 			print len(Temporary_sigmas)
