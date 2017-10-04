@@ -1818,12 +1818,14 @@ if __name__ == '__main__':
 					if not os.path.isdir(results_dir_filpersig):
 						os.makedirs(results_dir_filpersig)
 					
-					p = mp.Pool(1)
+					#p = mp.Pool(1)
 					sigma_values = np.linspace(3, 10, 200)
-					#Instance = FilamentsPerSigma.FilamentsPerSigma(file_directory+'/'+LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-					#Results = Instance.Filaments_per_sigma(sigma_values)
-					Results = p.map(partial(Multiprocess_FilamentsPerSigma, sigma_values), SkeletonFiles)
-					print Results
+					Results = []
+					for filenames in SkeletonFiles:
+						Instance = FilamentsPerSigma.FilamentsPerSigma(filenames)
+						Instance_output = Instance.Filaments_per_sigma(sigma_values)
+						Results.append(Instance_output)
+					#Results = p.map(partial(Multiprocess_FilamentsPerSigma, sigma_values), SkeletonFiles)
 					fig22 = plt.figure()
 					for data in Results:
 						plt.plot(sigma_values, data)
