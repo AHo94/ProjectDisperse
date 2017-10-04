@@ -4,6 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib import cm
 from matplotlib import colors as mcolors
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
@@ -950,7 +951,7 @@ class Disperse_Plotter():
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1])
 					ax_kernel.set_xlim([self.xmin, self.xmax])
 					ax_kernel.set_ylim([self.ymin, self.ymax])
-					cbar = DMParticles_kernelPlot.colobar(cax)
+					cbar = DMParticles_kernelPlot.colorbar(cax)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 
@@ -969,7 +970,7 @@ class Disperse_Plotter():
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1] + '. Logarithmic')
 					ax_kernel_log.set_xlim([self.xmin, self.xmax])
 					ax_kernel_log.set_ylim([self.ymin, self.ymax])
-					cabr = DMParticles_kernelPlot_logarithmic(cax)
+					cbar_log = DMParticles_kernelPlot_logarithmic.colorbar(cax_log)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					
