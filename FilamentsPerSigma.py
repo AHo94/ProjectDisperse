@@ -10,7 +10,8 @@ class FilamentsPerSigma():
 
 	def ReadFile(self, filename, dimensions=3):
 		""" Reads the data from the skeleton file from Disperse """
-		datafiles = open(os.path.join(file_directory, filename), 'r')
+		#datafiles = open(os.path.join(file_directory, filename), 'r')
+		datafiles = open(filename, 'r')
 		self.CriticalPoints = []
 		self.Filaments = []
 		self.CriticalPointsData = []
@@ -77,7 +78,6 @@ class FilamentsPerSigma():
 		Sorts the coordinates of the filaments and critical points to their respective arrays 
 		Data to be sorted: Critical points coordinate, ID of filament and filament coordinates
 		"""
-		 = self.
 		self.NFils = int(self.Filaments[0][0])
 
 		# General data
@@ -110,6 +110,9 @@ class FilamentsPerSigma():
 				self.CP_id_of_connecting_filament.append(np.array(Temp_CPID))
 			counter += 1
 			i += 2 + Filament_connections
+
+		self.CP_id_of_connecting_filament = np.asarray(self.CP_id_of_connecting_filament)
+		self.Neighbours_CP = np.asarray(self.CP_id_of_connecting_filament)
 
 		# Filament positions etc
 		self.FilamentPos = []
@@ -233,19 +236,27 @@ class FilamentsPerSigma():
 
 	def Filaments_per_sigma(self, sigma_array):
 		""" Checks number of existing filaments based on sigma value """
+		print 'Computing number of filaments as a function of sigma'
 		fil_per_sig = []
 		Temporary_sigmas = self.Persistence_nsigmas
 		for sigmas in sigma_array:
+			Filaments = []
 			CPs_included = np.where(Temporary_sigmas >= sigmas)[0]
 			for i in CPs_included:
 				Fil_included_index = np.where(np.array(self.Neighbours_CP)[i] == np.array(self.CP_id_of_connecting_filament)[i])[0]
 				Filaments.append(self.Critpts_filamentID[i][Fil_included_index])
 			Unique_filaments = np.unique(np.array(Filaments))
 			fil_per_sig.append(len(Unique_filaments))
+			print len(Temporary_sigmas)
+			print len(self.Neighbours_CP)
+			print len(self.CP_id_of_connecting_filament)
 			Temporary_sigmas = Temporary_sigmas[CPs_included]
-		return fil_per_sig
+			self.Neighbours_CP = self.Neighbours_CP[CPs_included]
+			self.CP_id_of_connecting_filament = self.CP_id_of_connecting_filament[CPs_included]
+
+		return np.array(fil_per_sig)
 		
 
 if __name__ == '__main__':
 	# Testing program
-	FilamentsPerSigma('lcdm_testing/LCDM_z0_64PeriodicTesting/'+'SkelconvOutput_LCDMz064.a.NDskl', 1)
+	FilamentsPerSigma('lcdm_testing/LCDM_z0_64PeriodicTesting/'+'SkelconvOutput_LCDMz064.a.NDskl')
