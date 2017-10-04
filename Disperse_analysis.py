@@ -1511,11 +1511,8 @@ class Histogram_Comparison():
 
 def Multiprocess_FilamentsPerSigma(filename, sigmas):
 	""" Multiprocess function to compute filaments as a function of sigmas """
-	print filename
-	print sigmas
 	Instance = FilamentsPerSigma.FilamentsPerSigma(filename)
 	Filament_count = Instance.Filaments_per_sigma(sigmas)
-	print Filament_count
 	return Filament_count
 
 def Argument_parser():
@@ -1826,6 +1823,7 @@ if __name__ == '__main__':
 					#Instance = FilamentsPerSigma.FilamentsPerSigma(file_directory+'/'+LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 					#Results = Instance.Filaments_per_sigma(sigma_values)
 					Results = p.map(partial(Multiprocess_FilamentsPerSigma, sigma_values), SkeletonFiles)
+					print Results
 					fig22 = plt.figure()
 					for data in Results:
 						plt.plot(sigma_values, data)
