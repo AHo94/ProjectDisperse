@@ -1816,15 +1816,20 @@ if __name__ == '__main__':
 				else:
 					SkeletonFiles = [LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl',\
 									LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl', LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl']
-					p = mp.Pool(1)
-					sigma_values = np.linspace(3, 10, 101)
-					Instance = FilamentsPerSigma.FilamentsPerSigma(file_directory+'/'+LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+					
 					results_dir_filpersig = os.path.join(savefile_directory, Comparison_dir+'Plotstest/')
 					if not os.path.isdir(results_dir_filpersig):
 						os.makedirs(results_dir_filpersig)
-
-					Result = Instance.Filaments_per_sigma(sigma_values)
+					
+					p = mp.Pool(4)
+					sigma_values = np.linspace(3, 10, 200)
+					#Instance = FilamentsPerSigma.FilamentsPerSigma(file_directory+'/'+LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+					#Results = Instance.Filaments_per_sigma(sigma_values)
+					Results = p.map(partial(Multiprocess_FilamentsPerSigma, sigma_values), SkeletonFiles)
 					fig22 = plt.figure()
-					plt.plot(sigma_values, Result)
+					for data in Results:
+						plt.plot(sigma_values, data)
+					plt.legend(['$\mathregular{64^3}$ subsample','$\mathregular{128^3}$ subsample',\
+								'$\mathregular{256^3}$ subsample','$\mathregular{512^3}$ particles'])
 					print 'saving in', results_dir_filpersig
 					fig22.savefig(results_dir_filpersig + 'Filaments_per_sigma.png')
