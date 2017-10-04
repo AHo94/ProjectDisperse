@@ -3,15 +3,13 @@ import os
 file_directory = '/mn/stornext/d5/aleh'
 
 class FilamentsPerSigma():
-	def __init__(self, filename, UnitConverter):
-		self.UnitConverter = UnitConverter
+	def __init__(self, filename):
 		self.ReadFile(filename)
 		self.Sort_filament_coordinates()
 		self.Sort_filament_data()
 
 	def ReadFile(self, filename, dimensions=3):
 		""" Reads the data from the skeleton file from Disperse """
-		UnitConverter = self.UnitConverter
 		datafiles = open(os.path.join(file_directory, filename), 'r')
 		self.CriticalPoints = []
 		self.Filaments = []
@@ -26,13 +24,13 @@ class FilamentsPerSigma():
 				BoxMax = BoxSize[2]
 				MaxValues = BoxMax[BoxMax.index("[") + 1:BoxMax.rindex("]")].replace(",", " ").split()
 				MinValues = BoxMin[BoxMin.index("[") + 1:BoxMin.rindex("]")].replace(",", " ").split()
-				self.xmin = float(MinValues[0])*UnitConverter
-				self.xmax = float(MaxValues[0])*UnitConverter
-				self.ymin = float(MinValues[1])*UnitConverter
-				self.ymax = float(MaxValues[1])*UnitConverter
+				self.xmin = float(MinValues[0])
+				self.xmax = float(MaxValues[0])
+				self.ymin = float(MinValues[1])
+				self.ymax = float(MaxValues[1])
 				if dimensions == 3:
-					self.zmin = float(MinValues[2])*UnitConverter
-					self.zmax = float(MaxValues[2])*UnitConverter
+					self.zmin = float(MinValues[2])
+					self.zmax = float(MaxValues[2])
 				else:
 					continue
 				
@@ -79,7 +77,7 @@ class FilamentsPerSigma():
 		Sorts the coordinates of the filaments and critical points to their respective arrays 
 		Data to be sorted: Critical points coordinate, ID of filament and filament coordinates
 		"""
-		UnitConverter = self.UnitConverter
+		 = self.
 		self.NFils = int(self.Filaments[0][0])
 
 		# General data
@@ -96,9 +94,9 @@ class FilamentsPerSigma():
 		counter = 0
 		while i < len(self.CriticalPoints):
 			Info = self.CriticalPoints[i]	# Type, value and neighbouring CP not saved
-			self.CritPointXpos.append(float(Info[1])*UnitConverter)
-			self.CritPointYpos.append(float(Info[2])*UnitConverter)
-			self.CritPointZpos.append(float(Info[3])*UnitConverter)
+			self.CritPointXpos.append(float(Info[1]))
+			self.CritPointYpos.append(float(Info[2]))
+			self.CritPointZpos.append(float(Info[3]))
 			self.Neighbours_CP.append(int(Info[5]))
 			Filament_connections = int(self.CriticalPoints[i+1][0])
 			self.Number_filaments_connecting_to_CP.append(Filament_connections)
@@ -131,8 +129,8 @@ class FilamentsPerSigma():
 				self.FilID.append(NewID)
 				self.PairIDS.append(np.array([Filstuff[0], Filstuff[1]]))
 				for j in range(1, int(Filstuff[-1])+1):
-					xPos = float(self.Filaments[k+j][0])*UnitConverter
-					yPos = float(self.Filaments[k+j][1])*UnitConverter
+					xPos = float(self.Filaments[k+j][0])
+					yPos = float(self.Filaments[k+j][1])
 					TempPositions.append(np.array([xPos, yPos]))
 					xtemp.append(xPos)
 					ytemp.append(yPos)
@@ -154,9 +152,9 @@ class FilamentsPerSigma():
 				for j in range(1, int(Filstuff[-1])+1):
 					if k+j >= len(self.Filaments):
 						break
-					xPos = float(self.Filaments[k+j][0])*UnitConverter
-					yPos = float(self.Filaments[k+j][1])*UnitConverter
-					zPos = float(self.Filaments[k+j][2])*UnitConverter
+					xPos = float(self.Filaments[k+j][0])
+					yPos = float(self.Filaments[k+j][1])
+					zPos = float(self.Filaments[k+j][2])
 					TempPositions.append(np.array([xPos, yPos]))
 					xtemp.append(xPos)
 					ytemp.append(yPos)
@@ -233,15 +231,19 @@ class FilamentsPerSigma():
 
 		self.Persistence_nsigmas = np.asarray(self.Persistence_nsigmas)
 
-	def Filaments_per_sigma(self, sigmas):
+	def Filaments_per_sigma(self, sigma_array):
 		""" Checks number of existing filaments based on sigma value """
-		CPs_included = np.where(Temporary_sigmas >= sigmas)[0]
-		for i in CPs_included:
-			Fil_included_index = np.where(np.array(self.Neighbours_CP)[i] == np.array(self.CP_id_of_connecting_filament)[i])[0]
-			Filaments.append(self.Critpts_filamentID[i][Fil_included_index])
-		Unique_filaments = np.unique(np.array(Filaments))
-		
-		return len(Unique_filaments)
+		fil_per_sig = []
+		Temporary_sigmas = self.Persistence_nsigmas
+		for sigmas in sigma_array:
+			CPs_included = np.where(Temporary_sigmas >= sigmas)[0]
+			for i in CPs_included:
+				Fil_included_index = np.where(np.array(self.Neighbours_CP)[i] == np.array(self.CP_id_of_connecting_filament)[i])[0]
+				Filaments.append(self.Critpts_filamentID[i][Fil_included_index])
+			Unique_filaments = np.unique(np.array(Filaments))
+			fil_per_sig.append(len(Unique_filaments))
+			Temporary_sigmas = Temporary_sigmas[CPs_included]
+		return fil_per_sig
 		
 
 if __name__ == '__main__':
