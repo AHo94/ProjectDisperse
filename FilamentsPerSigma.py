@@ -112,7 +112,7 @@ class FilamentsPerSigma():
 			i += 2 + Filament_connections
 
 		self.CP_id_of_connecting_filament = np.asarray(self.CP_id_of_connecting_filament)
-		self.Neighbours_CP = np.asarray(Neighbours_CP)
+		self.Neighbours_CP = np.asarray(self.Neighbours_CP)
 
 	def Sort_filament_data(self):
 		""" 
