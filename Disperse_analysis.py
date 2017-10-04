@@ -1084,7 +1084,7 @@ class Disperse_Plotter():
 		self.Sort_filament_coordinates(ndim)
 		self.Sort_filament_data()
 		self.Number_filament_connections()
-		self.Filaments_per_sigma()
+		#self.Filaments_per_sigma()
 		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
 			self.Interpolate_DM_particles()
 		# Get masked critical points
