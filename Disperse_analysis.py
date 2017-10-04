@@ -938,11 +938,11 @@ class Disperse_Plotter():
 					# Using gaussian kernel to plot density field of DM particle positions
 					DMParticles_kernelPlot, ax_kernel = plt.subplots()
 					if type(self.Interpolated_Z) != list:
-						ax_kernel.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-						plt.title('Bandwidth = Scott')
+						cax = ax_kernel.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+						ax_kernel.set_title('Bandwidth = Scott')
 					elif len(self.Interpolated_Z) == 1:
-						ax_kernel.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-						plt.title('Bandwidth = ' + parsed_arguments.bwMethod[0]) 
+						cax = ax_kernel.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+						ax_kernel.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0]) 
 					else:
 						for j in range(1,len(self.Interpolated_Z)+1):
 							plt.subplots(Column, Row, j)
@@ -950,18 +950,18 @@ class Disperse_Plotter():
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1])
 					ax_kernel.set_xlim([self.xmin, self.xmax])
 					ax_kernel.set_ylim([self.ymin, self.ymax])
-					plt.colorbar()
+					cbar = DMParticles_kernelPlot.colobar(cax)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 
 					# Plotting logarithmic value of the density
 					DMParticles_kernelPlot_logarithmic, ax_kernel_log = plt.subplots()
 					if type(self.Interpolated_Z) != list:
-						ax_kernel_log.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-						plt.title('Bandwidth = Scott. Logarithmic')
+						cax_log = ax_kernel_log.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+						ax_kernel_log.set_title('Bandwidth = Scott. Logarithmic')
 					elif len(self.Interpolated_Z) == 1:
-						ax_kernel_log.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-						plt.title('Bandwidth = ' + parsed_arguments.bwMethod[0] + '. Logarithmic') 
+						cax_log = ax_kernel_log.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+						ax_kernel_log.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0] + '. Logarithmic') 
 					else:
 						for j in range(1,len(self.Logarithmic_density)+1):
 							plt.subplots(Column, Row, j)
@@ -969,7 +969,7 @@ class Disperse_Plotter():
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1] + '. Logarithmic')
 					ax_kernel_log.set_xlim([self.xmin, self.xmax])
 					ax_kernel_log.set_ylim([self.ymin, self.ymax])
-					plt.colorbar()
+					cabr = DMParticles_kernelPlot_logarithmic(cax)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					
@@ -1547,7 +1547,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1737,7 +1737,7 @@ if __name__ == '__main__':
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/', nPart=64, model='LCDM', redshift=0)
-			#NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			if parsed_arguments.HigherPart:
 				LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 				NumConn_128LCDM, FilLen_128LCDM, NPts_128LCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
