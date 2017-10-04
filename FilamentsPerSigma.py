@@ -185,7 +185,7 @@ class FilamentsPerSigma():
 			self.Neighbours_CP = self.Neighbours_CP[CPs_included]
 			self.CP_id_of_connecting_filament = self.CP_id_of_connecting_filament[CPs_included]
 
-		return np.array(fil_per_sig)
+		return fil_per_sig
 		
 
 if __name__ == '__main__':
