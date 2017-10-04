@@ -1511,11 +1511,10 @@ class Histogram_Comparison():
 
 def Multiprocess_FilamentsPerSigma(filename, sigmas):
 	""" Multiprocess function to compute filaments as a function of sigmas """
-	print 'OK'
+	print filename
+	print sigmas
 	Instance = FilamentsPerSigma.FilamentsPerSigma(filename)
-	print 'OK 2'
 	Filament_count = Instance.Filaments_per_sigma(sigmas)
-	print 'OK3'
 	return Filament_count
 
 def Argument_parser():
