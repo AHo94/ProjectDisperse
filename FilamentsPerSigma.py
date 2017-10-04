@@ -79,7 +79,6 @@ class FilamentsPerSigma():
 		Sorts the coordinates of the filaments and critical points to their respective arrays 
 		Data to be sorted: Critical points coordinate, ID of filament and filament coordinates
 		"""
-		print 'Sorting filament and critical point positions ...'
 		UnitConverter = self.UnitConverter
 		self.NFils = int(self.Filaments[0][0])
 
@@ -111,40 +110,8 @@ class FilamentsPerSigma():
 					Temp_filID.append(int(self.CriticalPoints[i+j+1][1]))
 				self.Critpts_filamentID.append(np.array(Temp_filID))
 				self.CP_id_of_connecting_filament.append(np.array(Temp_CPID))
-			#else:
-			#	break
 			counter += 1
 			i += 2 + Filament_connections
-
-		"""
-		self.NumFilamentConnections = []
-		self.IDFilamentConnected = []
-		self.CritPointInfo = []
-		############ UNIT CONVERSION NOT FIXED HERE!!!! 
-		self.NcritPts = int(self.CriticalPoints[0][0])
-		for i in range(1, len(self.CriticalPoints)-1):
-			stuff = self.CriticalPoints[i]
-			if len(stuff) == 1:
-				self.NumFilamentConnections.append(int(stuff[0]))
-				IDconnections = []
-				if int(stuff[0]) == 1:
-					IDS = self.CriticalPoints[i+1]
-					IDconnections.append(np.array([float(IDS[0]), float(IDS[1])]))
-				else:	
-					for j in range(1, int(stuff[0])+1):
-						IDS = self.CriticalPoints[i+j]
-						IDconnections.append(np.array([float(IDS[0]),float(IDS[1])]))
-				self.IDFilamentConnected.append(np.asarray(IDconnections))
-			elif len(stuff) > 2:
-				InfoListTemp = []
-				for k in range(len(stuff)):
-					InfoListTemp.append(float(stuff[k]))
-				self.CritPointInfo.append(np.asarray(InfoListTemp))
-
-		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
-		self.IDFilamentConnected = np.asarray(self.IDFilamentConnected)
-		self.CritPointInfo = np.asarray(self.CritPointInfo)
-		"""
 
 		# Filament positions etc
 		self.FilamentPos = []
@@ -220,7 +187,6 @@ class FilamentsPerSigma():
 		Sorts the data of the filaments and critical points.
 		Data to be sorted includes: Persistence, persistence pairs, persistence ratios, field values, etc.
 		"""
-		print 'Sorting data of filaments and critical points'
 		header_count_critpoint = int(self.CriticalPointsData[0][0])
 		self.Persistence_ratio = []
 		self.Persistence_nsigmas = []
