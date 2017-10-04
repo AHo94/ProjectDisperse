@@ -1819,7 +1819,7 @@ if __name__ == '__main__':
 					p = mp.Pool(1)
 					sigma_values = np.linspace(3, 10, 4)
 					Instance = FilamentsPerSigma.FilamentsPerSigma(file_directory+'/'+LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-					results_dir = os.path.join(savefile_directory, LCDM_z0_64_dir+'Plotstest2')
+					results_dir = os.path.join(savefile_directory, LCDM_z0_64_dir+'Plotstest2/')
 					if not os.path.isdir(results_dir):
 						os.makedirs(results_dir)
 
