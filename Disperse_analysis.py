@@ -1820,7 +1820,7 @@ if __name__ == '__main__':
 						os.makedirs(results_dir_filpersig)
 					
 					#p = mp.Pool(1)
-					sigma_values = np.linspace(3, 10, 200)
+					sigma_values = np.linspace(3, 10, 100)
 					Results = []
 					for filenames in SkeletonFiles:
 						Instance = FilamentsPerSigma.FilamentsPerSigma(filenames)
@@ -1833,4 +1833,4 @@ if __name__ == '__main__':
 					plt.legend(['$\mathregular{64^3}$ subsample','$\mathregular{128^3}$ subsample',\
 								'$\mathregular{256^3}$ subsample','$\mathregular{512^3}$ particles'])
 					print 'saving in', results_dir_filpersig
-					fig22.savefig(results_dir_filpersig + 'Filaments_per_sigma.png')
+					fig22.savefig(results_dir_filpersig + 'Filaments_per_sigma_100.png')
