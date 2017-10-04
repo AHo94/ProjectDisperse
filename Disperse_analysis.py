@@ -17,6 +17,7 @@ import cPickle as pickle
 import argparse
 from collections import Counter
 import multiprocessing as mp
+from functools import partial
 #from sklearn.neighbors import KernelDensity
 
 # Disable warnings from matplotlib	
@@ -1508,9 +1509,14 @@ class Histogram_Comparison():
 		plt.close('all')
 
 
-def Multiprocess_FilamentsPerSigma(argument):
+def Multiprocess_FilamentsPerSigma(filename, sigmas):
 	""" Multiprocess function to compute filaments as a function of sigmas """
-
+	print 'OK'
+	Instance = FilamentsPerSigma.FilamentsPerSigma(filename)
+	print 'OK 2'
+	Filament_count = Instance.Filaments_per_sigma(sigmas)
+	print 'OK3'
+	return Filament_count
 
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
@@ -1544,7 +1550,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1635,8 +1641,8 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
-			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
+			#LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
+			#NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
@@ -1810,5 +1816,10 @@ if __name__ == '__main__':
 				else:
 					SkeletonFiles = [LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl',\
 									LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl', LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl']
-					for files in SkeletonFiles:
-						
+					p = mp.Pool(1)
+					sigma_values = np.linspace(3, 10, 4)
+					Instance = FilamentsPerSigma.FilamentsPerSigma(file_directory+'/'+LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+					Result = Instance.Filaments_per_sigma(sigma_values)
+					fig = plt.figure()
+					plt.plot(sigma_values, Result)
+					fig.savefig(LCDM_z0_64_dir + 'Plotstest2' + 'Fil_per_sig_test.png')
