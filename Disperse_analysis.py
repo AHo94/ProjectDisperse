@@ -1817,15 +1817,14 @@ if __name__ == '__main__':
 					SkeletonFiles = [LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl',\
 									LCDM_z0_256_dir+'SkelconvOutput_LCDMz0256.a.NDskl', LCDM_z0_512_dir+'SkelconvOutput_LCDMz0512.a.NDskl']
 					p = mp.Pool(1)
-					sigma_values = np.linspace(3, 10, 4)
+					sigma_values = np.linspace(3, 10, 101)
 					Instance = FilamentsPerSigma.FilamentsPerSigma(file_directory+'/'+LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
-					results_dir = os.path.join(savefile_directory, LCDM_z0_64_dir+'Plotstest2/')
-					if not os.path.isdir(results_dir):
-						os.makedirs(results_dir)
+					results_dir_filpsig = os.path.join(savefile_directory, Comparison_dir+'Plotstest/')
+					if not os.path.isdir(results_dir_filpersig):
+						os.makedirs(results_dir_filpersig)
 
 					Result = Instance.Filaments_per_sigma(sigma_values)
-					print Result
 					fig22 = plt.figure()
 					plt.plot(sigma_values, Result)
-					print 'saving in', results_dir
-					fig22.savefig(results_dir + 'Fil_per_sig_test.png')
+					print 'saving in', results_dir_filpersig
+					fig22.savefig(results_dir_filpersig + 'Filaments_per_sigma.png')
