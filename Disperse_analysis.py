@@ -1067,14 +1067,12 @@ class Disperse_Plotter():
 		# Pickle filenames and folder directory
 		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
 		Mask_slice_cachefn = cachedir + "mask_slice.p"
-		Pickle_check_fn = cachedir + 'masking_check.p'
+		Pickle_check_fn = cachedir + 'Conditions_check.p'
 		
 		self.ReadFile(filename, ndim)
 		self.Sort_filament_coordinates(ndim)
 		self.Sort_filament_data()
 		self.Number_filament_connections()
-		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
-			self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles()
 
 		if Sigma_threshold:
 			# Filters filament based on a given sigma threshold. Still work in progress
@@ -1092,6 +1090,9 @@ class Disperse_Plotter():
 				print 'Some global parameters are changed. Recomputing everything and creating new pickle files'
 				os.remove(Boundary_check_cachefn)
 				os.remove(Mask_slice_cachefn)
+				for fname in os.listdir(cachedir):
+					if fname.startswith("InterpolatedDensities"):
+						os.remove(os.path.join(cachedir), fname)
 				pickle.dump(Pickle_check_list, open(Pickle_check_fn, 'wb'))
 		else:
 			pickle.dump(Pickle_check_list, open(Pickle_check_fn, 'wb'))
@@ -1114,7 +1115,6 @@ class Disperse_Plotter():
 			else:
 				Mask_instance = FilamentMasking.FilamentMasking(self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,\
 												self.LengthSplitFilament , self.NFils, Mask_direction_check, Mask_boundary_list)
-
 				Mask_instance_variables = Mask_instance.Mask_slices()
 				Masked_critpts = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
 																 Mask_boundary_list, Mask_direction_check)
@@ -1123,6 +1123,18 @@ class Disperse_Plotter():
 			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments\
 						, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
 			self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = Masked_critpts
+
+
+		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
+			# Pickle file for interpolated densities using Gaussian KDE
+			for bandwidths in parsed_arguments.bwMethod:
+				Interpolated_density_cachefn = cachedir + "InterpolatedDensities_bandwidth_" + bandwidths + '.p'
+				if os.path.isfile(Interpolated_density_cachefn):
+					print "reading from interpolated density pickle file..."
+					self.Interpolated_Z, self.Logarithmic_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
+				else:
+					self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles()
+					pickle.dump([self.Interpolated_Z, self.Logarithmic_density], open(Interpolated_density_cachefn ,'wb'))
 
 		if not Comparison:
 			if self.savefile == 2:
@@ -1529,7 +1541,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1590,8 +1602,8 @@ if __name__ == '__main__':
 			UpperBoundaryYDir = 0.55*UnitConverter
 			print '   --Masking Y direction'
 		if MaskZdir == 1:
-			LowerBoundaryZDir = 0.49*UnitConverter
-			UpperBoundaryZDir = 0.51*UnitConverter
+			LowerBoundaryZDir = 0.45*UnitConverter
+			UpperBoundaryZDir = 0.55*UnitConverter
 			print '   --Masking Z direction'
 
 	Mask_boundary_list = [UpperBoundaryXDir, UpperBoundaryYDir, UpperBoundaryZDir, LowerBoundaryXDir, LowerBoundaryYDir, LowerBoundaryZDir]
