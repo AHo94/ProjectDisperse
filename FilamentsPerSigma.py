@@ -9,7 +9,7 @@ class FilamentsPerSigma():
 		self.Sort_filament_coordinates()
 		self.Sort_filament_data()
 		# Testing
-		#self.Filaments_per_sigma(np.linspace(4,10,5))
+		#self.Filaments_per_sigma(np.linspace(4,10,100))
 		#self.Filaments_per_sigma2(np.linspace(4,10,5))
 
 	def ReadFile(self, filename, dimensions=3):
@@ -191,7 +191,6 @@ class FilamentsPerSigma():
 			self.Neighbours_CP = self.Neighbours_CP[CPs_included]
 			#self.CP_id_of_connecting_filament[CPs_included]
 			#self.Critpts_filamentID = np.array(self.Critpts_filamentID)[CPs_included]
-		print fil_per_sig
 		return fil_per_sig
 
 	def Filaments_per_sigma2(self, sigma_array):
