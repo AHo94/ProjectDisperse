@@ -307,7 +307,6 @@ class Disperse_Plotter():
 		self.CritPointXpos = np.asarray(self.CritPointXpos)
 		self.CritPointYpos = np.asarray(self.CritPointYpos)
 		self.CritPointZpos = np.asarray(self.CritPointZpos)
-		print self.NFils, 'NUMBER OF FILAMENTS'
 		if dimensions == 3:
 			self.zdimPos = np.array(self.zdimPos)
 
@@ -544,7 +543,6 @@ class Disperse_Plotter():
 
 	def Interpolate_DM_particles(self):
 		time_start = time.clock()
-		print 'Interpolating DM particle densities'
 		X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
 		positions = np.vstack([X.ravel(), Y.ravel()])
 		values = np.vstack([PartPosX, PartPosY])
@@ -553,28 +551,19 @@ class Disperse_Plotter():
 		if parsed_arguments.bwMethod == 'Scott':
 			print 'Interpolating with bandwidth = Scott'
 			kernel = stats.gaussian_kde(values)
-			self.Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
-			self.Logarithmic_density = np.log(self.Interpolated_Z/np.average(self.Interpolated_Z))
+			Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
+			Logarithmic_density = np.log(self.Interpolated_Z/np.average(self.Interpolated_Z))
 		else:
-			self.Interpolated_Z = []
-			self.Logarithmic_density = []
+			Interpolated_Z = []
+			Logarithmic_density = []
 			for bw_args in parsed_arguments.bwMethod:
 				print 'Interpolating with bandwidth = ' + bw_args
 				kernel = stats.gaussian_kde(values, bw_method=float(bw_args))
 				Density = np.reshape(kernel(positions).T, X.shape)
-				self.Interpolated_Z.append(Density)
-				self.Logarithmic_density.append(np.log(self.Interpolated_Z/np.average(self.Interpolated_Z)))
+				Interpolated_Z.append(Density)
+				Logarithmic_density.append(np.log(Density/np.average(Density)))
 
-		# Scikit kernel stuff
-		# Takes too long for unknown reasons
-		"""
-		values = np.column_stack([PartPosX, PartPosY])
-		kde = KernelDensity(bandwidth=parsed_arguments.bwMethod, kernel=parsed_arguments.KernelMethod)
-		kde.fit(values)
-	 	self.Interpolated_Z = kde.score_samples(values)
-	 	"""
-	 	print 'Interpolation time = ', time.clock() - time_start, 's'
-
+	 	return Interpolated_Z, Logarithmic_density
 
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
@@ -1076,7 +1065,6 @@ class Disperse_Plotter():
 		if not os.path.isdir(cachedir):
 			os.makedirs(cachedir)
 		# Pickle filenames and folder directory
-		print 'Cache directory: ', cachedir
 		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
 		Mask_slice_cachefn = cachedir + "mask_slice.p"
 		Pickle_check_fn = cachedir + 'masking_check.p'
@@ -1086,34 +1074,30 @@ class Disperse_Plotter():
 		self.Sort_filament_data()
 		self.Number_filament_connections()
 		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
-			self.Interpolate_DM_particles()
-		
-		# Get masked critical points
-		self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
-																 Mask_boundary_list, Mask_direction_check)
+			self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles()
 
 		if Sigma_threshold:
 			# Filters filament based on a given sigma threshold. Still work in progress
 			self.Filter_filaments(Sigma_threshold)
 
+		Pickle_check_list = [Mask_direction_check, Mask_boundary_list, Sigma_threshold]
 		if os.path.isfile(Pickle_check_fn):
 			"""
 			Check if pickle file exist. If it exists, it will read from the existing pickle file and get data from there.
 			The pickle file will check if the masking conditions are changed or not. If it is changed, will recalculate stuff.
 			If pickle file does not exist, then the program will calculate stuff. 
 			"""
-			print 'Checking masking conditions from pickle file'
 			Pickle_check = pickle.load(open(Pickle_check_fn, 'rb'))
-			if not MaskXdir == Pickle_check[0] or not MaskYdir == Pickle_check[1] or not MaskZdir == Pickle_check[2]\
-				 or not Sigma_threshold == Pickle_check[3]:	
-				print 'Mask directions changed. Removing old pickle files'
+			if Pickle_check != Pickle_check_list:
+				print 'Some global parameters are changed. Recomputing everything and creating new pickle files'
 				os.remove(Boundary_check_cachefn)
 				os.remove(Mask_slice_cachefn)
-				pickle.dump([MaskXdir, MaskYdir, MaskZdir, Sigma_threshold], open(Pickle_check_fn,'wb'))
+				pickle.dump(Pickle_check_list, open(Pickle_check_fn, 'wb'))
 		else:
-			pickle.dump([MaskXdir, MaskYdir, MaskZdir, Sigma_threshold], open(Pickle_check_fn,'wb'))
+			pickle.dump(Pickle_check_list, open(Pickle_check_fn, 'wb'))
 
 		if os.path.isfile(Boundary_check_cachefn):
+			## Computing filaments crossing boundaries
 			print "reading from boundary check pickle file..."
 			BC_instance_variables = pickle.load(open(Boundary_check_cachefn, 'rb'))
 		else:
@@ -1123,18 +1107,23 @@ class Disperse_Plotter():
 		self.FilamentIDs, self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths = BC_instance_variables
 
 		if IncludeSlicing:
+			## Masking filament and critical points
 			if os.path.isfile(Mask_slice_cachefn):
 				print "reading from mask_slice pickle file..."
-				Mask_instance_variables = pickle.load(open(Mask_slice_cachefn, 'rb'))
+				Mask_instance_variables, Masked_critpts = pickle.load(open(Mask_slice_cachefn, 'rb'))
 			else:
 				Mask_instance = FilamentMasking.FilamentMasking(self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,\
 												self.LengthSplitFilament , self.NFils, Mask_direction_check, Mask_boundary_list)
+
 				Mask_instance_variables = Mask_instance.Mask_slices()
-				pickle.dump(Mask_instance_variables, open(Mask_slice_cachefn, 'wb'))
+				Masked_critpts = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
+																 Mask_boundary_list, Mask_direction_check)
+				pickle.dump([Mask_instance_variables, Masked_critpts], open(Mask_slice_cachefn, 'wb'))
+
 			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments\
-							, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
-	
-		
+						, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
+			self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = Masked_critpts
+
 		if not Comparison:
 			if self.savefile == 2:
 				print 'Done! No files saved.'
@@ -1540,7 +1529,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1566,26 +1555,26 @@ if __name__ == '__main__':
 	print '=== INFORMATION ==='
 	# Some if tests before the simulation runs
 	if FilamentLimit == 1:
-		print 'Running program with limited amount of filaments.'
+		print '   Running program with limited amount of filaments.'
 
 	if IncludeDMParticles == 1 and HOMEPC == 1:
-		print 'Dark matter particles will be included'
+		print '   Dark matter particles will be included'
 		IncludeSlicing = 1
 	else:
-		print 'Dark matter particles not included'
+		print '   Dark matter particles not included'
 
 	if IncludeSlicing == 1 and MaskXdir == 0 and MaskYdir == 0 and MaskZdir == 0:
 		raise ValueError('IncludeSlicing set to 1, but all mask direction set to 0. Set at least one of them to 1.')
 
 	if ModelCompare == 1:
-		print 'Will compare histograms for different models'
+		print '   Will compare histograms for different models'
 	elif Comparison == 1 and ModelCompare == 0:
-		print 'Will compare histograms over different models or number of particles.'
+		print '   Will compare histograms over different models or number of particles.'
 
 	UnitConverter = 256.0 if IncludeUnits == 1 else 1
 	### Slice selection can be chosen here
 	if IncludeSlicing == 1:
-		print 'Slicing included'
+		print '   Slicing included'
 		LowerBoundaryXDir = 0
 		LowerBoundaryYDir = 0
 		LowerBoundaryZDir = 0
@@ -1595,15 +1584,15 @@ if __name__ == '__main__':
 		if MaskXdir == 1:
 			LowerBoundaryXDir = 0.45*UnitConverter
 			UpperBoundaryXDir = 0.55*UnitConverter
-			print 'Masking X direction'
+			print '   --Masking X direction'
 		if MaskYdir == 1:
 			LowerBoundaryYDir = 0.45*UnitConverter
 			UpperBoundaryYDir = 0.55*UnitConverter
-			print 'Masking Y direction'
+			print '   --Masking Y direction'
 		if MaskZdir == 1:
-			LowerBoundaryZDir = 0.45*UnitConverter
-			UpperBoundaryZDir = 0.55*UnitConverter
-			print 'Masking Z direction'
+			LowerBoundaryZDir = 0.49*UnitConverter
+			UpperBoundaryZDir = 0.51*UnitConverter
+			print '   --Masking Z direction'
 
 	Mask_boundary_list = [UpperBoundaryXDir, UpperBoundaryYDir, UpperBoundaryZDir, LowerBoundaryXDir, LowerBoundaryYDir, LowerBoundaryZDir]
 	Mask_direction_check = [MaskXdir, MaskYdir, MaskZdir]
@@ -1611,10 +1600,10 @@ if __name__ == '__main__':
 	if SaveAsPNG == 1 and SaveAsPDF	== 1:
 		raise ValueError('Cannot save both PDF and PNG at the same time. Only allow one at a time.')
 	elif SaveAsPDF == 1 and SaveAsPNG == 0:
-		print 'Saving figures as PDF files'
+		print '   Saving figures as PDF files'
 		filetype = '.pdf'
 	elif SaveAsPNG == 1 and SaveAsPDF == 0:
-		print 'Saving figures as PNG files'
+		print '   Saving figures as PNG files'
 		filetype = '.png'
 	else:
 		raise ValueError('Figure filetype to save not selected.')
@@ -1729,7 +1718,7 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			if parsed_arguments.HigherPart:
 				LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
@@ -1811,8 +1800,8 @@ if __name__ == '__main__':
 					if not os.path.isdir(results_dir_filpersig):
 						os.makedirs(results_dir_filpersig)
 					
-					#p = mp.Pool(1)
-					sigma_values = np.linspace(3, 10, 200)
+					N_sigmas = 200
+					sigma_values = np.linspace(3, 10, N_sigmas)
 					Results = []
 					for filenames in SkeletonFiles:
 						Instance = FilamentsPerSigma.FilamentsPerSigma(filenames)
@@ -1820,16 +1809,20 @@ if __name__ == '__main__':
 						Results.append(Instance_output)
 					#Results = p.map(partial(Multiprocess_FilamentsPerSigma, sigma_values), SkeletonFiles)
 					fig_filpersig, ax_filpersig = plt.subplots()
-					fig_filpersig_log, ax_filpersig_log = plt.subplots
+					fig_filpersig_log, ax_filpersig_log = plt.subplots()
 					for data in Results:
 						ax_filpersig.plot(sigma_values, data)
-						ax_filpersig_log.plot(sigma_values, np.log(data))
+						ax_filpersig_log.semilogy(sigma_values, data)
 					ax_filpersig.legend(['$\mathregular{64^3}$ subsample','$\mathregular{128^3}$ subsample',\
 								'$\mathregular{256^3}$ subsample','$\mathregular{512^3}$ particles'])
 					ax_filpersig_log.legend(['$\mathregular{64^3}$ subsample','$\mathregular{128^3}$ subsample',\
 								'$\mathregular{256^3}$ subsample','$\mathregular{512^3}$ particles'])
+					ax_filpersig.set_xlabel('Sigma')
+					ax_filpersig_log.set_xlabel('Sigma')
+					ax_filpersig.set_ylabel('Number of filaments')
+					ax_filpersig_log.set_ylabel('Number of filaments')
 
 					print 'saving in', results_dir_filpersig
-					fig_filpersig.savefig(results_dir_filpersig + 'Filaments_per_sigma_alt100.png')
-					fig_filpersig_log.savefig(results_dir_filpersig + 'Filaments_per_sigma_alt100_logarithmic.png')
+					fig_filpersig.savefig(results_dir_filpersig + 'Filaments_per_sigma_alt' + str(N_sigmas) + '.png')
+					fig_filpersig_log.savefig(results_dir_filpersig + 'Filaments_per_sigma_alt'+ str(N_sigmas) + '_logarithmic.png')
 
