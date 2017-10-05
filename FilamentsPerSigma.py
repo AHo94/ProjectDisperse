@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import time
 file_directory = '/mn/stornext/d5/aleh'
 
 class FilamentsPerSigma():
@@ -7,6 +8,9 @@ class FilamentsPerSigma():
 		self.ReadFile(filename)
 		self.Sort_filament_coordinates()
 		self.Sort_filament_data()
+		# Testing
+		#self.Filaments_per_sigma(np.linspace(4,10,5))
+		#self.Filaments_per_sigma2(np.linspace(4,10,5))
 
 	def ReadFile(self, filename, dimensions=3):
 		""" Reads the data from the skeleton file from Disperse """
@@ -97,12 +101,13 @@ class FilamentsPerSigma():
 			self.CritPointXpos.append(float(Info[1]))
 			self.CritPointYpos.append(float(Info[2]))
 			self.CritPointZpos.append(float(Info[3]))
-			self.Neighbours_CP.append(int(Info[5]))
+			#self.Neighbours_CP.append(int(Info[5]))	# Includes all CPs even without filaments
 			Filament_connections = int(self.CriticalPoints[i+1][0])
 			self.Number_filaments_connecting_to_CP.append(Filament_connections)
 			Temp_filID = []
 			Temp_CPID = []
 			if Filament_connections != 0:
+				self.Neighbours_CP.append(int(Info[5]))
 				for j in range(1,Filament_connections+1):
 					Temp_CPID.append(int(self.CriticalPoints[i+j+1][0]))
 					Temp_filID.append(int(self.CriticalPoints[i+j+1][1]))
@@ -166,7 +171,10 @@ class FilamentsPerSigma():
 		self.Persistence_nsigmas = np.asarray(self.Persistence_nsigmas)
 
 	def Filaments_per_sigma(self, sigma_array):
-		""" Checks number of existing filaments based on sigma value """
+		"""
+		Checks number of existing filaments based on sigma value
+		This algorithm assumes that a critical point only has one filament connection 
+		"""
 		print 'Computing number of filaments as a function of sigma'
 		fil_per_sig = []
 		Temporary_sigmas = self.Persistence_nsigmas
@@ -180,7 +188,27 @@ class FilamentsPerSigma():
 			Unique_filaments = np.unique(np.array(Filaments))
 			fil_per_sig.append(len(Unique_filaments))
 			Temporary_sigmas = Temporary_sigmas[CPs_included]
+			self.Neighbours_CP = self.Neighbours_CP[CPs_included]
+			#self.CP_id_of_connecting_filament[CPs_included]
+			#self.Critpts_filamentID = np.array(self.Critpts_filamentID)[CPs_included]
+		print fil_per_sig
+		return fil_per_sig
 
+	def Filaments_per_sigma2(self, sigma_array):
+		""" 
+		Alternative filament per sigma estimator.
+		This algorithm assumes that all filaments connecting to a critical point, which is to be removed, are removed as well
+		"""
+		print 'Computing number of filaments as a function of sigma'
+		fil_per_sig = []
+		Temporary_sigmas = self.Persistence_nsigmas
+		for sigmas in sigma_array:
+			CPs_included = np.where(Temporary_sigmas >= sigmas)[0]
+			if len(CPs_included) != 0:
+				fil_per_sig.append(np.sum(np.array(self.Number_filaments_connecting_to_CP)[CPs_included]))
+			else:
+				fil_per_sig.append(0)
+		Temporary_sigmas = Temporary_sigmas[CPs_included]
 		return fil_per_sig
 		
 
