@@ -1085,9 +1085,9 @@ class Disperse_Plotter():
 		self.Sort_filament_coordinates(ndim)
 		self.Sort_filament_data()
 		self.Number_filament_connections()
-		#self.Filaments_per_sigma()
 		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
 			self.Interpolate_DM_particles()
+		
 		# Get masked critical points
 		self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
 																 Mask_boundary_list, Mask_direction_check)
@@ -1133,15 +1133,7 @@ class Disperse_Plotter():
 				pickle.dump(Mask_instance_variables, open(Mask_slice_cachefn, 'wb'))
 			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments\
 							, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
-		
-		#if IncludeSlicing and IncludeDMParticles and not Comparison:
-		#	self.NumParticles_per_filament_v2()
-		"""
-		if IncludeSlicing and IncludeDMParticles and not Comparison:
-			self.Read_SolveFile()
-			#self.Mask_DMParticles()
-			#self.NumParticles_per_filament()
-		"""
+	
 		
 		if not Comparison:
 			if self.savefile == 2:
@@ -1737,7 +1729,7 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			if parsed_arguments.HigherPart:
 				LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
@@ -1820,17 +1812,24 @@ if __name__ == '__main__':
 						os.makedirs(results_dir_filpersig)
 					
 					#p = mp.Pool(1)
-					sigma_values = np.linspace(3, 10, 100)
+					sigma_values = np.linspace(3, 10, 200)
 					Results = []
 					for filenames in SkeletonFiles:
 						Instance = FilamentsPerSigma.FilamentsPerSigma(filenames)
-						Instance_output = Instance.Filaments_per_sigma(sigma_values)
+						Instance_output = Instance.Filaments_per_sigma2(sigma_values)
 						Results.append(Instance_output)
 					#Results = p.map(partial(Multiprocess_FilamentsPerSigma, sigma_values), SkeletonFiles)
-					fig22 = plt.figure()
+					fig_filpersig, ax_filpersig = plt.subplots()
+					fig_filpersig_log, ax_filpersig_log = plt.subplots
 					for data in Results:
-						plt.plot(sigma_values, data)
-					plt.legend(['$\mathregular{64^3}$ subsample','$\mathregular{128^3}$ subsample',\
+						ax_filpersig.plot(sigma_values, data)
+						ax_filpersig_log.plot(sigma_values, np.log(data))
+					ax_filpersig.legend(['$\mathregular{64^3}$ subsample','$\mathregular{128^3}$ subsample',\
 								'$\mathregular{256^3}$ subsample','$\mathregular{512^3}$ particles'])
+					ax_filpersig_log.legend(['$\mathregular{64^3}$ subsample','$\mathregular{128^3}$ subsample',\
+								'$\mathregular{256^3}$ subsample','$\mathregular{512^3}$ particles'])
+
 					print 'saving in', results_dir_filpersig
-					fig22.savefig(results_dir_filpersig + 'Filaments_per_sigma_100.png')
+					fig_filpersig.savefig(results_dir_filpersig + 'Filaments_per_sigma_alt100.png')
+					fig_filpersig_log.savefig(results_dir_filpersig + 'Filaments_per_sigma_alt100_logarithmic.png')
+
