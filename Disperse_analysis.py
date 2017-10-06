@@ -940,7 +940,7 @@ class Disperse_Plotter():
 					else:
 						for j in range(1,len(self.Interpolated_Z)+1):
 							plt.subplot(Column, Row, j)
-							cax = plt.imshow(np.rot90(self.Interpolated_Z[j-1][0]))
+							cax = plt.imshow(np.rot90(self.Interpolated_Z[j-1][0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 							cbar = DMParticles_kernelPlot.colorbar(cax)
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1])
 					ax_kernel.set_xlim([self.xmin, self.xmax])
@@ -962,7 +962,7 @@ class Disperse_Plotter():
 					else:
 						for j in range(1,len(self.Logarithmic_density)+1):
 							plt.subplot(Column, Row, j)
-							cax_log = plt.imshow(np.rot90(self.Logarithmic_density[j-1][0]))
+							cax_log = plt.imshow(np.rot90(self.Logarithmic_density[j-1][0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 							cbar_log = DMParticles_kernelPlot_logarithmic.colorbar(cax_log)
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1] + '. Logarithmic')
 					ax_kernel_log.set_xlim([self.xmin, self.xmax])
