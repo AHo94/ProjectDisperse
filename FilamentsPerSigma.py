@@ -173,14 +173,14 @@ class FilamentsPerSigma():
 	def Filaments_per_sigma(self, sigma_array):
 		"""
 		Checks number of existing filaments based on sigma value
-		This algorithm assumes that a critical point only has one filament connection 
+		This algorithm assumes that a persistence pair has at most one filament pair
+		May be cases where the persistence pair has zero filaments connected between them
 		"""
 		print 'Computing number of filaments as a function of sigma'
 		fil_per_sig = []
-		Temporary_sigmas = self.Persistence_nsigmas
 		for sigmas in sigma_array:
 			Filaments = []
-			CPs_included = np.where(Temporary_sigmas >= sigmas)[0]
+			CPs_included = np.where(self.Persistence_nsigmas >= sigmas)[0]
 			time_start = time.clock()
 			for i in CPs_included:
 				for j in range(len(self.CP_id_of_connecting_filament[i])):
@@ -189,8 +189,6 @@ class FilamentsPerSigma():
 			time_start = time.clock()
 			Unique_filaments = np.unique(np.array(Filaments))
 			fil_per_sig.append(len(Unique_filaments))
-			Temporary_sigmas = Temporary_sigmas[CPs_included]
-			self.Neighbours_CP = self.Neighbours_CP[CPs_included]
 
 		return fil_per_sig
 
@@ -201,14 +199,12 @@ class FilamentsPerSigma():
 		"""
 		print 'Computing number of filaments as a function of sigma'
 		fil_per_sig = []
-		Temporary_sigmas = self.Persistence_nsigmas
 		for sigmas in sigma_array:
-			CPs_included = np.where(Temporary_sigmas >= sigmas)[0]
+			CPs_included = np.where(self.Persistence_nsigmas>= sigmas)[0]
 			if len(CPs_included) != 0:
 				fil_per_sig.append(np.sum(np.array(self.Number_filaments_connecting_to_CP)[CPs_included]))
 			else:
 				fil_per_sig.append(0)
-		Temporary_sigmas = Temporary_sigmas[CPs_included]
 		return fil_per_sig
 		
 
