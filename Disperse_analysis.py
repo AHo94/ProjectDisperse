@@ -186,15 +186,23 @@ class Disperse_Plotter():
 		counter = 0
 		while i < len(self.CriticalPoints):
 			Info = self.CriticalPoints[i]	# Type, value and neighbouring CP not saved
+			"""
+			# This saves all points
 			self.CritPointXpos.append(float(Info[1])*UnitConverter)
 			self.CritPointYpos.append(float(Info[2])*UnitConverter)
 			self.CritPointZpos.append(float(Info[3])*UnitConverter)
 			self.Neighbours_CP.append(int(Info[5]))
+			"""
 			Filament_connections = int(self.CriticalPoints[i+1][0])
 			self.Number_filaments_connecting_to_CP.append(Filament_connections)
 			Temp_filID = []
 			Temp_CPID = []
 			if Filament_connections != 0:
+				""" Saves points which has a filament connection """
+				self.CritPointXpos.append(float(Info[1])*UnitConverter)
+				self.CritPointYpos.append(float(Info[2])*UnitConverter)
+				self.CritPointZpos.append(float(Info[3])*UnitConverter)
+				self.Neighbours_CP.append(int(Info[5]))
 				for j in range(1,Filament_connections+1):
 					Temp_CPID.append(int(self.CriticalPoints[i+j+1][0]))
 					Temp_filID.append(int(self.CriticalPoints[i+j+1][1]))
@@ -363,6 +371,19 @@ class Disperse_Plotter():
 				self.Filament_type.append(int(self.FilamentsData[i][4]))
 
 		self.Persistence_nsigmas = np.asarray(self.Persistence_nsigmas)
+		"""
+		#Z = np.zeros((len(self.CritPointXpos),len(self.CritPointYpos)))
+		x,y = np.meshgrid(self.CritPointXpos, self.CritPointYpos)
+		print x.shape
+		Z = np.zeros((12621,12621))
+		for i,j in enumerate(zip(self.CritPointXpos, self.CritPointYpos)):
+			Z[j] = self.CritPoint_field_value[i]
+		fig, ax = plt.subplots()
+		sc = ax.scatter(self.CritPointXpos, self.CritPointYpos, c=self.log_CritPoint_field_value)#, extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+		fig.colorbar(sc)
+		fig.savefig(self.results_dir + 'test_fieldvalue.png')
+		print aaavaga
+		"""
 
 	def Filter_filaments(self, Sigma_threshold):
 		CP_indices_to_be_deleted = np.where(self.Persistence_nsigmas <= Sigma_threshold)[0]
@@ -1531,7 +1552,7 @@ def Argument_parser():
 
 if __name__ == '__main__':
 	parsed_arguments = Argument_parser()
-	HOMEPC = parsed_arguments.HOMEPC	# Set 1 if working in UiO terminal
+	HOMEPC = 1#parsed_arguments.HOMEPC	# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1541,7 +1562,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1812,7 +1833,7 @@ if __name__ == '__main__':
 					if not os.path.isdir(results_dir_filpersig):
 						os.makedirs(results_dir_filpersig)
 					
-					N_sigmas = 200
+					N_sigmas = 100
 					sigma_values = np.linspace(3, 10, N_sigmas)
 					Results = []
 					for filenames in SkeletonFiles:
