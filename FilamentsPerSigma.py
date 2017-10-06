@@ -181,7 +181,6 @@ class FilamentsPerSigma():
 		for sigmas in sigma_array:
 			Filaments = []
 			CPs_included = np.where(self.Persistence_nsigmas >= sigmas)[0]
-			time_start = time.clock()
 			for i in CPs_included:
 				for j in range(len(self.CP_id_of_connecting_filament[i])):
 					if self.Neighbours_CP[i] == self.CP_id_of_connecting_filament[i][j]:
