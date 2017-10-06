@@ -911,28 +911,7 @@ class Disperse_Plotter():
 					Mpc = 3.08568025e22
 					G_grav = 6.67258e-11
 					H_0 = 0.7*100*1e3/Mpc
-					mass = 0.23*(3*H_0**2/(8*np.pi*G_grav))*(256.0*Mpc/0.7)**3/(512.0)**3
-					
-					Points = np.column_stack((PartPosX, PartPosY))
-					grid_x, grid_y = np.mgrid[self.xmin:self.xmax:400j, self.xmin:self.xmax:400j]
-					grid_z_nearest = griddata(Points, np.ones(len(Points))*mass, (grid_x, grid_y), method='nearest')
-					grid_z_linear = griddata(Points, np.ones(len(Points))*mass, (grid_x, grid_y), method='linear')
-					grid_z_cubic = griddata(Points, np.ones(len(Points))*mass, (grid_x, grid_y), method='cubic')
-					Interpolated_DM_particles_figure_griddata = plt.figure()
-					plt.subplot(221)
-					plt.imshow(np.ones((400,400)), extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
-					plt.plot(PartPosX, PartPosY, 'k.', ms=1)
-					plt.title('Original')
-					plt.subplot(222)
-					plt.imshow(grid_z_nearest.T, extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
-					plt.title('Nearest')
-					plt.subplot(223)
-					plt.imshow(grid_z_linear.T, extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
-					plt.title('Linear')
-					plt.subplot(224)
-					plt.imshow(grid_z_cubic.T, extent=(self.xmin, self.xmax, self.ymin, self.ymax), origin='lower')
-					plt.title('Cubic')
-					#plt.title('Dark matter particle density field, interpolated with griddata')
+					mass = 0.23*(3*H_0**2/(8*np.pi*G_grav))*(256.0*Mpc/0.7)**3/(512.0)**3griddata')
 					"""
 					
 					if parsed_arguments.bwMethod != 'Scott':
