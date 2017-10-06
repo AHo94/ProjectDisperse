@@ -9,7 +9,7 @@ class FilamentsPerSigma():
 		self.Sort_filament_coordinates()
 		self.Sort_filament_data()
 		# Testing
-		self.Filaments_per_sigma(np.linspace(3,10,40))
+		#self.Filaments_per_sigma(np.linspace(3,10,40))
 		#self.Filaments_per_sigma2(np.linspace(4,10,5))
 
 	def ReadFile(self, filename, dimensions=3):
@@ -192,7 +192,6 @@ class FilamentsPerSigma():
 			Temporary_sigmas = Temporary_sigmas[CPs_included]
 			self.Neighbours_CP = self.Neighbours_CP[CPs_included]
 
-		print fil_per_sig
 		return fil_per_sig
 
 	def Filaments_per_sigma2(self, sigma_array):
@@ -216,7 +215,4 @@ class FilamentsPerSigma():
 if __name__ == '__main__':
 	# Testing program
 	FilamentsPerSigma('lcdm_testing/LCDM_z0_64PeriodicTesting/'+'SkelconvOutput_LCDMz064.a.NDskl')
-	#FilamentsPerSigma('lcdm_testing/LCDM_z0_128PeriodicTesting/'+'SkelconvOutput_LCDM128.a.NDskl')
-	#FilamentsPerSigma('lcdm_testing/LCDM_z0_256PeriodicTesting/'+'SkelconvOutput_LCDMz0256.a.NDskl')
-	#FilamentsPerSigma('lcdm_testing/LCDM_z0_512PeriodicTesting/'+'SkelconvOutput_LCDMz0512.a.NDskl')
 	
