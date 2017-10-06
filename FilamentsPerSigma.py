@@ -186,7 +186,6 @@ class FilamentsPerSigma():
 				for j in range(len(self.CP_id_of_connecting_filament[i])):
 					if self.Neighbours_CP[i] == self.CP_id_of_connecting_filament[i][j]:
 						Filaments.append(self.Critpts_filamentID[i][j])
-			time_start = time.clock()
 			Unique_filaments = np.unique(np.array(Filaments))
 			fil_per_sig.append(len(Unique_filaments))
 
