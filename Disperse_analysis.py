@@ -24,7 +24,7 @@ from functools import partial
 # Disable warnings from matplotlib	
 import warnings
 import matplotlib.cbook
-#warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
+warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 
 # Own modules
 import BoundaryChecker
@@ -569,7 +569,7 @@ class Disperse_Plotter():
 		values = np.vstack([PartPosX, PartPosY])
 
 		# Scipy kernel stuff
-		if parsed_arguments.bwMethod == 'Scott':
+		if parsed_arguments.bwMethod[0] == 'Scott':
 			print 'Interpolating with bandwidth = Scott'
 			kernel = stats.gaussian_kde(values)
 			Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
@@ -934,64 +934,73 @@ class Disperse_Plotter():
 					plt.title('Cubic')
 					#plt.title('Dark matter particle density field, interpolated with griddata')
 					"""
-					if len(self.Interpolated_Z) == 2:
-						Column = 2
-						Row = 1
-					elif len(self.Interpolated_Z) > 2 and len(self.Interpolated_Z) <= 4:
-						Column = 2
-						Row = 2
-					elif len(self.Interpolated_Z) > 4 and len(self.Interpolated_Z) <= 6:
-						Column = 3
-						Row = 2
-					elif len(self.Interpolated_Z) > 6 and len(self.Interpolated_Z) <= 9:
-						Column = 3
-						Row = 3
-					# Using gaussian kernel to plot density field of DM particle positions
+					
+					if parsed_arguments.bwMethod != 'Scott':
+						if len(parsed_arguments.bwMethod) == 2:
+							Column = 2
+							Row = 1
+						elif len(parsed_arguments.bwMethod) > 2 and len(parsed_arguments.bwMethod) <= 4:
+							Column = 2
+							Row = 2
+						elif len(parsed_arguments.bwMethod) > 4 and len(parsed_arguments.bwMethod) <= 6:
+							Column = 3
+							Row = 2
+						elif len(parsed_arguments.bwMethod) > 6 and len(parsed_arguments.bwMethod) <= 9:
+							Column = 3
+							Row = 3
+						# Using gaussian kernel to plot density field of DM particle positions
 					DMParticles_kernelPlot, ax_kernel = plt.subplots()
-					if type(self.Interpolated_Z) != list:
+					if len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod == 'Scott':
 						cax = ax_kernel.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 						ax_kernel.set_title('Bandwidth = Scott')
-					elif len(self.Interpolated_Z) == 1:
+						cbar = DMParticles_kernelPlot.colorbar(cax)
+					elif len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod != 'Scott':
 						cax = ax_kernel.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 						ax_kernel.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0]) 
+						cbar = DMParticles_kernelPlot.colorbar(cax)
 					else:
 						for j in range(1,len(self.Interpolated_Z)+1):
-							plt.subplots(Column, Row, j)
-							plt.imshow(np.rot90(self.Interpolated_Z[j-1]))
+							plt.subplot(Column, Row, j)
+							cax = plt.imshow(np.rot90(self.Interpolated_Z[j-1][0]))
+							cbar = DMParticles_kernelPlot.colorbar(cax)
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1])
+							plt.xticks([0, 256/2.0, 256])
 					ax_kernel.set_xlim([self.xmin, self.xmax])
 					ax_kernel.set_ylim([self.ymin, self.ymax])
-					cbar = DMParticles_kernelPlot.colorbar(cax)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
+					#plt.tight_layout()
 
 					# Plotting logarithmic value of the density
 					DMParticles_kernelPlot_logarithmic, ax_kernel_log = plt.subplots()
-					if type(self.Interpolated_Z) != list:
+					if len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod == 'Scott':
 						cax_log = ax_kernel_log.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 						ax_kernel_log.set_title('Bandwidth = Scott. Logarithmic')
-					elif len(self.Interpolated_Z) == 1:
+						cbar_log = DMParticles_kernelPlot_logarithmic.colorbar(cax_log)
+					elif len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod != 'Scott':
 						cax_log = ax_kernel_log.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 						ax_kernel_log.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0] + '. Logarithmic') 
+						cbar_log = DMParticles_kernelPlot_logarithmic.colorbar(cax_log)
 					else:
 						for j in range(1,len(self.Logarithmic_density)+1):
-							plt.subplots(Column, Row, j)
-							plt.imshow(np.rot90(self.Logarithmic_density[j-1]))
+							plt.subplot(Column, Row, j)
+							cax_log = plt.imshow(np.rot90(self.Logarithmic_density[j-1][0]))
+							cbar_log = DMParticles_kernelPlot_logarithmic.colorbar(cax_log)
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1] + '. Logarithmic')
 					ax_kernel_log.set_xlim([self.xmin, self.xmax])
 					ax_kernel_log.set_ylim([self.ymin, self.ymax])
-					cbar_log = DMParticles_kernelPlot_logarithmic.colorbar(cax_log)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
+					#plt.tight_layout()
 					
 					# Overplot with filaments on the gaussian kernel plots
 					# Only done if input parameters for bw_method is none or only one scalar
-					if type(self.Interpolated_Z) != list or len(self.Interpolated_Z) == 1:
+					if parsed_arguments.bwMethod == 'Scott' or len(parsed_arguments.bwMethod) == 1:
 						DMParticles_kernelPlot_wFilaments, ax_kernel_wfil = plt.subplots()
-						if type(self.Interpolated_Z) != list:
+						if parsed_arguments.bwMethod == 'Scott':
 							ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 							plt.title('Bandwidth = Scott')
-						elif len(self.Interpolated_Z) == 1:
+						else:
 							ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[0]) 
 						ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
@@ -1046,11 +1055,12 @@ class Disperse_Plotter():
 						elif len(self.Interpolated_Z) == 1:
 							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot' + parsed_arguments.bwMethod[0] + self.ModelFilename)
 							DMParticles_kernelPlot_logarithmic.savefig(self.results_dir + 'DMParticles_kernelPlot_logarithmic' + parsed_arguments.bwMethod[0] + self.ModelFilename)
-							DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments' \
+							if parsed_arguments.bwMethod == 'Scott' or len(parsed_arguments.bwMethod) == 1:
+								DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments' \
 																		+ str(parsed_arguments.bwMethod[0]) + self.ModelFilename)
 						else:
 							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_subplots' + self.ModelFilename)
-							DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_subplots_logarithmic' + self.ModelFilename)
+							DMParticles_kernelPlot_logarithmic.savefig(self.results_dir + 'DMParticles_kernelPlot_subplots_logarithmic' + self.ModelFilename)
 
 					if MaskXdir == 1 and MaskYdir == 1 and MaskZdir == 1:
 						DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_XYZMasked' + self.ModelFilename)
@@ -1148,14 +1158,30 @@ class Disperse_Plotter():
 
 		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
 			# Pickle file for interpolated densities using Gaussian KDE
-			for bandwidths in parsed_arguments.bwMethod:
-				Interpolated_density_cachefn = cachedir + "InterpolatedDensities_bandwidth_" + bandwidths + '.p'
+			if len(parsed_arguments.bwMethod) == 1:
+				# If there is only one argument
+				Interpolated_density_cachefn = cachedir + "InterpolatedDensities_bandwidth_" + parsed_arguments.bwMethod[0] + '.p'
 				if os.path.isfile(Interpolated_density_cachefn):
-					print "reading from interpolated density pickle file..."
+					print "reading from interpolated density pickle file, with bandwidth = " + parsed_arguments.bwMethod[0] + "..."
 					self.Interpolated_Z, self.Logarithmic_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 				else:
-					self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles()
-					pickle.dump([self.Interpolated_Z, self.Logarithmic_density], open(Interpolated_density_cachefn ,'wb'))
+					Density, Log_density = self.Interpolate_DM_particles()
+					pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
+
+			elif len(parsed_arguments.bwMethod) > 1:
+				# If there are multiple arguments
+				self.Interpolated_Z = []
+				self.Logarithmic_density = []
+				for bandwidths in parsed_arguments.bwMethod:
+					Interpolated_density_cachefn = cachedir + "InterpolatedDensities_bandwidth_" + bandwidths + '.p'
+					if os.path.isfile(Interpolated_density_cachefn):
+						print "reading from interpolated density pickle file, with bandwidth = " + bandwidths  + "..."
+						Density, Log_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
+						self.Interpolated_Z.append(Density)
+						self.Logarithmic_density.append(Log_density)
+					else:
+						Density, Log_density = self.Interpolate_DM_particles()
+						pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
 
 		if not Comparison:
 			if self.savefile == 2:
@@ -1532,7 +1558,7 @@ def Multiprocess_FilamentsPerSigma(filename, sigmas):
 
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
-	print 'Run python code with -h argument for extra arguments'
+	print 'Run python code with -h argument to see extra optional arguments'
 
 	parser = argparse.ArgumentParser()
 	# Optional arguments
@@ -1552,7 +1578,7 @@ def Argument_parser():
 
 if __name__ == '__main__':
 	parsed_arguments = Argument_parser()
-	HOMEPC = 1#parsed_arguments.HOMEPC	# Set 1 if working in UiO terminal
+	HOMEPC = parsed_arguments.HOMEPC	# Set 1 if working in UiO terminal
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
@@ -1562,7 +1588,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 0 		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 1 		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1751,7 +1777,7 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			if parsed_arguments.HigherPart:
 				LCDM_z0_128Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
