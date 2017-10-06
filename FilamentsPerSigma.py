@@ -9,7 +9,7 @@ class FilamentsPerSigma():
 		self.Sort_filament_coordinates()
 		self.Sort_filament_data()
 		# Testing
-		#self.Filaments_per_sigma(np.linspace(3,10,40))
+		self.Filaments_per_sigma(np.linspace(3,10,40))
 		#self.Filaments_per_sigma2(np.linspace(4,10,5))
 
 	def ReadFile(self, filename, dimensions=3):
@@ -175,26 +175,24 @@ class FilamentsPerSigma():
 		Checks number of existing filaments based on sigma value
 		This algorithm assumes that a critical point only has one filament connection 
 		"""
-		time_start = time.clock()
 		print 'Computing number of filaments as a function of sigma'
 		fil_per_sig = []
 		Temporary_sigmas = self.Persistence_nsigmas
 		for sigmas in sigma_array:
 			Filaments = []
 			CPs_included = np.where(Temporary_sigmas >= sigmas)[0]
+			time_start = time.clock()
 			for i in CPs_included:
-				Fil_included_index = np.where(np.array(self.Neighbours_CP)[i] == np.array(self.CP_id_of_connecting_filament)[i])[0]
-				if len(Fil_included_index) != 0:
-					Filaments.append(self.Critpts_filamentID[i][Fil_included_index[0]])
+				for j in range(len(self.CP_id_of_connecting_filament[i])):
+					if self.Neighbours_CP[i] == self.CP_id_of_connecting_filament[i][j]:
+						Filaments.append(self.Critpts_filamentID[i][j])
+			time_start = time.clock()
 			Unique_filaments = np.unique(np.array(Filaments))
 			fil_per_sig.append(len(Unique_filaments))
-			#Temporary_sigmas = np.delete(Temporary_sigmas, Fil_included_index)
-			#self.Neighbours_CP = np.delete(self.Neighbours_CP, Fil_included_index)
 			Temporary_sigmas = Temporary_sigmas[CPs_included]
 			self.Neighbours_CP = self.Neighbours_CP[CPs_included]
-			#self.CP_id_of_connecting_filament[CPs_included]
-			#self.Critpts_filamentID = np.array(self.Critpts_filamentID)[CPs_included]
-		print 'Elapsed time:', time.clock() - time_start , 's'
+
+		print fil_per_sig
 		return fil_per_sig
 
 	def Filaments_per_sigma2(self, sigma_array):
@@ -218,3 +216,7 @@ class FilamentsPerSigma():
 if __name__ == '__main__':
 	# Testing program
 	FilamentsPerSigma('lcdm_testing/LCDM_z0_64PeriodicTesting/'+'SkelconvOutput_LCDMz064.a.NDskl')
+	#FilamentsPerSigma('lcdm_testing/LCDM_z0_128PeriodicTesting/'+'SkelconvOutput_LCDM128.a.NDskl')
+	#FilamentsPerSigma('lcdm_testing/LCDM_z0_256PeriodicTesting/'+'SkelconvOutput_LCDMz0256.a.NDskl')
+	#FilamentsPerSigma('lcdm_testing/LCDM_z0_512PeriodicTesting/'+'SkelconvOutput_LCDMz0512.a.NDskl')
+	
