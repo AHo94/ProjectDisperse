@@ -964,12 +964,11 @@ class Disperse_Plotter():
 							cax = plt.imshow(np.rot90(self.Interpolated_Z[j-1][0]))
 							cbar = DMParticles_kernelPlot.colorbar(cax)
 							plt.title('Bandwidth = ' + parsed_arguments.bwMethod[j-1])
-							plt.xticks([0, 256/2.0, 256])
 					ax_kernel.set_xlim([self.xmin, self.xmax])
 					ax_kernel.set_ylim([self.ymin, self.ymax])
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
-					#plt.tight_layout()
+					plt.tight_layout()
 
 					# Plotting logarithmic value of the density
 					DMParticles_kernelPlot_logarithmic, ax_kernel_log = plt.subplots()
@@ -991,7 +990,7 @@ class Disperse_Plotter():
 					ax_kernel_log.set_ylim([self.ymin, self.ymax])
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
-					#plt.tight_layout()
+					plt.tight_layout()
 					
 					# Overplot with filaments on the gaussian kernel plots
 					# Only done if input parameters for bw_method is none or only one scalar
