@@ -1143,8 +1143,8 @@ class Disperse_Plotter():
 					print "reading from interpolated density pickle file, with bandwidth = " + parsed_arguments.bwMethod[0] + "..."
 					self.Interpolated_Z, self.Logarithmic_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 				else:
-					Density, Log_density = self.Interpolate_DM_particles()
-					pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
+					self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles()
+					pickle.dump([self.Interpolated_Z, self.Logarithmic_density], open(Interpolated_density_cachefn ,'wb'))
 
 			elif len(parsed_arguments.bwMethod) > 1:
 				# If there are multiple arguments
@@ -1160,6 +1160,8 @@ class Disperse_Plotter():
 					else:
 						Density, Log_density = self.Interpolate_DM_particles()
 						pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
+						self.Interpolated_Z.append(Density)
+						self.Logarithmic_density.append(Log_density)
 
 		if not Comparison:
 			if self.savefile == 2:
