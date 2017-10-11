@@ -164,6 +164,112 @@ class Disperse_Plotter():
 		self.FilamentsData = np.asarray(self.FilamentsData)
 		print 'Time elapsed for filament data reading: ', time.clock() - time_start, 's'
 
+	def Read_binary_file(self, filename):
+		""" Reads from the binary skeleton file. Also sorts most data available. """
+		datafiles = open(os.path.join(file_directory, filename), 'rb')
+		# Header stuff
+		dummy = np.fromfile(datafiles, np.int32, 1)
+		tag = np.fromfile(datafiles, 'c', 16)
+		dummy = np.fromfile(datafiles, np.int32, 2)
+		comment = np.fromfile(datafiles, 'c', 80)
+		ndims = np.fromfile(datafiles, np.int32, 1)[0]
+		dims = np.fromfile(datafiles, np.int32, 20)
+		x0 = np.fromfile(datafiles, np.float64, 20)[0:ndims]
+		delta = np.fromfile(datafiles, np.float64, 20)[0:ndims]
+		nsegs = np.fromfile(datafiles, np.int32, 1)[0]
+		self.NcritPts = np.fromfile(datafiles, np.int32, 1)[0]
+		nsegdata = np.fromfile(datafiles, np.int32, 1)[0]
+		nnodedata = np.fromfile(datafiles, np.int32, 1)[0]
+		self.xmin, self.ymin, self.zmin = x0
+		self.xmax, self.ymax, self.zmax = delta
+		# Some more useless header stuff
+		dummy = np.fromfile(datafiles, np.int32, 1)
+		if not nsegdata == 0:
+			dummy = np.fromfile(datafiles, np.int32, 1)
+		seg_data_info = np.fromfile(datafiles, 'c', 20*nsegdata)
+		if not nsegdata == 0:
+			dummy = np.fromfile(datafiles, np.int32, 1)
+		if not nnodedata == 0:
+			dummy = np.fromfile(datafiles, np.int32, 1)
+		node_data_info = np.fromfile(datafiles, 'c', 20*nnodedata)
+		if not nnodedata == 0:
+			dummy = np.fromfile(datafiles, np.int32, 1)
+		dummy = np.fromfile(datafiles, np.int32, 1)
+		# Data on important stuff
+		# Filament positions (filament position currently not consistent with ascii data)
+		segpos = np.fromfile(datafiles, np.float32, 2*nsegs*ndims)
+		filament_xdim = segpos[0::3]
+		filament_ydim = segpos[1::3]
+		filament_zdim = segpos[2::3]
+		dummy = np.fromfile(datafiles, np.int32, 2)
+		# Critical point positions 
+		nodepos = np.fromfile(datafiles, np.float32, self.NcritPts*ndims)
+		self.CritPointXpos = nodepos[0::3]
+		self.CritPointYpos = nodepos[1::3]
+		self.CritPointZpos = nodepos[2::3]
+		dummy = np.fromfile(datafiles, np.int32, 2)
+		# Segment data, field values etc.
+		segdata = np.fromfile(datafiles, np.float64, nsegdata*nsegs)
+		dummy = np.fromfile(datafiles, np.int32, 2)
+		# Critpts data, persistence, nsigma, field value etc.
+		nodedata = np.fromfile(datafiles, np.float64, nnodedata*self.NcritPts)
+		dummy = np.fromfile(datafiles, np.int32, 2)
+		
+		# Sorting actual data
+		# Critical point data
+		self.Number_filament_connections = []
+		self.CP_id_of_connecting_filament = []
+		self.Number_filament_points = []
+		self.Critpts_filamentID = []
+		for i in range(self.NcritPts):
+			pos_index = np.fromfile(datafiles, np.int32, 1)[0]
+			flags = np.fromfile(datafiles, np.int32, 1)[0]
+			nnext = np.fromfile(datafiles, np.int32, 1)[0]
+			type_ci = np.fromfile(datafiles, np.int32, 1)[0]
+			index = np.fromfile(datafiles, np.int32, 1)[0]
+			numsegs = np.fromfile(datafiles, np.int32, nnext)
+			Temp_CPID = []
+			Temp_filID = []
+			for j in range(nnext):
+				nextNode = np.fromfile(datafiles, np.int32, 1)[0]
+				nextSeg = np.fromfile(datafiles, np.int32, 1)[0]
+				Temp_CPID.append(nextNode)
+				Temp_filID.append(nextSeg)
+			self.Number_filament_connections.append(nnext)
+			self.CP_id_of_connecting_filament.append(np.array(Temp_CPID))
+			self.Critpts_filamentID.append(np.array(Temp_filID))
+			self.Number_filament_points.append(numsegs)
+
+		# Filament data
+		dummy = np.fromfile(datafiles, np.int32, 2)
+		self.FilamentPos = []
+		self.FilID = []
+		self.PairIDS = []
+		self.xdimPos = []
+		self.ydimPos = []
+		self.zdimPos = []
+		self.NFilamentPoints = []
+		xTemp = []
+		yTemp = []
+		zTemp = []
+		segment_point_temp = []
+		segment_point = []
+		for i in range(nsegs):
+			pos_index = np.fromfile(datafiles, np.int32, 1)[0]
+			nodes = np.fromfile(datafiles, np.int32, 2)
+			flags = np.fromfile(datafiles, np.int32, 1)[0]
+			index = np.fromfile(datafiles, np.int32, 1)[0]
+			next_seg = np.fromfile(datafiles, np.int32, 1)[0]
+			prev_seg = np.fromfile(datafiles, np.int32, 1)[0]
+			segment_point_temp.append(segpos[index*3:index*3+3])
+			if next_seg == -1:
+				segment_point.append(segment_point_temp)
+				self.NFilamentPoints.append(len(segment_point_temp))
+				segment_point_temp = []
+		dummy = np.fromfile(datafiles, np.int32, 1)
+		#print self.NFilamentPoints
+
+
 	def Sort_filament_coordinates(self, dimensions):
 		""" 
 		Sorts the coordinates of the filaments and critical points to their respective arrays 
@@ -1675,7 +1781,7 @@ if __name__ == '__main__':
 	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = parsed_arguments.Comparisons	# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1766,6 +1872,9 @@ if __name__ == '__main__':
 			#LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4PlotsTest/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				
+			# Binary test
+			LCDM_z0_binary = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_binary.Read_binary_file(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary.NDskl')
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
