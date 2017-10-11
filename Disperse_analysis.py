@@ -1538,8 +1538,8 @@ if __name__ == '__main__':
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
-	SaveAsPNG = 1				# Set 1 to save figures as PNG
-	SaveAsPDF = 0 				# Set 1 to save figures as PDF
+	SaveAsPNG = 0				# Set 1 to save figures as PNG
+	SaveAsPDF = 1 				# Set 1 to save figures as PDF
 
 	print '=== INFORMATION ==='
 	# Some if tests before the simulation runs
