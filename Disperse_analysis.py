@@ -32,6 +32,7 @@ import FilamentMasking
 import ReadGadgetFile
 import MaskCritPts
 import FilamentsPerSigma
+import Histogram_comparison
 
 class Disperse_Plotter():
 	"""
@@ -166,6 +167,7 @@ class Disperse_Plotter():
 
 	def Read_binary_file(self, filename):
 		""" Reads from the binary skeleton file. Also sorts most data available. """
+		print 'Reading binary data from file: ', filename, '...'
 		datafiles = open(os.path.join(file_directory, filename), 'rb')
 		# Header stuff
 		dummy = np.fromfile(datafiles, np.int32, 1)
@@ -180,8 +182,8 @@ class Disperse_Plotter():
 		self.NcritPts = np.fromfile(datafiles, np.int32, 1)[0]
 		nsegdata = np.fromfile(datafiles, np.int32, 1)[0]
 		nnodedata = np.fromfile(datafiles, np.int32, 1)[0]
-		self.xmin, self.ymin, self.zmin = x0
-		self.xmax, self.ymax, self.zmax = delta
+		self.xmin, self.ymin, self.zmin = x0*UnitConverter
+		self.xmax, self.ymax, self.zmax = delta*UnitConverter
 		# Some more useless header stuff
 		dummy = np.fromfile(datafiles, np.int32, 1)
 		if not nsegdata == 0:
@@ -204,9 +206,9 @@ class Disperse_Plotter():
 		dummy = np.fromfile(datafiles, np.int32, 2)
 		# Critical point positions 
 		nodepos = np.fromfile(datafiles, np.float32, self.NcritPts*ndims)
-		self.CritPointXpos = nodepos[0::3]
-		self.CritPointYpos = nodepos[1::3]
-		self.CritPointZpos = nodepos[2::3]
+		self.CritPointXpos = nodepos[0::3]*UnitConverter
+		self.CritPointYpos = nodepos[1::3]*UnitConverter
+		self.CritPointZpos = nodepos[2::3]*UnitConverter
 		dummy = np.fromfile(datafiles, np.int32, 2)
 		# Segment data, field values etc.
 		segdata = np.fromfile(datafiles, np.float64, nsegdata*nsegs)
@@ -217,7 +219,7 @@ class Disperse_Plotter():
 		
 		# Sorting actual data
 		# Critical point data
-		self.Number_filament_connections = []
+		self.Number_filaments_connecting_to_CP = []
 		self.CP_id_of_connecting_filament = []
 		self.Number_filament_points = []
 		self.Critpts_filamentID = []
@@ -235,26 +237,20 @@ class Disperse_Plotter():
 				nextSeg = np.fromfile(datafiles, np.int32, 1)[0]
 				Temp_CPID.append(nextNode)
 				Temp_filID.append(nextSeg)
-			self.Number_filament_connections.append(nnext)
+			self.Number_filaments_connecting_to_CP.append(nnext)
 			self.CP_id_of_connecting_filament.append(np.array(Temp_CPID))
 			self.Critpts_filamentID.append(np.array(Temp_filID))
 			self.Number_filament_points.append(numsegs)
-
-		# Filament data
 		dummy = np.fromfile(datafiles, np.int32, 2)
-		self.FilamentPos = []
+
+		# Filament data (some issues here, not consistent with ascii data)
 		self.FilID = []
 		self.PairIDS = []
-		self.xdimPos = []
-		self.ydimPos = []
-		self.zdimPos = []
 		self.NFilamentPoints = []
-		xTemp = []
-		yTemp = []
-		zTemp = []
 		segment_point_temp = []
 		segment_point = []
-		for i in range(nsegs):
+		counter = 0
+		for k in range(nsegs):
 			pos_index = np.fromfile(datafiles, np.int32, 1)[0]
 			nodes = np.fromfile(datafiles, np.int32, 2)
 			flags = np.fromfile(datafiles, np.int32, 1)[0]
@@ -265,10 +261,46 @@ class Disperse_Plotter():
 			if next_seg == -1:
 				segment_point.append(segment_point_temp)
 				self.NFilamentPoints.append(len(segment_point_temp))
+				self.PairIDS.append(nodes)
+				self.FilID.append(counter)
 				segment_point_temp = []
+				counter += 1
 		dummy = np.fromfile(datafiles, np.int32, 1)
-		#print self.NFilamentPoints
+		datafiles.close()
 
+		# Sorting filaments
+		self.FilamentPos = []
+		self.xdimPos = []
+		self.ydimPos = []
+		self.zdimPos = []
+		for i in range(len(segment_point)):
+			xTemp = []
+			yTemp = []
+			zTemp = []
+			TempPositions = []
+			for j in range(self.NFilamentPoints[i]):
+				xPos = segment_point[i][j][0]*UnitConverter
+				yPos = segment_point[i][j][1]*UnitConverter
+				zPos = segment_point[i][j][2]*UnitConverter
+				TempPositions.append(np.array([xPos, yPos]))
+				xTemp.append(xPos)
+				yTemp.append(yPos)
+				zTemp.append(zPos)
+			self.FilamentPos.append(np.array(TempPositions))
+			self.xdimPos.append(np.array(xTemp))
+			self.ydimPos.append(np.array(yTemp))
+			self.zdimPos.append(np.array(zTemp))
+
+		self.NFils = len(segment_point)
+		self.FilamentPos = np.array(self.FilamentPos)
+		self.NFilamentPoints = np.array(self.NFilamentPoints)
+		self.xdimPos = np.array(self.xdimPos)
+		self.ydimPos = np.array(self.ydimPos)
+		self.zdimPos = np.array(self.zdimPos)
+		self.Critpts_filamentID = np.array(self.Critpts_filamentID)
+		self.CritPointXpos = np.asarray(self.CritPointXpos)
+		self.CritPointYpos = np.asarray(self.CritPointYpos)
+		self.CritPointZpos = np.asarray(self.CritPointZpos)
 
 	def Sort_filament_coordinates(self, dimensions):
 		""" 
@@ -1237,12 +1269,13 @@ class Disperse_Plotter():
 
 		plt.close('all')
 
-	def Solve(self, filename, ndim=3, Sigma_threshold = False, robustness=False):
+	def Solve(self, filename, read_binary = 0, ndim=3, Sigma_threshold = False, robustness=False):
 		""" 
 		Runs the whole thing.
 		Creates a pickle file of certain data unless it already exist.
 		Removes the old pickle files if any of the mask directions are changed.
 		"""
+		time_start = time.clock()
 		# Determines folder name of pickle files
 		cachedir_foldername_extra = self.model + 'npart'+str(self.nPart)
 		if self.SigmaArg:
@@ -1265,9 +1298,12 @@ class Disperse_Plotter():
 		Mask_slice_cachefn = cachedir + "mask_slice.p"
 		Pickle_check_fn = cachedir + 'Conditions_check.p'
 		
-		self.ReadFile(filename, ndim)
-		self.Sort_filament_coordinates(ndim)
-		self.Sort_filament_data()
+		if read_binary:
+			self.Read_binary_file(filename)
+		else:
+			self.ReadFile(filename, ndim)
+			self.Sort_filament_coordinates(ndim)
+			self.Sort_filament_data()
 		self.Number_filament_connections()
 
 		if Sigma_threshold:
@@ -1780,14 +1816,14 @@ if __name__ == '__main__':
 	# Histogram plots
 	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = parsed_arguments.Comparisons	# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	ModelCompare = 1 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
+	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 
-	SymmA_model = 0
-	SymmB_model = 0
+	SymmA_model = 1
+	SymmB_model = 1
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
@@ -1862,8 +1898,8 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			#LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
-			#NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
+			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
@@ -1873,8 +1909,8 @@ if __name__ == '__main__':
 			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				
 			# Binary test
-			LCDM_z0_binary = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots', nPart=64, model='LCDM', redshift=0)
-			LCDM_z0_binary.Read_binary_file(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary.NDskl')
+			LCDM_z0_binary = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
+			#Nconn_64, FilLen_64, Npts_64 = LCDM_z0_binary.Solve(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary.NDskl', read_binary=1)
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
@@ -1932,7 +1968,10 @@ if __name__ == '__main__':
 			FilLengthsModels_list = [FilLen_64PartLCDM, FilLen_64PartSymmA, FilLen_64PartSymmB]
 			FilPointsModels_list = [NPts_64PartLCDM, NPts_64PartSymmA, NPts_64PartSymmB]
 
-			ModelCompareInstance = Histogram_Comparison(savefile=1, savefigDirectory=ModelComparisonDir+ModelsFolder+'Plots/', redshift=0,\
+			#ModelCompareInstance = Histogram_Comparison(savefile=1, savefigDirectory=ModelComparisonDir+ModelsFolder+'Plots/', redshift=0,\
+			#				LCDM=LCDM_model, SymmA=SymmA_model, SymmB=SymmB_model)
+			ModelCompareInstance = Histogram_comparison.Histogram_Comparison(savefile=1, savefile_directory = savefile_directory, 
+							 savefigDirectory=ModelComparisonDir+ModelsFolder+'Plots/', redshift=0,\
 							LCDM=LCDM_model, SymmA=SymmA_model, SymmB=SymmB_model)
 			ModelCompareInstance.Run(NumConnectionsModels_list, FilLengthsModels_list, FilPointsModels_list, 64)
 
