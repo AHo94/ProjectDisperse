@@ -90,7 +90,9 @@ def Read_Delaunay_binary(file_dir, file_name):
 	dummy = np.fromfile(f, np.int32, 1)
 	f.close()
 
-
+	#plt.hist2d(Vertex_x, Vertex_y, bins=150)
+	#plt.show()
+	
 if __name__ == '__main__':
 	#Read_Delaunay_ascii(file_directory, filename_ascii)
 	Read_Delaunay_binary(file_directory, filename_binary)
