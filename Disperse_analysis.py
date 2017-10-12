@@ -200,9 +200,9 @@ class Disperse_Plotter():
 		# Data on important stuff
 		# Filament positions (filament position currently not consistent with ascii data)
 		segpos = np.fromfile(datafiles, np.float32, 2*nsegs*ndims)
-		filament_xdim = segpos[0::3]
-		filament_ydim = segpos[1::3]
-		filament_zdim = segpos[2::3]
+		filament_xdim = segpos[0::3]*UnitConverter
+		filament_ydim = segpos[1::3]*UnitConverter
+		filament_zdim = segpos[2::3]*UnitConverter
 		dummy = np.fromfile(datafiles, np.int32, 2)
 		# Critical point positions 
 		nodepos = np.fromfile(datafiles, np.float32, self.NcritPts*ndims)
@@ -354,36 +354,6 @@ class Disperse_Plotter():
 			#	break
 			counter += 1
 			i += 2 + Filament_connections
-
-		"""
-		self.NumFilamentConnections = []
-		self.IDFilamentConnected = []
-		self.CritPointInfo = []
-		############ UNIT CONVERSION NOT FIXED HERE!!!! 
-		self.NcritPts = int(self.CriticalPoints[0][0])
-		for i in range(1, len(self.CriticalPoints)-1):
-			stuff = self.CriticalPoints[i]
-			if len(stuff) == 1:
-				self.NumFilamentConnections.append(int(stuff[0]))
-				IDconnections = []
-				if int(stuff[0]) == 1:
-					IDS = self.CriticalPoints[i+1]
-					IDconnections.append(np.array([float(IDS[0]), float(IDS[1])]))
-				else:	
-					for j in range(1, int(stuff[0])+1):
-						IDS = self.CriticalPoints[i+j]
-						IDconnections.append(np.array([float(IDS[0]),float(IDS[1])]))
-				self.IDFilamentConnected.append(np.asarray(IDconnections))
-			elif len(stuff) > 2:
-				InfoListTemp = []
-				for k in range(len(stuff)):
-					InfoListTemp.append(float(stuff[k]))
-				self.CritPointInfo.append(np.asarray(InfoListTemp))
-
-		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
-		self.IDFilamentConnected = np.asarray(self.IDFilamentConnected)
-		self.CritPointInfo = np.asarray(self.CritPointInfo)
-		"""
 
 		# Filament positions etc
 		self.FilamentPos = []
