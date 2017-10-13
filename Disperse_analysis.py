@@ -273,6 +273,7 @@ class Disperse_Plotter():
 		self.xdimPos = []
 		self.ydimPos = []
 		self.zdimPos = []
+		print 'hhh'
 		for i in range(len(segment_point)):
 			xTemp = []
 			yTemp = []
@@ -301,6 +302,14 @@ class Disperse_Plotter():
 		self.CritPointXpos = np.asarray(self.CritPointXpos)
 		self.CritPointYpos = np.asarray(self.CritPointYpos)
 		self.CritPointZpos = np.asarray(self.CritPointZpos)
+
+		print self.FilamentPos[0:10]
+		fig, ax = plt.subplots()
+		ax.set_xlim(self.xmin, self.xmax)
+		ax.set_ylim(self.ymin, self.ymax)		
+		lines = LineCollection(self.FilamentPos[0:10])
+		ax.add_collection(lines)
+		plt.show()		
 
 	def Sort_filament_coordinates(self, dimensions):
 		""" 
@@ -726,7 +735,7 @@ class Disperse_Plotter():
 
 		if HistogramPlots:
 			# Histogram of number of filament connections
-			###### NEEDS FIXING!!
+			###### NEEDS FIXING!! Done.
 			NumMin = min(self.NumFilamentConnections)
 			NumMax = max(self.NumFilamentConnections)
 			BinSize = (NumMax - NumMin)/(0.5) + 1
@@ -1497,14 +1506,14 @@ if __name__ == '__main__':
 	# Histogram plots
 	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = parsed_arguments.Comparisons	# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	ModelCompare = 1 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
+	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
 	LCDM_model = 1 
-	SymmA_model = 1
-	SymmB_model = 1
+	SymmA_model = 0
+	SymmB_model = 0
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
@@ -1579,8 +1588,8 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
-			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
+			#LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
+			#NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
@@ -1590,8 +1599,8 @@ if __name__ == '__main__':
 			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				
 			# Binary test
-			LCDM_z0_binary = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
-			#Nconn_64, FilLen_64, Npts_64 = LCDM_z0_binary.Solve(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary.NDskl', read_binary=1)
+			LCDM_z0_binary = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
+			Nconn_64, FilLen_64, Npts_64 = LCDM_z0_binary.Solve(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary.NDskl', read_binary=1)
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
