@@ -327,8 +327,10 @@ class Disperse_Plotter():
 		self.Neighbours_CP = []
 		self.CP_id_of_connecting_filament = []
 		self.Number_filaments_connecting_to_CP = []
+		self.CP_type = []
 		i = 1
 		counter = 0
+		ayy = 0
 		while i < len(self.CriticalPoints):
 			Info = self.CriticalPoints[i]	# Type, value and neighbouring CP not saved
 			"""
@@ -340,6 +342,7 @@ class Disperse_Plotter():
 			"""
 			Filament_connections = int(self.CriticalPoints[i+1][0])
 			self.Number_filaments_connecting_to_CP.append(Filament_connections)
+			self.CP_type.append(int(Info[0]))
 			Temp_filID = []
 			Temp_CPID = []
 			if Filament_connections != 0:
@@ -366,7 +369,7 @@ class Disperse_Plotter():
 		self.ydimPos = []
 		self.NFilamentPoints = []
 		k = 1
-		NewID = 1
+		NewID = 0
 		if dimensions == 2:
 			for i in range(1, self.NFils):
 				Filstuff = self.Filaments[k]	# Contains info on filament ID, num crit pts etc.
@@ -433,7 +436,6 @@ class Disperse_Plotter():
 		if dimensions == 3:
 			self.zdimPos = np.array(self.zdimPos)
 
-		print np.sum(self.NFilamentPoints)
 		print 'Array sorting time: ', time.clock() - time_start, 's'
 
 	def Sort_filament_data(self):
@@ -487,6 +489,14 @@ class Disperse_Plotter():
 				self.Filament_type.append(int(self.FilamentsData[i][4]))
 
 		self.Persistence_nsigmas = np.asarray(self.Persistence_nsigmas)
+		# Give filaments persistence nsigma value based on the nsigma value of the connected maxima CP.
+		maximas = np.where(np.array(self.CP_type) == 3)[0]
+		maxima_nsigmas = self.Persistence_nsigmas[maximas]
+		self.Filament_sigma = np.zeros(self.NFils-1)
+		for i in range(self.NFils-1):
+			CP_maxima_index = self.PairIDS[i][1]
+			self.Filament_sigma[i] = self.Persistence_nsigmas[CP_maxima_index]
+
 		"""
 		#Z = np.zeros((len(self.CritPointXpos),len(self.CritPointYpos)))
 		x,y = np.meshgrid(self.CritPointXpos, self.CritPointYpos)
@@ -903,6 +913,17 @@ class Disperse_Plotter():
 				ax2.set_zlabel('$\mathregular{z}$' + LegendText)
 				plt.title('Sliced segment of the 3D box, with filaments cut off outside of boundary')
 				
+				# 2D projection onto the X-Y plane with masked filaments. Segment in z-dir cut off outside of boundary. Colorbar based on filament sigma value
+				FilPositions_2DProjection_sigmacolorbar, ax_sigmacbar = plt.subplots()
+				ax_sigmacbar.set_xlim(self.xmin, self.ymax)
+				ax_sigmacbar.set_ylim(self.ymin, self.ymax)
+				line_segments_sigma = LineCollection(self.CutOffFilamentSegments, array=self.Filament_sigma)
+				ax_sigmacbar.add_collection(line_segments_sigma)
+				FilPositions_2DProjection_sigmacolorbar.colorbar(line_segments_sigma)
+				ax_sigmacbar.set_xlabel('$\mathregular{x}$' + LegendText)
+				ax_sigmacbar.set_ylabel('$\mathregular{y}$' + LegendText)
+				plt.title('2D Position projection sliced box. \n Colorbar based on filament sigma value')
+				
 				if Projection2D:
 					# 2D projection onto the X-Y plane with masked filaments
 					FilPositions_2DProjectionSliced = plt.figure()
@@ -1278,7 +1299,7 @@ class Disperse_Plotter():
 			self.ReadFile(filename, ndim)
 			self.Sort_filament_coordinates(ndim)
 			self.Sort_filament_data()
-		#return 1,2,3
+		return 1,2,3
 		self.Number_filament_connections()
 
 		if Sigma_threshold:
@@ -1493,7 +1514,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 1		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 0		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1503,7 +1524,7 @@ if __name__ == '__main__':
 	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = parsed_arguments.Comparisons	# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
@@ -1584,8 +1605,8 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			#LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
-			#NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
+			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
@@ -1595,8 +1616,8 @@ if __name__ == '__main__':
 			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				
 			# Binary test
-			LCDM_z0_binary = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
-			Nconn_64, FilLen_64, Npts_64 = LCDM_z0_binary.Solve(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary2.NDskl', read_binary=1)
+			#LCDM_z0_binary = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
+			#Nconn_64, FilLen_64, Npts_64 = LCDM_z0_binary.Solve(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary2.NDskl', read_binary=1)
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
@@ -1686,7 +1707,7 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plotstest2_png/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plotstest2_png/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			
 			#LCDM_z0_binary = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
@@ -1777,9 +1798,9 @@ if __name__ == '__main__':
 					Results = []
 					for filenames in SkeletonFiles:
 						Instance = FilamentsPerSigma.FilamentsPerSigma(filenames)
-						Instance_output = Instance.Filaments_per_sigma2(sigma_values)
+						Instance_output = Instance.Filaments_per_sigma_Maxima(sigma_values)
 						Results.append(Instance_output)
-					#Results = p.map(partial(Multiprocess_FilamentsPerSigma, sigma_values), SkeletonFiles)
+
 					fig_filpersig, ax_filpersig = plt.subplots()
 					fig_filpersig_log, ax_filpersig_log = plt.subplots()
 					for data in Results:
@@ -1795,6 +1816,6 @@ if __name__ == '__main__':
 					ax_filpersig_log.set_ylabel('Number of filaments')
 
 					print 'saving in', results_dir_filpersig
-					fig_filpersig.savefig(results_dir_filpersig + 'Filaments_per_sigma_alt' + str(N_sigmas) + '.png')
-					fig_filpersig_log.savefig(results_dir_filpersig + 'Filaments_per_sigma_alt'+ str(N_sigmas) + '_logarithmic.png')
+					fig_filpersig.savefig(results_dir_filpersig + 'Filaments_per_sigma_Maxima' + str(N_sigmas) + '.png')
+					fig_filpersig_log.savefig(results_dir_filpersig + 'Filaments_per_sigma_Maxima'+ str(N_sigmas) + '_logarithmic.png')
 
