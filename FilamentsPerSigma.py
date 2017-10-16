@@ -2,6 +2,7 @@ import numpy as np
 import os
 import time
 file_directory = '/mn/stornext/d5/aleh'
+#file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
 
 class FilamentsPerSigma():
 	def __init__(self, filename):
@@ -11,6 +12,7 @@ class FilamentsPerSigma():
 		# Testing
 		#self.Filaments_per_sigma(np.linspace(3,10,40))
 		#self.Filaments_per_sigma2(np.linspace(4,10,5))
+		#self.Filaments_per_sigma_Maxima(np.linspace(3,10,20))
 
 	def ReadFile(self, filename, dimensions=3):
 		""" Reads the data from the skeleton file from Disperse """
@@ -86,23 +88,19 @@ class FilamentsPerSigma():
 
 		# General data
 		# Critical points
-		self.CritPointXpos = []
-		self.CritPointYpos = []
-		self.CritPointZpos = []
 		self.NcritPts = int(self.CriticalPoints[0][0])
 		self.Critpts_filamentID = []
 		self.Neighbours_CP = []
 		self.CP_id_of_connecting_filament = []
 		self.Number_filaments_connecting_to_CP = []
+		self.CP_type = []
 		i = 1
 		counter = 0
 		while i < len(self.CriticalPoints):
 			Info = self.CriticalPoints[i]	# Type, value and neighbouring CP not saved
-			self.CritPointXpos.append(float(Info[1]))
-			self.CritPointYpos.append(float(Info[2]))
-			self.CritPointZpos.append(float(Info[3]))
 			#self.Neighbours_CP.append(int(Info[5]))	# Includes all CPs even without filaments
 			Filament_connections = int(self.CriticalPoints[i+1][0])
+			self.CP_type.append(int(Info[0]))
 			self.Number_filaments_connecting_to_CP.append(Filament_connections)
 			Temp_filID = []
 			Temp_CPID = []
@@ -118,6 +116,20 @@ class FilamentsPerSigma():
 
 		self.CP_id_of_connecting_filament = np.asarray(self.CP_id_of_connecting_filament)
 		self.Neighbours_CP = np.asarray(self.Neighbours_CP)
+
+		self.FilID = []
+		self.NFilamentPoints = []
+		self.PairIDS = []
+		k = 1
+		NewID = 0
+		for i in range(1, self.NFils):
+			Filstuff = self.Filaments[k]
+			self.FilID.append(NewID)
+			self.PairIDS.append(np.array([int(Filstuff[0]), int(Filstuff[1])]))
+			self.NFilamentPoints.append(int(Filstuff[-1]))
+			k += int(Filstuff[-1])+1
+			NewID += 1
+			
 
 	def Sort_filament_data(self):
 		""" 
@@ -204,9 +216,32 @@ class FilamentsPerSigma():
 			else:
 				fil_per_sig.append(0)
 		return fil_per_sig
-		
+
+	def Filaments_per_sigma_Maxima(self, sigma_array):
+		"""
+		This algorithm assumes that the sigma value of a filament is based on the maxima the filament is connected to.
+		A filament, defined in DisPerSE, is an arc connecting a maxima and a 2-saddle (in 3D). This corresponds to critical points of index 3 and 2.
+		Persistence pairs of a maxima and a 2-saddle will have a persistence n-sigma value. 
+		Filaments connected to the maxima in question will have the same persistence n-sigma value.
+		"""
+		print 'Computing number of filaments as a function of sigma'
+		maximas = np.where(np.array(self.CP_type) == 3)[0]
+		maxima_nsigmas = self.Persistence_nsigmas[maximas]
+		self.Filament_sigma = np.zeros(self.NFils-1)
+		for i in range(self.NFils-1):
+			CP_maxima_index = self.PairIDS[i][1]
+			self.Filament_sigma[i] = self.Persistence_nsigmas[CP_maxima_index]
+
+		fil_per_sig = []
+		for sigmas in sigma_array:
+			Filaments_included = np.where(self.Filament_sigma >= sigmas)[0]
+			fil_per_sig.append(len(Filaments_included))
+
+		return fil_per_sig
 
 if __name__ == '__main__':
 	# Testing program
-	FilamentsPerSigma('lcdm_testing/LCDM_z0_64PeriodicTesting/'+'SkelconvOutput_LCDMz064.a.NDskl')
+	#FilamentsPerSigma('lcdm_testing/LCDM_z0_64PeriodicTesting/'+'SkelconvOutput_LCDMz064.a.NDskl')
+	# Home Testing
+	FilamentsPerSigma('lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'+'SkelconvOutput_LCDMz064.a.NDskl')
 	
