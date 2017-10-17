@@ -1295,14 +1295,15 @@ class Disperse_Plotter():
 		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
 		Mask_slice_cachefn = cachedir + "mask_slice.p"
 		Pickle_check_fn = cachedir + 'Conditions_check.p'
-		
+		Disperse_data_check_fn = cachedir + 'Disperse_data_check.p'
+
 		if read_binary:
 			self.Read_binary_file(filename)
 		else:
 			self.ReadFile(filename, ndim)
 			self.Sort_filament_coordinates(ndim)
 			self.Sort_filament_data()
-		return 1,2,3
+		#return 1,2,3
 		self.Number_filament_connections()
 
 		if Sigma_threshold:
@@ -1321,9 +1322,6 @@ class Disperse_Plotter():
 				print 'Some global parameters are changed. Recomputing everything and creating new pickle files'
 				os.remove(Boundary_check_cachefn)
 				os.remove(Mask_slice_cachefn)
-				#for fname in os.listdir(cachedir):
-				#	if fname.startswith("InterpolatedDensities"):
-				#		os.remove(os.path.join(cachedir), fname)
 				pickle.dump(Pickle_check_list, open(Pickle_check_fn, 'wb'))
 		else:
 			pickle.dump(Pickle_check_list, open(Pickle_check_fn, 'wb'))
@@ -1344,15 +1342,16 @@ class Disperse_Plotter():
 				print "reading from mask_slice pickle file..."
 				Mask_instance_variables, Masked_critpts = pickle.load(open(Mask_slice_cachefn, 'rb'))
 			else:
-				Mask_instance = FilamentMasking.FilamentMasking(self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,\
-												self.LengthSplitFilament , self.NFils, Mask_direction_check, Mask_boundary_list)
+				Mask_instance = FilamentMasking.FilamentMasking(self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,
+																self.LengthSplitFilament , self.NFils, Mask_direction_check,
+																Mask_boundary_list)
 				Mask_instance_variables = Mask_instance.Mask_slices()
-				Masked_critpts = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,\
-																 Mask_boundary_list, Mask_direction_check)
+				Masked_critpts = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,
+													  Mask_boundary_list, Mask_direction_check)
 				pickle.dump([Mask_instance_variables, Masked_critpts], open(Mask_slice_cachefn, 'wb'))
 
 			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments\
-						, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
+											, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
 			self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = Masked_critpts
 
 
