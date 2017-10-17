@@ -251,7 +251,7 @@ class Disperse_Plotter():
 		segment_point_temp = []
 		segment_point = []
 		counter = 0
-		for k in range(nsegs):
+		for k in range(10):
 			pos_index = np.fromfile(datafiles, np.int32, 1)[0]
 			nodes = np.fromfile(datafiles, np.int32, 2)
 			flags = np.fromfile(datafiles, np.int32, 1)[0]
@@ -259,7 +259,8 @@ class Disperse_Plotter():
 			next_seg = np.fromfile(datafiles, np.int32, 1)[0]
 			prev_seg = np.fromfile(datafiles, np.int32, 1)[0]
 			segment_point_temp.append(segpos[index*3:index*3+3])
-			#print next_seg, prev_seg, k
+			#print next_seg, prev_seg, k, nodes
+			print segpos[index*3:index*3+3], index
 			if next_seg == -1:
 				segment_point.append(segment_point_temp)
 				self.NFilamentPoints.append(len(segment_point_temp))
@@ -269,6 +270,7 @@ class Disperse_Plotter():
 				counter += 1
 		dummy = np.fromfile(datafiles, np.int32, 1)
 		datafiles.close()
+		return 
 		# Sorting filaments
 		self.FilamentPos = []
 		self.xdimPos = []
@@ -1300,7 +1302,7 @@ class Disperse_Plotter():
 			self.ReadFile(filename, ndim)
 			self.Sort_filament_coordinates(ndim)
 			self.Sort_filament_data()
-		#return 1,2,3
+		return 1,2,3
 		self.Number_filament_connections()
 
 		if Sigma_threshold:
@@ -1607,7 +1609,7 @@ if __name__ == '__main__':
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
 			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
-			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
+			#NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
@@ -1617,8 +1619,8 @@ if __name__ == '__main__':
 			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				
 			# Binary test
-			#LCDM_z0_binary = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
-			#Nconn_64, FilLen_64, Npts_64 = LCDM_z0_binary.Solve(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary2.NDskl', read_binary=1)
+			LCDM_z0_binary = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
+			Nconn_64, FilLen_64, Npts_64 = LCDM_z0_binary.Solve(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary.NDskl', read_binary=1)
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
