@@ -1299,7 +1299,7 @@ class Disperse_Plotter():
 			self.ReadFile(filename, ndim)
 			self.Sort_filament_coordinates(ndim)
 			self.Sort_filament_data()
-		return 1,2,3
+		#return 1,2,3
 		self.Number_filament_connections()
 
 		if Sigma_threshold:
