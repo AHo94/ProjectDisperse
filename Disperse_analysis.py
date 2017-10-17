@@ -1227,6 +1227,7 @@ class Disperse_Plotter():
 			if IncludeSlicing and PlotFilaments:
 				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + self.ModelFilename)
 				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + self.ModelFilename)
+				FilPositions_2DProjection_sigmacolorbar.savefig(self.results_dir + 'CutoffFilaments_sigmacolorbar' + self.ModelFilename)
 				if Projection2D:
 					FilPositions_2DProjectionSliced.savefig(self.results_dir + '2DProjectionSliced3dBox' + self.ModelFilename)
 				if ColorBarZDir:
