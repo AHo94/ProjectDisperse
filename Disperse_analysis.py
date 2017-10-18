@@ -286,7 +286,7 @@ class Disperse_Plotter():
 			Log_density = np.log(Density/np.average(Density))
 			return Density, Log_density
 
-		def Density_zoomed(ZoomArea):
+		def Density_zoomed(ZoomArea, method_):
 			""" Calculates density profile of the zoomed in section. Assumes UnitConverter is on by default """
 			Xzoom, Yzoom = np.mgrid[ZoomArea[0]:ZoomArea[1]:200j, ZoomArea[2]:ZoomArea[3]:200j]
 			position_zoom = np.vstack([Xzoom.ravel(), Yzoom.ravel()])
@@ -294,15 +294,18 @@ class Disperse_Plotter():
 			YMask = np.logical_and(PartPosY > ZoomArea[2], PartPosY < ZoomArea[3])
 			partpositions = np.vstack([PartPosX[Xmask], PartPosY[YMask]])
 
-			Density, Log_density = Compute_density(partpositions, position_zoom, Xzoom, Yzoom, bandwidth)
+			Density, Log_density = Compute_density(partpositions, position_zoom, Xzoom, Yzoom, method_)
 			return Density, Log_density
+
+		if bandwidth != 'Scott':
+			method = float(bandwidth)
 
 		# Scipy kernel stuff
 		Zoomed_density_list = []
 		Log_zoomed_density_list = []	
-		Interpolated_Z, Logarithmic_density = Compute_density(particle_positions, positions, X, Y, bandwidth)
+		Interpolated_Z, Logarithmic_density = Compute_density(particle_positions, positions, X, Y, method)
 		for zoom_grid in self.Zoom_areas:
-			Zoomed_density, Log_zoomed_density = Density_zoomed(zoom_grid)
+			Zoomed_density, Log_zoomed_density = Density_zoomed(zoom_grid, method)
 			Zoomed_density_list.append(Zoomed_density)
 			Log_zoomed_density_list.append(Log_zoomed_density)
 		"""
