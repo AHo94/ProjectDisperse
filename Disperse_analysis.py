@@ -1048,7 +1048,7 @@ class Disperse_Plotter():
 					self.Zoomed_density, self.Log_zoomed_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 				else:
 					self.Interpolated_Z, self.Logarithmic_density,\
-					self.Zoomed_density, self.Log_zoomed_density = self.Interpolate_DM_particles()
+					self.Zoomed_density, self.Log_zoomed_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
 					pickle.dump([self.Interpolated_Z, self.Logarithmic_density, self.Zoomed_density, self.Log_zoomed_density],
 						open(Interpolated_density_cachefn ,'wb'))
 
