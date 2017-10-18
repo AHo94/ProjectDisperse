@@ -1,8 +1,17 @@
 ### Set comment on the two below to plot. Only use if running on euclid21 or other institute computers. 
 #import matplotlib
 #matplotlib.use('Agg')
+# Basic stuff
+import os
+import time
+import argparse
+import cPickle as pickle
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import Counter
+from functools import partial
+
+# Numpy, matplotlib and scipy
 import matplotlib as mpl
 from matplotlib import cm
 from matplotlib import colors as mcolors
@@ -12,14 +21,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy import stats
 from scipy import spatial
 from scipy.interpolate import griddata
-import os
-import time
-import cPickle as pickle
-import argparse
-from collections import Counter
-import multiprocessing as mp
-from functools import partial
-#from sklearn.neighbors import KernelDensity
 
 # Disable warnings from matplotlib	
 import warnings
@@ -33,6 +34,7 @@ import ReadGadgetFile
 import MaskCritPts
 import FilamentsPerSigma
 import Histogram_comparison as HComp
+import ReadFilamentData
 
 class Disperse_Plotter():
 	"""
@@ -1267,6 +1269,50 @@ class Disperse_Plotter():
 
 		plt.close('all')
 
+	def Unpack_filament_data(self, Box_info, CP_coord, Fil_coord, CP_data, Fil_data):
+		""" Unpacks filament data from the read filament data module. """
+		self.xmin = Box_info[0]
+		self.xmax = Box_info[1]
+		self.ymin = Box_info[2]
+		self.ymax = Box_info[3]
+		self.zmin = Box_info[4]
+		self.zmax = Box_info[5]
+
+		self.CritPointXpos = CP_coord[0]
+		self.CritPointYpos = CP_coord[1]
+		self.CritPointZpos = CP_coord[2]
+		self.CP_type = CP_coord[3]
+		self.CP_persistent_pair = CP_coord[4] 
+		self.Critpts_filamentID = CP_coord[5] 
+		self.CP_id_of_connecting_filament = CP_coord[6] 
+		self.Number_filaments_connecting_to_CP = CP_coord[7]
+
+		self.NFils = Fil_coord[0]
+		self.FilamentPos = Fil_coord[1]
+		self.xdimPos = Fil_coord[2]
+		self.ydimPos = Fil_coord[3]
+		self.zdimPos = Fil_coord[4]
+		self.NFilamentPoints = Fil_coord[5]
+		self.FilID = Fil_coord[6]
+		self.PairIDS = Fil_coord[7]
+
+		self.Persistence_ratio = CP_data[0]
+		self.Persistence_nsigmas = CP_data[1]
+		self.Persistence = CP_data[2]
+		self.Persistence_pair = CP_data[3]
+		self.Parent_index = CP_data[4]
+		self.Parent_log_index = CP_data[5]
+		self.log_CritPoint_field_value = CP_data[6]
+		self.CritPoint_field_value = CP_data[7]
+		self.CritPoint_cell = CP_data[8]
+		
+		self.Filament_field_value = Fil_data[0]
+		self.orientation = Fil_data[1]
+		self.Filament_cell = Fil_data[2]
+		self.log_Filament_field_value = Fil_data[3]
+		self.Filament_type = Fil_data[4]
+		self.Filament_sigma = Fil_data[5]
+		
 	def Solve(self, filename, read_binary = 0, ndim=3, Sigma_threshold = False, robustness=False):
 		""" 
 		Runs the whole thing.
@@ -1295,20 +1341,16 @@ class Disperse_Plotter():
 		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
 		Mask_slice_cachefn = cachedir + "mask_slice.p"
 		Pickle_check_fn = cachedir + 'Conditions_check.p'
-		Disperse_data_check_fn = cachedir + 'Disperse_data_check.p'
+		Disperse_data_check_fn = cachedir + 'Disperse_data.p'
 
+		"""
 		if read_binary:
 			self.Read_binary_file(filename)
 		else:
 			self.ReadFile(filename, ndim)
 			self.Sort_filament_coordinates(ndim)
 			self.Sort_filament_data()
-		#return 1,2,3
-		self.Number_filament_connections()
-
-		if Sigma_threshold:
-			# Filters filament based on a given sigma threshold. Still work in progress
-			self.Filter_filaments(Sigma_threshold)
+		"""
 
 		Pickle_check_list = [Mask_direction_check, Mask_boundary_list, Sigma_threshold]
 		if os.path.isfile(Pickle_check_fn):
@@ -1326,14 +1368,31 @@ class Disperse_Plotter():
 		else:
 			pickle.dump(Pickle_check_list, open(Pickle_check_fn, 'wb'))
 
+		if os.path.isfile(Disperse_data_check_fn):
+			# Read filament data from the skeleton file
+			print "reading from filament data pickle file..."
+			Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data = pickle.load(open(Disperse_data_check_fn, 'rb'))
+		else:
+			Read_filament_data_instance = ReadFilamentData.read_disperse_output(directory=file_directory, UnitConverter=UnitConverter)
+			Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data = Read_filament_data_instance.get_data(filename=filename)
+			pickle.dump(
+				[Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data],
+				open(Disperse_data_check_fn, 'wb')
+				)
+		self.Unpack_filament_data(Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data)
+		
 		if os.path.isfile(Boundary_check_cachefn):
 			## Computing filaments crossing boundaries
 			print "reading from boundary check pickle file..."
 			BC_instance_variables = pickle.load(open(Boundary_check_cachefn, 'rb'))
 		else:
-			BC_instance = BoundaryChecker.BoundaryChecker(self.xmin, self.xmax, self.xdimPos, self.ydimPos, self.zdimPos, self.FilID, self.NFils)
+			BC_instance = BoundaryChecker.BoundaryChecker(
+					self.xmin, self.xmax, self.xdimPos,
+					self.ydimPos, self.zdimPos, self.FilID, self.NFils
+					)
 			BC_instance_variables = BC_instance.Get_periodic_boundary()
 			pickle.dump(BC_instance_variables, open(Boundary_check_cachefn, 'wb'))
+
 		self.FilamentIDs, self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos, self.LengthSplitFilament, self.FilLengths = BC_instance_variables
 
 		if IncludeSlicing:
@@ -1342,18 +1401,26 @@ class Disperse_Plotter():
 				print "reading from mask_slice pickle file..."
 				Mask_instance_variables, Masked_critpts = pickle.load(open(Mask_slice_cachefn, 'rb'))
 			else:
-				Mask_instance = FilamentMasking.FilamentMasking(self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,
-																self.LengthSplitFilament , self.NFils, Mask_direction_check,
-																Mask_boundary_list)
+				Mask_instance = FilamentMasking.FilamentMasking(
+						self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,
+						self.LengthSplitFilament , self.NFils, Mask_direction_check, Mask_boundary_list
+						)
 				Mask_instance_variables = Mask_instance.Mask_slices()
-				Masked_critpts = MaskCritPts.Mask_CPs(self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,
-													  Mask_boundary_list, Mask_direction_check)
+				Masked_critpts = MaskCritPts.Mask_CPs(
+							self.CritPointXpos, self.CritPointYpos, self.CritPointZpos,
+							Mask_boundary_list, Mask_direction_check
+							)
 				pickle.dump([Mask_instance_variables, Masked_critpts], open(Mask_slice_cachefn, 'wb'))
 
 			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments\
 											, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
 			self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = Masked_critpts
 
+		# Computing other properties
+		self.Number_filament_connections()
+		if Sigma_threshold:
+			# Filters filament based on a given sigma threshold. Still work in progress
+			self.Filter_filaments(Sigma_threshold)
 
 		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
 			# Pickle file for interpolated densities using Gaussian KDE
@@ -1607,8 +1674,8 @@ if __name__ == '__main__':
 			#solveInstance1.Plot("simu_32_id.gad.NDnet_s3.5.up.NDskl.a.NDskl", ndim=3)
 
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
-			#NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
+			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
@@ -1618,8 +1685,8 @@ if __name__ == '__main__':
 			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				
 			# Binary test
-			LCDM_z0_binary = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
-			Nconn_64, FilLen_64, Npts_64 = LCDM_z0_binary.Solve(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary.NDskl', read_binary=1)
+			#LCDM_z0_binary = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
+			#Nconn_64, FilLen_64, Npts_64 = LCDM_z0_binary.Solve(LCDM_z0_64_dir+ 'SkelconvOutput_LCDMz064_binary.NDskl', read_binary=1)
 			if SigmaComparison:
 				LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 				LCDM_nsig5Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma5Plots/', nPart=64, model='LCDM', redshift=0, SigmaArg=5)
