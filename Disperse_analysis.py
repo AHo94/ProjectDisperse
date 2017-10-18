@@ -1054,6 +1054,8 @@ class Disperse_Plotter():
 				# If there are multiple arguments
 				self.Interpolated_Z = []
 				self.Logarithmic_density = []
+				self.Zoomed_density = []
+				self.Log_zoomed_density = []
 				for bandwidths in parsed_arguments.bwMethod:
 					Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + bandwidths + '.p'
 					if os.path.isfile(Interpolated_density_cachefn):
@@ -1061,12 +1063,16 @@ class Disperse_Plotter():
 						Density, Log_density, ZDensity, ZLogDensity = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
+						self.Zoomed_density.append(ZDensity)
+						self.Log_zoomed_density.append(ZLogDensity)
 					else:
 						Density, Log_density, ZDensity, ZLogDensity = self.Interpolate_DM_particles(bandwidths)
-						pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
+						pickle.dump([Density, Log_density, ZDensity, ZLogDensity], open(Interpolated_density_cachefn ,'wb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
-
+						self.Zoomed_density.append(ZDensity)
+						self.Log_zoomed_density.append(ZLogDensity)
+						
 		if not Comparison:
 			if self.savefile == 2:
 				print 'Done! No files saved.'
