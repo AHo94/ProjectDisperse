@@ -331,6 +331,7 @@ class Disperse_Plotter():
 					Zoomed_density_list.append(Zoomed_density)
 					Log_zoomed_density_list.append(Log_zoomed_density)
 		"""
+		print 'Interplation time:', time.clock() - time_start, 's'
 	 	return Interpolated_Z, Logarithmic_density, Zoomed_density_list, Log_zoomed_density_list
 
 	def Plot_Figures(self, filename, ndim=3):
@@ -767,10 +768,10 @@ class Disperse_Plotter():
 							'Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on average filament length'
 							+'\n' + self.nPart_text + 'particle subsample. ' + self.Alternative_sigmaTitle)
 					plt.subplot(1,2,1)
-					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					plt.imshow(np.rot90(self.Log_zoomed_density[0]), extent=[70, 180, 140, 250])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(
 						self.CutOffFilamentSegments, linestyle='solid',
-						array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
+						array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
@@ -778,17 +779,18 @@ class Disperse_Plotter():
 					plt.ylim(140,250)
 					plt.subplot(1,2,2)
 					
-					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					plt.imshow(np.rot90(self.Log_zoomed_density[0]), extent=[100, 150, 170, 230])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(
 						self.CutOffFilamentSegments, linestyle='solid',
-						array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
+						array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlim(100, 150)
 					plt.ylim(170,230)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					
-					cax = DMParticles_kernelPlot_wFilaments_log_Zoomed.add_axes([0.1, 0.08, 0.8, 0.03])	# Colorbar to the right side, [left, bottom, width, height], % of box
+					# Colorbar at the bottom of the figure. [left, bottom, width, height], % of box
+					cax = DMParticles_kernelPlot_wFilaments_log_Zoomed.add_axes([0.1, 0.08, 0.8, 0.03])
 					DMParticles_kernelPlot_wFilaments_log_Zoomed.colorbar(line_segmentsDMlen_kernel_log_zoom, cax=cax, orientation='horizontal')
 					plt.tight_layout()
 					
@@ -1072,7 +1074,7 @@ class Disperse_Plotter():
 						self.Logarithmic_density.append(Log_density)
 						self.Zoomed_density.append(ZDensity)
 						self.Log_zoomed_density.append(ZLogDensity)
-						
+
 		if not Comparison:
 			if self.savefile == 2:
 				print 'Done! No files saved.'
