@@ -599,7 +599,7 @@ class Disperse_Plotter():
 				ax = plt.axes()
 				ax.set_xlim(self.xmin, self.xmax)
 				ax.set_ylim(self.ymin, self.ymax)
-				line_segmentsDMlen = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
+				line_segmentsDMlen = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
 				ax.add_collection(line_segmentsDMlen)
 				DMParticleHistwFilamentsLengthCbar.colorbar(line_segmentsDMlen)
 				plt.hist2d(self.PartPosX, self.PartPosY, bins=100)
@@ -699,7 +699,8 @@ class Disperse_Plotter():
 					# Filaments overplotted on the density field
 					DMParticles_kernelPlot_wFilaments, ax_kernel_wfil = plt.subplots()
 					ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-					ax_kernel_wfil.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0] +'\n' + self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle) 
+					ax_kernel_wfil.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0] +'\n' 
+											+ self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle) 
 					ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
 					ax_kernel_wfil.set_ylim([self.ymin, self.ymax])
 					line_segmentsDMlen_kernel = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
@@ -728,21 +729,15 @@ class Disperse_Plotter():
 					DMParticles_kernelPlot_wFilaments_log_Zoomed.suptitle('Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on average filament length'\
 											+'\n' + self.nPart_text + 'particle subsample. ' + self.Alternative_sigmaTitle)
 					plt.subplot(1,2,1)
-					#ax1 = plt.subplot(211, xlim=[self.xmin, self.xmax], ylim=[self.ymin, self.ymax])
-					#plt.title('Bandwidth = ' + parsed_arguments.bwMethod[0] + \
-					#					'. Logarithmic density. \n' + self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle)
 					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
-				
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.xlim(70, 180)
 					plt.ylim(140,250)
 					plt.subplot(1,2,2)
-					#ax2 = plt.subplot(1,2,2, xlim=[self.xmin, self.xmax], ylim=[self.ymin, self.ymax])
-					#plt.title('Bandwidth = ' + parsed_arguments.bwMethod[0] + \
-					#					'. Logarithmic density. \n' + self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle)
+					
 					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
@@ -755,42 +750,6 @@ class Disperse_Plotter():
 					DMParticles_kernelPlot_wFilaments_log_Zoomed.colorbar(line_segmentsDMlen_kernel_log_zoom, cax=cax, orientation='horizontal')
 					plt.tight_layout()
 					
-
-					""""
-					DMParticles_kernelPlot_wFilaments_log_Zoomed, ax_kernel_wfil_log_zoom = plt.subplots()
-					plt.subplot(211)
-					ax_kernel_wfil_log_zoom.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-					ax_kernel_wfil_log_zoom.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0] + \
-										'. Logarithmic density. \n' + self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle) 
-					ax_kernel_wfil_log_zoom.set_xlim([self.xmin, self.xmax])
-					ax_kernel_wfil_log_zoom.set_ylim([self.ymin, self.ymax])
-					line_segmentsDMlen_kernel_log_zoom = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
-					ax_kernel_wfil_log_zoom.add_collection(line_segmentsDMlen_kernel_log_zoom)
-					Cbar_kernelwFil_log_zoom = DMParticles_kernelPlot_wFilaments_log_Zoomed.colorbar(line_segmentsDMlen_kernel_log_zoom)
-					Cbar_kernelwFil_log_zoom.set_clim(vmin=0, vmax=40)
-					plt.xlim(80, 170)
-					plt.ylim(150,250)
-					plt.xlabel('$\mathregular{x}$' + LegendText)
-					plt.ylabel('$\mathregular{y}$' + LegendText)
-
-					plt.subplot(212)
-					ax_kernel_wfil_log_zoom.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-					ax_kernel_wfil_log_zoom.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0] + \
-										'. Logarithmic density. \n' + self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle) 
-					ax_kernel_wfil_log_zoom.set_xlim([self.xmin, self.xmax])
-					ax_kernel_wfil_log_zoom.set_ylim([self.ymin, self.ymax])
-					line_segmentsDMlen_kernel_log_zoom = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
-					ax_kernel_wfil_log_zoom.add_collection(line_segmentsDMlen_kernel_log_zoom)
-					Cbar_kernelwFil_log_zoom = DMParticles_kernelPlot_wFilaments_log_Zoomed.colorbar(line_segmentsDMlen_kernel_log_zoom)
-					Cbar_kernelwFil_log_zoom.set_clim(vmin=0, vmax=40)
-					plt.xlim(100, 150)
-					plt.ylim(170,230)
-					plt.xlabel('$\mathregular{x}$' + LegendText)
-					plt.ylabel('$\mathregular{y}$' + LegendText)
-					"""
-					
-						
-
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			if HistogramPlots:
@@ -900,7 +859,6 @@ class Disperse_Plotter():
 		Creates a pickle file of certain data unless it already exist.
 		Removes the old pickle files if any of the mask directions are changed.
 		"""
-		time_start = time.clock()
 		# Determines folder name of pickle files
 		cachedir_foldername_extra = self.model + 'npart'+str(self.nPart)
 		if self.SigmaArg:
@@ -914,10 +872,10 @@ class Disperse_Plotter():
 		if HOMEPC == 0:
 			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
 		else:
-			#cachedir='/mn/stornext/u3/aleh/Masters_project/PythonCaches/Disperse_analysis/' + cachedir_foldername_extra + '/'
 			cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/' + cachedir_foldername_extra + '/'
 		if not os.path.isdir(cachedir):
 			os.makedirs(cachedir)
+
 		# Pickle filenames and folder directory
 		Boundary_check_cachefn = cachedir + "check_boundary_compact.p"
 		Mask_slice_cachefn = cachedir + "mask_slice.p"
@@ -941,7 +899,7 @@ class Disperse_Plotter():
 			pickle.dump(Pickle_check_list, open(Pickle_check_fn, 'wb'))
 
 		if os.path.isfile(Disperse_data_check_fn):
-			# Read filament data from the skeleton file
+			## Read filament data from the skeleton file
 			print "reading from filament data pickle file..."
 			Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data = pickle.load(open(Disperse_data_check_fn, 'rb'))
 		else:
