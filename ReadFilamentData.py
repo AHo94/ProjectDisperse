@@ -1,15 +1,15 @@
 import numpy as np
 import os
+import time
 
 class read_disperse_output():
 	""" 
 	This class reads the skeleton output file from DisPerSE.
 	All data sets are assumed to be 3D
 	"""
-	def __init__(self, directory, UnitConverter, FilamentLimit = False):
+	def __init__(self, directory, UnitConverter, FilamentLimit=False):
 		self.directory = directory
 		self.UnitConverter = UnitConverter
-		self.dimensions = dimensions
 		self.FilamentLimit = FilamentLimit
 
 	def ReadFile(self, filename):
@@ -93,8 +93,8 @@ class read_disperse_output():
 		CP_type = []
 		i = 1
 		counter = 0
-		while i < len(CriticalPoints):
-			Info = CriticalPoints[i]
+		while i < len(self.CriticalPoints):
+			Info = self.CriticalPoints[i]
 			"""
 			# This saves all points
 			CritPointXpos.append(float(Info[1])*self.UnitConverter)
@@ -102,7 +102,7 @@ class read_disperse_output():
 			CritPointZpos.append(float(Info[3])*self.UnitConverter)
 			CP_persistent_pair.append(int(Info[5]))
 			"""
-			Filament_connections = int(CriticalPoints[i+1][0])
+			Filament_connections = int(self.CriticalPoints[i+1][0])
 			Number_filaments_connecting_to_CP.append(Filament_connections)
 			CP_type.append(int(Info[0]))
 			Temp_filID = []
@@ -114,8 +114,8 @@ class read_disperse_output():
 				CritPointZpos.append(float(Info[3])*self.UnitConverter)
 				CP_persistent_pair.append(int(Info[5]))
 				for j in range(1,Filament_connections+1):
-					Temp_CPID.append(int(CriticalPoints[i+j+1][0]))
-					Temp_filID.append(int(CriticalPoints[i+j+1][1]))
+					Temp_CPID.append(int(self.CriticalPoints[i+j+1][0]))
+					Temp_filID.append(int(self.CriticalPoints[i+j+1][1]))
 				Critpts_filamentID.append(np.array(Temp_filID))
 				CP_id_of_connecting_filament.append(np.array(Temp_CPID))
 			#else:
@@ -127,15 +127,23 @@ class read_disperse_output():
 		CritPointXpos = np.asarray(CritPointXpos)
 		CritPointYpos = np.asarray(CritPointYpos)
 		CritPointZpos = np.asarray(CritPointZpos)
-		return CritPointYpos, CritPointYpos, CritPointZpos, CP_type, CP_persistent_pair, Critpts_filamentID, CP_id_of_connecting_filament, Number_filaments_connecting_to_CP
+		return_list = [
+				CritPointXpos, CritPointYpos, CritPointZpos, 
+				CP_type, CP_persistent_pair, Critpts_filamentID, 
+				CP_id_of_connecting_filament, Number_filaments_connecting_to_CP
+				]
 
+		self.Critpts_filamentID_array = Critpts_filamentID
+		self.CP_type = CP_type
+		return return_list
+		
 	def sort_filament_coordinates(self):
 		""" Sort filament coordinate data """
 		print 'Sorting filament coordinate data'
-		if self.FilamentLimit is not False:
-			NFils = int(self.Filaments[0][0])
+		if self.FilamentLimit is False:
+			self.NFils = int(self.Filaments[0][0])
 		else:
-			NFils = FilamentLimit
+			self.NFils = self.FilamentLimit
 
 		FilamentPos = []
 		FilID = []
@@ -173,7 +181,7 @@ class read_disperse_output():
 			NewID += 1
 			if self.FilamentLimit is not False:
 				if k >= self.FilamentLimit:
-					NFils = len(xdimPos)
+					self.NFils = len(xdimPos)
 					break
 
 		FilamentPos = np.array(FilamentPos)
@@ -181,15 +189,94 @@ class read_disperse_output():
 		xdimPos = np.array(xdimPos)
 		ydimPos = np.array(ydimPos)
 		zdimPos = np.array(zdimPos)
-		return FilamentPos, xdimPos, ydimPos, zdimPos, NFilamentPoints
+		self.PairIDS = PairIDS
+		return_list = [self.NFils, FilamentPos, xdimPos, ydimPos, zdimPos, NFilamentPoints, FilID, PairIDS]
+		return return_list
+
+	def sort_cp_data(self):
+		""" Sorts data under the section CRITICAL POINT DATA in the skeleton file """
+		print 'Sorting data of filaments and critical points'
+		header_count_critpoint = int(self.CriticalPointsData[0][0])
+		Persistence_ratio = []
+		Persistence_nsigmas = []
+		Persistence = []
+		Persistence_pair = []
+		Parent_index = []
+		Parent_log_index = []
+		log_CritPoint_field_value = []
+		CritPoint_field_value = []
+		CritPoint_cell = []
+
+		for i in range(1, len(self.CriticalPointsData)):
+			if i <= header_count_critpoint:
+				continue
+			else:
+				if i <= len(self.Critpts_filamentID_array)+header_count_critpoint:
+					# Do not include critical points that are not connected to filaments
+					Persistence_ratio.append(float(self.CriticalPointsData[i][0]))
+					Persistence_nsigmas.append(float(self.CriticalPointsData[i][1]))
+					Persistence.append(float(self.CriticalPointsData[i][2]))
+					Persistence_pair.append(int(self.CriticalPointsData[i][3]))
+					Parent_index.append(int(self.CriticalPointsData[i][4]))
+					Parent_log_index.append(int(self.CriticalPointsData[i][5]))
+					log_CritPoint_field_value.append(float(self.CriticalPointsData[i][6]))
+					CritPoint_field_value.append(float(self.CriticalPointsData[i][7]))
+					CritPoint_cell.append(float(self.CriticalPointsData[i][8]))
 		
+		return_list = [
+				Persistence_ratio, Persistence_nsigmas, Persistence, 
+				Persistence_pair, Parent_index, Parent_log_index, 
+				log_CritPoint_field_value, CritPoint_field_value, CritPoint_cell
+				]
+		self.Persistence_nsigmas_array = np.asarray(Persistence_nsigmas)
+		return return_list
+
+	def sort_filament_data(self):
+		""" Sorts data under the section FILAMENT DATA of the skeleton file """
+		header_count_filament = int(self.FilamentsData[0][0])
+		Filament_field_value = []
+		orientation = []
+		Filament_cell = []
+		log_Filament_field_value = []
+		Filament_type = []
+
+		for j in range(1, len(self.FilamentsData)):
+			if j <= header_count_filament:
+				continue
+			else:
+				Filament_field_value.append(float(self.FilamentsData[j][0]))
+				orientation.append(int(self.FilamentsData[j][1]))
+				Filament_cell.append(float(self.FilamentsData[j][2]))
+				log_Filament_field_value.append(float(self.FilamentsData[j][3]))
+				Filament_type.append(int(self.FilamentsData[j][4]))
+
+		# Give filaments persistence nsigma value based on the nsigma value of the connected maxima CP.
+		maximas = np.where(np.array(self.CP_type) == 3)[0]
+		maxima_nsigmas = self.Persistence_nsigmas_array[maximas]
+		Filament_sigma = np.zeros(self.NFils-1)
+		for i in range(self.NFils-1):
+			CP_maxima_index = self.PairIDS[i][1]
+			Filament_sigma[i] = self.Persistence_nsigmas_array[CP_maxima_index]
+
+		return_list = [
+				Filament_field_value, orientation, Filament_cell,
+				log_Filament_field_value, Filament_type, Filament_sigma
+				]
+		return return_list
+
 	def get_data(self, filename):
 		""" Recieves all info based on the filament input """
 		self.ReadFile(filename)
 		CP_coordinate_data = self.sort_cp_coordinates()
 		Filament_coordinate_data = self.sort_filament_coordinates()
-
+		CP_data = self.sort_cp_data()
+		Filament_data = self.sort_filament_data()
+		Box_boundaries = [self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax]
 		#### In the main program, read these as single variables and have a function which unpacks them to self variables
 		#### Save first to pickle and read it before unpacking!
+		return Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data
 
-		return CP_coordinate_data, Filament_coordinate_data
+if __name__ == '__main__':
+	# Testing program
+	Instance = read_disperse_output('C:/Users/Alex/Documents/Masters_project/Disperse', 1)
+	a,b,c,d = Instance.get_data('lcdm_z0_testing/LCDM_z0_64PeriodicTesting/SkelconvOutput_LCDMz064.a.NDskl')
