@@ -484,11 +484,11 @@ class Disperse_Plotter():
 			if j <= header_count_filament:
 				continue
 			else:
-				self.Filament_field_value.append(float(self.FilamentsData[i][0]))
-				self.orientation.append(int(self.FilamentsData[i][1]))
-				self.Filament_cell.append(float(self.FilamentsData[i][2]))
-				self.log_Filament_field_value.append(float(self.FilamentsData[i][3]))
-				self.Filament_type.append(int(self.FilamentsData[i][4]))
+				self.Filament_field_value.append(float(self.FilamentsData[j][0]))
+				self.orientation.append(int(self.FilamentsData[j][1]))
+				self.Filament_cell.append(float(self.FilamentsData[j][2]))
+				self.log_Filament_field_value.append(float(self.FilamentsData[j][3]))
+				self.Filament_type.append(int(self.FilamentsData[j][4]))
 
 		self.Persistence_nsigmas = np.asarray(self.Persistence_nsigmas)
 		# Give filaments persistence nsigma value based on the nsigma value of the connected maxima CP.
