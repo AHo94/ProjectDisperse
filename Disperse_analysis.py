@@ -291,8 +291,10 @@ class Disperse_Plotter():
 			Xzoom, Yzoom = np.mgrid[ZoomArea[0]:ZoomArea[1]:200j, ZoomArea[2]:ZoomArea[3]:200j]
 			position_zoom = np.vstack([Xzoom.ravel(), Yzoom.ravel()])
 			Xmask = np.logical_and(PartPosX > ZoomArea[0], PartPosX < ZoomArea[1])
-			YMask = np.logical_and(PartPosY > ZoomArea[2], PartPosY < ZoomArea[3])
-			partpositions = np.vstack([PartPosX[Xmask], PartPosY[YMask]])
+			Ymask = np.logical_and(PartPosY > ZoomArea[2], PartPosY < ZoomArea[3])
+			print Xmask
+			print PartPosX[Xmask]
+			partpositions = np.vstack([PartPosX[Xmask], PartPosY[Ymask]])
 
 			Density, Log_density = Compute_density(partpositions, position_zoom, Xzoom, Yzoom, method_)
 			return Density, Log_density
@@ -303,7 +305,7 @@ class Disperse_Plotter():
 		# Scipy kernel stuff
 		Zoomed_density_list = []
 		Log_zoomed_density_list = []	
-		Interpolated_Z, Logarithmic_density = Compute_density(particle_positions, positions, X, Y, method)
+		#Interpolated_Z, Logarithmic_density = Compute_density(particle_positions, positions, X, Y, method)
 		for zoom_grid in self.Zoom_areas:
 			Zoomed_density, Log_zoomed_density = Density_zoomed(zoom_grid, method)
 			Zoomed_density_list.append(Zoomed_density)
@@ -335,6 +337,7 @@ class Disperse_Plotter():
 					Log_zoomed_density_list.append(Log_zoomed_density)
 		"""
 		print 'Interplation time:', time.clock() - time_start, 's'
+		print assss
 	 	return Interpolated_Z, Logarithmic_density, Zoomed_density_list, Log_zoomed_density_list
 
 	def Plot_Figures(self, filename, ndim=3):
