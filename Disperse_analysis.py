@@ -273,29 +273,65 @@ class Disperse_Plotter():
 
 		self.NumFilamentConnections = np.asarray(self.NumFilamentConnections)
 
-	def Interpolate_DM_particles(self):
+	def Interpolate_DM_particles(self, bandwidth):
 		time_start = time.clock()
 		X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
 		positions = np.vstack([X.ravel(), Y.ravel()])
-		values = np.vstack([PartPosX, PartPosY])
+		particle_positions = np.vstack([PartPosX, PartPosY])
+		self.Zoom_areas = [[70, 180, 140, 250], [100, 150, 170, 230]]
+
+		def Compute_density(particle_pos, grid_pos, x_array, y_array, method):
+			kernel = stats.gaussian_kde(particle_pos, bw_method=method)
+			Density = np.reshape(kernel(grid_pos).T, x_array.shape)
+			Log_density = np.log(Density/np.average(Density))
+			return Density, Log_density
+
+		def Density_zoomed(ZoomArea):
+			""" Calculates density profile of the zoomed in section. Assumes UnitConverter is on by default """
+			Xzoom, Yzoom = np.mgrid[ZoomArea[0]:ZoomArea[1]:200j, ZoomArea[2]:ZoomArea[3]:200j]
+			position_zoom = np.vstack([Xzoom.ravel(), Yzoom.ravel()])
+			Xmask = np.logical_and(PartPosX > ZoomArea[0], PartPosX < ZoomArea[1])
+			YMask = np.logical_and(PartPosY > ZoomArea[2], PartPosY < ZoomArea[3])
+			partpositions = np.vstack([PartPosX[Xmask], PartPosY[YMask]])
+
+			Density, Log_density = Compute_density(partpositions, position_zoom, Xzoom, Yzoom, bandwidth)
+			return Density, Log_density
 
 		# Scipy kernel stuff
+		Zoomed_density_list = []
+		Log_zoomed_density_list = []	
+		Interpolated_Z, Logarithmic_density = Compute_density(particle_positions, positions, X, Y, bandwidth)
+		for zoom_grid in self.Zoom_areas:
+			Zoomed_density, Log_zoomed_density = Density_zoomed(zoom_grid)
+			Zoomed_density_list.append(Zoomed_density)
+			Log_zoomed_density_list.append(Log_zoomed_density)
+		"""
 		if parsed_arguments.bwMethod[0] == 'Scott':
 			print 'Interpolating with bandwidth = Scott'
-			kernel = stats.gaussian_kde(values)
-			Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
-			Logarithmic_density = np.log(self.Interpolated_Z/np.average(self.Interpolated_Z))
+			Interpolated_Z, Logarithmic_density = Compute_density(particle_positions, positions, X, Y, 'Scott')
+			for zoom_grid in self.Zoom_areas:
+				Zoomed_density, Log_zoomed_density = Density_zoomed(zoom_grid)
+				Zoomed_density_list.append(Zoomed_density)
+				Log_zoomed_density_list.append(Log_zoomed_density)
+			#kernel = stats.gaussian_kde(particle_positions)
+			#Interpolated_Z = np.reshape(kernel(positions).T, X.shape)
+			#Logarithmic_density = np.log(self.Interpolated_Z/np.average(self.Interpolated_Z))
 		else:
 			Interpolated_Z = []
 			Logarithmic_density = []
 			for bw_args in parsed_arguments.bwMethod:
 				print 'Interpolating with bandwidth = ' + bw_args
-				kernel = stats.gaussian_kde(values, bw_method=float(bw_args))
-				Density = np.reshape(kernel(positions).T, X.shape)
+				#kernel = stats.gaussian_kde(particle_positions, bw_method=float(bw_args))
+				#Density = np.reshape(kernel(positions).T, X.shape)
+				Interpolated_Z, Logarithmic_density = Compute_density(particle_positions, positions, X, Y, float(bw_args))
 				Interpolated_Z.append(Density)
 				Logarithmic_density.append(np.log(Density/np.average(Density)))
-
-	 	return Interpolated_Z, Logarithmic_density
+				for zoom_grid in self.Zoom_areas:
+					Zoomed_density, Log_zoomed_density = Density_zoomed(zoom_grid)
+					Zoomed_density_list.append(Zoomed_density)
+					Log_zoomed_density_list.append(Log_zoomed_density)
+		"""
+	 	return Interpolated_Z, Logarithmic_density, Zoomed_density_list, Log_zoomed_density_list
 
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
@@ -504,7 +540,8 @@ class Disperse_Plotter():
 				ax_sigmacbar.set_ylim(self.ymin, self.ymax)
 				line_segments_sigma = LineCollection(self.CutOffFilamentSegments, array=self.Filament_sigma)
 				ax_sigmacbar.add_collection(line_segments_sigma)
-				FilPositions_2DProjection_sigmacolorbar.colorbar(line_segments_sigma)
+				CbarSigma =FilPositions_2DProjection_sigmacolorbar.colorbar(line_segments_sigma)
+				CbarSigma.set_clim(vmin=2, vmax=8)
 				ax_sigmacbar.set_xlabel('$\mathregular{x}$' + LegendText)
 				ax_sigmacbar.set_ylabel('$\mathregular{y}$' + LegendText)
 				plt.title('2D Position projection sliced box. \n Colorbar based on filament sigma value')
@@ -703,10 +740,10 @@ class Disperse_Plotter():
 											+ self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle) 
 					ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
 					ax_kernel_wfil.set_ylim([self.ymin, self.ymax])
-					line_segmentsDMlen_kernel = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
+					line_segmentsDMlen_kernel = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
 					ax_kernel_wfil.add_collection(line_segmentsDMlen_kernel)
 					Cbar_kernelwFil = DMParticles_kernelPlot_wFilaments.colorbar(line_segmentsDMlen_kernel)
-					Cbar_kernelwFil.set_clim(vmin = 0, vmax=25)
+					Cbar_kernelwFil.set_clim(vmin=0, vmax=max(ColorMapLengthMasked))
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 
@@ -717,20 +754,23 @@ class Disperse_Plotter():
 										'. Logarithmic density. \n' + self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle) 
 					ax_kernel_wfil_log.set_xlim([self.xmin, self.xmax])
 					ax_kernel_wfil_log.set_ylim([self.ymin, self.ymax])
-					line_segmentsDMlen_kernel_log = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
+					line_segmentsDMlen_kernel_log = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
 					ax_kernel_wfil_log.add_collection(line_segmentsDMlen_kernel_log)
 					Cbar_kernelwFil_log = DMParticles_kernelPlot_wFilaments_log.colorbar(line_segmentsDMlen_kernel_log)
-					Cbar_kernelwFil_log.set_clim(vmin=0, vmax=40)
+					Cbar_kernelwFil_log.set_clim(vmin=0, vmax=max(ColorMapLengthMasked))
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 
 					# Different zoom-ins on the density field with filaments
 					DMParticles_kernelPlot_wFilaments_log_Zoomed, ax_kernel_wfil_log_zoom = plt.subplots()#figsize=(12,16))
-					DMParticles_kernelPlot_wFilaments_log_Zoomed.suptitle('Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on average filament length'\
-											+'\n' + self.nPart_text + 'particle subsample. ' + self.Alternative_sigmaTitle)
+					DMParticles_kernelPlot_wFilaments_log_Zoomed.suptitle(
+							'Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on average filament length'
+							+'\n' + self.nPart_text + 'particle subsample. ' + self.Alternative_sigmaTitle)
 					plt.subplot(1,2,1)
 					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-					line_segmentsDMlen_kernel_log_zoom = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
+					line_segmentsDMlen_kernel_log_zoom = LineCollection(
+						self.CutOffFilamentSegments, linestyle='solid',
+						array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlabel('$\mathregular{x}$' + LegendText)
 					plt.ylabel('$\mathregular{y}$' + LegendText)
@@ -739,7 +779,9 @@ class Disperse_Plotter():
 					plt.subplot(1,2,2)
 					
 					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
-					line_segmentsDMlen_kernel_log_zoom = LineCollection(self.CutOffFilamentSegments, linestyle='solid', array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
+					line_segmentsDMlen_kernel_log_zoom = LineCollection(
+						self.CutOffFilamentSegments, linestyle='solid',
+						array=ColorMapLengthCutOff, cmap=plt.cm.rainbow)
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlim(100, 150)
 					plt.ylim(170,230)
@@ -761,49 +803,74 @@ class Disperse_Plotter():
 			if PlotFilaments:
 				FilPositions.savefig(self.results_dir + 'FilamentPositions' + self.ModelFilename)
 			if PlotFilamentsWCritPts:
-				FilPositions_WCritPts.savefig(self.results_dir + 'FilamentPositionsWithCritPts' + self.ModelFilename)
+				FilPositions_WCritPts.savefig(self.results_dir 
+					+ 'FilamentPositionsWithCritPts' + self.ModelFilename)
 			if Projection2D:
-				FilPositions_2DProjection.savefig(self.results_dir + '2DProjectedFilamentPosition' + self.ModelFilename)
+				FilPositions_2DProjection.savefig(self.results_dir 
+					+ '2DProjectedFilamentPosition' + self.ModelFilename)
 				if ColorBarZDir:
-					FilPositions_2DProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionColorBarZDir' + self.ModelFilename)
+					FilPositions_2DProjectionColorBarZDir.savefig(self.results_dir 
+						+ '2DProjectionColorBarZDir' + self.ModelFilename)
 				if ColorBarLength:
-					FilPositions_2DProjectionColobarLength.savefig(self.results_dir + '2DProjectionColobarLength' + self.ModelFilename)
+					FilPositions_2DProjectionColobarLength.savefig(self.results_dir 
+						+ '2DProjectionColobarLength' + self.ModelFilename)
 			if IncludeSlicing and PlotFilaments:
 				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + self.ModelFilename)
 				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + self.ModelFilename)
-				FilPositions_2DProjection_sigmacolorbar.savefig(self.results_dir + 'CutoffFilaments_sigmacolorbar' + self.ModelFilename)
+				FilPositions_2DProjection_sigmacolorbar.savefig(self.results_dir 
+					+ 'CutoffFilaments_sigmacolorbar' + self.ModelFilename)
 				if Projection2D:
-					FilPositions_2DProjectionSliced.savefig(self.results_dir + '2DProjectionSliced3dBox' + self.ModelFilename)
+					FilPositions_2DProjectionSliced.savefig(self.results_dir 
+						+ '2DProjectionSliced3dBox' + self.ModelFilename)
 				if ColorBarZDir:
-					FilPositions_2DSlicedProjectionColorBarZDir.savefig(self.results_dir + '2DProjectionSlicedColobarZDir' + self.ModelFilename)
+					FilPositions_2DSlicedProjectionColorBarZDir.savefig(self.results_dir 
+						+ '2DProjectionSlicedColobarZDir' + self.ModelFilename)
 				if ColorBarLength:
-					FilPositions_2DSlicedProjectionColorBarLen.savefig(self.results_dir + '2DProjectionSlicedColobarLength' + self.ModelFilename)
-					FilPositions_2DSlicedProjection_Cbar_CritPts.savefig(self.results_dir + '2DProjectionSliced_CbarLength_CritPts' + self.ModelFilename)
+					FilPositions_2DSlicedProjectionColorBarLen.savefig(self.results_dir 
+						+ '2DProjectionSlicedColobarLength' + self.ModelFilename)
+					FilPositions_2DSlicedProjection_Cbar_CritPts.savefig(self.results_dir 
+						+ '2DProjectionSliced_CbarLength_CritPts' + self.ModelFilename)
 			if IncludeDMParticles:
 				Masked_filename = 'Masked' + 'X'*MaskXdir + 'Y'*MaskYdir + 'Z'*MaskZdir
-
-				DMParticleHist.savefig(self.results_dir + 'DMParticleHistogram_' + Masked_filename + self.ModelFilename)
-				DMParticleHistwFilaments.savefig(self.results_dir + 'DMParticleHistogramWFIlaments' + Masked_filename + self.ModelFilename)
+				DMParticleHist.savefig(self.results_dir 
+					+ 'DMParticleHistogram_' + Masked_filename + self.ModelFilename)
+				DMParticleHistwFilaments.savefig(self.results_dir 
+					+ 'DMParticleHistogramWFIlaments' + Masked_filename + self.ModelFilename)
 				ONEDHistX.savefig(self.results_dir + 'DMParticle1DHistogramXposition' + self.ModelFilename)
-				DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir + 'DMParticleHistogramWFilaments_LengthCbar_' + Masked_filename + self.ModelFilename)
-				Interpolated_DM_particles_figure.savefig(self.results_dir + 'DMParticleHistogram_interpolated' + self.ModelFilename)
-				#Interpolated_DM_particles_figure_griddata.savefig(self.results_dir + 'DMParticleHistogram_interpolated_griddata' + self.ModelFilename)
+				DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir 
+					+ 'DMParticleHistogramWFilaments_LengthCbar_' + Masked_filename 
+					+ self.ModelFilename)
+				Interpolated_DM_particles_figure.savefig(self.results_dir 
+					+ 'DMParticleHistogram_interpolated' + self.ModelFilename)
+				
 				if len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod[0] == 'Scott':
 					DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott' + self.ModelFilename)
-					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott_logarithmic' + self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott_wFilaments'+ self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments_log.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott_wFilaments_logarithmic' + self.ModelFilename)
+					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir 
+						+ 'DMParticles_kernelPlot_Scott_logarithmic' + self.ModelFilename)
+					DMParticles_kernelPlot_wFilaments.savefig(self.results_dir 
+						+ 'DMParticles_kernelPlot_Scott_wFilaments'+ self.ModelFilename)
+					DMParticles_kernelPlot_wFilaments_log.savefig(self.results_dir 
+						+ 'DMParticles_kernelPlot_Scott_wFilaments_logarithmic' + self.ModelFilename)
 				elif len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod[0] != 'Scott':
-					DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot' + parsed_arguments.bwMethod[0] + self.ModelFilename)
-					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir + 'DMParticles_kernelPlot_logarithmic' + parsed_arguments.bwMethod[0] + self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments' + parsed_arguments.bwMethod[0] + self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments_log.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments_logarithmic' + parsed_arguments.bwMethod[0] + self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments_log_Zoomed.savefig(self.results_dir + 'DMParticles_kernelPlot_wFilaments_logarithmic_Zoomed' \
-														+ parsed_arguments.bwMethod[0] + self.ModelFilename)
+					DMParticles_kernelPlot.savefig(self.results_dir 
+						+ 'DMParticles_kernelPlot' + parsed_arguments.bwMethod[0] + self.ModelFilename)
+					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir
+						+ 'DMParticles_kernelPlot_logarithmic' + parsed_arguments.bwMethod[0] 
+						+ self.ModelFilename)
+					DMParticles_kernelPlot_wFilaments.savefig(self.results_dir
+						+ 'DMParticles_kernelPlot_wFilaments' + parsed_arguments.bwMethod[0] 
+						+ self.ModelFilename)
+					DMParticles_kernelPlot_wFilaments_log.savefig(self.results_dir 
+						+ 'DMParticles_kernelPlot_wFilaments_logarithmic' + parsed_arguments.bwMethod[0] 
+						+ self.ModelFilename)
+					DMParticles_kernelPlot_wFilaments_log_Zoomed.savefig(self.results_dir 
+						+ 'DMParticles_kernelPlot_wFilaments_logarithmic_Zoomed' 
+						+ parsed_arguments.bwMethod[0] + self.ModelFilename)
 				else:
-					DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_subplots' + self.ModelFilename)
-					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir + 'DMParticles_kernelPlot_subplots_logarithmic' + self.ModelFilename)
-
+					DMParticles_kernelPlot.savefig(self.results_dir 
+						+ 'DMParticles_kernelPlot_subplots' + self.ModelFilename)
+					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir 
+						+ 'DMParticles_kernelPlot_subplots_logarithmic' + self.ModelFilename)
 		else:
 			plt.show()
 
@@ -975,10 +1042,13 @@ class Disperse_Plotter():
 				Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + parsed_arguments.bwMethod[0] + '.p'
 				if os.path.isfile(Interpolated_density_cachefn):
 					print "reading from interpolated density pickle file, with bandwidth = " + parsed_arguments.bwMethod[0] + "..."
-					self.Interpolated_Z, self.Logarithmic_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
+					self.Interpolated_Z, self.Logarithmic_density,\
+					self.Zoomed_density, self.Log_zoomed_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 				else:
-					self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles()
-					pickle.dump([self.Interpolated_Z, self.Logarithmic_density], open(Interpolated_density_cachefn ,'wb'))
+					self.Interpolated_Z, self.Logarithmic_density,\
+					self.Zoomed_density, self.Log_zoomed_density = self.Interpolate_DM_particles()
+					pickle.dump([self.Interpolated_Z, self.Logarithmic_density, self.Zoomed_density, self.Log_zoomed_density],
+						open(Interpolated_density_cachefn ,'wb'))
 
 			elif len(parsed_arguments.bwMethod) > 1:
 				# If there are multiple arguments
@@ -988,11 +1058,11 @@ class Disperse_Plotter():
 					Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + bandwidths + '.p'
 					if os.path.isfile(Interpolated_density_cachefn):
 						print "reading from interpolated density pickle file, with bandwidth = " + bandwidths  + "..."
-						Density, Log_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
+						Density, Log_density, ZDensity, ZLogDensity = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
 					else:
-						Density, Log_density = self.Interpolate_DM_particles()
+						Density, Log_density, ZDensity, ZLogDensity = self.Interpolate_DM_particles(bandwidths)
 						pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
@@ -1306,7 +1376,7 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plotstest2_png/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/Bandwidth_test/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			
 			#LCDM_z0_binary = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir + 'BinaryPlots/', nPart=64, model='LCDM', redshift=0)
