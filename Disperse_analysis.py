@@ -293,7 +293,7 @@ class Disperse_Plotter():
 			position_zoom = np.vstack([Xzoom.ravel(), Yzoom.ravel()])
 			Xmask = np.logical_and(PartPosX > ZoomArea[0], PartPosX < ZoomArea[1])
 			Ymask = np.logical_and(PartPosY > ZoomArea[2], PartPosY < ZoomArea[3])
-			print len(PartPosX[Xmask]), len(PartPosY[YMask]), 'b'
+			print len(PartPosX[Xmask]), len(PartPosY[Ymask]), 'b'
 			partpositions = np.vstack([PartPosX[Xmask], PartPosY[Ymask]])
 
 			Density, Log_density = Compute_density(partpositions, position_zoom, Xzoom, Yzoom, method_)
