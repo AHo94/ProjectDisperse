@@ -1211,7 +1211,7 @@ if __name__ == '__main__':
 	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = parsed_arguments.Comparisons	# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 0 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
