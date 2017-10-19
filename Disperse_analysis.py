@@ -275,7 +275,7 @@ class Disperse_Plotter():
 
 	def Interpolate_DM_particles(self, bandwidth):
 		time_start = time.clock()
-		X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
+		X, Y = np.mgrid[self.xmin:self.xmax:200j, self.ymin:self.ymax:200j]
 		positions = np.vstack([X.ravel(), Y.ravel()])
 		particle_positions = np.vstack([PartPosX, PartPosY])
 		#self.Zoom_areas = [[70, 180, 140, 250], [100, 150, 170, 230]]
@@ -1184,7 +1184,7 @@ def Argument_parser():
 	parser.add_argument("-comp", "--Comparisons", help="If set to 1, compares different particle subsamples and/or gravity models. Default to 0", type=int, default=0)
 	parser.add_argument("-hpart", "--HigherPart", help="Includes particles of larger subsamples if set to 1."\
 					+ "Aimed to include seperate simulations for larger number of particles. Defalult to 0 (only runs 64^3 particles)", type=int, default=0)
-	parsed.add_argument("-sigcomp", "--SigmaComp", help="Set to 1 to compare simulations of different sigmas. 0 by default.", type=int, default=0)
+	parser.add_argument("-sigcomp", "--SigmaComp", help="Set to 1 to compare simulations of different sigmas. 0 by default.", type=int, default=0)
 
 	# Parse arguments
 	args = parser.parse_args()
