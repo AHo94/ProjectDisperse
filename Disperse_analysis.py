@@ -279,6 +279,7 @@ class Disperse_Plotter():
 		positions = np.vstack([X.ravel(), Y.ravel()])
 		particle_positions = np.vstack([PartPosX, PartPosY])
 		self.Zoom_areas = [[70, 180, 140, 250], [100, 150, 170, 230]]
+		print len(PartPosX), len(PartPosY), 'a'
 
 		def Compute_density(particle_pos, grid_pos, x_array, y_array, method):
 			kernel = stats.gaussian_kde(particle_pos, bw_method=method)
@@ -292,8 +293,7 @@ class Disperse_Plotter():
 			position_zoom = np.vstack([Xzoom.ravel(), Yzoom.ravel()])
 			Xmask = np.logical_and(PartPosX > ZoomArea[0], PartPosX < ZoomArea[1])
 			Ymask = np.logical_and(PartPosY > ZoomArea[2], PartPosY < ZoomArea[3])
-			print Xmask
-			print PartPosX[Xmask]
+			print len(PartPosX[Xmask]), len(PartPosY[YMask]), 'b'
 			partpositions = np.vstack([PartPosX[Xmask], PartPosY[Ymask]])
 
 			Density, Log_density = Compute_density(partpositions, position_zoom, Xzoom, Yzoom, method_)
