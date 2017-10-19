@@ -278,7 +278,7 @@ class Disperse_Plotter():
 		X, Y = np.mgrid[self.xmin:self.xmax:100j, self.ymin:self.ymax:100j]
 		positions = np.vstack([X.ravel(), Y.ravel()])
 		particle_positions = np.vstack([PartPosX, PartPosY])
-		self.Zoom_areas = [[70, 180, 140, 250], [100, 150, 170, 230]]
+		#self.Zoom_areas = [[70, 180, 140, 250], [100, 150, 170, 230]]
 
 		def Compute_density(particle_pos, grid_pos, x_array, y_array, method):
 			kernel = stats.gaussian_kde(particle_pos, bw_method=method)
@@ -308,13 +308,13 @@ class Disperse_Plotter():
 			method = float(bandwidth)
 
 		# Scipy kernel stuff
-		Zoomed_density_list = []
-		Log_zoomed_density_list = []	
+		#Zoomed_density_list = []
+		#Log_zoomed_density_list = []	
 		Interpolated_Z, Logarithmic_density = Compute_density(particle_positions, positions, X, Y, method)
-		for zoom_grid in self.Zoom_areas:
-			Zoomed_density, Log_zoomed_density = Density_zoomed(zoom_grid, method)
-			Zoomed_density_list.append(Zoomed_density)
-			Log_zoomed_density_list.append(Log_zoomed_density)
+		#for zoom_grid in self.Zoom_areas:
+		#	Zoomed_density, Log_zoomed_density = Density_zoomed(zoom_grid, method)
+		#	Zoomed_density_list.append(Zoomed_density)
+		#	Log_zoomed_density_list.append(Log_zoomed_density)
 		"""
 		if parsed_arguments.bwMethod[0] == 'Scott':
 			print 'Interpolating with bandwidth = Scott'
@@ -342,7 +342,7 @@ class Disperse_Plotter():
 					Log_zoomed_density_list.append(Log_zoomed_density)
 		"""
 		print 'Interplation time:', time.clock() - time_start, 's'
-		return Interpolated_Z, Logarithmic_density, Zoomed_density_list, Log_zoomed_density_list
+		return Interpolated_Z, Logarithmic_density#, Zoomed_density_list, Log_zoomed_density_list
 
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
@@ -778,7 +778,7 @@ class Disperse_Plotter():
 							'Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on average filament length'
 							+'\n' + self.nPart_text + 'particle subsample. ' + self.Alternative_sigmaTitle)
 					plt.subplot(1,2,1)
-					plt.imshow(np.rot90(self.Log_zoomed_density[0]), extent=[70, 180, 140, 250])
+					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[70, 180, 140, 250])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(
 						self.CutOffFilamentSegments, linestyle='solid',
 						array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
@@ -789,7 +789,7 @@ class Disperse_Plotter():
 					plt.ylim(140,250)
 					plt.subplot(1,2,2)
 					
-					plt.imshow(np.rot90(self.Log_zoomed_density[0]), extent=[100, 150, 170, 230])
+					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[100, 150, 170, 230])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(
 						self.CutOffFilamentSegments, linestyle='solid',
 						array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
@@ -1054,36 +1054,36 @@ class Disperse_Plotter():
 				Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + parsed_arguments.bwMethod[0] + '.p'
 				if os.path.isfile(Interpolated_density_cachefn):
 					print "reading from interpolated density pickle file, with bandwidth = " + parsed_arguments.bwMethod[0] + "..."
-					self.Interpolated_Z, self.Logarithmic_density,\
-					self.Zoomed_density, self.Log_zoomed_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
+					self.Interpolated_Z, self.Logarithmic_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
+					#self.Zoomed_density, self.Log_zoomed_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 				else:
-					self.Interpolated_Z, self.Logarithmic_density,\
-					self.Zoomed_density, self.Log_zoomed_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
-					pickle.dump([self.Interpolated_Z, self.Logarithmic_density, self.Zoomed_density, self.Log_zoomed_density],
+					self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
+					#self.Zoomed_density, self.Log_zoomed_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
+					pickle.dump([self.Interpolated_Z, self.Logarithmic_density],
 						open(Interpolated_density_cachefn ,'wb'))
 
 			elif len(parsed_arguments.bwMethod) > 1:
 				# If there are multiple arguments
 				self.Interpolated_Z = []
 				self.Logarithmic_density = []
-				self.Zoomed_density = []
-				self.Log_zoomed_density = []
+				#self.Zoomed_density = []
+				#self.Log_zoomed_density = []
 				for bandwidths in parsed_arguments.bwMethod:
 					Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + bandwidths + '.p'
 					if os.path.isfile(Interpolated_density_cachefn):
 						print "reading from interpolated density pickle file, with bandwidth = " + bandwidths  + "..."
-						Density, Log_density, ZDensity, ZLogDensity = pickle.load(open(Interpolated_density_cachefn, 'rb'))
+						Density, Log_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
-						self.Zoomed_density.append(ZDensity)
-						self.Log_zoomed_density.append(ZLogDensity)
+						#self.Zoomed_density.append(ZDensity)
+						#self.Log_zoomed_density.append(ZLogDensity)
 					else:
-						Density, Log_density, ZDensity, ZLogDensity = self.Interpolate_DM_particles(bandwidths)
-						pickle.dump([Density, Log_density, ZDensity, ZLogDensity], open(Interpolated_density_cachefn ,'wb'))
+						Density, Log_density = self.Interpolate_DM_particles(bandwidths)
+						pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
-						self.Zoomed_density.append(ZDensity)
-						self.Log_zoomed_density.append(ZLogDensity)
+						#self.Zoomed_density.append(ZDensity)
+						#self.Log_zoomed_density.append(ZLogDensity)
 
 		if not Comparison:
 			if self.savefile == 2:
@@ -1184,6 +1184,7 @@ def Argument_parser():
 	parser.add_argument("-comp", "--Comparisons", help="If set to 1, compares different particle subsamples and/or gravity models. Default to 0", type=int, default=0)
 	parser.add_argument("-hpart", "--HigherPart", help="Includes particles of larger subsamples if set to 1."\
 					+ "Aimed to include seperate simulations for larger number of particles. Defalult to 0 (only runs 64^3 particles)", type=int, default=0)
+	parsed.add_argument("-sigcomp", "--SigmaComp", help="Set to 1 to compare simulations of different sigmas. 0 by default.", type=int, default=0)
 
 	# Parse arguments
 	args = parser.parse_args()
@@ -1211,7 +1212,7 @@ if __name__ == '__main__':
 	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = parsed_arguments.Comparisons	# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
 	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
-	SigmaComparison = 1 		# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
+	SigmaComparison = parsed_arguments.SigmaComp 	# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
 	# Run simulation for different models. Set to 1 to run them. 
