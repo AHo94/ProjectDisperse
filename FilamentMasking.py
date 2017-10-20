@@ -2,6 +2,11 @@ import numpy as np
 import time
 
 class FilamentMasking():
+	"""
+	This class masks the filament given a masking boundary.
+	Filaments within the given boundary are included, while the rest are ignored.
+	Also includes filaments which gets 'cut off' outside the boundary.
+	"""
 	def __init__(self, FilamentPos, xpoints, ypoints, zpoints, lengths, NumFilaments, mask_dir, boundaries):
 		self.FilamentPos = FilamentPos
 		self.xdimPos = xpoints
