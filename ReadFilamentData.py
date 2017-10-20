@@ -54,7 +54,7 @@ class read_disperse_output():
 						break
 					else:
 						self.Filaments.append(dataFil)
-					if self.FilamentLimit is not False:
+					if self.FilamentLimit:
 						if SETLIMIT == self.FilamentLimit+1:
 							break
 						SETLIMIT += 1
@@ -140,7 +140,7 @@ class read_disperse_output():
 	def sort_filament_coordinates(self):
 		""" Sort filament coordinate data """
 		print 'Sorting filament coordinate data'
-		if self.FilamentLimit is False:
+		if not self.FilamentLimit:
 			self.NFils = int(self.Filaments[0][0])
 		else:
 			self.NFils = self.FilamentLimit
@@ -179,7 +179,7 @@ class read_disperse_output():
 			zdimPos.append(np.array(ztemp))
 			k += int(Filstuff[-1])+1
 			NewID += 1
-			if self.FilamentLimit is not False:
+			if self.FilamentLimit:
 				if k >= self.FilamentLimit:
 					self.NFils = len(xdimPos)
 					break
@@ -278,5 +278,8 @@ class read_disperse_output():
 
 if __name__ == '__main__':
 	# Testing program
-	Instance = read_disperse_output('C:/Users/Alex/Documents/Masters_project/Disperse', 1)
-	a,b,c,d = Instance.get_data('lcdm_z0_testing/LCDM_z0_64PeriodicTesting/SkelconvOutput_LCDMz064.a.NDskl')
+	#Instance = read_disperse_output('C:/Users/Alex/Documents/Masters_project/Disperse', 1)
+	#a,b,c,d, e = Instance.get_data('lcdm_z0_testing/LCDM_z0_64PeriodicTesting/SkelconvOutput_LCDMz064.a.NDskl')
+	# At UiO 
+	Instance = read_disperse_output('/mn/stornext/d5/aleh', 1)
+	a,b,c,d,e = Instance.get_data('lcdm_testing/LCDM_z0_64PeriodicTesting/SkelconvOutput_LCDMz064.a.NDskl')
