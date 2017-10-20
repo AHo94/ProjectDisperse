@@ -704,7 +704,7 @@ class Disperse_Plotter():
 					ax_kernel.set_title('Bandwidth = Scott')
 					cbar = DMParticles_kernelPlot.colorbar(cax)
 				elif len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod[0] != 'Scott':
-					cax = ax_kernel.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					cax = ax_kernel.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					ax_kernel.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0]) 
 					cbar = DMParticles_kernelPlot.colorbar(cax)
 				else:
@@ -726,7 +726,7 @@ class Disperse_Plotter():
 					ax_kernel_log.set_title('Bandwidth = Scott. Logarithmic')
 					cbar_log = DMParticles_kernelPlot_logarithmic.colorbar(cax_log)
 				elif len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod[0] != 'Scott':
-					cax_log = ax_kernel_log.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					cax_log = ax_kernel_log.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					ax_kernel_log.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0] + '. Logarithmic') 
 					cbar_log = DMParticles_kernelPlot_logarithmic.colorbar(cax_log)
 				else:
@@ -746,7 +746,7 @@ class Disperse_Plotter():
 				if parsed_arguments.bwMethod[0] == 'Scott' or len(parsed_arguments.bwMethod) == 1:
 					# Filaments overplotted on the density field
 					DMParticles_kernelPlot_wFilaments, ax_kernel_wfil = plt.subplots()
-					ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					ax_kernel_wfil.imshow(np.rot90(self.Interpolated_Z), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					ax_kernel_wfil.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0] +'\n' 
 											+ self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle) 
 					ax_kernel_wfil.set_xlim([self.xmin, self.xmax])
@@ -760,7 +760,7 @@ class Disperse_Plotter():
 
 					# Filaments overplotted on the logarithmic scaled density field
 					DMParticles_kernelPlot_wFilaments_log, ax_kernel_wfil_log = plt.subplots()
-					ax_kernel_wfil_log.imshow(np.rot90(self.Logarithmic_density[0]), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					ax_kernel_wfil_log.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					ax_kernel_wfil_log.set_title('Bandwidth = ' + parsed_arguments.bwMethod[0] + \
 										'. Logarithmic density. \n' + self.nPart_text + ' particle subsample. ' + self.Alternative_sigmaTitle) 
 					ax_kernel_wfil_log.set_xlim([self.xmin, self.xmax])
@@ -778,7 +778,7 @@ class Disperse_Plotter():
 							'Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on average filament length'
 							+'\n' + self.nPart_text + 'particle subsample. ' + self.Alternative_sigmaTitle)
 					plt.subplot(1,2,1)
-					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[70, 180, 140, 250])
+					plt.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(
 						self.CutOffFilamentSegments, linestyle='solid',
 						array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
@@ -787,9 +787,9 @@ class Disperse_Plotter():
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.xlim(70, 180)
 					plt.ylim(140,250)
+
 					plt.subplot(1,2,2)
-					
-					plt.imshow(np.rot90(self.Logarithmic_density[0]), extent=[100, 150, 170, 230])
+					plt.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(
 						self.CutOffFilamentSegments, linestyle='solid',
 						array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
@@ -1048,7 +1048,6 @@ class Disperse_Plotter():
 			if not os.path.isdir(Masked_density_dir):
 				os.makedirs(Masked_density_dir)
 
-			print Masked_density_dir
 			if len(parsed_arguments.bwMethod) == 1:
 				# If there is only one argument
 				Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + parsed_arguments.bwMethod[0] + '.p'
