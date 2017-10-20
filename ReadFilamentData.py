@@ -5,7 +5,7 @@ import time
 class read_disperse_output():
 	""" 
 	This class reads the skeleton output file from DisPerSE.
-	All data sets are assumed to be 3D
+	All data sets are assumed to be 3D.
 	"""
 	def __init__(self, directory, UnitConverter, FilamentLimit=False):
 		self.directory = directory
