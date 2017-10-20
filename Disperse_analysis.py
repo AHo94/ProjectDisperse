@@ -344,6 +344,44 @@ class Disperse_Plotter():
 		print 'Interplation time:', time.clock() - time_start, 's'
 		return Interpolated_Z, Logarithmic_density#, Zoomed_density_list, Log_zoomed_density_list
 
+	def compute_zoomed_density(self, bandwidth):
+		print 'compute zoomed density'
+		self.Zoom_areas = [[70, 180, 140, 250], [100, 150, 170, 230]]
+
+		def Compute_density(particle_pos, grid_pos, x_array, y_array, method):
+			kernel = stats.gaussian_kde(particle_pos, bw_method=method)
+			Density = np.reshape(kernel(grid_pos).T, x_array.shape)
+			Log_density = np.log(Density/np.average(Density))
+			return Density, Log_density
+
+		def Density_zoomed(ZoomArea, method_):
+			""" Calculates density profile of the zoomed in section. Assumes UnitConverter is on by default """
+			Xzoom, Yzoom = np.mgrid[ZoomArea[0]:ZoomArea[1]:200j, ZoomArea[2]:ZoomArea[3]:200j]
+			position_zoom = np.vstack([Xzoom.ravel(), Yzoom.ravel()])
+			Particle_positions = np.column_stack([PartPosX, PartPosY, PartPosZ])
+			mask = np.logical_and(
+				np.logical_and(Particle_positions[:,0] > ZoomArea[0], Particle_positions[:,0] < ZoomArea[1]),
+				np.logical_and(Particle_positions[:,1] > ZoomArea[2], Particle_positions[:,1] < ZoomArea[3])
+				)
+			Masked_positions = Particle_positions[mask]
+			MaskedX = Masked_positions[:,0]
+			MaskedY = Masked_positions[:,1]
+			partpositions = np.vstack([MaskedX, MaskedY])
+			Density, Log_density = Compute_density(partpositions, position_zoom, Xzoom, Yzoom, method_)
+			return Density, Log_density
+
+		if bandwidth != 'Scott':
+			method = float(bandwidth)
+
+		# Scipy kernel stuff
+		Zoomed_density_list = []
+		Log_zoomed_density_list = []	
+		for zoom_grid in self.Zoom_areas:
+			Zoomed_density, Log_zoomed_density = Density_zoomed(zoom_grid, method)
+			Zoomed_density_list.append(Zoomed_density)
+			Log_zoomed_density_list.append(Log_zoomed_density)
+		return Zoomed_density_list, Log_zoomed_density_list
+		
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
 		print 'Plotting'
@@ -657,7 +695,8 @@ class Disperse_Plotter():
 				plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar.'\
 						 +'Colors indicate length of a filament.')
 
-				# Interpolated smoothed out 2D histogram of dark matter particles
+				# Interpolated smoothed out 2D histogram of dark matter particles. Interpolation with NonUniformImage function.
+				"""
 				Interpolated_DM_particles_figure = plt.figure()
 				ax_interpolated = plt.axes()
 				#ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal',\
@@ -672,7 +711,7 @@ class Disperse_Plotter():
 				plt.xlabel('$\mathregular{x}$' + LegendText)
 				plt.ylabel('$\mathregular{y}$' + LegendText)
 				plt.title('Dark matter particle density field, interpolated')
-				
+				"""
 				# Values in griddata = mass. Currently normalized to 1.
 				# Compute mass as 0.23*rho_{crit,0}*Volume_box/Num_particles
 				# See discussion with Max
@@ -682,7 +721,7 @@ class Disperse_Plotter():
 				H_0 = 0.7*100*1e3/Mpc
 				mass = 0.23*(3*H_0**2/(8*np.pi*G_grav))*(256.0*Mpc/0.7)**3/(512.0)**3griddata')
 				"""
-					
+			if parsed_arguments.bwMethod and IncludeDMParticles:
 				if parsed_arguments.bwMethod != 'Scott':
 					if len(parsed_arguments.bwMethod) == 2:
 						Column = 2
@@ -775,10 +814,10 @@ class Disperse_Plotter():
 					# Different zoom-ins on the density field with filaments
 					DMParticles_kernelPlot_wFilaments_log_Zoomed, ax_kernel_wfil_log_zoom = plt.subplots()#figsize=(12,16))
 					DMParticles_kernelPlot_wFilaments_log_Zoomed.suptitle(
-							'Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on average filament length'
+							'Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on filament length'
 							+'\n' + self.nPart_text + 'particle subsample. ' + self.Alternative_sigmaTitle)
 					plt.subplot(1,2,1)
-					plt.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					plt.imshow(np.rot90(self.Log_zoomed_density[0]), extent=[70, 180, 140, 250])#extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(
 						self.CutOffFilamentSegments, linestyle='solid',
 						array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
@@ -789,7 +828,7 @@ class Disperse_Plotter():
 					plt.ylim(140,250)
 
 					plt.subplot(1,2,2)
-					plt.imshow(np.rot90(self.Logarithmic_density), extent=[self.xmin, self.xmax, self.ymin, self.ymax])
+					plt.imshow(np.rot90(self.Log_zoomed_density[1]), extent=[100,150,170,230]) #extent=[self.xmin, self.xmax, self.ymin, self.ymax])
 					line_segmentsDMlen_kernel_log_zoom = LineCollection(
 						self.CutOffFilamentSegments, linestyle='solid',
 						array=ColorMapLengthMasked, cmap=plt.cm.rainbow)
@@ -852,9 +891,9 @@ class Disperse_Plotter():
 				DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir 
 					+ 'DMParticleHistogramWFilaments_LengthCbar_' + Masked_filename 
 					+ self.ModelFilename)
-				Interpolated_DM_particles_figure.savefig(self.results_dir 
-					+ 'DMParticleHistogram_interpolated' + self.ModelFilename)
-				
+				#Interpolated_DM_particles_figure.savefig(self.results_dir 
+				#	+ 'DMParticleHistogram_interpolated' + self.ModelFilename)
+			if parsed_arguments.bwMethod and IncludeDMParticles:
 				if len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod[0] == 'Scott':
 					DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott' + self.ModelFilename)
 					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir 
@@ -1050,23 +1089,27 @@ class Disperse_Plotter():
 
 			if len(parsed_arguments.bwMethod) == 1:
 				# If there is only one argument
-				Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + parsed_arguments.bwMethod[0] + '.p'
+				Interpolated_density_cachefn = Masked_density_dir + 'InterpolatedDensities_bandwidth_' + parsed_arguments.bwMethod[0] + '.p'
+				Interpolated_density_zoomed_cachefn = Masked_density_dir + 'InterpolatedDensities_Zoomed_bandwidth_' + parsed_arguments.bwMethod[0] + '.p'
 				if os.path.isfile(Interpolated_density_cachefn):
 					print "reading from interpolated density pickle file, with bandwidth = " + parsed_arguments.bwMethod[0] + "..."
 					self.Interpolated_Z, self.Logarithmic_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
-					#self.Zoomed_density, self.Log_zoomed_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 				else:
 					self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
-					#self.Zoomed_density, self.Log_zoomed_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
 					pickle.dump([self.Interpolated_Z, self.Logarithmic_density],
 						open(Interpolated_density_cachefn ,'wb'))
+
+				if os.path.isfile(Interpolated_density_zoomed_cachefn):
+					self.Zoomed_density, self.Log_zoomed_density = pickle.load(open(Interpolated_density_zoomed_cachefn, 'rb'))
+				else:
+					self.Zoomed_density, self.Log_zoomed_density = self.compute_zoomed_density(parsed_arguments.bwMethod[0])
+					pickle.dump([self.Zoomed_density, self.Log_zoomed_density],
+					 	open(Interpolated_density_zoomed_cachefn, 'wb'))
 
 			elif len(parsed_arguments.bwMethod) > 1:
 				# If there are multiple arguments
 				self.Interpolated_Z = []
 				self.Logarithmic_density = []
-				#self.Zoomed_density = []
-				#self.Log_zoomed_density = []
 				for bandwidths in parsed_arguments.bwMethod:
 					Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + bandwidths + '.p'
 					if os.path.isfile(Interpolated_density_cachefn):
@@ -1074,16 +1117,11 @@ class Disperse_Plotter():
 						Density, Log_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
-						#self.Zoomed_density.append(ZDensity)
-						#self.Log_zoomed_density.append(ZLogDensity)
 					else:
 						Density, Log_density = self.Interpolate_DM_particles(bandwidths)
 						pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
-						#self.Zoomed_density.append(ZDensity)
-						#self.Log_zoomed_density.append(ZLogDensity)
-
 		if not Comparison:
 			if self.savefile == 2:
 				print 'Done! No files saved.'
@@ -1195,7 +1233,7 @@ if __name__ == '__main__':
 
 	# Filament and dark matter particle plotting
 	FilamentLimit = 0			# Limits the number of lines read from file. Reads all if 0
-	PlotFilaments = 1			# Set 1 to plot actual filaments
+	PlotFilaments = 0			# Set 1 to plot actual filaments
 	PlotFilamentsWCritPts = 0	# Set to 1 to plot filaments with critical points
 	Projection2D = 0			# Set to 1 to plot a 2D projection of the 3D case
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
