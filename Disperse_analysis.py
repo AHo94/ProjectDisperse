@@ -1087,10 +1087,9 @@ class Disperse_Plotter():
 
 			if not os.path.isdir(Masked_density_dir):
 				os.makedirs(Masked_density_dir)
-                
-            
-            Particle_positions = [PartPosX, PartPosY, PartPosZ]
-            Box = [self.xmin, self.xmax, self.ymin, self.ymax]
+			
+			Particle_positions = [PartPosX, PartPosY, PartPosZ]
+			Box = [self.xmin, self.xmax, self.ymin, self.ymax]
 			if len(parsed_arguments.bwMethod) == 1:
 				# If there is only one argument
 				Interpolated_density_cachefn = Masked_density_dir + 'InterpolatedDensities_bandwidth_' + parsed_arguments.bwMethod[0] + '.p'
