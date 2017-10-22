@@ -60,7 +60,7 @@ class InterpolateDensity():
 			MaskedX = Masked_positions[:,0]
 			MaskedY = Masked_positions[:,1]
 			partpositions = np.vstack([MaskedX, MaskedY])
-			Density, Log_density = Compute_density(partpositions, position_zoom, Xzoom)
+			Density, Log_density = self.Compute_density(partpositions, position_zoom, Xzoom)
 			return Density, Log_density
 
 		Zoomed_density_list = []
