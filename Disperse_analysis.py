@@ -1094,14 +1094,14 @@ class Disperse_Plotter():
 				# If there is only one argument
 				Interpolated_density_cachefn = Masked_density_dir + 'InterpolatedDensities_bandwidth_' + parsed_arguments.bwMethod[0] + '.p'
 				Interpolated_density_zoomed_cachefn = Masked_density_dir + 'InterpolatedDensities_Zoomed_bandwidth_' + parsed_arguments.bwMethod[0] + '.p'
-                Interpolation_instance = InterpolateDensity.InterpolateDensity(parsed_arguments.bwMethod[0], Particle_positions, Box)
+				Interpolation_instance = InterpolateDensity.InterpolateDensity(parsed_arguments.bwMethod[0], Particle_positions, Box)
 				if os.path.isfile(Interpolated_density_cachefn):
 					print "reading from interpolated density pickle file, with bandwidth = " + parsed_arguments.bwMethod[0] + "..."
 					self.Interpolated_Z, self.Logarithmic_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 				else:
 					#self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
 					self.Interpolated_Z, self.Logarithmic_density = Interpolation_instance.Interpolate_DM_particles()
-                    pickle.dump([self.Interpolated_Z, self.Logarithmic_density],
+					pickle.dump([self.Interpolated_Z, self.Logarithmic_density],
 						open(Interpolated_density_cachefn ,'wb'))
 
 				if os.path.isfile(Interpolated_density_zoomed_cachefn):
@@ -1109,7 +1109,7 @@ class Disperse_Plotter():
 				else:
 					#self.Zoomed_density, self.Log_zoomed_density = self.compute_zoomed_density(parsed_arguments.bwMethod[0])
 					self.Zoomed_density, self.Log_zoomed_density = Interpolation_instance.compute_zoomed_density([[70, 180, 140, 250], [100, 150, 170, 230]])
-                    pickle.dump([self.Zoomed_density, self.Log_zoomed_density],
+					pickle.dump([self.Zoomed_density, self.Log_zoomed_density],
 					 	open(Interpolated_density_zoomed_cachefn, 'wb'))
 
 			elif len(parsed_arguments.bwMethod) > 1:
@@ -1118,7 +1118,7 @@ class Disperse_Plotter():
 				self.Logarithmic_density = []
 				for bandwidths in parsed_arguments.bwMethod:
 					Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + bandwidths + '.p'
-                    Interpolation_instance = InterpolateDensity.InterpolateDensity(bandwidths, Particle_positions, Box)
+					Interpolation_instance = InterpolateDensity.InterpolateDensity(bandwidths, Particle_positions, Box)
 					if os.path.isfile(Interpolated_density_cachefn):
 						print "reading from interpolated density pickle file, with bandwidth = " + bandwidths  + "..."
 						Density, Log_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
@@ -1126,8 +1126,8 @@ class Disperse_Plotter():
 						self.Logarithmic_density.append(Log_density)
 					else:
 						#Density, Log_density = self.Interpolate_DM_particles(bandwidths)
-						
-                        pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
+						Density, Log_density = Interpolation_instance.Interpolate_DM_particles()
+						pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
 			
