@@ -1073,7 +1073,6 @@ class Disperse_Plotter():
 
 		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
 			# Pickle file for interpolated densities using Gaussian KDE
-			"""
 			Density_dir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/Interpolated_Densities/'
 			if not os.path.isdir(Density_dir):
 				os.makedirs(Density_dir)
@@ -1088,24 +1087,30 @@ class Disperse_Plotter():
 
 			if not os.path.isdir(Masked_density_dir):
 				os.makedirs(Masked_density_dir)
-
+                
+            
+            Particle_positions = [PartPosX, PartPosY, PartPosZ]
+            Box = [self.xmin, self.xmax, self.ymin, self.ymax]
 			if len(parsed_arguments.bwMethod) == 1:
 				# If there is only one argument
 				Interpolated_density_cachefn = Masked_density_dir + 'InterpolatedDensities_bandwidth_' + parsed_arguments.bwMethod[0] + '.p'
 				Interpolated_density_zoomed_cachefn = Masked_density_dir + 'InterpolatedDensities_Zoomed_bandwidth_' + parsed_arguments.bwMethod[0] + '.p'
+                Interpolation_instance = InterpolateDensity.InterpolateDensity(parsed_arguments.bwMethod[0], Particle_positions, Box)
 				if os.path.isfile(Interpolated_density_cachefn):
 					print "reading from interpolated density pickle file, with bandwidth = " + parsed_arguments.bwMethod[0] + "..."
 					self.Interpolated_Z, self.Logarithmic_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 				else:
-					self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
-					pickle.dump([self.Interpolated_Z, self.Logarithmic_density],
+					#self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
+					self.Interpolated_Z, self.Logarithmic_density = Interpolation_instance.Interpolate_DM_particles()
+                    pickle.dump([self.Interpolated_Z, self.Logarithmic_density],
 						open(Interpolated_density_cachefn ,'wb'))
 
 				if os.path.isfile(Interpolated_density_zoomed_cachefn):
 					self.Zoomed_density, self.Log_zoomed_density = pickle.load(open(Interpolated_density_zoomed_cachefn, 'rb'))
 				else:
-					self.Zoomed_density, self.Log_zoomed_density = self.compute_zoomed_density(parsed_arguments.bwMethod[0])
-					pickle.dump([self.Zoomed_density, self.Log_zoomed_density],
+					#self.Zoomed_density, self.Log_zoomed_density = self.compute_zoomed_density(parsed_arguments.bwMethod[0])
+					self.Zoomed_density, self.Log_zoomed_density = Interpolation_instance.compute_zoomed_density([[70, 180, 140, 250], [100, 150, 170, 230]])
+                    pickle.dump([self.Zoomed_density, self.Log_zoomed_density],
 					 	open(Interpolated_density_zoomed_cachefn, 'wb'))
 
 			elif len(parsed_arguments.bwMethod) > 1:
@@ -1114,22 +1119,24 @@ class Disperse_Plotter():
 				self.Logarithmic_density = []
 				for bandwidths in parsed_arguments.bwMethod:
 					Interpolated_density_cachefn = Masked_density_dir + "InterpolatedDensities_bandwidth_" + bandwidths + '.p'
+                    Interpolation_instance = InterpolateDensity.InterpolateDensity(bandwidths, Particle_positions, Box)
 					if os.path.isfile(Interpolated_density_cachefn):
 						print "reading from interpolated density pickle file, with bandwidth = " + bandwidths  + "..."
 						Density, Log_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
 					else:
-						Density, Log_density = self.Interpolate_DM_particles(bandwidths)
-						pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
+						#Density, Log_density = self.Interpolate_DM_particles(bandwidths)
+						
+                        pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
-			"""
-			Particle_positions = [PartPosX, PartPosY, PartPosZ]
-			Box = [self.xmin, self.xmax, self.ymin, self.ymax]
-			Interpolation_instance = InterpolateDensity.InterpolateDensity(parsed_arguments.bwMethod[0], Particle_positions, Box)
-			self.Interpolated_Z, self.Logarithmic_density = Interpolation_instance.Interpolate_DM_particles()
-			self.Zoomed_density, self.Log_zoomed_density = Interpolation_instance.compute_zoomed_density([[70, 180, 140, 250], [100, 150, 170, 230]])
+			
+			#Particle_positions = [PartPosX, PartPosY, PartPosZ]
+			#Box = [self.xmin, self.xmax, self.ymin, self.ymax]
+			#Interpolation_instance = InterpolateDensity.InterpolateDensity(parsed_arguments.bwMethod[0], Particle_positions, Box, npoints=10j)
+			#self.Interpolated_Z, self.Logarithmic_density = Interpolation_instance.Interpolate_DM_particles()
+			#self.Zoomed_density, self.Log_zoomed_density = Interpolation_instance.compute_zoomed_density([[70, 180, 140, 250], [100, 150, 170, 230]])
 
 		if not Comparison:
 			if self.savefile == 2:
@@ -1434,7 +1441,7 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/Bandwidth_test/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Plotstest2/Bandwidth_test/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			
 			if parsed_arguments.HigherPart:
