@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 import time
+import datetime
 
 class InterpolateDensity():
 	"""
@@ -23,20 +24,20 @@ class InterpolateDensity():
 			self.method = bandwidth
 
 	def Compute_density(self, particle_pos, grid_pos, x_array):
+		time_start = datetime.datetime.time(datetime.datetime.now())
 		kernel = stats.gaussian_kde(particle_pos, bw_method=self.method)
 		Density = np.reshape(kernel(grid_pos).T, x_array.shape)
 		Log_density = np.log(Density/np.average(Density))
+		print 'Interpolation started: ', time_start , ' -- Interpolation finished: ', datetime.datetime.time(datetime.datetime.now())
 		return Density, Log_density
 
 	def Interpolate_DM_particles(self):
 		""" Interpolates dark matter particles within the whole grid """
 		print 'Interpolating dark matter particle density'
-		time_start = time.clock()
 		X, Y = np.mgrid[self.xmin:self.xmax:self.npoints, self.ymin:self.ymax:self.npoints]
 		positions = np.vstack([X.ravel(), Y.ravel()])
 		particle_positions = np.vstack([self.PartPosX, self.PartPosY])
 		Interpolated_Z, Logarithmic_density = self.Compute_density(particle_positions, positions, X)
-		print 'Interplation time:', time.clock() - time_start, 's'
 		return Interpolated_Z, Logarithmic_density
 
 	def compute_zoomed_density(self, Zoom_areas):
