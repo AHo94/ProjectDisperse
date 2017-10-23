@@ -137,6 +137,17 @@ class Disperse_Plotter():
 
 		self.NFils = len(self.xdimPos)
 
+	def Filter_filaments2(self, Sigma_threshold):
+		maximas = np.where(np.array(self.CP_type) == 3)[0]
+		maxima_nsigmas = np.array(self.Persistence_nsigmas)[maximas]
+		filaments_included = []
+		for i in range(self.NFils-1):
+			CP_maxima_index = self.PairIDS[i][1]
+			if maxima_nsigmas[CP_maxima_index] >= Sigma_threshold:
+				filaments_included.append(i)
+		print np.array(filaments_included)
+		print len(filaments_included)
+		
 	def NumParticles_per_filament(self):
 		""" 
 		Checks the number of dark matter filaments per filament.
@@ -982,8 +993,8 @@ class Disperse_Plotter():
 		self.Number_filament_connections()
 		if Sigma_threshold:
 			# Filters filament based on a given sigma threshold. Still work in progress
-			self.Filter_filaments(Sigma_threshold)
-
+			self.Filter_filaments2(Sigma_threshold)
+		
 		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
 			# Pickle file for interpolated densities using Gaussian KDE
 			
@@ -1263,7 +1274,7 @@ if __name__ == '__main__':
 			#LCDM_z0_128Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_128_dir+'Plots/', nPart=128, model='LCDM', redshift=0)
 			#NConn_128PartLCDM, FilLen_128PartLCDM, NPts_128PartLCDM = LCDM_z0_128Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDM128.a.NDskl')
 			
-			#LCDM_nsig4Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Sigma4PlotsTest/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
+			#LCDM_nsig4Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'Sigma4PlotsTest/', nPart=64, model='LCDM', redshift=0, SigmaArg=4)
 			#NConn_nsig4, FilLen_nsig4, NPts_nsig4 = LCDM_nsig4Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig4.a.NDskl')
 				
 			if SigmaComparison:
