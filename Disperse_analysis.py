@@ -14,9 +14,7 @@ from functools import partial
 # Numpy, matplotlib and scipy
 import matplotlib as mpl
 from matplotlib import cm
-from matplotlib import colors as mcolors
 from matplotlib.collections import LineCollection
-from matplotlib.colors import ListedColormap, BoundaryNorm
 from mpl_toolkits.mplot3d import Axes3D
 from scipy import stats
 from scipy import spatial
@@ -715,7 +713,7 @@ class Disperse_Plotter():
 					plt.ylabel('$\mathregular{y}$' + LegendText)
 
 					# Different zoom-ins on the density field with filaments
-					DMParticles_kernelPlot_wFilaments_log_Zoomed, ax_kernel_wfil_log_zoom = plt.subplots(figsize=(14,14))
+					DMParticles_kernelPlot_wFilaments_log_Zoomed, ax_kernel_wfil_log_zoom = plt.subplots(figsize=(8,8))
 					DMParticles_kernelPlot_wFilaments_log_Zoomed.suptitle(
 							'Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on filament length'
 							+'\n' + self.nPart_text + 'particle subsample. ' + self.Alternative_sigmaTitle)
