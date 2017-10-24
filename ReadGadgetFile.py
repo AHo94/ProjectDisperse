@@ -108,8 +108,11 @@ class Read_Gadget_file():
 		This process takes a very long time!
 		"""
 		print 'Creating a KDTree for the dark matter particles'
-		DM_points = np.dstack((self.PartPos[:,0].ravel(), self.PartPos[:,1].ravel(), self.PartPos[:,2].ravel()))
-		self.DM_tree = spatial.KDTree(DM_points[0])
+		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
+		print DM_points.shape
+		assert (DM_points[0].shape)[1] == 3, "Something is wrong with the shape of DM_points: %s" %(str(DM_points[0].shape))
+		self.DM_tree = spatial.cKDTree(DM_points[0])
+		print "DONE"
 
 	def Histogram_and_bins(self):
 		Hist, xedges, yedges = np.histogram2d(self.PartPosX, self.PartPosY, bins=50)
