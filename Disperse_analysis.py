@@ -709,11 +709,11 @@ class Disperse_Plotter():
 					ax_kernel_wfil_log.add_collection(line_segmentsDMlen_kernel_log)
 					Cbar_kernelwFil_log = DMParticles_kernelPlot_wFilaments_log.colorbar(line_segmentsDMlen_kernel_log)
 					Cbar_kernelwFil_log.set_clim(vmin=0, vmax=max(ColorMapLengthMasked))
-					plt.xlabel('$\mathregular{x}$' + LegendText)
-					plt.ylabel('$\mathregular{y}$' + LegendText)
+					#plt.xlabel('$\mathregular{x}$' + LegendText)
+					#plt.ylabel('$\mathregular{y}$' + LegendText)
 
 					# Different zoom-ins on the density field with filaments
-					DMParticles_kernelPlot_wFilaments_log_Zoomed, ax_kernel_wfil_log_zoom = plt.subplots(figsize=(8,8))
+					DMParticles_kernelPlot_wFilaments_log_Zoomed, ax_kernel_wfil_log_zoom = plt.subplots(figsize=(8.5,8.5))
 					DMParticles_kernelPlot_wFilaments_log_Zoomed.suptitle(
 							'Zoomed in segments of the (logarithmic) density field with filaments \n Colorbar based on filament length'
 							+'\n' + self.nPart_text + 'particle subsample. ' + self.Alternative_sigmaTitle)
@@ -723,10 +723,10 @@ class Disperse_Plotter():
 						self.CutOffFilamentSegments, linestyle='solid',
 						array=ColorMapLengthMasked, cmap=plt.cm.autumn)
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
-					plt.xlabel('$\mathregular{x}$' + LegendText)
-					plt.ylabel('$\mathregular{y}$' + LegendText)
 					plt.xlim(70, 180)
 					plt.ylim(140,250)
+					#plt.xlabel('$\mathregular{x}$' + LegendText)
+					#plt.ylabel('$\mathregular{y}$' + LegendText)
 
 					plt.subplot(2,2,2)
 					plt.imshow(np.rot90(self.Log_zoomed_density[1]), extent=[100,150,175,225]) #extent=[self.xmin, self.xmax, self.ymin, self.ymax])
@@ -736,8 +736,8 @@ class Disperse_Plotter():
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlim(100, 150)
 					plt.ylim(175,225)
-					plt.xlabel('$\mathregular{x}$' + LegendText)
-					plt.ylabel('$\mathregular{y}$' + LegendText)
+					#plt.xlabel('$\mathregular{x}$' + LegendText)
+					#plt.ylabel('$\mathregular{y}$' + LegendText)
 					
 					plt.subplot(2,2,3)
 					plt.imshow(np.rot90(self.Log_zoomed_density[2]), extent=[120, 145, 190, 215])
@@ -747,8 +747,8 @@ class Disperse_Plotter():
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlim(120, 145)
 					plt.ylim(190,215)
-					plt.xlabel('$\mathregular{x}$' + LegendText)
-					plt.ylabel('$\mathregular{y}$' + LegendText)
+					#plt.xlabel('$\mathregular{x}$' + LegendText)
+					#plt.ylabel('$\mathregular{y}$' + LegendText)
 					
 					plt.subplot(2,2,4)
 					plt.imshow(np.rot90(self.Log_zoomed_density[2]), extent=[115, 125, 195, 210])
@@ -758,11 +758,13 @@ class Disperse_Plotter():
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlim(115, 125)
 					plt.ylim(195,210)
-					plt.xlabel('$\mathregular{x}$' + LegendText)
-					plt.ylabel('$\mathregular{y}$' + LegendText)
+					#plt.xlabel('$\mathregular{x}$' + LegendText)
+					#plt.ylabel('$\mathregular{y}$' + LegendText)
 
+					DMParticles_kernelPlot_wFilaments_log_Zoomed.text(0.5, 0.04, '$\mathregular{x}$' + LegendText, ha='center', fontsize=16)
+					DMParticles_kernelPlot_wFilaments_log_Zoomed.text(0.04, 0.5, '$\mathregular{y}$' + LegendText, va='center', rotation='vertical', fontsize=16)
 					# Colorbar at the bottom of the figure. [left, bottom, width, height], % of box
-					cax = DMParticles_kernelPlot_wFilaments_log_Zoomed.add_axes([0.95, 0.08, 0.03, 0.8])
+					cax = DMParticles_kernelPlot_wFilaments_log_Zoomed.add_axes([0.92, 0.08, 0.03, 0.8])
 					DMParticles_kernelPlot_wFilaments_log_Zoomed.colorbar(line_segmentsDMlen_kernel_log_zoom, cax=cax)#, orientation='horizontal')
 					#plt.tight_layout()
 					
