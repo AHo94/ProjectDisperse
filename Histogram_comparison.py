@@ -15,7 +15,7 @@ class Histogram_Comparison():
 		self.SigmaComparison = False
 
 		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
-		if not os.path.isdir(self.results_dir):
+		if not os.path.isdir(self.results_dir) and savefile==1:
 			os.makedirs(self.results_dir)
 
 		if LCDM and not SymmA and not SymmB:
@@ -276,12 +276,58 @@ class Histogram_Comparison():
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
-			ConnectedHistComparison.savefig(self.results_dir + 'HistNumConnectedFilamentsComparison_AllParticles_nsig' + str(nsigma) + self.filetype)
-			LengthHistComparison.savefig(self.results_dir + 'HistLengthComparison_AllParticles_nsig' + str(nsigma) + self.filetype)
-			NPointsHistComparison.savefig(self.results_dir + 'HistNPointsComparison_AllParticles_nsig' + str(nsigma) + self.filetype)
+			ConnectedHistComparison.savefig(self.results_dir 
+				+ 'HistNumConnectedFilamentsComparison_AllParticles_nsig' + str(nsigma) + self.filetype)
+			LengthHistComparison.savefig(self.results_dir 
+				+ 'HistLengthComparison_AllParticles_nsig' + str(nsigma) + self.filetype)
+			NPointsHistComparison.savefig(self.results_dir 
+				+ 'HistNPointsComparison_AllParticles_nsig' + str(nsigma) + self.filetype)
 		elif self.savefile == 2:
 			print 'Done! No histograms to plot.'
 		else:
 			plt.show()
 		plt.close('all')
 
+	def Compare_mg_models(self, Nconnections, FilLengths, NptsPerFilament):
+		""" 
+		Compares all stuff for different models.
+		Relative deviation compares models with respect to the LCDM model.
+		The function assumes that LCDM data is the first in the data list.
+		"""
+		def relative_deviation(data, index):
+			delta = (data[0] - data[index])/data[0]
+			return delta
+
+		N = len(Nconnections)
+		ConnectedHistComparison = plt.figure()
+		Legends = ['$\mathregular{\Lambda}$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6']
+		
+		# Histogram for number of filament connections per filament
+		NconComparison = plt.figure()
+		for i in range(N):
+			DataMin = min(Nconnections[i])
+			DataMax = max(Nconnections[i])
+			BinSize = (DataMax - DataMin)/(0.5) + 1
+			BinList = np.linspace(DataMin, DataMax, BinSize)
+			print BinSize
+			plt.hist(Nconnections[i], align='mid', rwidth=1, bins=BinList, normed=False, histtype='step')
+		plt.xlabel('Number of connected filaments per filament')
+		plt.ylabel('Number of occurances')
+		plt.title('Histogram comparison of number of filament connections for each filmanet')
+		plt.legend(Legends)
+		plt.show()
+		# Relative deviation of number of filament connections
+		"""
+		NconComparison = plt.figure()
+		for i in range(1,N):
+			Delta = relative_deviation(Nconnections, i)
+			DataMin = min(Delta)
+			DataMax = max(Delta)
+			BinSize = (DataMax - DataMin)/(0.5) + 1
+			BinList = np.linspace(DataMin, DataMax, BinSize)
+			plt.hist(Delta, align='mid', rwidth=1, bins=BinList, normed=False, histtype='step')
+		plt.xlabel('Number of connected filaments per filament')
+		plt.ylabel('Number of occurances')
+		plt.title('Histogram comparison of number of filament connections for each filmanet')
+		plt.legend(Legends)
+		"""
