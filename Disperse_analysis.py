@@ -62,7 +62,7 @@ class Disperse_Plotter():
 		# Creates folder when saving figure
 		#script_dir = os.path.dirname(__file__) 	# Script running directory
 		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
-		if not os.path.isdir(self.results_dir):
+		if not os.path.isdir(self.results_dir) and savefile == 1:
 			os.makedirs(self.results_dir)
 
 		if type(redshift) != int and type(redshift) != float:
@@ -74,6 +74,16 @@ class Disperse_Plotter():
 			self.ModelFilename = 'SymmA' + 'z' + str(redshift) + filetype
 		elif model == 'SymmB':
 			self.ModelFilename = 'SymmB' + 'z' + str(redshift) + filetype
+		elif model == 'SymmC':
+			self.ModelFilename = 'SymmC' + 'z' + str(redshift) + filetype
+		elif model == 'SymmD':
+			self.ModelFilename = 'SymmD' + 'z' + str(redshift) + filetype
+		elif model == 'fofr4':
+			self.ModelFilename = 'fofr4' + 'z' + str(redshift) + filetype
+		elif model == 'fofr5':
+			self.ModelFilename = 'fofr5' + 'z' + str(redshift) + filetype
+		elif model == 'fofr6':
+			self.ModelFilename = 'fofr6' + 'z' + str(redshift) + filetype
 		else:
 			raise ValueError('Model name not properly set')
 		self.model = model
@@ -709,8 +719,8 @@ class Disperse_Plotter():
 					ax_kernel_wfil_log.add_collection(line_segmentsDMlen_kernel_log)
 					Cbar_kernelwFil_log = DMParticles_kernelPlot_wFilaments_log.colorbar(line_segmentsDMlen_kernel_log)
 					Cbar_kernelwFil_log.set_clim(vmin=0, vmax=max(ColorMapLengthMasked))
-					#plt.xlabel('$\mathregular{x}$' + LegendText)
-					#plt.ylabel('$\mathregular{y}$' + LegendText)
+					plt.xlabel('$\mathregular{x}$' + LegendText)
+					plt.ylabel('$\mathregular{y}$' + LegendText)
 
 					# Different zoom-ins on the density field with filaments
 					DMParticles_kernelPlot_wFilaments_log_Zoomed, ax_kernel_wfil_log_zoom = plt.subplots(figsize=(8.5,8.5))
@@ -725,8 +735,6 @@ class Disperse_Plotter():
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlim(70, 180)
 					plt.ylim(140,250)
-					#plt.xlabel('$\mathregular{x}$' + LegendText)
-					#plt.ylabel('$\mathregular{y}$' + LegendText)
 
 					plt.subplot(2,2,2)
 					plt.imshow(np.rot90(self.Log_zoomed_density[1]), extent=[100,150,175,225]) #extent=[self.xmin, self.xmax, self.ymin, self.ymax])
@@ -736,8 +744,6 @@ class Disperse_Plotter():
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlim(100, 150)
 					plt.ylim(175,225)
-					#plt.xlabel('$\mathregular{x}$' + LegendText)
-					#plt.ylabel('$\mathregular{y}$' + LegendText)
 					
 					plt.subplot(2,2,3)
 					plt.imshow(np.rot90(self.Log_zoomed_density[2]), extent=[120, 145, 190, 215])
@@ -747,8 +753,6 @@ class Disperse_Plotter():
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlim(120, 145)
 					plt.ylim(190,215)
-					#plt.xlabel('$\mathregular{x}$' + LegendText)
-					#plt.ylabel('$\mathregular{y}$' + LegendText)
 					
 					plt.subplot(2,2,4)
 					plt.imshow(np.rot90(self.Log_zoomed_density[2]), extent=[115, 125, 195, 210])
@@ -758,8 +762,6 @@ class Disperse_Plotter():
 					plt.gca().add_collection(line_segmentsDMlen_kernel_log_zoom)
 					plt.xlim(115, 125)
 					plt.ylim(195,210)
-					#plt.xlabel('$\mathregular{x}$' + LegendText)
-					#plt.ylabel('$\mathregular{y}$' + LegendText)
 
 					DMParticles_kernelPlot_wFilaments_log_Zoomed.text(0.5, 0.04, '$\mathregular{x}$' + LegendText, ha='center', fontsize=16)
 					DMParticles_kernelPlot_wFilaments_log_Zoomed.text(0.04, 0.5, '$\mathregular{y}$' + LegendText, va='center', rotation='vertical', fontsize=16)
@@ -896,7 +898,7 @@ class Disperse_Plotter():
 		self.Filament_type = Fil_data[4]
 		self.Filament_sigma = Fil_data[5]
 		
-	def Solve(self, filename, read_binary = 0, ndim=3, Sigma_threshold = False, robustness=False):
+	def Solve(self, filename, ndim=3, Sigma_threshold = False, robustness=False):
 		""" 
 		Runs the whole thing.
 		Creates a pickle file of certain data unless it already exist.
@@ -1025,7 +1027,6 @@ class Disperse_Plotter():
 					print "reading from interpolated density pickle file, with bandwidth = " + parsed_arguments.bwMethod[0] + "..."
 					self.Interpolated_Z, self.Logarithmic_density = pickle.load(open(Interpolated_density_cachefn, 'rb'))
 				else:
-					#self.Interpolated_Z, self.Logarithmic_density = self.Interpolate_DM_particles(parsed_arguments.bwMethod[0])
 					self.Interpolated_Z, self.Logarithmic_density = Interpolation_instance.Interpolate_DM_particles()
 					pickle.dump([self.Interpolated_Z, self.Logarithmic_density],
 						open(Interpolated_density_cachefn ,'wb'))
@@ -1033,7 +1034,6 @@ class Disperse_Plotter():
 				if os.path.isfile(Interpolated_density_zoomed_cachefn):
 					self.Zoomed_density, self.Log_zoomed_density = pickle.load(open(Interpolated_density_zoomed_cachefn, 'rb'))
 				else:
-					#self.Zoomed_density, self.Log_zoomed_density = self.compute_zoomed_density(parsed_arguments.bwMethod[0])
 					self.Zoomed_density, self.Log_zoomed_density = Interpolation_instance.compute_zoomed_density(self.Zoom_areas)
 					pickle.dump([self.Zoomed_density, self.Log_zoomed_density],
 					 	open(Interpolated_density_zoomed_cachefn, 'wb'))
@@ -1051,7 +1051,6 @@ class Disperse_Plotter():
 						self.Interpolated_Z.append(Density)
 						self.Logarithmic_density.append(Log_density)
 					else:
-						#Density, Log_density = self.Interpolate_DM_particles(bandwidths)
 						Density, Log_density = Interpolation_instance.Interpolate_DM_particles()
 						pickle.dump([Density, Log_density], open(Interpolated_density_cachefn ,'wb'))
 						self.Interpolated_Z.append(Density)
@@ -1163,6 +1162,7 @@ def Argument_parser():
 	parser.add_argument("-hpart", "--HigherPart", help="Includes particles of larger subsamples if set to 1."\
 					+ "Aimed to include seperate simulations for larger number of particles. Defalult to 0 (only runs 64^3 particles)", type=int, default=0)
 	parser.add_argument("-sigcomp", "--SigmaComp", help="Set to 1 to compare simulations of different sigmas. 0 by default.", type=int, default=0)
+	parser.add_argument("-modelcomp", "--ModelCompare", help="Set to 1 to compare all the modified gravity models. 0 by default.", type=int, default=0)
 
 	# Parse arguments
 	args = parser.parse_args()
@@ -1189,7 +1189,7 @@ if __name__ == '__main__':
 	# Histogram plots
 	HistogramPlots = 0			# Set to 1 to plot histograms
 	Comparison = parsed_arguments.Comparisons	# Set 1 if you want to compare different number of particles. Usual plots will not be plotted!
-	ModelCompare = 0 			# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
+	ModelCompare = parsed_arguments.ModelCompare 	# Set to 1 to compare histograms of different models. Particle comparisons will not be run.
 	SigmaComparison = parsed_arguments.SigmaComp 	# Set to 1 to compare histograms and/or plots based on different sigma values by MSE.
 								# Must also set Comparison=1 to compare histograms
 	
@@ -1197,6 +1197,11 @@ if __name__ == '__main__':
 	LCDM_model = 1 
 	SymmA_model = 0
 	SymmB_model = 0
+	SymmC_model = 0
+	SymmD_model = 0
+	fofr4_model = 0
+	fofr5_model = 0
+	fofr6_model = 0
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
@@ -1221,6 +1226,8 @@ if __name__ == '__main__':
 		print '   Will compare histograms for different models'
 	elif Comparison == 1 and ModelCompare == 0:
 		print '   Will compare histograms over different models or number of particles.'
+	if ModelCompare == 1 and HOMEPC:
+		LCDM_model = 0
 
 	UnitConverter = 256.0 if IncludeUnits == 1 else 1
 	### Slice selection can be chosen here
@@ -1350,7 +1357,7 @@ if __name__ == '__main__':
 			
 			if IncludeDMParticles == 1:
 				Gadget_instance = ReadGadgetFile.Read_Gadget_file(Mask_direction_check, Mask_boundary_list)
-				PartPosX, PartPosY, PartPosZ, DMHistogram, DMBinXedges, DMBinYedges, DM_KDTree = Gadget_instance.Get_particles(includeKDTree=False)
+				PartPosX, PartPosY, PartPosZ, DMHistogram, DMBinXedges, DMBinYedges, DM_KDTree = Gadget_instance.Get_particles('lcdm', includeKDTree=False)
 				"""
 				#SolveReadInstance = Read_solve_files()
 				SolveReadInstance = Read_Gadget_file()
@@ -1366,7 +1373,7 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'Plotstest2_png/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plotstest2_png/', nPart=64, model='LCDM', redshift=0)
 			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
 			
 			if parsed_arguments.HigherPart:
@@ -1488,3 +1495,56 @@ if __name__ == '__main__':
 					fig_filpersig.savefig(results_dir_filpersig + 'Filaments_per_sigma_Maxima' + str(N_sigmas) + '.png')
 					fig_filpersig_log.savefig(results_dir_filpersig + 'Filaments_per_sigma_Maxima'+ str(N_sigmas) + '_logarithmic.png')
 
+	if ModelCompare:
+		""" 
+		Runs for all modified gravity simulations.
+		All runs are on 256^3 particle subsample at sigma=5.
+		"""
+		lcdm_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/Sigma5/'
+		SymmA_dir = 'SymmA_data/SymmA_z0_256Particles/Sigma5/'
+		SymmB_dir = 'SymmB_data/SymmB_z0_256Particles/Sigma5/'
+		SymmB_dir = 'SymmC_data/SymmC_z0_256Particles/Sigma5/'
+		SymmB_dir = 'SymmD_data/SymmD_z0_256Particles/Sigma5/'
+		fofr4_dir = 'fofr4_data/fofr4_z0_256Particles/Sigma5/'
+		fofr5_dir = 'fofr4_data/fofr5_z0_256Particles/Sigma5/'
+		fofr6_dir = 'fofr4_data/fofr6_z0_256Particles/Sigma5/'
+		"""
+		LCDM_instance = Disperse_Plotter(savefile=0, savefigDirectory=lcdm_dir+'Plots/', nPart=256, model='LCDM', redshift=0, SigmaArg=5)
+		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0256_nsig5')
+
+		SymmA_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmA_dir+'Plots/', nPart=256, model='SymmA', redshift=0, SigmaArg=5)
+		NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0256_nsig5.a.NDskl')
+
+		SymmB_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmB_dir+'Plots/', nPart=256, model='SymmB', redshift=0, SigmaArg=5)
+		NummConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz0256_nsig5.a.NDskl')
+
+		SymmC_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmC_dir+'Plots/', nPart=256, model='SymmC', redshift=0, SigmaArg=5)
+		NummConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz0256_nsig5.a.NDskl')
+
+		SymmD_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmD_dir+'Plots/', nPart=256, model='SymmD', redshift=0, SigmaArg=5)
+		NummConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz0256_nsig5.a.NDskl')
+
+		fofr4_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr4_dir+'Plots/', nPart=256, model='fofr4', redshift=0, SigmaArg=5)
+		NummConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z0256_nsig5.a.NDskl')
+
+		fofr5_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr5_dir+'Plots/', nPart=256, model='fofr5', redshift=0, SigmaArg=5)
+		NummConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z0256_nsig5.a.NDskl')
+
+		fofr6_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr6_dir+'Plots/', nPart=256, model='fofr6', redshift=0, SigmaArg=5)
+		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr4_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0256_nsig5.a.NDskl')
+		"""
+
+		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
+		symma_64dir = 'SymmA_data/SymmA_z0_64Particles/'
+		LCDM_test = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_64dir+'Plots/', nPart=64, model='LCDM', redshift=0)
+		NNLCDM, FLLCDM, NPLCDM = LCDM_test.Solve(lcdm_64dir+'SkelconvOutput_LCDMz064.a.NDskl')
+
+		syma_test = Disperse_Plotter(savefile=2, savefigDirectory=symma_64dir+'Plots/', nPart=64, model='SymmA', redshift=0)
+		NNSymmA, FLSymmA, NPSymmA = syma_test.Solve(symma_64dir+'SkelconvOutput_SymmAz064Part.a.NDskl')
+
+		NumConnections_list = [NNLCDM, NNSymmA]
+		FilLengths_list = [FLLCDM, FLSymmA]
+		FilPoints_list = [NPLCDM, NPSymmA]
+
+		CompI = HComp.Histogram_Comparison(savefile=0, savefigDirectory='LOL/', savefile_directory='WHAT/', filetype=filetype, redshift=0, LCDM=1)
+		CompI.Compare_mg_models(NumConnections_list, FilLengths_list, FilPoints_list)

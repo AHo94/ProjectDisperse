@@ -6,7 +6,7 @@ class Read_Gadget_file():
 		self.Mask_check_list = mask_check
 		self.Boundary_list = boundary_list
 
-	def read_file(self):
+	def read_file(self, model):
 		""" 
 		Reads the gadget files from RAMSES 
 		Code by Bridget Falck
@@ -14,7 +14,7 @@ class Read_Gadget_file():
 		print 'Reading gadget files ...'
 		numfiles = 512
 		nparticles = 512
-		datadir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/lcdm/z0.000/data/gadgetfiles/'
+		datadir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/' + model + '/z0.000/data/gadgetfiles/'
 		filename = datadir+'gadget.'
 
 		self.PartPos = np.empty((nparticles**3,3),np.float32)
@@ -93,7 +93,7 @@ class Read_Gadget_file():
 		else:
 			self.mask = False
 
-		if self.mask is not False:
+		if self.mask:
 			self.PartPosX = self.PartPos[self.mask,0]
 			self.PartPosY = self.PartPos[self.mask,1]
 			self.PartPosZ = self.PartPos[self.mask,2]
@@ -119,12 +119,23 @@ class Read_Gadget_file():
 		Hist = Hist.T
 		return Hist, xedges, yedges
 
-	def Get_particles(self, includeKDTree=True):
-		self.read_file()
+	def Get_particles(self, modelfile, includeKDTree=True):
+		toggle = False
+		Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6']
+		for models in Model_check:
+			if modelfile == models:
+				toggle = True
+		if not toggle:
+			raise ValueError('Model input name %s not correctly set into the gadget file reader.' %modelfile)
+
+		self.read_file(modelfile)
 		self.Create_Mask()
-		Histogram, xedges, yedges = self.Histogram_and_bins()
+		#Histogram, xedges, yedges = self.Histogram_and_bins()
 		if includeKDTree:
 			self.Create_KDTree()
 		else:
 			self.DM_tree = None
+		Histogram = 1
+		xedges = 1
+		yedges = 1
 		return self.PartPosX, self.PartPosY, self.PartPosZ, Histogram, xedges, yedges, self.DM_tree
