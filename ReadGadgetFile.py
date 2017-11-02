@@ -91,9 +91,9 @@ class Read_Gadget_file():
 			self.mask = np.logical_and(np.logical_and(self.PartPos[:,2] < UpperBoundaryZDir, self.PartPos[:,2] > LowerBoundaryZDir),\
 									   np.logical_and(self.PartPos[:,1] < UpperBoundaryYDir, self.PartPos[:,1] > LowerBoundaryYDir))
 		else:
-			self.mask = False
+			self.mask = np.array([False])
 
-		if self.mask:
+		if self.mask.any():
 			self.PartPosX = self.PartPos[self.mask,0]
 			self.PartPosY = self.PartPos[self.mask,1]
 			self.PartPosZ = self.PartPos[self.mask,2]
