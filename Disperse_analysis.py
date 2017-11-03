@@ -978,7 +978,7 @@ class Disperse_Plotter():
 			else:
 				Mask_instance = FilamentMasking.FilamentMasking(
 						self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,
-						self.LengthSplitFilament , self.NFils, Mask_direction_check, Mask_boundary_list
+						self.FilLengths , self.NFils, Mask_direction_check, Mask_boundary_list
 						)
 				Mask_instance_variables = Mask_instance.Mask_slices()
 				Masked_critpts = MaskCritPts.Mask_CPs(
@@ -1373,8 +1373,8 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plotstest2_png/', nPart=64, model='LCDM', redshift=0)
-			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl')
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plotstest2_periodic_png/', nPart=128, model='LCDM', redshift=0)
+			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDMz0128.a.NDskl')
 			
 			if parsed_arguments.HigherPart:
 				LCDM_z0_128Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plotstest2_png/', nPart=128, model='LCDM', redshift=0)
