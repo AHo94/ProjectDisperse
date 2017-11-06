@@ -301,7 +301,6 @@ class Histogram_Comparison():
 		N = len(Nconnections)
 		ConnectedHistComparison = plt.figure()
 		Legends = ['$\mathregular{\Lambda}$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6']
-		
 		# Histogram for number of filament connections per filament
 		NconComparison = plt.figure()
 		for i in range(N):
@@ -309,13 +308,12 @@ class Histogram_Comparison():
 			DataMax = max(Nconnections[i])
 			BinSize = (DataMax - DataMin)/(0.5) + 1
 			BinList = np.linspace(DataMin, DataMax, BinSize)
-			print BinSize
 			plt.hist(Nconnections[i], align='mid', rwidth=1, bins=BinList, normed=False, histtype='step')
 		plt.xlabel('Number of connected filaments per filament')
 		plt.ylabel('Number of occurances')
+		plt.xscale('log')
 		plt.title('Histogram comparison of number of filament connections for each filmanet')
 		plt.legend(Legends)
-		plt.show()
 		# Relative deviation of number of filament connections
 		"""
 		NconComparison = plt.figure()
@@ -331,3 +329,33 @@ class Histogram_Comparison():
 		plt.title('Histogram comparison of number of filament connections for each filmanet')
 		plt.legend(Legends)
 		"""
+
+		# Histogram of filament length comparison
+		LengthHistComparison = plt.figure()
+		for i in range(N):
+			DataMin = min(FilLengths[i])
+			DataMax = max(FilLengths[i])
+			BinSize = (DataMax - DataMin)/(0.5) + 1
+			BinList = np.linspace(DataMin, DataMax, BinSize)
+			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=BinList, normed=False, histtype='step')
+		plt.xlabel('Filament length')
+		plt.ylabel('Number of occurances')
+		plt.xscale('log')
+		plt.title('Histogram comparison of filament lengths')
+		plt.legend(Legends)
+
+		# Number of filaments larger than a given length: N(>L)
+		lengths = np.linspace(np.min(np.min(FilamentLengths)), np.max(np.max(FilamentLengths)), 300)
+		distribution = []
+		for fils_len in FilamentLengths:
+			temp_dist = []
+				for lens in lengths:
+					Number_count = len(np.where(fils_lens >= lens)[0])
+					temp_dist.append(Number_count)
+				distribution.append(temp_dist)
+		FilLen_massfunc = plt.figure()
+		for i in range(len(distribution)):
+			plt.semilogx(lengths, distribution[i])
+		plt.legend(Legends)
+		plt.xlabel('L = Filament length')
+		plt.ylabel('\mathregular{$N(>L)$}')
