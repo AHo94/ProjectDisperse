@@ -349,10 +349,10 @@ class Histogram_Comparison():
 		distribution = []
 		for fils_len in FilamentLengths:
 			temp_dist = []
-				for lens in lengths:
-					Number_count = len(np.where(fils_lens >= lens)[0])
-					temp_dist.append(Number_count)
-				distribution.append(temp_dist)
+			for lens in lengths:
+				Number_count = len(np.where(fils_lens >= lens)[0])
+				temp_dist.append(Number_count)
+			distribution.append(temp_dist)
 		FilLen_massfunc = plt.figure()
 		for i in range(len(distribution)):
 			plt.semilogx(lengths, distribution[i])
