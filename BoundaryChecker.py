@@ -15,7 +15,7 @@ class BoundaryChecker():
 		self.FilID = FilID
 		self.NFils = NumFilaments
 
-	def Get_periodic_boundary(self):
+	def Get_periodic_boundary_old(self):
 		"""
 		This function checks whether a filament crosses the boundary or not. 
 		If a filament crosses the boundary, the filament will be split into two/three filaments, i.e different lists/arrays.
@@ -415,17 +415,17 @@ class BoundaryChecker():
 		Check2 = np.where(diff >= self.BoxSize/2.0)[0]
 		if len(Check1):
 			diff[Check1] += self.BoxSize
-		elif len(Check2):
+		if len(Check2):
 			diff[Check2] -= self.BoxSize
 		return diff
 
 	def compute_lengths(self, xpos, ypos, zpos):
 		""" Computes the length of the whole filament. This takes into account for periodic boundaries. """
 		length = 0
-		diffx = xpos[i][1:] - xpos[i][:-1]
-		diffy = ypos[i][1:] - ypos[i][:-1]
-		diffz = zpos[i][1:] - zpos[i][:-1]
-			
+		diffx = xpos[1:] - xpos[:-1]
+		diffy = ypos[1:] - ypos[:-1]
+		diffz = zpos[1:] - zpos[:-1]
+		
 		diffx = self.check_bc(diffx)
 		diffy = self.check_bc(diffy)
 		diffz = self.check_bc(diffz)
@@ -435,8 +435,15 @@ class BoundaryChecker():
 
 		return length
 
-	def Get_periodic_boundary2(self):
+	def Get_periodic_boundary(self):
+		"""
+		This function checks whether a filament crosses the boundary or not. 
+		If a filament crosses the boundary, the filament will be split into two/three filaments, i.e different lists/arrays.
+		More details of the algorithm, see paper.
+		Function also computes the length of the filament.
+		"""
 		print 'Checking boundaries'
+		time_start = time.clock()
 		self.BoxSize = self.UpperBound - self.LowerBound
 		FilPosTemp = []
 		xPosTemp = []
@@ -464,7 +471,7 @@ class BoundaryChecker():
 				Zpoint2 = Zpoint1
 				Ypoint1 = self.LowerBound if Boundary_check else self.UpperBound
 				Ypoint2 = self.UpperBound if Boundary_check else self.LowerBound
-			elif zbound and not (xbound, ybound)
+			elif zbound and not (xbound and ybound):
 				Boundary_check = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
 				Xpoint1, Ypoint1 = self.New_points(Point1, Point2, 'z', Boundary_check)
 				Xpoint2 = Xpoint1
@@ -474,7 +481,7 @@ class BoundaryChecker():
 			elif (xbound and ybound) and not zbound:
 				Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
 				Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
-				Ypoint, Zpoint1 = self.New_points(Point1, Point2, 'x', Boundary_check)
+				Ypoint, Zpoint1 = self.New_points(Point1, Point2, 'x', Boundary_checkX)
 				Zpoint2 = Zpoint1
 				Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
 				Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
@@ -483,7 +490,7 @@ class BoundaryChecker():
 			elif (xbound and zbound) and not ybound:
 				Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
 				Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
-				Ypoint1, Zpoint = self.New_points(Point1, Point2, 'x', Boundary_check)
+				Ypoint1, Zpoint = self.New_points(Point1, Point2, 'x', Boundary_checkX)
 				Ypoint2 = Ypoint1
 				Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
 				Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
@@ -492,13 +499,13 @@ class BoundaryChecker():
 			elif (ybound and zbound) and not xbound:
 				Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
 				Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
-				Xpoint1, Zpoint = self.New_points(Point1, Point2, 'y', Boundary_check)
+				Xpoint1, Zpoint = self.New_points(Point1, Point2, 'y', Boundary_checkY)
 				Xpoint2 = Xpoint1
 				Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
 				Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
 				Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
 				Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
-			elif: xbound and ybound and zbound
+			elif xbound and ybound and zbound:
 				Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
 				Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
 				Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
@@ -550,8 +557,13 @@ class BoundaryChecker():
 			self.xTemp = []
 			self.yTemp = []
 			self.zTemp = []
+			SplitFilament = 0
 			SplitCount = 1
 			Filament_length = 0
+			if i == 66:
+				print diffx
+				print diffy
+				print diffz
 			for j in range(len(diffx)):
 				if SplitFilament:
 					get_boundary_point(i, j, xBoundary, yBoundary, zBoundary)
@@ -566,22 +578,24 @@ class BoundaryChecker():
 					self.yTemp.append(self.ydimPos[i][j])
 					self.zTemp.append(self.zdimPos[i][j])
 
-				if diffx[j] > 0.5*self.BoxSize:
+				if np.abs(diffx[j]) > 0.5*self.BoxSize:
 					SplitFilament = 1
 					xBoundary = 1
-				if diffy[j] > 0.5*self.BoxSize:
+				if np.abs(diffy[j]) > 0.5*self.BoxSize:
 					SplitFilament = 1
 					yBoundary = 1
-				if diffz[j] > 0.5*self.BoxSize:
+				if np.abs(diffz[j]) > 0.5*self.BoxSize:
 					SplitFilament = 1
 					zBoundary = 1
+				if i == 66:
+					print xBoundary, yBoundary, zBoundary
 			# Add final points
 			self.xyTemp.append(np.array([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
-			self.xTemp.append(xdimPos[i][-1])
-			self.yTemp.append(ydimPos[i][-1])
-			self.zTemp.append(zdimPos[i][-1])
+			self.xTemp.append(self.xdimPos[i][-1])
+			self.yTemp.append(self.ydimPos[i][-1])
+			self.zTemp.append(self.zdimPos[i][-1])
 
-			self.FilPosTemp.append(self.xyTemp)
+			FilPosTemp.append(self.xyTemp)
 			xPosTemp.append(self.xTemp)
 			yPosTemp.append(self.yTemp)
 			zPosTemp.append(self.zTemp)
@@ -595,6 +609,10 @@ class BoundaryChecker():
 			# Corresponds to the colorbar of the filament. Ensures that split filaments retains their total length in the plots.
 			for k in range(SplitCount):
 				self.LengthSplitFilament.append(Filament_length)
+                
+			if i == 66:
+				print np.array(np.array(FilPosTemp[i]))
+				print np.array(xPosTemp[i])
 
 		FilamentIDs = np.array(self.FilamentIDs)
 		FilamentPos = np.array(FilPosTemp)
