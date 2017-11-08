@@ -35,10 +35,10 @@ class BoundaryChecker():
 
 		def New_points(P1, P2, boundary_dir, boundary):
 			""" Computes the points of the two non-boundary crossing coordinates at the boundary. """
-			if boundary == 0:
+			if boundary:
 				DifferenceAdd = -BoxSize
 				BoxBoundary = self.LowerBound
-			elif boundary == 1:
+			else:
 				DifferenceAdd = BoxSize
 				BoxBoundary = self.UpperBound
 
@@ -70,7 +70,7 @@ class BoundaryChecker():
 				xNewTemp.append(x2)
 				yNewTemp.append(y2)
 				zNewTemp.append(z2)
-			if SplitFilament == 2:
+			elif SplitFilament == 2:
 				xyNewTemp.append(np.array([x1,y1]))
 				xNewTemp.append(x1)
 				yNewTemp.append(y1)
@@ -93,11 +93,10 @@ class BoundaryChecker():
 			xNewTemp = []
 			yNewTemp = []
 			zNewTemp = []
-			if SplitFilament == 2:
-				xyNewTemp2 = []
-				xNewTemp2 = []
-				yNewTemp2 = []
-				zNewTemp2 = []
+			xyNewTemp2 = []
+			xNewTemp2 = []
+			yNewTemp2 = []
+			zNewTemp2 = []
 			for j in range(len(self.xdimPos[i])-1):
 				xDiff = np.abs(self.xdimPos[i][j+1] - self.xdimPos[i][j])
 				yDiff = np.abs(self.ydimPos[i][j+1] - self.ydimPos[i][j])
@@ -113,27 +112,84 @@ class BoundaryChecker():
 					if xBoundary == 1 or yBoundary == 1 or zBoundary == 1:
 						Point1 = np.array([self.xdimPos[i][j-1], self.ydimPos[i][j-1], self.zdimPos[i][j-1]])
 						Point2 = np.array([self.xdimPos[i][j], self.ydimPos[i][j], self.zdimPos[i][j]])
-					if xBoundary == 1:
+					if xBoundary == 1 and yBoundary != 1 and zBoundary != 1:
+						#print 'only x'
 						Boundary_check = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
-						Ypoint, Zpoint = New_points(Point1, Point2, 'x', 0)
+						Ypoint, Zpoint = New_points(Point1, Point2, 'x', Boundary_check)
 						Xpoint1 = self.LowerBound if Boundary_check else self.UpperBound
 						Xpoint2 = self.UpperBound if Boundary_check else self.LowerBound
 						xBoundary = 2
 						Append_points(Xpoint1, Xpoint2, Ypoint, Ypoint, Zpoint, Zpoint)
-					elif yBoundary == 1:
+					elif yBoundary == 1 and xBoundary != 1 and zBoundary != 1:
+						#print 'only y'
 						Boundary_check = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
-						Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
+						Xpoint, Zpoint = New_points(Point1, Point2, 'y', Boundary_check)
 						Ypoint1 = self.LowerBound if Boundary_check else self.UpperBound
 						Ypoint2 = self.UpperBound if Boundary_check else self.LowerBound
 						yBoundary = 2
 						Append_points(Xpoint, Xpoint, Ypoint1, Ypoint2, Zpoint, Zpoint)
-					elif zBoundary == 1:
+					elif zBoundary == 1 and xBoundary != 1 and yBoundary != 1:
+						#print 'only z'
 						Boundary_check = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
-						Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
+						Xpoint, Ypoint = New_points(Point1, Point2, 'z', Boundary_check)
 						Zpoint1 = self.LowerBound if Boundary_check else self.UpperBound
 						Zpoint2 = self.UpperBound if Boundary_check else self.LowerBound
 						zBoundary = 2
 						Append_points(Xpoint, Xpoint, Ypoint, Ypoint, Zpoint1, Zpoint2)
+					elif xBoundary == 1 and yBoundary == 1 and zBoundary != 1:
+						print 'x and y', i
+						Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Ypoint, Zpoint = New_points(Point1, Point2, 'x', Boundary_checkX)
+						Xpoint, Zpoint123 = New_points(Point1, Point2, 'y', Boundary_checkY)
+						print Zpoint, Zpoint123
+						Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
+						Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
+						Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
+						Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
+						Append_points(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint, Zpoint)
+						xBoundary = 2
+						yBoundary = 2
+					elif xBoundary != 1 and yBoundary == 1 and zBoundary == 1:
+						print 'z and y', i
+						Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Xpoint, Ypoint = New_points(Point1, Point2, 'z', Boundary_checkZ)
+						Xpoint, Zpoint = New_points(Point1, Point2, 'y', Boundary_checkY)
+						Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
+						Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
+						Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
+						Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
+						Append_points(Xpoint, Xpoint, Ypoint1, Ypoint2, Zpoint1, Zpoint2)
+						zBoundary = 2
+						yBoundary = 2
+					elif xBoundary == 1 and yBoundary != 1 and zBoundary == 1:
+						print 'x and z', i
+						Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Ypoint, Zpoint = New_points(Point1, Point2, 'x', Boundary_checkX)
+						Xpoint, Ypoint = New_points(Point1, Point2, 'z', Boundary_checkZ)
+						Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
+						Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
+						Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
+						Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
+						Append_points(Xpoint1, Xpoint2, Ypoint, Ypoint, Zpoint, Zpoint)
+						xBoundary = 2
+						zBoundary = 2
+					elif xBoundary == 1 and yBoundary == 1 and zBoundary == 1:
+						Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Bounadry_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
+						Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
+						Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
+						Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
+						Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
+						Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
+						Append_points(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint, Zpoint)
+						xBoundary = 2
+						yBoundary = 2
+						zBoundary = 2
 					xyNewTemp.append(np.asarray([self.xdimPos[i][j], self.ydimPos[i][j]]))
 					xNewTemp.append(self.xdimPos[i][j])
 					yNewTemp.append(self.ydimPos[i][j])
@@ -143,27 +199,81 @@ class BoundaryChecker():
 					if xBoundary == 1 or yBoundary == 1 or zBoundary == 1:
 						Point1 = np.array([self.xdimPos[i][j-1], self.ydimPos[i][j-1], self.zdimPos[i][j-1]])
 						Point2 = np.array([self.xdimPos[i][j], self.ydimPos[i][j], self.zdimPos[i][j]])
-					if xBoundary == 1:
+					if xBoundary == 1 and yBoundary != 1 and zBoundary != 1:
 						Boundary_check = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
-						Ypoint, Zpoint = New_points(Point1, Point2, 'x', 0)
+						Ypoint, Zpoint = New_points(Point1, Point2, 'x', Boundary_check)
 						Xpoint1 = self.LowerBound if Boundary_check else self.UpperBound
 						Xpoint2 = self.UpperBound if Boundary_check else self.LowerBound
 						xBoundary = 2
 						Append_points(Xpoint1, Xpoint2, Ypoint, Ypoint, Zpoint, Zpoint)
-					elif yBoundary == 1:
+					elif yBoundary == 1 and xBoundary != 1 and zBoundary != 1:
 						Boundary_check = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
-						Xpoint, Zpoint = New_points(Point1, Point2, 'y', 0)
+						Xpoint, Zpoint = New_points(Point1, Point2, 'y', Boundary_check)
 						Ypoint1 = self.LowerBound if Boundary_check else self.UpperBound
 						Ypoint2 = self.UpperBound if Boundary_check else self.LowerBound
 						yBoundary = 2
 						Append_points(Xpoint, Xpoint, Ypoint1, Ypoint2, Zpoint, Zpoint)
-					elif zBoundary == 1:
+					elif zBoundary == 1 and xBoundary != 1 and yBoundary != 1:
 						Boundary_check = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
-						Xpoint, Ypoint = New_points(Point1, Point2, 'z', 0)
+						Xpoint, Ypoint = New_points(Point1, Point2, 'z', Boundary_check)
 						Zpoint1 = self.LowerBound if Boundary_check else self.UpperBound
 						Zpoint2 = self.UpperBound if Boundary_check else self.LowerBound
 						zBoundary = 2
 						Append_points(Xpoint, Xpoint, Ypoint, Ypoint, Zpoint1, Zpoint2)
+					elif xBoundary == 1 and yBoundary == 1 and zBoundary != 1:
+						print 'x and y', i
+						Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Ypoint, Zpoint = New_points(Point1, Point2, 'x', Boundary_checkX)
+						Xpoint, Zpoint123 = New_points(Point1, Point2, 'y', Boundary_checkY)
+						print Zpoint, Zpoint123
+						Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
+						Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
+						Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
+						Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
+						Append_points(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint, Zpoint)
+						xBoundary = 2
+						yBoundary = 2
+					elif xBoundary != 1 and yBoundary == 1 and zBoundary == 1:
+						print 'z and y', i
+						Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Xpoint, Ypoint = New_points(Point1, Point2, 'z', Boundary_checkZ)
+						Xpoint, Zpoint = New_points(Point1, Point2, 'y', Boundary_checkY)
+						Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
+						Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
+						Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
+						Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
+						Append_points(Xpoint, Xpoint, Ypoint1, Ypoint2, Zpoint1, Zpoint2)
+						zBoundary = 2
+						yBoundary = 2
+					elif xBoundary == 1 and yBoundary != 1 and zBoundary == 1:
+						print 'x and z', i
+						Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Ypoint, Zpoint = New_points(Point1, Point2, 'x', Boundary_checkX)
+						Xpoint, Ypoint = New_points(Point1, Point2, 'z', Boundary_checkZ)
+						Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
+						Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
+						Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
+						Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
+						Append_points(Xpoint1, Xpoint2, Ypoint, Ypoint, Zpoint, Zpoint)
+						xBoundary = 2
+						zBoundary = 2
+					elif xBoundary == 1 and yBoundary == 1 and zBoundary == 1:
+						Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Bounadry_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*BoxSize
+						Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
+						Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
+						Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
+						Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
+						Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
+						Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
+						Append_points(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint, Zpoint)
+						xBoundary = 2
+						yBoundary = 2
+						zBoundary = 2
 					xyNewTemp2.append(np.asarray([self.xdimPos[i][j], self.ydimPos[i][j]]))
 					xNewTemp2.append(self.xdimPos[i][j])
 					yNewTemp2.append(self.ydimPos[i][j])
@@ -171,21 +281,23 @@ class BoundaryChecker():
 
 				# Check if boundary has been crossed
 				if xDiff > 0.5*BoxSize:
-					if SplitFilament == 1:
+					if SplitFilament == 0 and not (yBoundary or zBoundary):
+						SplitFilament = 1
+					elif SplitFilament == 1 and not (yBoundary or zBoundary):
 						SplitFilament = 2
-					SplitFilament += 1
 					xBoundary = 1
 				if yDiff > 0.5*BoxSize:
-					if SplitFilament == 1:
+					if SplitFilament == 0 and not (xBoundary or zBoundary):
+						SplitFilament = 1
+					elif SplitFilament == 1 and not (xBoundary or zBoundary):
 						SplitFilament = 2
-					SplitFilament += 1
 					yBoundary = 1
 				if zDiff > 0.5*BoxSize:
-					if SplitFilament == 1:
+					if SplitFilament == 0 and not (xBoundary or yBoundary):
+						SplitFilament = 1
+					elif SplitFilament == 1 and not (xBoundary or yBoundary):
 						SplitFilament = 2
-					SplitFilament += 1
 					zBoundary = 1
-
 			# Adds final points to the positions
 			if SplitFilament == 0:
 				xyTemp.append(np.asarray([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
@@ -240,6 +352,14 @@ class BoundaryChecker():
 						TempLength += np.sqrt((xyNewTemp2[k+1][0]-xyNewTemp2[k][0])**2 + (xyNewTemp2[k+1][1] - xyNewTemp2[k][1])**2 \
 											+ (zNewTemp2[k+1]-zNewTemp2[k])**2)
 			self.FilLengths.append(TempLength)
+			if i == 424:
+				print TempLength
+				print xTemp, xNewTemp, xNewTemp2
+				print yTemp, yNewTemp, yNewTemp2
+				print zTemp, zNewTemp, zNewTemp2
+				print 
+				print self.xdimPos[i]
+				print self.ydimPos[i]
 			# Seperating length to arrays to give filaments that is split the same total length
 			if len(zTemp) > 1:
 				self.LengthSplitFilament.append(TempLength)
