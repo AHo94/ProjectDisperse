@@ -22,6 +22,9 @@ class FilamentMasking():
 		Creates a mask to plot a slice of the filament box. Boundary of slice chosen arbitrarily.
 		The masking includes filaments that are within the given boundary.
 		Also includes masking where the filament are cut off outside the boundary. 
+		Filament length input must be an array that is of equal size as the position arrays.
+		If filaments are split, then the filament length array must contain identical lengths for the split filament.
+		e.g filament I is split into two parts with length 2, then LengSplitFilament = [..., 2, 2, ...] 
 		"""
 		UpperBoundaryXDir, UpperBoundaryYDir, UpperBoundaryZDir, LowerBoundaryXDir, LowerBoundaryYDir, LowerBoundaryZDir = self.Boundary_list
 		MaskXdir, MaskYdir, MaskZdir = self.Masking_directions 
