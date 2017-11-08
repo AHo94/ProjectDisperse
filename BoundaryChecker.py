@@ -379,3 +379,229 @@ class BoundaryChecker():
 		print 'Boundary check time:', time.clock() - time_start, 's'
 		return FilamentIDs, FilamentPos, xdimPosNew, ydimPosNew, zdimPosNew, LengthSplitFilament, FilLengths
 	
+	def New_points(self, P1, P2, boundary_dir, boundary):
+		""" 
+		Computes the points of the two non-boundary crossing coordinates at the boundary. 
+		See notes for more info.
+		If filament crosses two boundaries at once, it is assumed that the t variable gives the same value for the third point.
+		"""
+		if boundary:
+			DifferenceAdd = -self.BoxSize
+			BoxBoundary = self.LowerBound
+		else:
+			DifferenceAdd = self.BoxSize
+			BoxBoundary = self.UpperBound
+		
+		if boundary_dir == 'x':
+			t_variable = (BoxBoundary - P1[0])/(P2[0] - P1[0] - self.BoxSize)
+			y_coord = P1[1] + (P2[1] - P1[1])*t_variable
+			z_coord = P1[2] + (P2[2] - P1[2])*t_variable
+			return y_coord, z_coord
+		elif boundary_dir == 'y':
+			t_variable = (BoxBoundary - P1[1])/(P2[1] - P1[1] - self.BoxSize)
+			x_coord = P1[0] + (P2[0] - P1[0])*t_variable
+			z_coord = P1[2] + (P2[2] - P1[2])*t_variable
+			return x_coord, z_coord
+		elif boundary_dir == 'z':
+			t_variable = (BoxBoundary - P1[2])/(P2[2] - P1[2] - self.BoxSize)
+			x_coord = P1[0] + (P2[0] - P1[0])*t_variable
+			y_coord = P1[1] + (P2[1] - P1[1])*t_variable
+			return x_coord, y_coord
+		else:
+			raise ValueError('boundary_dir argument not set properly')
+
+	def check_bc(self, diff):
+		Check1 = np.where(diff <= -self.BoxSize/2.0)[0]
+		Check2 = np.where(diff >= self.BoxSize/2.0)[0]
+		if len(Check1):
+			diff[Check1] += self.BoxSize
+		elif len(Check2):
+			diff[Check2] -= self.BoxSize
+		return diff
+
+	def compute_lengths(self, xpos, ypos, zpos):
+		""" Computes the length of the whole filament. This takes into account for periodic boundaries. """
+		length = 0
+		diffx = xpos[i][1:] - xpos[i][:-1]
+		diffy = ypos[i][1:] - ypos[i][:-1]
+		diffz = zpos[i][1:] - zpos[i][:-1]
+			
+		diffx = self.check_bc(diffx)
+		diffy = self.check_bc(diffy)
+		diffz = self.check_bc(diffz)
+
+		for j in range(len(diffx)):
+			length += np.sqrt(diffx[j]**2 + diffy[j]**2 + diffz[j]**2)
+
+		return length
+
+	def Get_periodic_boundary2(self):
+		print 'Checking boundaries'
+		self.BoxSize = self.UpperBound - self.LowerBound
+		FilPosTemp = []
+		xPosTemp = []
+		yPosTemp = []
+		zPosTemp = []
+		self.FilLengths = []
+		self.LengthSplitFilament = []
+		self.FilamentIDs = []
+
+		def get_boundary_point(i, j, xbound, ybound, zbound):
+			""" Interpolates boundary points for the non-boundary crossing axes. """
+			Point1 = np.array([self.xdimPos[i][j-1], self.ydimPos[i][j-1], self.zdimPos[i][j-1]])
+			Point2 = np.array([self.xdimPos[i][j], self.ydimPos[i][j], self.zdimPos[i][j]])
+			if xbound and not (ybound and zbound):
+				Boundary_check = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Ypoint1, Zpoint1 = self.New_points(Point1, Point2, 'x', Boundary_check)
+				Ypoint2 = Ypoint1
+				Zpoint2 = Zpoint1
+				Xpoint1 = self.LowerBound if Boundary_check else self.UpperBound
+				Xpoint2 = self.UpperBound if Boundary_check else self.LowerBound
+			elif ybound and not (xbound and zbound):
+				Boundary_check = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Xpoint1, Zpoint1 = self.New_points(Point1, Point2, 'y', Boundary_check)
+				Xpoint2 = Xpoint1
+				Zpoint2 = Zpoint1
+				Ypoint1 = self.LowerBound if Boundary_check else self.UpperBound
+				Ypoint2 = self.UpperBound if Boundary_check else self.LowerBound
+			elif zbound and not (xbound, ybound)
+				Boundary_check = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Xpoint1, Ypoint1 = self.New_points(Point1, Point2, 'z', Boundary_check)
+				Xpoint2 = Xpoint1
+				Ypoint2 = Ypoint1
+				Zpoint1 = self.LowerBound if Boundary_check else self.UpperBound
+				Zpoint2 = self.UpperBound if Boundary_check else self.LowerBound
+			elif (xbound and ybound) and not zbound:
+				Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Ypoint, Zpoint1 = self.New_points(Point1, Point2, 'x', Boundary_check)
+				Zpoint2 = Zpoint1
+				Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
+				Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
+				Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
+				Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
+			elif (xbound and zbound) and not ybound:
+				Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Ypoint1, Zpoint = self.New_points(Point1, Point2, 'x', Boundary_check)
+				Ypoint2 = Ypoint1
+				Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
+				Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
+				Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
+				Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
+			elif (ybound and zbound) and not xbound:
+				Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Xpoint1, Zpoint = self.New_points(Point1, Point2, 'y', Boundary_check)
+				Xpoint2 = Xpoint1
+				Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
+				Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
+				Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
+				Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
+			elif: xbound and ybound and zbound
+				Boundary_checkX = np.abs(self.xdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Boundary_checkY = np.abs(self.ydimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Boundary_checkZ = np.abs(self.zdimPos[i][j-1] - self.LowerBound) < 0.5*self.BoxSize
+				Xpoint1 = self.LowerBound if Boundary_checkX else self.UpperBound
+				Xpoint2 = self.UpperBound if Boundary_checkX else self.LowerBound
+				Ypoint1 = self.LowerBound if Boundary_checkY else self.UpperBound
+				Ypoint2 = self.UpperBound if Boundary_checkY else self.LowerBound
+				Zpoint1 = self.LowerBound if Boundary_checkZ else self.UpperBound
+				Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
+			else:
+				raise ValueError('Something went wrong with setting xbound, ybound or zbound!')
+			add_boundary_point(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint1, Zpoint2, i)
+
+		def add_boundary_point(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint1, Zpoint2, i):
+			""" 
+			Adds the points to respective array for the first boundary point.
+			Clears the temporary lists containing the coordinate points and adds the second boundary points.
+			"""
+			self.xyTemp.append(np.array([Xpoint1, Ypoint1]))
+			self.xTemp.append(Xpoint1)
+			self.yTemp.append(Ypoint1)
+			self.zTemp.append(Zpoint1)
+
+			FilPosTemp.append(self.xyTemp)
+			xPosTemp.append(self.xTemp)
+			yPosTemp.append(self.yTemp)
+			zPosTemp.append(self.zTemp)
+			self.FilamentIDs.append(i)
+			
+			self.xyTemp = []
+			self.xTemp = []
+			self.yTemp = []
+			self.zTemp = []
+			
+			self.xyTemp.append(np.array([Xpoint2, Ypoint2]))
+			self.xTemp.append(Xpoint2)
+			self.yTemp.append(Ypoint2)
+			self.zTemp.append(Zpoint2)
+
+
+		for i in range(self.NFils-1):
+			xBoundary = 0
+			yBoundary = 0
+			zBoundary = 0
+			diffx = self.xdimPos[i][1:] - self.xdimPos[i][:-1]
+			diffy = self.ydimPos[i][1:] - self.ydimPos[i][:-1]
+			diffz = self.zdimPos[i][1:] - self.zdimPos[i][:-1]
+			self.xyTemp = []
+			self.xTemp = []
+			self.yTemp = []
+			self.zTemp = []
+			SplitCount = 1
+			Filament_length = 0
+			for j in range(len(diffx)):
+				if SplitFilament:
+					get_boundary_point(i, j, xBoundary, yBoundary, zBoundary)
+					SplitCount += 1
+					SplitFilament = 0
+					xBoundary = 0
+					yBoundary = 0
+					zBoundary = 0
+				else:
+					self.xyTemp.append(np.array([self.xdimPos[i][j], self.ydimPos[i][j]]))
+					self.xTemp.append(self.xdimPos[i][j])
+					self.yTemp.append(self.ydimPos[i][j])
+					self.zTemp.append(self.zdimPos[i][j])
+
+				if diffx[j] > 0.5*self.BoxSize:
+					SplitFilament = 1
+					xBoundary = 1
+				if diffy[j] > 0.5*self.BoxSize:
+					SplitFilament = 1
+					yBoundary = 1
+				if diffz[j] > 0.5*self.BoxSize:
+					SplitFilament = 1
+					zBoundary = 1
+			# Add final points
+			self.xyTemp.append(np.array([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
+			self.xTemp.append(xdimPos[i][-1])
+			self.yTemp.append(ydimPos[i][-1])
+			self.zTemp.append(zdimPos[i][-1])
+
+			self.FilPosTemp.append(self.xyTemp)
+			xPosTemp.append(self.xTemp)
+			yPosTemp.append(self.yTemp)
+			zPosTemp.append(self.zTemp)
+			self.FilamentIDs.append(i)
+
+			# Compute length of the whole filament
+			Filament_length = self.compute_lengths(self.xdimPos[i], self.ydimPos[i], self.zdimPos[i])
+			self.FilLengths.append(Filament_length)
+
+			# Adds filament length to a different array.
+			# Corresponds to the colorbar of the filament. Ensures that split filaments retains their total length in the plots.
+			for k in range(SplitCount):
+				self.LengthSplitFilament.append(Filament_length)
+
+		FilamentIDs = np.array(self.FilamentIDs)
+		FilamentPos = np.array(FilPosTemp)
+		xdimPosNew = np.array(xPosTemp)
+		ydimPosNew = np.array(yPosTemp)
+		zdimPosNew = np.array(zPosTemp)
+		LengthSplitFilament = np.array(self.LengthSplitFilament)
+		FilLengths = np.array(self.FilLengths)
+		print 'Boundary check time:', time.clock() - time_start, 's'
+		return FilamentIDs, FilamentPos, xdimPosNew, ydimPosNew, zdimPosNew, LengthSplitFilament, FilLengths
