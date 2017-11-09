@@ -426,10 +426,15 @@ class BoundaryChecker():
 		diffy = ypos[1:] - ypos[:-1]
 		diffz = zpos[1:] - zpos[:-1]
 		
-		diffx = self.check_bc(diffx)
-		diffy = self.check_bc(diffy)
-		diffz = self.check_bc(diffz)
-
+		#diffx = self.check_bc(diffx)
+		#diffy = self.check_bc(diffy)
+		#diffz = self.scheck_bc(diffz)
+		diffx[diffx <= -self.BoxSize/2.0] += self.BoxSize
+		diffx[diffx >= self.BoxSize/2.0] -= self.BoxSize
+		diffy[diffy <= -self.BoxSize/2.0] += self.BoxSize
+		diffy[diffy >= self.BoxSize/2.0] -= self.BoxSize
+		diffz[diffz <= -self.BoxSize/2.0] += self.BoxSize
+		diffz[diffz >= self.BoxSize/2.0] -= self.BoxSize
 		for j in range(len(diffx)):
 			length += np.sqrt(diffx[j]**2 + diffy[j]**2 + diffz[j]**2)
 
@@ -560,10 +565,6 @@ class BoundaryChecker():
 			SplitFilament = 0
 			SplitCount = 1
 			Filament_length = 0
-			if i == 66:
-				print diffx
-				print diffy
-				print diffz
 			for j in range(len(diffx)):
 				if SplitFilament:
 					get_boundary_point(i, j, xBoundary, yBoundary, zBoundary)
@@ -587,15 +588,13 @@ class BoundaryChecker():
 				if np.abs(diffz[j]) > 0.5*self.BoxSize:
 					SplitFilament = 1
 					zBoundary = 1
-				if i == 66:
-					print xBoundary, yBoundary, zBoundary
 			# Add final points
 			self.xyTemp.append(np.array([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
 			self.xTemp.append(self.xdimPos[i][-1])
 			self.yTemp.append(self.ydimPos[i][-1])
 			self.zTemp.append(self.zdimPos[i][-1])
 
-			FilPosTemp.append(self.xyTemp)
+			FilPosTemp.append(np.array(self.xyTemp))
 			xPosTemp.append(self.xTemp)
 			yPosTemp.append(self.yTemp)
 			zPosTemp.append(self.zTemp)
@@ -609,10 +608,6 @@ class BoundaryChecker():
 			# Corresponds to the colorbar of the filament. Ensures that split filaments retains their total length in the plots.
 			for k in range(SplitCount):
 				self.LengthSplitFilament.append(Filament_length)
-                
-			if i == 66:
-				print np.array(np.array(FilPosTemp[i]))
-				print np.array(xPosTemp[i])
 
 		FilamentIDs = np.array(self.FilamentIDs)
 		FilamentPos = np.array(FilPosTemp)
