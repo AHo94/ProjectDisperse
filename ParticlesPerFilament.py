@@ -5,7 +5,7 @@ import ReadGadgetFile
 # Box boundaries assumed to be from 0 to 256.0 Mpc/h
 lower_boundary = 0.0
 upper_boundary = 256.0
-class particle_per_filament():
+class particles_per_filament():
 	def __init__(self, model, maskdirs, masklimits):
 		RGF_instance = ReadGadgetFile.Read_Gadget_file(maskdirs, masklimits)
 		self.particlepos = RGF_instance.Get_3D_particles(model)
@@ -94,11 +94,11 @@ class particle_per_filament():
 			MovePartz = 256.0
 		# Still need to move particles to the other side of the boundary
 		if box == box2:
-			mask = particle_mask(box)
+			mask = self.particle_mask(box, ParticlePos)
 			return ParticlePos[mask]
 		else:
-			mask1 = particle_mask(box, ParticlePos)
-			mask2 = particle_mask(box2, ParticlePos)
+			mask1 = self.particle_mask(box, ParticlePos)
+			mask2 = self.particle_mask(box2, ParticlePos)
 			Particles1 = ParticlePos[mask1]
 			Particles2 = ParticlePos[mask2]
 			Particles2[:,0] += MovePartx
