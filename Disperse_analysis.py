@@ -8,6 +8,7 @@ import argparse
 import cPickle as pickle
 from collections import Counter
 from functools import partial
+import multiprocessing as mp
 
 # Numpy, matplotlib and scipy
 import numpy as np
@@ -952,7 +953,7 @@ class Disperse_Plotter():
 				self.Plot_Figures(filename, ndim)
 		
 		self.SolveRun = True
-		return self.NumFilamentConnections, sorted(self.FilLengths), self.NFilamentPoints, np.array(Filament_3DPos)
+		return self.NumFilamentConnections, sorted(self.FilLengths), self.NFilamentPoints
 
 	def get_3D_pos(self):
 		""" Create 3D filament position. Must have called solve() function first. """
@@ -960,7 +961,7 @@ class Disperse_Plotter():
 			raise ValueError('You have not called the solve() function yet! Cannot give 3D filament position.')
 		Filament_3DPos = []
 		for i in range(len(self.xdimPos)):
-			Filament_3DPos.append(np.column_stack((self.xdimPos[i], self.ydimPos[i], self.zdimPos)))
+			Filament_3DPos.append(np.column_stack((self.xdimPos[i], self.ydimPos[i], self.zdimPos[i])))
 		return np.array(Filament_3DPos)
 
 class Read_solve_files():
@@ -1061,16 +1062,16 @@ def Argument_parser():
 	args = parser.parse_args()
 	return args
 
-def Multiprocess_filament_per_filament(PartPos, distance_threshold, box_expand, Filament):
+def Multiprocess_filament_per_filament(Instance, distance_threshold, box_expand, Filament, i):
 	""" 
 	Computes number of particles per filament in parallel.
-	Input must be 3D filament position, 3D particle position as well as a given distance threshold from particle to filament.
+	Input must be 3D filament position, as well as a given distance threshold from particle to filament.
 	Box expand expands the box which covers the given filament. Ensures that it includes all particles.
 	Box_expand must be larger than distance_threshold
 	"""
 	if box_expand < distance_threshold:
 		raise ValueError('Box expand must be larger than the distance threshold!')
-	NumParticles = ParticlesPerFilament.solve(Filament, PartPos, distance_threshold, box_expand)
+	NumParticles = Instance.solve(Filament[i], distance_threshold, box_expand)
 	return NumParticles
 
 if __name__ == '__main__':
@@ -1405,7 +1406,7 @@ if __name__ == '__main__':
 		Runs for all modified gravity simulations.
 		All runs are on 256^3 particle subsample at sigma=5.
 		"""
-		lcdm_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/Sigma5/'
+		lcdm_dir = 'lcdm_testing/LCDM_z0_256Particles/Sigma5/'
 		SymmA_dir = 'SymmA_data/SymmA_z0_256Particles/Sigma5/'
 		SymmB_dir = 'SymmB_data/SymmB_z0_256Particles/Sigma5/'
 		SymmB_dir = 'SymmC_data/SymmC_z0_256Particles/Sigma5/'
@@ -1414,7 +1415,7 @@ if __name__ == '__main__':
 		fofr5_dir = 'fofr4_data/fofr5_z0_256Particles/Sigma5/'
 		fofr6_dir = 'fofr4_data/fofr6_z0_256Particles/Sigma5/'
 		
-		LCDM_instance = Disperse_Plotter(savefile=0, savefigDirectory=lcdm_dir+'Plots/', nPart=256, model='LCDM', redshift=0, SigmaArg=5)
+		LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=256, model='LCDM', redshift=0, SigmaArg=5)
 		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0256_nsig5')
 		Fil3DPos_LCDM = LCDM_instance.get_3D_pos()
 		"""
@@ -1464,13 +1465,13 @@ if __name__ == '__main__':
 		"""
 		# Compute number of particles per filament.
 		# Units in Mpc/h for distance threshold and box_expand
-		proc = mp.Pool(parsed_arguments.NumProcesses)
+		proc = mp.Pool(1)#parsed_arguments.NumProcesses)
 		BoundaryCheck_list2 = [0,0,0,0,0,0]
 		Mask_check_list2 = [0,0,0]
 		distance_threshold = 0.3
 		box_expand = 1
 		# LCDM
-		LCDM_part_instance = ReadGadgetFile(Mask_check_list2, BoundaryCheck_list2)
-		LCDM_particles = LCDM_part_instance.Get_3D_particles('lcdm')
-		Fixed_args_LCDM = partial(Multiprocess_filament_per_filament, LCDM_part_instance, distance_threshold, box_expand)
-		NumPart_PerFil_LCDM = proc.map(Fixed_args_LCDM, Fil3DPos_LCDM[0:10])
+		LCDM_ppf_Instance = ParticlesPerFilament.particles_per_filament('lcdm', Mask_direction_check, Mask_boundary_list)
+		Fixed_args_LCDM = partial(Multiprocess_filament_per_filament, LCDM_ppf_Instance, distance_threshold, box_expand, Fil3DPos_LCDM)
+		#NumPart_PerFil_LCDM = proc.map(Fixed_args_LCDM, Fil3DPos_LCDM[0])
+		#print NumPart_PerFil_LCDM
