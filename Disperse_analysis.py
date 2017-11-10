@@ -1413,11 +1413,11 @@ if __name__ == '__main__':
 		fofr4_dir = 'fofr4_data/fofr4_z0_256Particles/Sigma5/'
 		fofr5_dir = 'fofr4_data/fofr5_z0_256Particles/Sigma5/'
 		fofr6_dir = 'fofr4_data/fofr6_z0_256Particles/Sigma5/'
-		"""
+		
 		LCDM_instance = Disperse_Plotter(savefile=0, savefigDirectory=lcdm_dir+'Plots/', nPart=256, model='LCDM', redshift=0, SigmaArg=5)
 		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0256_nsig5')
 		Fil3DPos_LCDM = LCDM_instance.get_3D_pos()
-
+		"""
 		SymmA_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmA_dir+'Plots/', nPart=256, model='SymmA', redshift=0, SigmaArg=5)
 		NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0256_nsig5.a.NDskl')
 		Fil3DPos_SymmA = SymmA_instance.get_3D_pos()
@@ -1446,7 +1446,7 @@ if __name__ == '__main__':
 		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr4_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0256_nsig5.a.NDskl')
 		Fil3dPos_fofr6 = fofr6_instance.get_3D_pos()
 		"""
-
+		"""
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		symma_64dir = 'SymmA_data/SymmA_z0_64Particles/'
 		LCDM_test = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_64dir+'Plots/', nPart=64, model='LCDM', redshift=0)
@@ -1461,7 +1461,7 @@ if __name__ == '__main__':
 
 		CompI = HComp.Histogram_Comparison(savefile=0, savefigDirectory='LOL/', savefile_directory='WHAT/', filetype=filetype, redshift=0, LCDM=1)
 		CompI.Compare_mg_models(NumConnections_list, FilLengths_list, FilPoints_list)
-
+		"""
 		# Compute number of particles per filament.
 		# Units in Mpc/h for distance threshold and box_expand
 		proc = mp.Pool(parsed_arguments.NumProcesses)
@@ -1473,4 +1473,4 @@ if __name__ == '__main__':
 		LCDM_part_instance = ReadGadgetFile(Mask_check_list2, BoundaryCheck_list2)
 		LCDM_particles = LCDM_part_instance.Get_3D_particles('lcdm')
 		Fixed_args_LCDM = partial(Multiprocess_filament_per_filament, LCDM_part_instance, distance_threshold, box_expand)
-		NumPart_PerFil_LCDM = proc.map(Fixed_args_LCDM, Fil3DPos_LCDM)
+		NumPart_PerFil_LCDM = proc.map(Fixed_args_LCDM, Fil3DPos_LCDM[0:10])
