@@ -139,3 +139,15 @@ class Read_Gadget_file():
 		xedges = 1
 		yedges = 1
 		return self.PartPosX, self.PartPosY, self.PartPosZ, Histogram, xedges, yedges, self.DM_tree
+
+	def Get_3D_particles(self, modelfile):
+		toggle = False
+		Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6']
+		for models in Model_check:
+			if modelfile == models:
+				toggle = True
+		if not toggle:
+			raise ValueError('Model input name %s not correctly set into the gadget file reader.' %modelfile)
+
+		self.read_file(modelfile)
+		return self.PartPos		
