@@ -6,12 +6,12 @@ import os
 import time
 import argparse
 import cPickle as pickle
-import numpy as np
-import matplotlib.pyplot as plt
 from collections import Counter
 from functools import partial
 
 # Numpy, matplotlib and scipy
+import numpy as np
+import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib import cm
 from matplotlib.collections import LineCollection
@@ -34,6 +34,7 @@ import FilamentsPerSigma
 import Histogram_comparison as HComp
 import ReadFilamentData
 import InterpolateDensity
+import ParticlesPerFilament
 
 class Disperse_Plotter():
 	"""
@@ -865,8 +866,12 @@ class Disperse_Plotter():
 							)
 				pickle.dump([Mask_instance_variables, Masked_critpts], open(Mask_slice_cachefn, 'wb'))
 
-			self.MaskedFilamentSegments, self.MaskedLengths, self.zdimMasked, self.CutOffFilamentSegments\
-											, self.CutOffLengths, self.CutOffzDim = Mask_instance_variables
+			self.MaskedFilamentSegments = Mask_instance_variables[0]
+			self.MaskedLengths = Mask_instance_variables[1]
+			self.zdimMasked = Mask_instance_variables[2]
+			self.CutOffFilamentSegments = Mask_instance_variables[3]
+			self.CutOffLengths = Mask_instance_variables[4]
+			self.CutOffzDim = Mask_instance_variables[5]
 			self.MaskedXCP, self.MaskedYCP, self.MaskedZCP = Masked_critpts
 
 		# Computing other properties
@@ -1055,6 +1060,18 @@ def Argument_parser():
 	# Parse arguments
 	args = parser.parse_args()
 	return args
+
+def Multiprocess_filament_per_filament(PartPos, distance_threshold, box_expand, Filament):
+	""" 
+	Computes number of particles per filament in parallel.
+	Input must be 3D filament position, 3D particle position as well as a given distance threshold from particle to filament.
+	Box expand expands the box which covers the given filament. Ensures that it includes all particles.
+	Box_expand must be larger than distance_threshold
+	"""
+	if box_expand < distance_threshold:
+		raise ValueError('Box expand must be larger than the distance threshold!')
+	NumParticles = ParticlesPerFilament.solve(Filament, PartPos, distance_threshold, box_expand)
+	return NumParticles
 
 if __name__ == '__main__':
 	parsed_arguments = Argument_parser()
@@ -1444,3 +1461,16 @@ if __name__ == '__main__':
 
 		CompI = HComp.Histogram_Comparison(savefile=0, savefigDirectory='LOL/', savefile_directory='WHAT/', filetype=filetype, redshift=0, LCDM=1)
 		CompI.Compare_mg_models(NumConnections_list, FilLengths_list, FilPoints_list)
+
+		# Compute number of particles per filament.
+		# Units in Mpc/h for distance threshold and box_expand
+		proc = mp.Pool(parsed_arguments.NumProcesses)
+		BoundaryCheck_list2 = [0,0,0,0,0,0]
+		Mask_check_list2 = [0,0,0]
+		distance_threshold = 0.3
+		box_expand = 1
+		# LCDM
+		LCDM_part_instance = ReadGadgetFile(Mask_check_list2, BoundaryCheck_list2)
+		LCDM_particles = LCDM_part_instance.Get_3D_particles('lcdm')
+		Fixed_args_LCDM = partial(Multiprocess_filament_per_filament, LCDM_part_instance, distance_threshold, box_expand)
+		NumPart_PerFil_LCDM = proc.map(Fixed_args_LCDM, Fil3DPos_LCDM)
