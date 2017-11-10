@@ -345,9 +345,9 @@ class Histogram_Comparison():
 		plt.legend(Legends)
 
 		# Number of filaments larger than a given length: N(>L)
-		lengths = np.linspace(np.min(np.min(FilamentLengths)), np.max(np.max(FilamentLengths)), 300)
+		lengths = np.linspace(np.min(np.min(FilLengths)), np.max(np.max(FilLengths)), 300)
 		distribution = []
-		for fils_len in FilamentLengths:
+		for fils_len in FilLengths:
 			temp_dist = []
 			for lens in lengths:
 				Number_count = len(np.where(fils_lens >= lens)[0])
