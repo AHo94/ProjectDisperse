@@ -105,6 +105,9 @@ class Disperse_Plotter():
 		else:
 			self.SigmaArg = False
 
+		# A check that the funciton 'solve' has been called
+		self.SolveRun = False
+
 	def Filter_filaments(self, Sigma_threshold):
 		CP_indices_to_be_deleted = np.where(self.Persistence_nsigmas <= Sigma_threshold)[0]
 		
@@ -155,131 +158,6 @@ class Disperse_Plotter():
 				filaments_included.append(i)
 		print np.array(filaments_included)
 		print len(filaments_included)
-		
-	def NumParticles_per_filament(self):
-		""" 
-		Checks the number of dark matter filaments per filament.
-		The allowed distance between a particle and filament is arbitrarily chosen.
-		"""
-		time_start = time.clock()
-		print 'Checking number of particles within each filament'
-		self.Particles_per_filament = []
-
-		TempPartPosX = self.PartPosX
-		TempPartPosY = self.PartPosY
-		TempPartPosZ = self.PartPosZ
-
-		DistanceThreshold = 0.001*(self.xmax - self.xmin)
-		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
-		DM_tree = spatial.KDTree(DM_points[0])
-
-		for i in range(len(self.zdimMasked)):
-			PartCount = 0
-			Fil_pts = np.dstack((np.array(self.MaskedFilamentSegments[i])[:,0].ravel(), np.array(self.MaskedFilamentSegments[i])[:,1].ravel(), self.zdimMasked[i]))
-			Fil_tree = spatial.KDTree(Fil_pts[0])
-			nearest_pts = DM_tree.query_ball_tree(Fil_tree, DistanceThreshold)
-			for j in nearest_pts:
-				if not len(j) == 0:
-					PartCount += len(j)
-			self.Particles_per_filament.append(PartCount)
-
-		"""
-		for i in range(len(self.zdimMasked)):
-			PartCount = 0
-			for j in range(len(self.zdimMasked[i])):
-				index = []
-				for k in range(len(TempPartPosX)):
-					PointDistance = np.sqrt((self.MaskedFilamentSegments[i][j][0] - TempPartPosX[k])**2 + (self.MaskedFilamentSegments[i][j][1] - TempPartPosY[k])**2 \
-									+ (self.zdimMasked[i][j] - TempPartPosZ[k])**2)
-					if PointDistance < DistanceThreshold:
-						PartCount += 1
-						index.append(k)
-						#TempPartPosX = np.delete(TempPartPosX, k)
-						#TempPartPosY = np.delete(TempPartPosY, k)
-						#TempPartPosZ = np.delete(TempPartPosZ, k)
-					else:
-						continue
-				#TempPartPosX = np.delete(TempPartPosX, index)
-				#TempPartPosY = np.delete(TempPartPosY, index)
-				#TempPartPosZ = np.delete(TempPartPosZ, index)
-			self.Particles_per_filament.append(PartCount)
-		"""
-
-		self.Particles_per_filament = np.asarray(self.Particles_per_filament)
-		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
-
-	def NumParticles_per_filament_v2(self):
-		""" 
-		Checks the number of dark matter filaments per filament.
-		The allowed distance between a particle and filament is arbitrarily chosen.
-		"""
-		time_start = time.clock()
-		print 'Checking number of particles within each filament'
-		self.Particles_per_filament = []
-
-		def Find_distance(FilamentPos1, FilamentPos2, PartNeighbourIDs):
-			""" 
-			Computes the distances of the particle to the filament
-			Order of the distance array corresponds to the ID of the particle
-			"""
-			Particle_distances = []
-			particle_x = []
-			particle_y = []
-			particle_z = []
-			for id1 in PartNeighbourID1:
-				particle_x.append(PartPosX[id1])
-				particle_y.append(PartPosY[id1])
-				particle_z.append(PartPosZ[id1])
-			
-			ParticlePoints = np.dstack((np.array(particle_x).ravel(), np.array(particle_y).ravel(), np.array(particle_z).ravel()))[0]
-			SegmentLength = np.linalg.norm(np.concatenate([FilamentPos1, FilamentPos2]))
-			Distance1 = []
-			Distance2 = []
-			for PartCoord in ParticlePoints:
-				Distance1.append(np.linalg.norm(np.concatenate([FilamentPos1, PartCoord])))
-				Distance2.append(np.linalg.norm(np.concatenate([FilamentPos2, PartCoord])))
-			
-			Angle = np.arccos((SegmentLength**2 + np.array(Distance1)**2 - np.array(Distance2)**2)/(2*SegmentLength*np.array(Distance2)))
-			Distance = np.array(Distance2)*np.sin(Angle)
-			Particle_distances.append(Distance)
-			return np.array(Particle_distances)
-
-		BoxSize = self.xmax-self.xmin
-		DistanceThreshold = 0.001*BoxSize
-	
-		DuplicateCount_array = np.histogram(self.FilamentIDs, bins=np.arange(1, self.NFils+1))[0]
-		if not MaskXdir or not MaskYdir or MaskZdir:
-			a = 1
-			#while i < len(self.FilamentIDs)
-		else:
-			# Computes for all filaments
-			while i < len(self.FilamentIDs):
-				DuplicateCount = DuplicateCount_array[i]
-				if DuplicateCount == 0:
-					FilamentPoints = np.dstack((self.xdimPos[i].ravel(), self.ydimPos[i].ravel(), self.zdimPos[i].ravel()))
-				else:
-					xTemp = xdimPos[i]
-					yTemp = ydimPos[i]
-					zTemp = zdimPos[i]
-					for k in range(1,DuplicateCount+1):
-						xTemp = np.concatenate([xTemp, xdimPos[i+k]])
-						yTemp = np.concatenate([yTemp, ydimPos[i+k]])
-						zTemp = np.concatenate([zTemp, zdimPos[i+k]])
-					FilamentPoints = np.dstack((self.xTemp.ravel(), self.yTemp.ravel(), self.zTemp.ravel()))
-
-				Neighbours_indices = DM_KDTree.query_ball_point(FilamentPoints[0], BoxSize/2.0)
-				Neighbours_indices = np.unique(np.concatenate(Neighbours_indices, axis=0))
-				Accepted_IDs = np.array([])
-
-				for j in range(len(FilamentPoints)-1):
-					Distances = Find_distance(FilamentPoints[j], FilamentPoints[j+1], Neighbours_indices)
-					Distance_masking = Distances >= DistanceThreshold
-					Accepted_IDs = np.concatenate([Accepted_IDs, Neighbours_indices[Distance_masking]])
-
-				self.Particles_per_filament.append(len(np.unique(Accepted_IDs)))
-				i += DuplicateCount + 1
-				
-		print 'Number particle per filament check time: ', time.clock() - time_start, 's'
 
 	def Number_filament_connections(self):
 		""" Computes the number of filament connections one filament has"""
@@ -1068,7 +946,17 @@ class Disperse_Plotter():
 			else:
 				self.Plot_Figures(filename, ndim)
 		
-		return self.NumFilamentConnections, sorted(self.FilLengths), self.NFilamentPoints
+		self.SolveRun = True
+		return self.NumFilamentConnections, sorted(self.FilLengths), self.NFilamentPoints, np.array(Filament_3DPos)
+
+	def get_3D_pos(self):
+		""" Create 3D filament position. Must have called solve() function first. """
+		if not self.SolveRun:
+			raise ValueError('You have not called the solve() function yet! Cannot give 3D filament position.')
+		Filament_3DPos = []
+		for i in range(len(self.xdimPos)):
+			Filament_3DPos.append(np.column_stack((self.xdimPos[i], self.ydimPos[i], self.zdimPos)))
+		return np.array(Filament_3DPos)
 
 class Read_solve_files():
 	def __init__(self):
@@ -1266,7 +1154,7 @@ if __name__ == '__main__':
 	else:
 		raise ValueError('Figure filetype to save not selected.')
 
-	
+
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
 		savefile_directory = file_directory
@@ -1495,7 +1383,7 @@ if __name__ == '__main__':
 					fig_filpersig.savefig(results_dir_filpersig + 'Filaments_per_sigma_Maxima' + str(N_sigmas) + '.png')
 					fig_filpersig_log.savefig(results_dir_filpersig + 'Filaments_per_sigma_Maxima'+ str(N_sigmas) + '_logarithmic.png')
 
-	if ModelCompare:
+	if ModelCompare and HOMEPC == 1:
 		""" 
 		Runs for all modified gravity simulations.
 		All runs are on 256^3 particle subsample at sigma=5.
@@ -1511,27 +1399,35 @@ if __name__ == '__main__':
 		"""
 		LCDM_instance = Disperse_Plotter(savefile=0, savefigDirectory=lcdm_dir+'Plots/', nPart=256, model='LCDM', redshift=0, SigmaArg=5)
 		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0256_nsig5')
+		Fil3DPos_LCDM = LCDM_instance.get_3D_pos()
 
 		SymmA_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmA_dir+'Plots/', nPart=256, model='SymmA', redshift=0, SigmaArg=5)
 		NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0256_nsig5.a.NDskl')
+		Fil3DPos_SymmA = SymmA_instance.get_3D_pos()
 
 		SymmB_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmB_dir+'Plots/', nPart=256, model='SymmB', redshift=0, SigmaArg=5)
 		NummConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz0256_nsig5.a.NDskl')
-
+		Fil3DPos_SymmB = SymmB_instance.get_3D_pos()
+		
 		SymmC_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmC_dir+'Plots/', nPart=256, model='SymmC', redshift=0, SigmaArg=5)
 		NummConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz0256_nsig5.a.NDskl')
-
+		Fil3DPos_SymmD = SymmD_instance.get_3D_pos()
+		
 		SymmD_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmD_dir+'Plots/', nPart=256, model='SymmD', redshift=0, SigmaArg=5)
 		NummConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz0256_nsig5.a.NDskl')
-
+		Fil3DPos_SymmD = SymmD_instance.get_3D_pos()
+		
 		fofr4_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr4_dir+'Plots/', nPart=256, model='fofr4', redshift=0, SigmaArg=5)
 		NummConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z0256_nsig5.a.NDskl')
+		Fil3dPos_fofr4 = fofr4_instance.get_3D_pos()
 
 		fofr5_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr5_dir+'Plots/', nPart=256, model='fofr5', redshift=0, SigmaArg=5)
 		NummConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z0256_nsig5.a.NDskl')
-
+		Fil3dPos_fofr5 = fofr5_instance.get_3D_pos()
+		
 		fofr6_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr6_dir+'Plots/', nPart=256, model='fofr6', redshift=0, SigmaArg=5)
 		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr4_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0256_nsig5.a.NDskl')
+		Fil3dPos_fofr6 = fofr6_instance.get_3D_pos()
 		"""
 
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
