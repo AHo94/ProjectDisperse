@@ -1087,6 +1087,9 @@ def Save_NumPartPerFil(name, FilPos):
 		raise ValueError('Model input name %s not correctly set into the gadget file reader.' %modelfile)
 
 	cachedir_ppf = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/'
+	if not os.path.isdir(cahcedir_ppf):
+		os.makedirs(cachedir_ppf)
+		
 	cachedir_lcdm = cachedir_ppf + name + '_256Part.p'
 	if os.path.isfile(cachedir_lcdm):
 		NumPartPerFil = pickle.load(open(cachedir_lcdm, 'rb'))
