@@ -538,7 +538,7 @@ class BoundaryChecker():
 			xPosTemp.append(self.xTemp)
 			yPosTemp.append(self.yTemp)
 			zPosTemp.append(self.zTemp)
-			self.FilamentIDs.append(i)
+			self.FilamentIDs.append(self.FilID[i])
 			
 			self.xyTemp = []
 			self.xTemp = []
@@ -598,7 +598,7 @@ class BoundaryChecker():
 			xPosTemp.append(self.xTemp)
 			yPosTemp.append(self.yTemp)
 			zPosTemp.append(self.zTemp)
-			self.FilamentIDs.append(i)
+			self.FilamentIDs.append(self.FilID[i])
 
 			# Compute length of the whole filament
 			Filament_length = self.compute_lengths(self.xdimPos[i], self.ydimPos[i], self.zdimPos[i])
