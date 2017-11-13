@@ -176,33 +176,28 @@ class Disperse_Plotter():
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
 		def savefigure(figure, name):
+			""" Function that calls savefig based on figure instance and filename. """
 			if type(name) != str:
 				raise ValueError('filename not a string!')
 			figure.savefig(self.results_dir + name + self.ModelFilename)
 
 		print 'Plotting'
-		if Comparison:
-			#NormedArgument = True
-			NormedArgument = False
-		else:
-			NormedArgument = False
-
 		if FilamentColors:
 			ColorArray = np.linspace(0,1,110)
-			ColorMap2D = np.asarray([np.mean(zvalues) for zvalues in self.zdimPos])
-			ColorMapLength = np.asarray([lengths for lengths in self.LengthSplitFilament])
+			ColorMap2D = np.array([np.mean(zvalues) for zvalues in self.zdimPos])
+			ColorMapLength = np.array([lengths for lengths in self.LengthSplitFilament])
 			if IncludeSlicing:
-				ColorMap2DCutOff = np.asarray([np.mean(zvalues) for zvalues in self.CutOffzDim])
-				ColorMap2DMasked = np.asarray([np.mean(zvalues) for zvalues in self.zdimMasked])
-				ColorMapLengthCutOff = np.asarray([lengths for lengths in self.CutOffLengths])
-				ColorMapLengthMasked = np.asarray([lengths for lengths in self.MaskedLengths])
+				ColorMap2DCutOff = np.array([np.mean(zvalues) for zvalues in self.CutOffzDim])
+				ColorMap2DMasked = np.array([np.mean(zvalues) for zvalues in self.zdimMasked])
+				ColorMapLengthCutOff = np.array([lengths for lengths in self.CutOffLengths])
+				ColorMapLengthMasked = np.array([lengths for lengths in self.MaskedLengths])
 		else:
 			ColorArray = None
 		
 		if IncludeUnits:
 			LegendText = ' - [Mpc/h]'
 		else:
-			LegendText = ''
+			LegendText = ' - [Percentage of box size]'
 
 		if HistogramPlots:
 			# Histogram of number of filament connections
@@ -212,7 +207,7 @@ class Disperse_Plotter():
 			BinSize = (NumMax - NumMin)/(0.5) + 1
 			Bin_list = np.linspace(NumMin, NumMax, BinSize)
 			ConnectedHist = plt.figure()
-			plt.hist(self.NumFilamentConnections, align='left', rwidth=1, bins=Bin_list, normed=NormedArgument)
+			plt.hist(self.NumFilamentConnections, align='left', rwidth=1, bins=Bin_list)
 			plt.xlabel('Number of connected filaments')
 			plt.ylabel('Number of occurances')
 			plt.title('Histogram of number connections between the critical points \n with %.2f critical points. ' \
@@ -226,7 +221,7 @@ class Disperse_Plotter():
 			BinSize_size = (LenMax - LenMin)/(0.5) + 1
 			#BinList_FilLengths = np.linspace(LenMin, LenMax, BinSize_size)
 			FilamentLengthsHist = plt.figure()
-			plt.hist(self.FilLengths, align='left', rwidth=1, bins=600, normed=NormedArgument, histtype='step')#, bins=BinList_FilLengths)
+			plt.hist(self.FilLengths, align='left', rwidth=1, bins=600, histtype='step')#, bins=BinList_FilLengths)
 			#plt.hold("on")
 			#self.FilLengths.sort()
 			#fit = stats.norm.pdf(self.FilLengths, np.mean(self.FilLengths), np.std(self.FilLengths))
@@ -242,7 +237,7 @@ class Disperse_Plotter():
 			BinSize_FilPts = (PtsMax - PtsMin)/(0.5) + 1
 			BinList_FilPts = np.linspace(PtsMin, PtsMax, BinSize_FilPts)
 			FilamentPtsHis = plt.figure()
-			plt.hist(self.NFilamentPoints, align='left', rwidth=1, bins=BinList_FilPts, normed=NormedArgument)
+			plt.hist(self.NFilamentPoints, align='left', rwidth=1, bins=BinList_FilPts)
 			plt.xlabel('Number of position points for a filament')
 			plt.ylabel('Number of occurances')
 			plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
@@ -254,7 +249,7 @@ class Disperse_Plotter():
 				BinSize_NPartFil = (NPartFilBinMax - NPartFilBinMin)/(0.5) + 1
 				BinList_NPartFil = np.linspace(NPartFilBinMin, NPartFilBinMax, BinSize_NPartFil)
 				NumParticlesFilamentHist = plt.figure()
-				plt.hist(self.Particles_per_filament, align='left', rwidth=1, bins=600, normed=NormedArgument)
+				plt.hist(self.Particles_per_filament, align='left', rwidth=1, bins=600)
 				plt.xlabel('Number of particles per filament')
 				plt.ylabel('Number of occurances')
 				plt.title('Histogram of number of particles per filament with ' + self.nPart_text + '$\mathregular{^3}$ particles')
@@ -683,9 +678,10 @@ class Disperse_Plotter():
 					savefigure(DMParticles_kernelPlot, 'DMParticles_kernelPlot_Scott' + parsed_arguments.bwMethod[0])
 					savefigure(DMParticles_kernelPlot_logarithmic, 'DMParticles_kernelPlot_Scott_logarithmic' + parsed_arguments.bwMethod[0])
 					savefigure(DMParticles_kernelPlot_wFilaments,  'DMParticles_kernelPlot_Scott_wFilaments' + parsed_arguments.bwMethod[0])
-					savefigure(DMParticles_kernelPlot_wFilaments_log, 'DMParticles_kernelPlot_Scott_wFilaments_logarithmic' + parsed_arguments.bwMethod[0])
-					savefigure(DMParticles_kernelPlot_wFilaments_log_Zoomed, 'DMParticles_kernelPlot_wFilaments_logarithmic_Zoomed' 
-															+ parsed_arguments.bwMethod[0])
+					savefigure(DMParticles_kernelPlot_wFilaments_log, 
+							'DMParticles_kernelPlot_Scott_wFilaments_logarithmic' + parsed_arguments.bwMethod[0])
+					savefigure(DMParticles_kernelPlot_wFilaments_log_Zoomed, 
+							'DMParticles_kernelPlot_wFilaments_logarithmic_Zoomed' + parsed_arguments.bwMethod[0])
 				else:
 					savefigure(DMParticles_kernelPlot, 'DMParticles_kernelPlot_subplots')
 					savefigure(DMParticles_kernelPlot_logarithmic, 'DMParticles_kernelPlot_subplots_logarithmic')
@@ -843,7 +839,6 @@ class Disperse_Plotter():
 		
 		if HOMEPC == 1 and IncludeDMParticles and parsed_arguments.bwMethod:
 			# Pickle file for interpolated densities using Gaussian KDE
-			
 			Density_dir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/Interpolated_Densities/'
 			if not os.path.isdir(Density_dir):
 				os.makedirs(Density_dir)
@@ -1035,16 +1030,20 @@ def Multiprocess_filament_per_filament(Instance, distance_threshold, box_expand,
 	return NumParticles
 
 def Save_NumPartPerFil(name, FilPos):
+	""" 
+	Saves number of particle per filament data in pickle file.
+	Input is the model name and 3D filament positions.
+	"""
 	if type(name) != str:
 		raise ValueError('Wrong type for name. Current type is %s' %type(name))
 
 	toggle = 0
-	Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6']
+	Model_check = ['lcdm', 'symmA', 'symmB', 'symmC', 'symmD', 'fofr4', 'fofr5', 'fofr6']
 	for models in Model_check:
 		if name == models:
 			toggle = True
 	if not toggle:
-		raise ValueError('Model input name %s not correctly set into the gadget file reader.' %modelfile)
+		raise ValueError('Model input name %s not correctly set into the number particle per filament saver.' %modelfile)
 
 	cachedir_ppf = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/'
 	if not os.path.isdir(cachedir_ppf):
@@ -1052,8 +1051,10 @@ def Save_NumPartPerFil(name, FilPos):
 		
 	cachedir_lcdm = cachedir_ppf + name + '_256Part.p'
 	if os.path.isfile(cachedir_lcdm):
+		print 'Reading number of particles pickle file for ' + name + '...'
 		NumPartPerFil = pickle.load(open(cachedir_lcdm, 'rb'))
 	else:
+		print 'Computing number of particles per filament for ' + name + '. May take a while'
 		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
 		Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, box_expand, FilPos)
 		NumPartPerFil = proc.map(Fixed_args, range(len(FilPos)))
@@ -1415,7 +1416,7 @@ if __name__ == '__main__':
 		
 		SymmC_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmC_dir+'Plots/', nPart=256, model='SymmC', redshift=0, SigmaArg=5)
 		NummConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz0256_nsig5.a.NDskl')
-		Fil3DPos_SymmD = SymmD_instance.get_3D_pos()
+		Fil3DPos_SymmC = SymmC_instance.get_3D_pos()
 		
 		SymmD_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmD_dir+'Plots/', nPart=256, model='SymmD', redshift=0, SigmaArg=5)
 		NummConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz0256_nsig5.a.NDskl')
@@ -1456,16 +1457,13 @@ if __name__ == '__main__':
 		Mask_check_list2 = [0,0,0]
 		distance_threshold = 0.3
 		box_expand = 1
-		# LCDM
-		NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:10])
 		"""
-		cachedir_ppf = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/'
-		cachedir_lcdm = cachedir_ppf + 'LCDM_256Part.p'
-		if os.path.isfile(cachedir_lcdm):
-			NumPartPerFil_LCDM = pickle.load(open(cachedir_lcdm, 'rb'))
-		else:
-			LCDM_ppf_Instance = ParticlesPerFilament.particles_per_filament('lcdm', Mask_check_list2, BoundaryCheck_list2)
-			Fixed_args_LCDM = partial(Multiprocess_filament_per_filament, LCDM_ppf_Instance, distance_threshold, box_expand, Fil3DPos_LCDM)
-			NumPartPerFil_LCDM = proc.map(Fixed_args_LCDM, range(len(Fil3DPos_LCDM)))
-			pickle.dump(NumPartPerFil_LCDM, open(cachedir_lcdm, 'wb'))
+		NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM)
+		NumPartPerFil_SymmA = Save_NumPartPerFil('symmA', Fil3DPos_SymmA)
+		NumPartPerFil_SymmB = Save_NumPartPerFil('symmB', Fil3DPos_SymmB)
+		NumPartPerFil_SymmC = Save_NumPartPerFil('symmC', Fil3DPos_SymmC)
+		NumPartPerFil_SymmD = Save_NumPartPerFil('symmD', Fil3DPos_SymmD)
+		NumPartPerFil_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4)
+		NumPartPerFil_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5)
+		NumPartPerFil_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6)
 		"""
