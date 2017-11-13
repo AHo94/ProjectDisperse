@@ -1081,7 +1081,7 @@ def Save_NumPartPerFil(name, FilPos):
 	toggle = 0
 	Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6']
 	for models in Model_check:
-		if modelfile == models:
+		if name == models:
 			toggle = True
 	if not toggle:
 		raise ValueError('Model input name %s not correctly set into the gadget file reader.' %modelfile)
