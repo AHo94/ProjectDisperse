@@ -175,6 +175,11 @@ class Disperse_Plotter():
 
 	def Plot_Figures(self, filename, ndim=3):
 		""" All plots done in this function	"""
+		def savefigure(figure, name):
+			if type(name) != str:
+				raise ValueError('filename not a string!')
+			figure.savefig(self.results_dir + name + self.ModelFilename)
+
 		print 'Plotting'
 		if Comparison:
 			#NormedArgument = True
@@ -486,23 +491,6 @@ class Disperse_Plotter():
 				plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar.'\
 						 +'Colors indicate length of a filament.')
 
-				# Interpolated smoothed out 2D histogram of dark matter particles. Interpolation with NonUniformImage function.
-				"""
-				Interpolated_DM_particles_figure = plt.figure()
-				ax_interpolated = plt.axes()
-				#ax = Interpolated_DM_particles_figure.add_subplot(111, title='Dark matter particle density field, interpolated', aspect='equal',\
-				#				xlim=DMBinXedges[[0,-1]], ylim=DMBinYedges[[0,-1]])
-				ax_interpolated.set_xlim(DMBinXedges[0], DMBinXedges[-1])
-				ax_interpolated.set_ylim(DMBinYedges[0], DMBinYedges[-1])
-				im = mpl.image.NonUniformImage(ax_interpolated, interpolation='bilinear')
-				xcenters = (DMBinXedges[:-1] + DMBinYedges[1:])/2.0
-				ycenters = (DMBinYedges[:-1] + DMBinYedges[1:])/2.0
-				im.set_data(xcenters, ycenters, DMHistogram)
-				ax_interpolated.images.append(im)
-				plt.xlabel('$\mathregular{x}$' + LegendText)
-				plt.ylabel('$\mathregular{y}$' + LegendText)
-				plt.title('Dark matter particle density field, interpolated')
-				"""
 				# Values in griddata = mass. Currently normalized to 1.
 				# Compute mass as 0.23*rho_{crit,0}*Volume_box/Num_particles
 				# See discussion with Max
@@ -653,82 +641,54 @@ class Disperse_Plotter():
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			if HistogramPlots:
-				ConnectedHist.savefig(self.results_dir + 'NumberFilamentConnectedHistogram' + self.ModelFilename)
-				FilamentLengthsHist.savefig(self.results_dir + 'FilamentLengthsHistogram' + self.ModelFilename)
-				FilamentPtsHis.savefig(self.results_dir + 'FilamentPointsHistogram' + self.ModelFilename)
+				savefigure(ConnectedHist, 'NumberFilamentConnectedHistogram')
+				savefigure(FilamentLengthsHist, 'FilamentLengthsHistogram')
+				savefigure(FilamentPtsHis, 'FilamentPointsHistogram')
 				#if IncludeDMParticles:
-				#	NumParticlesFilamentHist.savefig(self.results_dir + 'NumParticlesPerFilament' + self.ModelFilename)
+				#	savefigure(NumParticlesFilamentHist, 'NumParticlesPerFilament')
 			if PlotFilaments:
-				FilPositions.savefig(self.results_dir + 'FilamentPositions' + self.ModelFilename)
+				savefigure(FilPositions, 'FilamentPositions')
 			if PlotFilamentsWCritPts:
-				FilPositions_WCritPts.savefig(self.results_dir 
-					+ 'FilamentPositionsWithCritPts' + self.ModelFilename)
+				savefigure(FilPositions_WCritPts, 'FilamentPositionsWithCritPts')
 			if Projection2D:
-				FilPositions_2DProjection.savefig(self.results_dir 
-					+ '2DProjectedFilamentPosition' + self.ModelFilename)
+				savefigure(FilPositions_2DProjection, '2DProjectedFilamentPosition')
 				if ColorBarZDir:
-					FilPositions_2DProjectionColorBarZDir.savefig(self.results_dir 
-						+ '2DProjectionColorBarZDir' + self.ModelFilename)
+					savefigure(FilPositions_2DProjectionColorBarZDir, '2DProjectionColorBarZDir')
 				if ColorBarLength:
-					FilPositions_2DProjectionColobarLength.savefig(self.results_dir 
-						+ '2DProjectionColobarLength' + self.ModelFilename)
+					savefigure(FilPositions_2DProjectionColobarLength, '2DProjectionColobarLength')
 			if IncludeSlicing and PlotFilaments:
-				FilamentSliced.savefig(self.results_dir + 'Sliced3dBox' + self.ModelFilename)
-				FilamentCutOff.savefig(self.results_dir + 'CutOffFilaments' + self.ModelFilename)
-				FilPositions_2DProjection_sigmacolorbar.savefig(self.results_dir 
-					+ 'CutoffFilaments_sigmacolorbar' + self.ModelFilename)
+				savefigure(FilamentSliced, 'Sliced3dBox')
+				savefigure(FilamentCutOff, 'CutOffFilaments')
+				savefigure(FilPositions_2DProjection_sigmacolorbar, 'CutoffFilaments_sigmacolorbar')
 				if Projection2D:
-					FilPositions_2DProjectionSliced.savefig(self.results_dir 
-						+ '2DProjectionSliced3dBox' + self.ModelFilename)
+					savefigure(FilPositions_2DProjectionSliced, '2DProjectionSliced3dBox')
 				if ColorBarZDir:
-					FilPositions_2DSlicedProjectionColorBarZDir.savefig(self.results_dir 
-						+ '2DProjectionSlicedColobarZDir' + self.ModelFilename)
+					savefigure(FilPositions_2DSlicedProjectionColorBarZDir, '2DProjectionSlicedColobarZDir')
 				if ColorBarLength:
-					FilPositions_2DSlicedProjectionColorBarLen.savefig(self.results_dir 
-						+ '2DProjectionSlicedColobarLength' + self.ModelFilename)
-					FilPositions_2DSlicedProjection_Cbar_CritPts.savefig(self.results_dir 
-						+ '2DProjectionSliced_CbarLength_CritPts' + self.ModelFilename)
+					savefigure(FilPositions_2DSlicedProjectionColorBarLen, '2DProjectionSlicedColobarLength')
+					savefigure(FilPositions_2DSlicedProjection_Cbar_CritPts, '2DProjectionSliced_CbarLength_CritPts')
 			if IncludeDMParticles:
 				Masked_filename = 'Masked' + 'X'*MaskXdir + 'Y'*MaskYdir + 'Z'*MaskZdir
-				DMParticleHist.savefig(self.results_dir 
-					+ 'DMParticleHistogram_' + Masked_filename + self.ModelFilename)
-				DMParticleHistwFilaments.savefig(self.results_dir 
-					+ 'DMParticleHistogramWFIlaments' + Masked_filename + self.ModelFilename)
-				ONEDHistX.savefig(self.results_dir + 'DMParticle1DHistogramXposition' + self.ModelFilename)
-				DMParticleHistwFilamentsLengthCbar.savefig(self.results_dir 
-					+ 'DMParticleHistogramWFilaments_LengthCbar_' + Masked_filename 
-					+ self.ModelFilename)
-				#Interpolated_DM_particles_figure.savefig(self.results_dir 
-				#	+ 'DMParticleHistogram_interpolated' + self.ModelFilename)
+				savefigure(DMParticleHist, 'DMParticleHistogram_' + Masked_filename)
+				savefigure(DMParticleHistwFilaments, 'DMParticleHistogramWFIlaments' + Masked_filename)
+				savefigure(DMParticleHistwFilamentsLengthCbar, 'DMParticleHistogramWFilaments_LengthCbar_' + Masked_filename)
+				savefigure(ONEDHistX, 'DMParticle1DHistogramXposition')
 			if parsed_arguments.bwMethod and IncludeDMParticles:
 				if len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod[0] == 'Scott':
-					DMParticles_kernelPlot.savefig(self.results_dir + 'DMParticles_kernelPlot_Scott' + self.ModelFilename)
-					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir 
-						+ 'DMParticles_kernelPlot_Scott_logarithmic' + self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments.savefig(self.results_dir 
-						+ 'DMParticles_kernelPlot_Scott_wFilaments'+ self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments_log.savefig(self.results_dir 
-						+ 'DMParticles_kernelPlot_Scott_wFilaments_logarithmic' + self.ModelFilename)
+					savefigure(DMParticles_kernelPlot, 'DMParticles_kernelPlot_Scott')
+					savefigure(DMParticles_kernelPlot_logarithmic, 'DMParticles_kernelPlot_Scott_logarithmic')
+					savefigure(DMParticles_kernelPlot_wFilaments,  'DMParticles_kernelPlot_Scott_wFilaments')
+					savefigure(DMParticles_kernelPlot_wFilaments_log, 'DMParticles_kernelPlot_Scott_wFilaments_logarithmic')
 				elif len(parsed_arguments.bwMethod) == 1 and parsed_arguments.bwMethod[0] != 'Scott':
-					DMParticles_kernelPlot.savefig(self.results_dir 
-						+ 'DMParticles_kernelPlot' + parsed_arguments.bwMethod[0] + self.ModelFilename)
-					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir
-						+ 'DMParticles_kernelPlot_logarithmic' + parsed_arguments.bwMethod[0] 
-						+ self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments.savefig(self.results_dir
-						+ 'DMParticles_kernelPlot_wFilaments' + parsed_arguments.bwMethod[0] 
-						+ self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments_log.savefig(self.results_dir 
-						+ 'DMParticles_kernelPlot_wFilaments_logarithmic' + parsed_arguments.bwMethod[0] 
-						+ self.ModelFilename)
-					DMParticles_kernelPlot_wFilaments_log_Zoomed.savefig(self.results_dir 
-						+ 'DMParticles_kernelPlot_wFilaments_logarithmic_Zoomed' 
-						+ parsed_arguments.bwMethod[0] + self.ModelFilename)
+					savefigure(DMParticles_kernelPlot, 'DMParticles_kernelPlot_Scott' + parsed_arguments.bwMethod[0])
+					savefigure(DMParticles_kernelPlot_logarithmic, 'DMParticles_kernelPlot_Scott_logarithmic' + parsed_arguments.bwMethod[0])
+					savefigure(DMParticles_kernelPlot_wFilaments,  'DMParticles_kernelPlot_Scott_wFilaments' + parsed_arguments.bwMethod[0])
+					savefigure(DMParticles_kernelPlot_wFilaments_log, 'DMParticles_kernelPlot_Scott_wFilaments_logarithmic' + parsed_arguments.bwMethod[0])
+					savefigure(DMParticles_kernelPlot_wFilaments_log_Zoomed, 'DMParticles_kernelPlot_wFilaments_logarithmic_Zoomed' 
+															+ parsed_arguments.bwMethod[0])
 				else:
-					DMParticles_kernelPlot.savefig(self.results_dir 
-						+ 'DMParticles_kernelPlot_subplots' + self.ModelFilename)
-					DMParticles_kernelPlot_logarithmic.savefig(self.results_dir 
-						+ 'DMParticles_kernelPlot_subplots_logarithmic' + self.ModelFilename)
+					savefigure(DMParticles_kernelPlot, 'DMParticles_kernelPlot_subplots')
+					savefigure(DMParticles_kernelPlot_logarithmic, 'DMParticles_kernelPlot_subplots_logarithmic')
 		else:
 			plt.show()
 
@@ -1206,7 +1166,7 @@ if __name__ == '__main__':
 		if LCDM_model == 1:
 			print '=== Running for the LCDM model ==='
 			LCDM_z0_64_dir = 'lcdm_z0_testing/LCDM_z0_64PeriodicTesting/'
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=0, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_64_dir+'PlotsTest/', nPart=64, model='LCDM', redshift=0)
 			NConn_64PartLCDM, FilLen_64PartLCDM, NPts_64PartLCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064.a.NDskl', Sigma_threshold=4.0)
 
 			#LCDM_z0_128_dir = 'lcdm_z0_testing/LCDM_z0_128PeriodicTesting/'
