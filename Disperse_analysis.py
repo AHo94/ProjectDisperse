@@ -1074,6 +1074,29 @@ def Multiprocess_filament_per_filament(Instance, distance_threshold, box_expand,
 	NumParticles = Instance.solve(Filament[i], distance_threshold, box_expand)
 	return NumParticles
 
+def Save_NumPartPerFil(name, FilPos):
+	if type(name) != str:
+		raise ValueError('Wrong type for name. Current type is %s' %type(name))
+
+	toggle = 0
+	Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6']
+	for models in Model_check:
+		if modelfile == models:
+			toggle = True
+	if not toggle:
+		raise ValueError('Model input name %s not correctly set into the gadget file reader.' %modelfile)
+
+	cachedir_ppf = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/'
+	cachedir_lcdm = cachedir_ppf + name + '_256Part.p'
+	if os.path.isfile(cachedir_lcdm):
+		NumPartPerFil = pickle.load(open(cachedir_lcdm, 'rb'))
+	else:
+		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
+		Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, box_expand, FilPos)
+		NumPartPerFil = proc.map(Fixed_args, range(len(FilPos)))
+		pickle.dump(NumPartPerFil, open(cachedir_lcdm, 'wb'))
+	return NumPartPerFil
+
 if __name__ == '__main__':
 	parsed_arguments = Argument_parser()
 	HOMEPC = parsed_arguments.HOMEPC	# Set 1 if working in UiO terminal
@@ -1465,13 +1488,21 @@ if __name__ == '__main__':
 		"""
 		# Compute number of particles per filament.
 		# Units in Mpc/h for distance threshold and box_expand
-		proc = mp.Pool(1)#parsed_arguments.NumProcesses)
+		proc = mp.Pool(parsed_arguments.NumProcesses)
 		BoundaryCheck_list2 = [0,0,0,0,0,0]
 		Mask_check_list2 = [0,0,0]
 		distance_threshold = 0.3
 		box_expand = 1
 		# LCDM
-		LCDM_ppf_Instance = ParticlesPerFilament.particles_per_filament('lcdm', Mask_direction_check, Mask_boundary_list)
-		Fixed_args_LCDM = partial(Multiprocess_filament_per_filament, LCDM_ppf_Instance, distance_threshold, box_expand, Fil3DPos_LCDM)
-		#NumPart_PerFil_LCDM = proc.map(Fixed_args_LCDM, Fil3DPos_LCDM[0])
-		#print NumPart_PerFil_LCDM
+		NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:10])
+		"""
+		cachedir_ppf = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/'
+		cachedir_lcdm = cachedir_ppf + 'LCDM_256Part.p'
+		if os.path.isfile(cachedir_lcdm):
+			NumPartPerFil_LCDM = pickle.load(open(cachedir_lcdm, 'rb'))
+		else:
+			LCDM_ppf_Instance = ParticlesPerFilament.particles_per_filament('lcdm', Mask_check_list2, BoundaryCheck_list2)
+			Fixed_args_LCDM = partial(Multiprocess_filament_per_filament, LCDM_ppf_Instance, distance_threshold, box_expand, Fil3DPos_LCDM)
+			NumPartPerFil_LCDM = proc.map(Fixed_args_LCDM, range(len(Fil3DPos_LCDM)))
+			pickle.dump(NumPartPerFil_LCDM, open(cachedir_lcdm, 'wb'))
+		"""
