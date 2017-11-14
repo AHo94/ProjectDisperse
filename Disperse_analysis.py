@@ -1058,6 +1058,8 @@ def Save_NumPartPerFil(name, FilPos):
 		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
 		Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, box_expand, FilPos)
 		NumPartPerFil = proc.map(Fixed_args, range(len(FilPos)))
+		proc.close()
+		proc.join()
 		pickle.dump(NumPartPerFil, open(cachedir_lcdm, 'wb'))
 	return NumPartPerFil
 
