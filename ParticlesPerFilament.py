@@ -60,39 +60,62 @@ class particles_per_filament():
 		MovePartx = 0
 		MoveParty = 0
 		MovePartz = 0
-		if xmin < lower_boundary:
-			box[0] = lower_boundary
-			box2[1] = upper_boundary
-			box2[0] = upper_boundary + (xmin - lower_boundary)
-			MovePartx = -256.0
-		elif xmax > upper_boundary:
-			box[1] = upper_boundary
-			box2[0] = lower_boundary
-			box2[1] = lower_boundary + (xmax - upper_boundary)
-			MovePartx = 256.0
+		AtBoundary = 0
+		if np.abs((xmin + distance_threshold) - lower_boundary) < 1e-3:
+			box[0] = xmin + distance_threshold
+			Atboundary = 1
+		elif np.abs((xmax - distance_threshold) - upper_boundary) < 1e-3:
+			box[1] = xmax - distance_threshold
+			Atboundary = 1
+		if np.abs((ymin + distance_threshold) - lower_boundary) < 1e-3:
+			box[2] = ymin + distance_threshold
+			Atboundary = 1
+		elif np.abs((ymax - distance_threshold) - upper_boundary) < 1e-3:
+			box[3] = ymax - distance_threshold
+			Atboundary = 1
+		if np.abs((zmin + distance_threshold) - lower_boundary) < 1e-3:
+			box[4] = zmin + distance_threshold
+			Atboundary = 1
+		elif np.abs((zmax - distance_threshold) - upper_boundary) < 1e-3:
+			box[5] = zmax - distance_threshold
+			Atboundary = 1
 			
-		if ymin < lower_boundary:
-			box[2] = lower_boundary
-			box2[3] = upper_boundary
-			box2[2] = upper_boundary + (ymin - lower_boundary)
-			MoveParty = -256.0
-		elif ymax > upper_boundary:
-			box[3] = upper_boundary
-			box2[2] = lower_boundary
-			box2[3] = lower_boundary + (ymax - upper_boundary)
-			MoveParty = 256.0
-			
-		if zmin < lower_boundary:
-			box[4] = lower_boundary
-			box2[5] = upper_boundary
-			box2[4] = upper_boundary + (zmin - lower_boundary)
-			MovePartz = -256.0
-		elif zmax > upper_boundary:
-			box[5] = upper_boundary
-			box2[4] = lower_boundary
-			box2[5] = lower_boundary + (zmax - upper_boundary)
-			MovePartz = 256.0
-		# Still need to move particles to the other side of the boundary
+		if Atboundary:
+			box2 = box
+		else:
+			if xmin < lower_boundary:
+				box[0] = lower_boundary
+				box2[1] = upper_boundary
+				box2[0] = upper_boundary + (xmin - lower_boundary)
+				MovePartx = -256.0
+			elif xmax > upper_boundary:
+				box[1] = upper_boundary
+				box2[0] = lower_boundary
+				box2[1] = lower_boundary + (xmax - upper_boundary)
+				MovePartx = 256.0
+				
+			if ymin < lower_boundary:
+				box[2] = lower_boundary
+				box2[3] = upper_boundary
+				box2[2] = upper_boundary + (ymin - lower_boundary)
+				MoveParty = -256.0
+			elif ymax > upper_boundary:
+				box[3] = upper_boundary
+				box2[2] = lower_boundary
+				box2[3] = lower_boundary + (ymax - upper_boundary)
+				MoveParty = 256.0
+				
+			if zmin < lower_boundary:
+				box[4] = lower_boundary
+				box2[5] = upper_boundary
+				box2[4] = upper_boundary + (zmin - lower_boundary)
+				MovePartz = -256.0
+			elif zmax > upper_boundary:
+				box[5] = upper_boundary
+				box2[4] = lower_boundary
+				box2[5] = lower_boundary + (zmax - upper_boundary)
+				MovePartz = 256.0
+			# Still need to move particles to the other side of the boundary
 		if box == box2:
 			mask = self.particle_mask(box, ParticlePos)
 			return ParticlePos[mask]
