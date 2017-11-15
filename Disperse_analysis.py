@@ -911,13 +911,16 @@ class Disperse_Plotter():
 		return self.NumFilamentConnections, sorted(self.FilLengths), self.NFilamentPoints
 
 	def get_3D_pos(self):
-		""" Create 3D filament position. Must have called solve() function first. """
+		""" 
+		Create 3D filament position. Must have called solve() function first. 
+		Also returns filament IDs.
+		"""
 		if not self.SolveRun:
 			raise ValueError('You have not called the solve() function yet! Cannot give 3D filament position.')
 		Filament_3DPos = []
 		for i in range(len(self.xdimPos)):
 			Filament_3DPos.append(np.column_stack((self.xdimPos[i], self.ydimPos[i], self.zdimPos[i])))
-		return np.array(Filament_3DPos)
+		return np.array(Filament_3DPos), self.FilamentIDs
 
 class Read_solve_files():
 	def __init__(self):
@@ -1029,7 +1032,7 @@ def Multiprocess_filament_per_filament(Instance, distance_threshold, box_expand,
 	NumParticles = Instance.solve(Filament[i], distance_threshold, box_expand)
 	return NumParticles
 
-def Save_NumPartPerFil(name, FilPos):
+def Save_NumPartPerFil(name, FilPos, FilID):
 	""" 
 	Saves number of particle per filament data in pickle file.
 	Input is the model name and 3D filament positions.
@@ -1061,7 +1064,27 @@ def Save_NumPartPerFil(name, FilPos):
 		proc.close()
 		proc.join()
 		pickle.dump(NumPartPerFil, open(cachedir_lcdm, 'wb'))
-	return NumPartPerFil
+
+	Npart_per_fil = []#np.zeros(len(np.unique(FilID)))
+	total = 0
+	for i in range(len(FilID)):	
+		if i != len(FilID) - 1:
+			if FilID[i+1] == FilID[i]:
+				total += NumPartPerFil[i]
+				if i == len(FilID) - 2:
+					Npart_per_fil.append(total)
+			else:
+				if total != 0:
+					Npart_per_fil.append(total)
+					total = 0
+				else:
+					Npart_per_fil.append(NumPartPerFil[i])
+		else:
+			if FilID[i] == FilID[i-1]:
+				Npart_per_fil[-1] += NumPartPerFil[i]
+			else:
+				Npart_per_fil.append(NumPartPerFil[i])
+	return Npart_per_fil
 
 if __name__ == '__main__':
 	parsed_arguments = Argument_parser()
@@ -1406,35 +1429,35 @@ if __name__ == '__main__':
 		
 		LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=256, model='LCDM', redshift=0, SigmaArg=5)
 		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0256_nsig5')
-		Fil3DPos_LCDM = LCDM_instance.get_3D_pos()
+		Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
 		"""
 		SymmA_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmA_dir+'Plots/', nPart=256, model='SymmA', redshift=0, SigmaArg=5)
 		NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0256_nsig5.a.NDskl')
-		Fil3DPos_SymmA = SymmA_instance.get_3D_pos()
+		Fil3DPos_SymmA, FilID_SymmA = SymmA_instance.get_3D_pos()
 
 		SymmB_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmB_dir+'Plots/', nPart=256, model='SymmB', redshift=0, SigmaArg=5)
 		NummConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz0256_nsig5.a.NDskl')
-		Fil3DPos_SymmB = SymmB_instance.get_3D_pos()
+		Fil3DPos_SymmB, FilID_SymmB = SymmB_instance.get_3D_pos()
 		
 		SymmC_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmC_dir+'Plots/', nPart=256, model='SymmC', redshift=0, SigmaArg=5)
 		NummConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz0256_nsig5.a.NDskl')
-		Fil3DPos_SymmC = SymmC_instance.get_3D_pos()
+		Fil3DPos_SymmC, FilID_SymmC = SymmC_instance.get_3D_pos()
 		
 		SymmD_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmD_dir+'Plots/', nPart=256, model='SymmD', redshift=0, SigmaArg=5)
 		NummConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz0256_nsig5.a.NDskl')
-		Fil3DPos_SymmD = SymmD_instance.get_3D_pos()
+		Fil3DPos_SymmD, FilID_SymmD = SymmD_instance.get_3D_pos()
 		
 		fofr4_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr4_dir+'Plots/', nPart=256, model='fofr4', redshift=0, SigmaArg=5)
 		NummConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z0256_nsig5.a.NDskl')
-		Fil3dPos_fofr4 = fofr4_instance.get_3D_pos()
+		Fil3dPos_fofr4, FilID_fofr4 = fofr4_instance.get_3D_pos()
 
 		fofr5_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr5_dir+'Plots/', nPart=256, model='fofr5', redshift=0, SigmaArg=5)
 		NummConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z0256_nsig5.a.NDskl')
-		Fil3dPos_fofr5 = fofr5_instance.get_3D_pos()
+		Fil3dPos_fofr5, FilID_fofr5 = fofr5_instance.get_3D_pos()
 		
 		fofr6_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr6_dir+'Plots/', nPart=256, model='fofr6', redshift=0, SigmaArg=5)
 		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr4_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0256_nsig5.a.NDskl')
-		Fil3dPos_fofr6 = fofr6_instance.get_3D_pos()
+		Fil3dPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
 		"""
 		"""
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
@@ -1460,12 +1483,12 @@ if __name__ == '__main__':
 		distance_threshold = 0.3
 		box_expand = 1
 		"""
-		NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM)
-		NumPartPerFil_SymmA = Save_NumPartPerFil('symmA', Fil3DPos_SymmA)
-		NumPartPerFil_SymmB = Save_NumPartPerFil('symmB', Fil3DPos_SymmB)
-		NumPartPerFil_SymmC = Save_NumPartPerFil('symmC', Fil3DPos_SymmC)
-		NumPartPerFil_SymmD = Save_NumPartPerFil('symmD', Fil3DPos_SymmD)
-		NumPartPerFil_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4)
-		NumPartPerFil_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5)
-		NumPartPerFil_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6)
+		NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM)
+		NumPartPerFil_SymmA = Save_NumPartPerFil('symmA', Fil3DPos_SymmA, FilID_SymmA)
+		NumPartPerFil_SymmB = Save_NumPartPerFil('symmB', Fil3DPos_SymmB, FilID_SymmB)
+		NumPartPerFil_SymmC = Save_NumPartPerFil('symmC', Fil3DPos_SymmC, FilID_SymmC)
+		NumPartPerFil_SymmD = Save_NumPartPerFil('symmD', Fil3DPos_SymmD, FilID_SymmD)
+		NumPartPerFil_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4)
+		NumPartPerFil_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5)
+		NumPartPerFil_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6)
 		"""
