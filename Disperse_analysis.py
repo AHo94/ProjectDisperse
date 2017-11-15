@@ -1032,7 +1032,7 @@ def Multiprocess_filament_per_filament(Instance, distance_threshold, box_expand,
 	NumParticles = Instance.solve(Filament[i], distance_threshold, box_expand)
 	return NumParticles
 
-def Save_NumPartPerFil(name, FilPos, FilID):
+def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	""" 
 	Saves number of particle per filament data in pickle file.
 	Input is the model name and 3D filament positions.
@@ -1052,7 +1052,7 @@ def Save_NumPartPerFil(name, FilPos, FilID):
 	if not os.path.isdir(cachedir_ppf):
 		os.makedirs(cachedir_ppf)
 		
-	cachedir_lcdm = cachedir_ppf + name + '_256Part.p'
+	cachedir_lcdm = cachedir_ppf + name + '_' + str(npart) + 'part_nsig' + str(nsig)  + '.p'
 	if os.path.isfile(cachedir_lcdm):
 		print 'Reading number of particles pickle file for ' + name + '...'
 		NumPartPerFil = pickle.load(open(cachedir_lcdm, 'rb'))
@@ -1065,7 +1065,7 @@ def Save_NumPartPerFil(name, FilPos, FilID):
 		proc.join()
 		pickle.dump(NumPartPerFil, open(cachedir_lcdm, 'wb'))
 
-	Npart_per_fil = []#np.zeros(len(np.unique(FilID)))
+	Npart_per_fil = []
 	total = 0
 	for i in range(len(FilID)):	
 		if i != len(FilID) - 1:
@@ -1483,12 +1483,12 @@ if __name__ == '__main__':
 		distance_threshold = 0.3
 		box_expand = 1
 		"""
-		NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM)
-		NumPartPerFil_SymmA = Save_NumPartPerFil('symmA', Fil3DPos_SymmA, FilID_SymmA)
-		NumPartPerFil_SymmB = Save_NumPartPerFil('symmB', Fil3DPos_SymmB, FilID_SymmB)
-		NumPartPerFil_SymmC = Save_NumPartPerFil('symmC', Fil3DPos_SymmC, FilID_SymmC)
-		NumPartPerFil_SymmD = Save_NumPartPerFil('symmD', Fil3DPos_SymmD, FilID_SymmD)
-		NumPartPerFil_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4)
-		NumPartPerFil_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5)
-		NumPartPerFil_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6)
+		NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
+		NumPartPerFil_SymmA = Save_NumPartPerFil('symmA', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
+		NumPartPerFil_SymmB = Save_NumPartPerFil('symmB', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
+		NumPartPerFil_SymmC = Save_NumPartPerFil('symmC', Fil3DPos_SymmC, FilID_SymmC, 128, 3)
+		NumPartPerFil_SymmD = Save_NumPartPerFil('symmD', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
+		NumPartPerFil_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
+		NumPartPerFil_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
+		NumPartPerFil_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
 		"""
