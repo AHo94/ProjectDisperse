@@ -36,7 +36,7 @@ class particles_per_filament():
 		maskz = (ParticlePos[:,2] > zmin) & (ParticlePos[:,2] < zmax)
 		return maskx*masky*maskz
 
-	def particle_box(self, filament_box, ParticlePos, box_expand):
+	def particle_box(self, filament_box, ParticlePos, box_expand, distance_threshold):
 		"""
 		Creates a particle box based on the filament box. 
 		The size is increased a little to include more particles. Size increase can be changed.
@@ -60,7 +60,7 @@ class particles_per_filament():
 		MovePartx = 0
 		MoveParty = 0
 		MovePartz = 0
-		AtBoundary = 0
+		Atboundary = 0
 		if np.abs((xmin + distance_threshold) - lower_boundary) < 1e-3:
 			box[0] = xmin + distance_threshold
 			Atboundary = 1
@@ -149,7 +149,7 @@ class particles_per_filament():
 
 	def solve(self, filament, distance_threshold, box_expand):
 		filbox = self.filament_box(filament)
-		partbox = self.particle_box(filbox, self.particlepos, box_expand)
+		partbox = self.particle_box(filbox, self.particlepos, box_expand, distance_threshold)
 		distances = self.get_distance(filament, partbox)
 		return len(np.where(distances <= distance_threshold)[0])
 

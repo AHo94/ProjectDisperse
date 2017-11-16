@@ -903,7 +903,7 @@ class Disperse_Plotter():
 
 		if not Comparison:
 			if self.savefile == 2:
-				print 'Done! No files saved.'
+				print 'Done! No figures saved.'
 			else:
 				self.Plot_Figures(filename, ndim)
 		
@@ -1016,7 +1016,7 @@ def Argument_parser():
 	parser.add_argument("-sigcomp", "--SigmaComp", help="Set to 1 to compare simulations of different sigmas. 0 by default.", type=int, default=0)
 	parser.add_argument("-modelcomp", "--ModelCompare", help="Set to 1 to compare all the modified gravity models. 0 by default.", type=int, default=0)
 	parser.add_argument("-NpartModel", "--NumPartModel", help="Computes number of particles per filament for an input model. Models may be:" \
-					+ "lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Runs all by default.", type='str')
+					+ "lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Runs all by default.", type=str)
 
 	# Parse arguments
 	args = parser.parse_args()
@@ -1423,44 +1423,44 @@ if __name__ == '__main__':
 		lcdm_dir = 'lcdm_testing/LCDM_z0_128Particles/Sigma3/'
 		SymmA_dir = 'SymmA_data/SymmA_z0_128Particles/Sigma3/'
 		SymmB_dir = 'SymmB_data/SymmB_z0_128Particles/Sigma3/'
-		SymmB_dir = 'SymmC_data/SymmC_z0_128Particles/Sigma3/'
-		SymmB_dir = 'SymmD_data/SymmD_z0_128Particles/Sigma3/'
+		SymmC_dir = 'SymmC_data/SymmC_z0_128Particles/Sigma3/'
+		SymmD_dir = 'SymmD_data/SymmD_z0_128Particles/Sigma3/'
 		fofr4_dir = 'fofr4_data/fofr4_z0_128Particles/Sigma3/'
-		fofr5_dir = 'fofr4_data/fofr5_z0_128Particles/Sigma3/'
-		fofr6_dir = 'fofr4_data/fofr6_z0_128Particles/Sigma3/'
+		fofr5_dir = 'fofr5_data/fofr5_z0_128Particles/Sigma3/'
+		fofr6_dir = 'fofr6_data/fofr6_z0_128Particles/Sigma3/'
 		
 		LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=128, model='LCDM', redshift=0, SigmaArg=3)
-		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0128_nsig3')
+		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0128_nsig3.a.NDskl')
 		Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
-		
-		SymmA_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmA_dir+'Plots/', nPart=128, model='SymmA', redshift=0, SigmaArg=3)
+		"""
+		SymmA_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_dir+'Plots/', nPart=128, model='SymmA', redshift=0, SigmaArg=3)
 		NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0128_nsig3.a.NDskl')
 		Fil3DPos_SymmA, FilID_SymmA = SymmA_instance.get_3D_pos()
 
-		SymmB_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmB_dir+'Plots/', nPart=128, model='SymmB', redshift=0, SigmaArg=3)
+		SymmB_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmB_dir+'Plots/', nPart=128, model='SymmB', redshift=0, SigmaArg=3)
 		NummConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz0128_nsig3.a.NDskl')
 		Fil3DPos_SymmB, FilID_SymmB = SymmB_instance.get_3D_pos()
 		
-		SymmC_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmC_dir+'Plots/', nPart=128, model='SymmC', redshift=0, SigmaArg=3)
+		SymmC_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmC_dir+'Plots/', nPart=128, model='SymmC', redshift=0, SigmaArg=3)
 		NummConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz0128_nsig3.a.NDskl')
 		Fil3DPos_SymmC, FilID_SymmC = SymmC_instance.get_3D_pos()
 		
-		SymmD_instance = Disperse_Plotter(savefile=0, savefigDirectory=SymmD_dir+'Plots/', nPart=128, model='SymmD', redshift=0, SigmaArg=3)
+		SymmD_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmD_dir+'Plots/', nPart=128, model='SymmD', redshift=0, SigmaArg=3)
 		NummConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz0128_nsig3.a.NDskl')
 		Fil3DPos_SymmD, FilID_SymmD = SymmD_instance.get_3D_pos()
 		
-		fofr4_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr4_dir+'Plots/', nPart=128, model='fofr4', redshift=0, SigmaArg=3)
+		fofr4_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr4_dir+'Plots/', nPart=128, model='fofr4', redshift=0, SigmaArg=3)
 		NummConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z0128_nsig3.a.NDskl')
 		Fil3dPos_fofr4, FilID_fofr4 = fofr4_instance.get_3D_pos()
 
-		fofr5_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr5_dir+'Plots/', nPart=128, model='fofr5', redshift=0, SigmaArg=3)
+		fofr5_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr5_dir+'Plots/', nPart=128, model='fofr5', redshift=0, SigmaArg=3)
 		NummConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z0128_nsig3.a.NDskl')
 		Fil3dPos_fofr5, FilID_fofr5 = fofr5_instance.get_3D_pos()
 		
-		fofr6_instance = Disperse_Plotter(savefile=0, savefigDirectory=fofr6_dir+'Plots/', nPart=128, model='fofr6', redshift=0, SigmaArg=3)
-		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr4_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0128_nsig3.a.NDskl')
+		fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=128, model='fofr6', redshift=0, SigmaArg=3)
+		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0128_nsig3.a.NDskl')
 		Fil3dPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
-		
+		"""
 		"""
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		symma_64dir = 'SymmA_data/SymmA_z0_64Particles/'
