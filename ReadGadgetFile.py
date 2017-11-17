@@ -138,7 +138,7 @@ class Read_Gadget_file():
 		Histogram = 1
 		xedges = 1
 		yedges = 1
-		return self.PartPosX, self.PartPosY, self.PartPosZ, Histogram, xedges, yedges, self.DM_tree
+		return self.PartPosX, self.PartPosY, self.PartPosZ, self.PartIDs, Histogram, xedges, yedges, self.DM_tree
 
 	def Get_3D_particles(self, modelfile):
 		toggle = False
@@ -150,4 +150,4 @@ class Read_Gadget_file():
 			raise ValueError('Model input name %s not correctly set into the gadget file reader.' %modelfile)
 
 		self.read_file(modelfile)
-		return self.PartPos		
+		return self.PartPos, self.PartIDs
