@@ -8,7 +8,7 @@ upper_boundary = 256.0
 class particles_per_filament():
 	def __init__(self, model, maskdirs, masklimits):
 		RGF_instance = ReadGadgetFile.Read_Gadget_file(maskdirs, masklimits)
-		self.particlepos = RGF_instance.Get_3D_particles(model)
+		self.particlepos, self.particleIDs = RGF_instance.Get_3D_particles(model)
 
 	def filament_box(self, filament):
 		""" 
@@ -118,17 +118,20 @@ class particles_per_filament():
 			# Still need to move particles to the other side of the boundary
 		if box == box2:
 			mask = self.particle_mask(box, ParticlePos)
-			return ParticlePos[mask]
+			return ParticlePos[mask], self.particleIDs[mask]
 		else:
 			mask1 = self.particle_mask(box, ParticlePos)
 			mask2 = self.particle_mask(box2, ParticlePos)
 			Particles1 = ParticlePos[mask1]
 			Particles2 = ParticlePos[mask2]
+			PartIDs1 = self.particleIDs[mask1]
+			PartIDs2 = self.particleIDs[mask2]
 			Particles2[:,0] += MovePartx
 			Particles2[:,1] += MoveParty
 			Particles2[:,2] += MovePartz
 			Masked_particles = np.concatenate([Particles1, Particles2])
-			return Masked_particles
+			Masked_particleIDs = np.concatenate([PartIDs1, PartIDs2])
+			return Masked_particles, Masked_particleIDs
 
 	def get_distance(self, filament, part_box):
 		""" 
@@ -149,9 +152,10 @@ class particles_per_filament():
 
 	def solve(self, filament, distance_threshold, box_expand):
 		filbox = self.filament_box(filament)
-		partbox = self.particle_box(filbox, self.particlepos, box_expand, distance_threshold)
+		partbox, masked_part_ids = self.particle_box(filbox, self.particlepos, box_expand, distance_threshold)
 		distances = self.get_distance(filament, partbox)
-		return len(np.where(distances <= distance_threshold)[0])
+		accepted_particle_ids = np.where(distances <= distance_threshold)[0]
+		return len(accepted_particle_ids), masked_part_ids[accepted_particle_ids]
 
 # Everything below is old code for -periodic argument in delaunaya
 def get_filament_box(filament, filament_p2=np.array([])):

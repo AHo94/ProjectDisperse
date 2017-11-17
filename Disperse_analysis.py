@@ -1043,12 +1043,12 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		raise ValueError('Wrong type for name. Current type is %s' %type(name))
 
 	toggle = 0
-	Model_check = ['lcdm', 'symmA', 'symmB', 'symmC', 'symmD', 'fofr4', 'fofr5', 'fofr6']
+	Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6']
 	for models in Model_check:
 		if name == models:
 			toggle = True
 	if not toggle:
-		raise ValueError('Model input name %s not correctly set into the number particle per filament saver.' %modelfile)
+		raise ValueError('Model input name %s not correctly set into the number particle per filament saver.' %name)
 
 	cachedir_ppf = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/'
 	if not os.path.isdir(cachedir_ppf):
@@ -1277,7 +1277,7 @@ if __name__ == '__main__':
 			
 			if IncludeDMParticles == 1:
 				Gadget_instance = ReadGadgetFile.Read_Gadget_file(Mask_direction_check, Mask_boundary_list)
-				PartPosX, PartPosY, PartPosZ, DMHistogram, DMBinXedges, DMBinYedges, DM_KDTree = Gadget_instance.Get_particles('lcdm', includeKDTree=False)
+				PartPosX, PartPosY, PartPosZ, PartIDs, DMHistogram, DMBinXedges, DMBinYedges, DM_KDTree = Gadget_instance.Get_particles('lcdm', includeKDTree=False)
 				"""
 				#SolveReadInstance = Read_solve_files()
 				SolveReadInstance = Read_Gadget_file()
@@ -1432,7 +1432,7 @@ if __name__ == '__main__':
 		LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=128, model='LCDM', redshift=0, SigmaArg=3)
 		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0128_nsig3.a.NDskl')
 		Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
-		"""
+		
 		SymmA_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_dir+'Plots/', nPart=128, model='SymmA', redshift=0, SigmaArg=3)
 		NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0128_nsig3.a.NDskl')
 		Fil3DPos_SymmA, FilID_SymmA = SymmA_instance.get_3D_pos()
@@ -1460,7 +1460,7 @@ if __name__ == '__main__':
 		fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=128, model='fofr6', redshift=0, SigmaArg=3)
 		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0128_nsig3.a.NDskl')
 		Fil3dPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
-		"""
+		
 		"""
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		symma_64dir = 'SymmA_data/SymmA_z0_64Particles/'
@@ -1487,13 +1487,13 @@ if __name__ == '__main__':
 		if parsed_arguments.NumPartModel == 'lcdm':
 			NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
 		elif parsed_arguments.NumPartModel == 'symmA':
-			NumPartPerFil_SymmA = Save_NumPartPerFil('symmA', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
+			NumPartPerFil_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
 		elif parsed_arguments.NumPartModel == 'symmB':
-			NumPartPerFil_SymmB = Save_NumPartPerFil('symmB', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
+			NumPartPerFil_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
 		elif parsed_arguments.NumPartModel == 'symmC':
-			NumPartPerFil_SymmC = Save_NumPartPerFil('symmC', Fil3DPos_SymmC, FilID_SymmC, 128, 3)	
+			NumPartPerFil_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)	
 		elif parsed_arguments.NumPartModel == 'symmD':
-			NumPartPerFil_SymmD = Save_NumPartPerFil('symmD', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
+			NumPartPerFil_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
 		elif parsed_arguments.NumPartModel == 'fofr4':
 			NumPartPerFil_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
 		elif parsed_arguments.NumPartModel == 'fofr5':
@@ -1502,10 +1502,10 @@ if __name__ == '__main__':
 			NumPartPerFil_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
 		else:
 			NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
-			NumPartPerFil_SymmA = Save_NumPartPerFil('symmA', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
-			NumPartPerFil_SymmB = Save_NumPartPerFil('symmB', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
-			NumPartPerFil_SymmC = Save_NumPartPerFil('symmC', Fil3DPos_SymmC, FilID_SymmC, 128, 3)
-			NumPartPerFil_SymmD = Save_NumPartPerFil('symmD', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
+			NumPartPerFil_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
+			NumPartPerFil_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
+			NumPartPerFil_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)
+			NumPartPerFil_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
 			NumPartPerFil_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
 			NumPartPerFil_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
 			NumPartPerFil_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
