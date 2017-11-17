@@ -1055,38 +1055,75 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		os.makedirs(cachedir_ppf)
 		
 	cachedir_lcdm = cachedir_ppf + name + '_' + str(npart) + 'part_nsig' + str(nsig) + 'treshold' + str(distance_threshold)  + '.p'
+	"""
 	if os.path.isfile(cachedir_lcdm):
 		print 'Reading number of particles pickle file for ' + name + '...'
-		NumPartPerFil = pickle.load(open(cachedir_lcdm, 'rb'))
+		NumPartPerFil, NumPartPerFil_particleIDs = pickle.load(open(cachedir_lcdm, 'rb'))
 	else:
 		print 'Computing number of particles per filament for ' + name + '. May take a while...'
 		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
 		Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, box_expand, FilPos)
-		NumPartPerFil = proc.map(Fixed_args, range(len(FilPos)))
+		Multiproc_output = proc.map(Fixed_args, range(len(FilPos)))
+		NumPartPerFil = np.array(Multiproc_output)[:,0]
+		NumPartPerFil_particleIDs = np.array(Multiproc_output)[:,1]
 		proc.close()
 		proc.join()
-		pickle.dump(NumPartPerFil, open(cachedir_lcdm, 'wb'))
-
+		pickle.dump([NumPartPerFil, NumPartPerFil_particleIDs], open(cachedir_lcdm, 'wb'))
+	"""
+	time_start = time.clock()
+	ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
+	Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, box_expand, FilPos)
+	Multiproc_output = proc.map(Fixed_args, range(len(FilPos)))
+	proc.close()
+	proc.join()
+	print 'time tot: ', time.clock() - time_start, 's'
+	flat_multiproc_output = [item for sublist in Multiproc_output for item in sublist]
+	NumPartPerFil = np.array(flat_multiproc_output[0::2])
+	NumPartPerFil_particleIDs = np.array(flat_multiproc_output[1::2])
+	
 	Npart_per_fil = []
+	Npart_per_fil_partIDs = []
+	def append_ids(id_list):
+		temp_id = []
+		for id_list2 in id_list:
+			for ids in id_list2:
+				temp_id.append(ids)
+		Npart_per_fil_partIDs.append(np.array(temp_id))
+
 	total = 0
+	total_partids = []
+	id_append_check = 0
 	for i in range(len(FilID)):	
 		if i != len(FilID) - 1:
 			if FilID[i+1] == FilID[i]:
+				total_partids.append(NumPartPerFil_particleIDs[i])
 				total += NumPartPerFil[i]
 				if i == len(FilID) - 2:
+					id_append_check = 1
 					Npart_per_fil.append(total)
 			else:
 				if total != 0:
 					Npart_per_fil.append(total)
+					append_ids(total_partids)
 					total = 0
+					total_partids = []
 				else:
 					Npart_per_fil.append(NumPartPerFil[i])
+					Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
 		else:
 			if FilID[i] == FilID[i-1]:
 				Npart_per_fil[-1] += NumPartPerFil[i]
+				if id_append_check:
+					total_partids.append(NumPartPerFil_particleIDs[i])
+					append_ids(total_partids)
+				else:
+					raise ValueError("Something went wrong with id_append_check if test!")
+				
 			else:
 				Npart_per_fil.append(NumPartPerFil[i])
-	return Npart_per_fil
+				Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
+
+	return np.array(Npart_per_fil), np.array(NumPartPerFil_particleIDs)
 
 if __name__ == '__main__':
 	parsed_arguments = Argument_parser()
@@ -1432,7 +1469,7 @@ if __name__ == '__main__':
 		LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=128, model='LCDM', redshift=0, SigmaArg=3)
 		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0128_nsig3.a.NDskl')
 		Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
-		
+		"""
 		SymmA_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_dir+'Plots/', nPart=128, model='SymmA', redshift=0, SigmaArg=3)
 		NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0128_nsig3.a.NDskl')
 		Fil3DPos_SymmA, FilID_SymmA = SymmA_instance.get_3D_pos()
@@ -1460,7 +1497,7 @@ if __name__ == '__main__':
 		fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=128, model='fofr6', redshift=0, SigmaArg=3)
 		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0128_nsig3.a.NDskl')
 		Fil3dPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
-		
+		"""
 		"""
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		symma_64dir = 'SymmA_data/SymmA_z0_64Particles/'
@@ -1485,28 +1522,28 @@ if __name__ == '__main__':
 		distance_threshold = 0.3
 		box_expand = 1
 		if parsed_arguments.NumPartModel == 'lcdm':
-			NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
+			NumPartPerFil_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:4], FilID_LCDM[0:4], 128, 3)
 		elif parsed_arguments.NumPartModel == 'symmA':
-			NumPartPerFil_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
+			NumPartPerFil_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
 		elif parsed_arguments.NumPartModel == 'symmB':
-			NumPartPerFil_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
+			NumPartPerFil_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
 		elif parsed_arguments.NumPartModel == 'symmC':
-			NumPartPerFil_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)	
+			NumPartPerFil_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)	
 		elif parsed_arguments.NumPartModel == 'symmD':
-			NumPartPerFil_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
+			NumPartPerFil_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
 		elif parsed_arguments.NumPartModel == 'fofr4':
-			NumPartPerFil_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
+			NumPartPerFil_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
 		elif parsed_arguments.NumPartModel == 'fofr5':
-			NumPartPerFil_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
+			NumPartPerFil_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
 		elif parsed_arguments.NumPartModel == 'fofr6':
-			NumPartPerFil_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
+			NumPartPerFil_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
 		else:
-			NumPartPerFil_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
-			NumPartPerFil_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
-			NumPartPerFil_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
-			NumPartPerFil_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)
-			NumPartPerFil_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
-			NumPartPerFil_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
-			NumPartPerFil_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
-			NumPartPerFil_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
+			NumPartPerFil_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
+			NumPartPerFil_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
+			NumPartPerFil_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
+			NumPartPerFil_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)
+			NumPartPerFil_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
+			NumPartPerFil_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
+			NumPartPerFil_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
+			NumPartPerFil_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
 			

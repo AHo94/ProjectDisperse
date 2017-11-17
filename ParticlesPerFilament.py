@@ -1,5 +1,7 @@
 import numpy as np
 import ReadGadgetFile
+import os
+import cPickle as pickle
 
 # Global variables
 # Box boundaries assumed to be from 0 to 256.0 Mpc/h
@@ -7,8 +9,9 @@ lower_boundary = 0.0
 upper_boundary = 256.0
 class particles_per_filament():
 	def __init__(self, model, maskdirs, masklimits):
+		self.model = model
 		RGF_instance = ReadGadgetFile.Read_Gadget_file(maskdirs, masklimits)
-		self.particlepos, self.particleIDs = RGF_instance.Get_3D_particles(model)
+		self.particlepos = RGF_instance.Get_3D_particles(model)
 
 	def filament_box(self, filament):
 		""" 
@@ -115,23 +118,23 @@ class particles_per_filament():
 				box2[4] = lower_boundary
 				box2[5] = lower_boundary + (zmax - upper_boundary)
 				MovePartz = 256.0
-			# Still need to move particles to the other side of the boundary
+
 		if box == box2:
 			mask = self.particle_mask(box, ParticlePos)
-			return ParticlePos[mask], self.particleIDs[mask]
+			return ParticlePos[mask],1# self.particleIDs[mask]
 		else:
 			mask1 = self.particle_mask(box, ParticlePos)
 			mask2 = self.particle_mask(box2, ParticlePos)
 			Particles1 = ParticlePos[mask1]
 			Particles2 = ParticlePos[mask2]
-			PartIDs1 = self.particleIDs[mask1]
-			PartIDs2 = self.particleIDs[mask2]
+			#PartIDs1 = self.particleIDs[mask1]
+			#PartIDs2 = self.particleIDs[mask2]
 			Particles2[:,0] += MovePartx
 			Particles2[:,1] += MoveParty
 			Particles2[:,2] += MovePartz
 			Masked_particles = np.concatenate([Particles1, Particles2])
 			Masked_particleIDs = np.concatenate([PartIDs1, PartIDs2])
-			return Masked_particles, Masked_particleIDs
+			return Masked_particles,1#  Masked_particleIDs
 
 	def get_distance(self, filament, part_box):
 		""" 
@@ -151,11 +154,27 @@ class particles_per_filament():
 		return np.array(distances)
 
 	def solve(self, filament, distance_threshold, box_expand):
+		cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
+		cache_model = cachedir + self.model + '_particleIDs.p'
+
+		####
+		# Note to self, maybe return the mask instead of all Ids and lengths.
+		# This will prevent sending a lot of data arouund multi processing.
+		# One caveat is that we have to read the gadget file twice, but should not be an issue.
+		# Returning True/False array mask would probably be excessive in terms of memory usage.
+		# Try returning indices where the mask is True.
+		# Masking is the time consuming part anyway.
+		####
+		#if os.path.isfile(cache_model):
+		#	self.particleIDs = pickle.load(open(cache_model, 'rb'))
+		#else:
+		#	raise ValueError("Pickle file containing particle IDs does not exist!")
+
 		filbox = self.filament_box(filament)
 		partbox, masked_part_ids = self.particle_box(filbox, self.particlepos, box_expand, distance_threshold)
 		distances = self.get_distance(filament, partbox)
 		accepted_particle_ids = np.where(distances <= distance_threshold)[0]
-		return len(accepted_particle_ids), masked_part_ids[accepted_particle_ids]
+		return len(accepted_particle_ids),1# masked_part_ids[accepted_particle_ids]
 
 # Everything below is old code for -periodic argument in delaunaya
 def get_filament_box(filament, filament_p2=np.array([])):

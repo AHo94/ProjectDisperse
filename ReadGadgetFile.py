@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import spatial
-
+import os
+import cPickle as pickle
 class Read_Gadget_file():
 	def __init__(self, mask_check, boundary_list):
 		self.Mask_check_list = mask_check
@@ -150,4 +151,12 @@ class Read_Gadget_file():
 			raise ValueError('Model input name %s not correctly set into the gadget file reader.' %modelfile)
 
 		self.read_file(modelfile)
-		return self.PartPos, self.PartIDs
+		
+		cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
+		if not os.path.isdir(cachedir):
+			os.makedirs(cachedir)
+
+		cache_model = cachedir + modelfile + '_particleIDs.p'
+		if not os.path.isfile(cache_model):
+			pickle.dump(self.PartIDs, open(cache_model, 'wb'))
+		return self.PartPos#, 1#self.PartIDs
