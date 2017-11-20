@@ -159,4 +159,4 @@ class Read_Gadget_file():
 		cache_model = cachedir + modelfile + '_particleIDs.p'
 		if not os.path.isfile(cache_model):
 			pickle.dump(self.PartIDs, open(cache_model, 'wb'))
-		return self.PartPos#, 1#self.PartIDs
+		return self.PartPos
