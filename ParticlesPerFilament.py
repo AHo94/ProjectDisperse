@@ -8,10 +8,11 @@ import cPickle as pickle
 lower_boundary = 0.0
 upper_boundary = 256.0
 class particles_per_filament():
-	def __init__(self, model, maskdirs, masklimits):
+	def __init__(self, model, maskdirs, masklimits, box_expand):
 		self.model = model
 		RGF_instance = ReadGadgetFile.Read_Gadget_file(maskdirs, masklimits)
 		self.particlepos = RGF_instance.Get_3D_particles(model)
+		self.box_expand = box_expand
 
 	def filament_box(self, filament):
 		""" 
@@ -39,7 +40,7 @@ class particles_per_filament():
 		maskz = (ParticlePos[:,2] > zmin) & (ParticlePos[:,2] < zmax)
 		return maskx*masky*maskz
 
-	def particle_box(self, filament_box, ParticlePos, box_expand, distance_threshold):
+	def particle_box(self, filament_box, distance_threshold):
 		"""
 		Creates a particle box based on the filament box. 
 		The size is increased a little to include more particles. Size increase can be changed.
@@ -52,35 +53,35 @@ class particles_per_filament():
 		Particles in the other box, the ones close to xmax, will be moved so they are close to xmin.
 		See notes for more details.
 		"""
-		xmin = filament_box[0] - box_expand
-		xmax = filament_box[1] + box_expand
-		ymin = filament_box[2] - box_expand
-		ymax = filament_box[3] + box_expand
-		zmin = filament_box[4] - box_expand
-		zmax = filament_box[5] + box_expand
+		xmin = filament_box[0] - self.box_expand
+		xmax = filament_box[1] + self.box_expand
+		ymin = filament_box[2] - self.box_expand
+		ymax = filament_box[3] + self.box_expand
+		zmin = filament_box[4] - self.box_expand
+		zmax = filament_box[5] + self.box_expand
 		box = [xmin, xmax, ymin, ymax, zmin, zmax]
 		box2 = [xmin, xmax, ymin, ymax, zmin, zmax]
 		MovePartx = 0
 		MoveParty = 0
 		MovePartz = 0
 		Atboundary = 0
-		if np.abs((xmin + distance_threshold) - lower_boundary) < 1e-3:
-			box[0] = xmin + distance_threshold
+		if np.abs((xmin + self.box_expand) - lower_boundary) < 1e-3:
+			box[0] = xmin + self.box_expand
 			Atboundary = 1
-		elif np.abs((xmax - distance_threshold) - upper_boundary) < 1e-3:
-			box[1] = xmax - distance_threshold
+		elif np.abs((xmax - self.box_expand) - upper_boundary) < 1e-3:
+			box[1] = xmax - self.box_expand
 			Atboundary = 1
-		if np.abs((ymin + distance_threshold) - lower_boundary) < 1e-3:
-			box[2] = ymin + distance_threshold
+		if np.abs((ymin + self.box_expand) - lower_boundary) < 1e-3:
+			box[2] = ymin + self.box_expand
 			Atboundary = 1
-		elif np.abs((ymax - distance_threshold) - upper_boundary) < 1e-3:
-			box[3] = ymax - distance_threshold
+		elif np.abs((ymax - self.box_expand) - upper_boundary) < 1e-3:
+			box[3] = ymax - self.box_expand
 			Atboundary = 1
-		if np.abs((zmin + distance_threshold) - lower_boundary) < 1e-3:
-			box[4] = zmin + distance_threshold
+		if np.abs((zmin + self.box_expand) - lower_boundary) < 1e-3:
+			box[4] = zmin + self.box_expand
 			Atboundary = 1
-		elif np.abs((zmax - distance_threshold) - upper_boundary) < 1e-3:
-			box[5] = zmax - distance_threshold
+		elif np.abs((zmax - self.box_expand) - upper_boundary) < 1e-3:
+			box[5] = zmax - self.box_expand
 			Atboundary = 1
 			
 		if Atboundary:
@@ -120,13 +121,13 @@ class particles_per_filament():
 				MovePartz = 256.0
 
 		if box == box2:
-			mask = self.particle_mask(box, ParticlePos)
-			return ParticlePos[mask],1# self.particleIDs[mask]
+			mask = self.particle_mask(box, self.particlepos)
+			return self.particlepos[mask],1# self.particleIDs[mask]
 		else:
-			mask1 = self.particle_mask(box, ParticlePos)
-			mask2 = self.particle_mask(box2, ParticlePos)
-			Particles1 = ParticlePos[mask1]
-			Particles2 = ParticlePos[mask2]
+			mask1 = self.particle_mask(box, self.particlepos)
+			mask2 = self.particle_mask(box2, self.particlepos)
+			Particles1 = self.particlepos[mask1]
+			Particles2 = self.particlepos[mask2]
 			#PartIDs1 = self.particleIDs[mask1]
 			#PartIDs2 = self.particleIDs[mask2]
 			Particles2[:,0] += MovePartx
@@ -136,7 +137,136 @@ class particles_per_filament():
 			Masked_particleIDs = np.concatenate([PartIDs1, PartIDs2])
 			return Masked_particles,1#  Masked_particleIDs
 
-	def get_distance(self, filament, part_box):
+	def particle_box2(self, filament, masked_ids):
+		"""
+		Creates a particle box based on the filament box. 
+		The size is increased a little to include more particles. Size increase can be changed.
+		If the box increase surpasses the simulation box, the box will 'continue' on the other side.
+		This will create two seperate boxes. Particles in the second box will be moved to the other boundary.
+
+		Example: Filament is near the left edge of the x-axis, i.e close to xmin.
+		The box_expand causes xmin - box_expand to be less than the boundary, i.e xmin - box_expand < 0.
+		We create a second box at the other side of the boundary, i.e xmax, with the size corresponding of whats left of the difference xmin - lower_boundary.
+		Particles in the other box, the ones close to xmax, will be moved so they are close to xmin.
+		See notes for more details.
+		"""
+		xmin = np.min(filament[:,0]) - self.box_expand
+		xmax = np.max(filament[:,0]) + self.box_expand
+		ymin = np.min(filament[:,1]) - self.box_expand
+		ymax = np.max(filament[:,1]) + self.box_expand
+		zmin = np.min(filament[:,2]) - self.box_expand
+		zmax = np.max(filament[:,2]) + self.box_expand
+		MovePartx = 0
+		MoveParty = 0
+		MovePartz = 0
+		if xmin < lower_boundary:
+			MovePartx = -256.0
+		elif xmax > upper_boundary:
+			MovePartx = 256.0
+				
+		if ymin < lower_boundary:
+			MoveParty = -256.0
+		elif ymax > upper_boundary:
+			MoveParty = 256.0
+				
+		if zmin < lower_boundary:
+			MovePartz = -256.0
+		elif zmax > upper_boundary:
+			MovePartz = 256.0
+
+		if len(masked_ids) == 1:
+			return self.particlepos[masked_ids]
+		else:
+			mask1 = masked_ids[0]
+			mask2 = masked_ids[1]
+			Particles1 = self.particlepos[mask1]
+			Particles2 = self.particlepos[mask2]
+			Particles2[:,0] += MovePartx
+			Particles2[:,1] += MoveParty
+			Particles2[:,2] += MovePartz
+			Masked_particle_box = np.concatenate([Particles1, Particles2])
+			return Masked_particles_box
+
+	def masked_particle_indices(self, filament_box, ParticlePos):
+		"""
+		Creates a mask of the particles based on the filament box.
+		The function will return particle IDs based on the corresponding mask.
+		The particle IDs will correspond to the particle box.
+		This function does NOT create a particle box for computation.
+		"""
+		xmin = filament_box[0] - self.box_expand
+		xmax = filament_box[1] + self.box_expand
+		ymin = filament_box[2] - self.box_expand
+		ymax = filament_box[3] + self.box_expand
+		zmin = filament_box[4] - self.box_expand
+		zmax = filament_box[5] + self.box_expand
+		box = [xmin, xmax, ymin, ymax, zmin, zmax]
+		box2 = [xmin, xmax, ymin, ymax, zmin, zmax]
+		MovePartx = 0
+		MoveParty = 0
+		MovePartz = 0
+		Atboundary = 0
+		if np.abs((xmin + self.box_expand) - lower_boundary) < 1e-3:
+			box[0] = xmin + self.box_expand
+			Atboundary = 1
+		elif np.abs((xmax - self.box_expand) - upper_boundary) < 1e-3:
+			box[1] = xmax - self.box_expand
+			Atboundary = 1
+		if np.abs((ymin + self.box_expand) - lower_boundary) < 1e-3:
+			box[2] = ymin + self.box_expand
+			Atboundary = 1
+		elif np.abs((ymax - self.box_expand) - upper_boundary) < 1e-3:
+			box[3] = ymax - self.box_expand
+			Atboundary = 1
+		if np.abs((zmin + self.box_expand) - lower_boundary) < 1e-3:
+			box[4] = zmin + self.box_expand
+			Atboundary = 1
+		elif np.abs((zmax - self.box_expand) - upper_boundary) < 1e-3:
+			box[5] = zmax - self.box_expand
+			Atboundary = 1
+			
+		if Atboundary:
+			box2 = box
+		else:
+			if xmin < lower_boundary:
+				box[0] = lower_boundary
+				box2[1] = upper_boundary
+				box2[0] = upper_boundary + (xmin - lower_boundary)
+			elif xmax > upper_boundary:
+				box[1] = upper_boundary
+				box2[0] = lower_boundary
+				box2[1] = lower_boundary + (xmax - upper_boundary)
+				
+			if ymin < lower_boundary:
+				box[2] = lower_boundary
+				box2[3] = upper_boundary
+				box2[2] = upper_boundary + (ymin - lower_boundary)
+			elif ymax > upper_boundary:
+				box[3] = upper_boundary
+				box2[2] = lower_boundary
+				box2[3] = lower_boundary + (ymax - upper_boundary)
+				
+			if zmin < lower_boundary:
+				box[4] = lower_boundary
+				box2[5] = upper_boundary
+				box2[4] = upper_boundary + (zmin - lower_boundary)
+			elif zmax > upper_boundary:
+				box[5] = upper_boundary
+				box2[4] = lower_boundary
+				box2[5] = lower_boundary + (zmax - upper_boundary)
+
+		if box == box2:
+			mask = self.particle_mask(box, self.particlepos)
+			return np.where(mask)[0]
+		else:
+			mask1 = self.particle_mask(box, self.particlepos)
+			mask2 = self.particle_mask(box2, self.particlepos)
+			indices1 = np.where(mask1)[0]
+			indices2 = np.where(mask2)[0]
+			#Masked_indices = np.concatenate([indices1, indices2])
+			return np.array([indices1, indices2])
+
+	def get_distance_old(self, filament, part_box):
 		""" 
 		Computes the distance from a particle to every segment in the filament.
 		Only the shortest distance is included.
@@ -153,7 +283,28 @@ class particles_per_filament():
 			distances.append(np.min(d))
 		return np.array(distances)
 
-	def solve(self, filament, distance_threshold, box_expand):
+	def get_distance(self, filament, masked_ids):
+		""" 
+		Computes the distance from a particle to every segment in the filament.
+		Only the shortest distance is included.
+		Input must be filament 3D position and the corresponding particle mask.
+		"""
+		part_box = self.particle_box2(filament, masked_ids)
+		Filament_point_diff = np.linalg.norm(filament[1:] - filament[:-1], axis=1)
+		for part_pos in part_box:
+			diff1 = part_pos - filament[1:]
+			diff2 = part_pos - filament[:-1]
+			cross_prod = np.cross(diff1, diff2)
+			cross_prod_norm = np.linalg.norm(cross_prod, axis=1)
+			d = cross_prod_norm/Filament_point_diff
+		return np.min(d)
+
+	def get_masked_ids(self, filament):
+		filbox = self.filament_box(filament)
+		masked_ids = self.masked_particle_indices(filbox)
+		return masked_ids
+
+	def solve(self, filament, distance_threshold):
 		cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
 		cache_model = cachedir + self.model + '_particleIDs.p'
 
@@ -164,6 +315,7 @@ class particles_per_filament():
 		# Returning True/False array mask would probably be excessive in terms of memory usage.
 		# Try returning indices where the mask is True.
 		# Masking is the time consuming part anyway.
+		# See solve function above
 		####
 		#if os.path.isfile(cache_model):
 		#	self.particleIDs = pickle.load(open(cache_model, 'rb'))
@@ -171,7 +323,7 @@ class particles_per_filament():
 		#	raise ValueError("Pickle file containing particle IDs does not exist!")
 
 		filbox = self.filament_box(filament)
-		partbox, masked_part_ids = self.particle_box(filbox, self.particlepos, box_expand, distance_threshold)
+		partbox, masked_part_ids = self.particle_box(filbox, distance_threshold)
 		distances = self.get_distance(filament, partbox)
 		accepted_particle_ids = np.where(distances <= distance_threshold)[0]
 		return len(accepted_particle_ids),1# masked_part_ids[accepted_particle_ids]
@@ -221,29 +373,3 @@ def get_filament_box(filament, filament_p2=np.array([])):
 		box1 = [xmin, xmax, ymin, ymax, zmin, zmax]
 		box2 = [xmin_p2, xmax_p2, ymin_p2, ymax_p2, zmin_p2, zmax_p2]
 		return [box1, box2]
-
-
-"""
-def PartPerFilament(filaments, filamentID, particlepos):
-	fil = filaments[0]
-	xmin = np.min(fil[:,0])
-	xmax = np.max(fil[:,0])
-	ymin = np.min(fil[:,1])
-	ymax = np.max(fil[:,1])
-	zmin = np.min(fil[:,2])
-	zmax = np.max(fil[:,2])
-
-	FilamentPos = np.column_stack((fil[:,0], fil[:,1]))
-	#x = fil[:,0]
-	#y = fil[:,1]
-	#FilamentPos = []
-	#for i in range(len(x)):
-	#	FilamentPos.append(np.array([x[i], y[i]]))
-	#print FilamentPos
-	fig, ax = plt.subplots()
-	ax.set_xlim([xmin, xmax])
-	ax.set_ylim([ymin, ymax])
-	line = LineCollection([FilamentPos], linestyle='solid')
-	ax.add_collection(line)
-	plt.show()
-"""
