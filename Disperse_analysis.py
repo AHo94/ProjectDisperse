@@ -1022,23 +1022,40 @@ def Argument_parser():
 	args = parser.parse_args()
 	return args
 
-def Multiprocess_filament_per_filament(Instance, distance_threshold, box_expand, Filament, i):
+def Multiprocess_filament_per_filament(Instance, distance_threshold, Filament, i):
 	""" 
 	Computes number of particles per filament in parallel.
 	Input must be 3D filament position, as well as a given distance threshold from particle to filament.
-	Box expand expands the box which covers the given filament. Ensures that it includes all particles.
-	Box_expand must be larger than distance_threshold
 	"""
-	if box_expand < distance_threshold:
-		raise ValueError('Box expand must be larger than the distance threshold!')
-	NumParticles = Instance.solve(Filament[i], distance_threshold, box_expand)
+	NumParticles = Instance.solve(Filament[i], distance_threshold)
 	return NumParticles
+
+def Multiprocess_masked_particle_ids(Instance, Filament, i):
+	""" 
+	Computes the masked particle indices.
+	Input must be 3D filament position.
+	"""
+	Indices = Instance.get_masked_ids(Filament[i])
+	return Indices
+
+def Multiprocess_particle_distances(Instance, Masked_ids, Filament, i):
+	""" 
+	Computes the masked particle indices.
+	Input must be 3D filament position.
+	"""
+	Distances = Instance.get_distance(Filament[i], Masked_ids[i])
+	return Distances
 
 def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	""" 
 	Saves number of particle per filament data in pickle file.
 	Input is the model name and 3D filament positions.
+	Box expand expands the box which covers the given filament. Ensures that it includes all particles.
+	Box_expand must be larger than distance_threshold
 	"""
+	if box_expand < distance_threshold:
+		raise ValueError('Box expand must be larger than the distance threshold!')
+
 	if type(name) != str:
 		raise ValueError('Wrong type for name. Current type is %s' %type(name))
 
@@ -1050,80 +1067,110 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	if not toggle:
 		raise ValueError('Model input name %s not correctly set into the number particle per filament saver.' %name)
 
-	cachedir_ppf = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/'
-	if not os.path.isdir(cachedir_ppf):
+	cachedir_ppf_distances = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/Distances/'
+	cachedir_ppf_ids = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/MaskedParticlesIDs/'
+	cache_particledata = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
+	if not os.path.isdir(cachedir_ppf_distances):
 		os.makedirs(cachedir_ppf)
+	if not os.math.isdir(cachedir_ppf_ids):
+		os.makedirs(cachedir_ppf_ids)
 		
-	cachedir_lcdm = cachedir_ppf + name + '_' + str(npart) + 'part_nsig' + str(nsig) + 'treshold' + str(distance_threshold)  + '.p'
+	cachefile_distances = cachedir_ppf + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p' 
 	"""
-	if os.path.isfile(cachedir_lcdm):
+	if os.path.isfile(cachefile):
 		print 'Reading number of particles pickle file for ' + name + '...'
-		NumPartPerFil, NumPartPerFil_particleIDs = pickle.load(open(cachedir_lcdm, 'rb'))
+		NumPartPerFil, NumPartPerFil_particleIDs = pickle.load(open(cachefile, 'rb'))
 	else:
 		print 'Computing number of particles per filament for ' + name + '. May take a while...'
 		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
-		Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, box_expand, FilPos)
+		Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, FilPos)
 		Multiproc_output = proc.map(Fixed_args, range(len(FilPos)))
 		NumPartPerFil = np.array(Multiproc_output)[:,0]
 		NumPartPerFil_particleIDs = np.array(Multiproc_output)[:,1]
 		proc.close()
 		proc.join()
-		pickle.dump([NumPartPerFil, NumPartPerFil_particleIDs], open(cachedir_lcdm, 'wb'))
+		pickle.dump([NumPartPerFil, NumPartPerFil_particleIDs], open(cachefile, 'wb'))
 	"""
-	time_start = time.clock()
-	ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
-	Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, box_expand, FilPos)
-	Multiproc_output = proc.map(Fixed_args, range(len(FilPos)))
-	proc.close()
-	proc.join()
-	print 'time tot: ', time.clock() - time_start, 's'
-	flat_multiproc_output = [item for sublist in Multiproc_output for item in sublist]
-	NumPartPerFil = np.array(flat_multiproc_output[0::2])
-	NumPartPerFil_particleIDs = np.array(flat_multiproc_output[1::2])
-	
+	Nfils_iterate = range(len(FilPos))
+	if os.path.isfile(cachefile_ids):
+		print 'Reading masked particle IDs for ' + name + '...'
+		Masked_ids = pickle.load(open(cachefile_ids, 'rb'))
+	else:
+		print 'Computing masked particle indices for ' + name + '. May take a while...'
+		Toggle_distance_computing = 1
+		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
+		Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
+		Masked_ids = np.array(proc.map(Fixed_args, Nfils_iterate))
+		pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
+
+	is os.path.isfile(cachefile_distances):
+		print 'Reading number of particles pickle file for ' + name + '...'
+		Particle_distances = pickle.load(open(cachefile_distances, 'rb'))
+	elif not os.path.isfile(cachefile_distances) and Toggle_distance_computing:
+		print 'Computing number of particles per filament for ' + name + '. may take a while...'
+		Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance, Masked_ids, FilPos)
+		Distances = np.array(proc.map(Fixed_args_distances, Nfils_iterate))
+		proc.close()
+		proc.join()
+		pickle.dump(Distances, open(cachedir_ppf_distances, 'wb'))
+
+	Accepted_distances = np.where(Distances <= distance_threshold)[0]
+	NumPartPerFil = len(Accepted_distances)
+
+	cache_model = cache_particledata + name + '_particleIDs.p'
+	if os.path.isfile(cache_model):
+		Particle_IDs = pickle.load(open(cache_model, 'rb'))
+	else:
+		raise ValueError("Particle ID pickle file does not exist!")
+
+	Filament_part_IDs = []
+	for mask in MaskeD_ids:
+		Filament_part_IDs.append(Particle_IDs[mask])
+
 	Npart_per_fil = []
-	Npart_per_fil_partIDs = []
-	def append_ids(id_list):
-		temp_id = []
-		for id_list2 in id_list:
-			for ids in id_list2:
-				temp_id.append(ids)
-		Npart_per_fil_partIDs.append(np.array(temp_id))
+	#Npart_per_fil_partIDs = []
+	#def append_ids(id_list):
+	#	temp_id = []
+	#	for id_list2 in id_list:
+	#		for ids in id_list2:
+	#			temp_id.append(ids)
+	#	Npart_per_fil_partIDs.append(np.array(temp_id))
 
 	total = 0
-	total_partids = []
-	id_append_check = 0
+	#total_partids = []
+	#id_append_check = 0
 	for i in range(len(FilID)):	
 		if i != len(FilID) - 1:
 			if FilID[i+1] == FilID[i]:
-				total_partids.append(NumPartPerFil_particleIDs[i])
+				#total_partids.append(NumPartPerFil_particleIDs[i])
 				total += NumPartPerFil[i]
 				if i == len(FilID) - 2:
-					id_append_check = 1
+					#id_append_check = 1
 					Npart_per_fil.append(total)
 			else:
 				if total != 0:
 					Npart_per_fil.append(total)
-					append_ids(total_partids)
+					#append_ids(total_partids)
 					total = 0
-					total_partids = []
+					#total_partids = []
 				else:
 					Npart_per_fil.append(NumPartPerFil[i])
-					Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
+					#Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
 		else:
 			if FilID[i] == FilID[i-1]:
 				Npart_per_fil[-1] += NumPartPerFil[i]
-				if id_append_check:
-					total_partids.append(NumPartPerFil_particleIDs[i])
-					append_ids(total_partids)
-				else:
-					raise ValueError("Something went wrong with id_append_check if test!")
+				#if id_append_check:
+				#	total_partids.append(NumPartPerFil_particleIDs[i])
+				#	append_ids(total_partids)
+				#else:
+				#	raise ValueError("Something went wrong with id_append_check if test!")
 				
 			else:
 				Npart_per_fil.append(NumPartPerFil[i])
-				Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
+				#Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
 
-	return np.array(Npart_per_fil), np.array(NumPartPerFil_particleIDs)
+	return np.array(Npart_per_fil), np.array(Filament_part_IDs)
 
 if __name__ == '__main__':
 	parsed_arguments = Argument_parser()
