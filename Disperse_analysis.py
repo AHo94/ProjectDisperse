@@ -1071,11 +1071,11 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	cachedir_ppf_ids = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/MaskedParticlesIDs/'
 	cache_particledata = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
 	if not os.path.isdir(cachedir_ppf_distances):
-		os.makedirs(cachedir_ppf)
-	if not os.math.isdir(cachedir_ppf_ids):
+		os.makedirs(cachedir_ppf_distances)
+	if not os.path.isdir(cachedir_ppf_ids):
 		os.makedirs(cachedir_ppf_ids)
 		
-	cachefile_distances = cachedir_ppf + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
 	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p' 
 	"""
 	if os.path.isfile(cachefile):
@@ -1095,28 +1095,36 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	Nfils_iterate = range(len(FilPos))
 	if os.path.isfile(cachefile_ids):
 		print 'Reading masked particle IDs for ' + name + '...'
+		Toggle_distance_computing = 0
 		Masked_ids = pickle.load(open(cachefile_ids, 'rb'))
 	else:
 		print 'Computing masked particle indices for ' + name + '. May take a while...'
 		Toggle_distance_computing = 1
 		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
 		Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
-		Masked_ids = np.array(proc.map(Fixed_args, Nfils_iterate))
+		Masked_ids = np.array(proc.map(Fixed_args_ids, Nfils_iterate))
 		pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
-
-	is os.path.isfile(cachefile_distances):
+		#proc.close()
+		#proc.join()
+	Distances = []
+	if os.path.isfile(cachefile_distances):
 		print 'Reading number of particles pickle file for ' + name + '...'
-		Particle_distances = pickle.load(open(cachefile_distances, 'rb'))
+		Distances = pickle.load(open(cachefile_distances, 'rb'))
 	elif not os.path.isfile(cachefile_distances) and Toggle_distance_computing:
 		print 'Computing number of particles per filament for ' + name + '. may take a while...'
-		Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance, Masked_ids, FilPos)
-		Distances = np.array(proc.map(Fixed_args_distances, Nfils_iterate))
-		proc.close()
-		proc.join()
-		pickle.dump(Distances, open(cachedir_ppf_distances, 'wb'))
-
-	Accepted_distances = np.where(Distances <= distance_threshold)[0]
-	NumPartPerFil = len(Accepted_distances)
+		#Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance, Masked_ids, FilPos)
+		#Distances = np.array(proc.map(Fixed_args_distances, Nfils_iterate))
+		for ids in Nfils_iterate:
+			Distances.append(ppf_instance.get_distance(FilPos[ids], Masked_ids[ids]))
+		#proc.close()
+		#proc.join()
+		pickle.dump(Distances, open(cachefile_distances, 'wb'))
+        
+	NumPartPerFil = []
+	for dist in Distances:
+		Accepted_distances = np.where(dist <= distance_threshold)[0]
+		NumPartPerFil.append(len(Accepted_distances))
+	#NumPartPerFil = len(Accepted_distances)
 
 	cache_model = cache_particledata + name + '_particleIDs.p'
 	if os.path.isfile(cache_model):
@@ -1125,7 +1133,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		raise ValueError("Particle ID pickle file does not exist!")
 
 	Filament_part_IDs = []
-	for mask in MaskeD_ids:
+	for mask in Masked_ids:
 		Filament_part_IDs.append(Particle_IDs[mask])
 
 	Npart_per_fil = []
@@ -1169,7 +1177,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 			else:
 				Npart_per_fil.append(NumPartPerFil[i])
 				#Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
-
+	print 'Done'
 	return np.array(Npart_per_fil), np.array(Filament_part_IDs)
 
 if __name__ == '__main__':
@@ -1563,7 +1571,9 @@ if __name__ == '__main__':
 		"""
 		# Compute number of particles per filament.
 		# Units in Mpc/h for distance threshold and box_expand
+		time_proc_start = time.clock()
 		proc = mp.Pool(parsed_arguments.NumProcesses)
+		print 'Processor preparation: ', time.clock() - time_proc_start, 's'
 		BoundaryCheck_list2 = [0,0,0,0,0,0]
 		Mask_check_list2 = [0,0,0]
 		distance_threshold = 0.3
@@ -1593,4 +1603,5 @@ if __name__ == '__main__':
 			NumPartPerFil_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
 			NumPartPerFil_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
 			NumPartPerFil_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
-			
+		proc.close()
+		proc.join()

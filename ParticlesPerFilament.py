@@ -174,12 +174,10 @@ class particles_per_filament():
 		elif zmax > upper_boundary:
 			MovePartz = 256.0
 
-		if len(masked_ids) == 1:
+		if not len(masked_ids) == 2:
 			return self.particlepos[masked_ids]
 		else:
-			mask1 = masked_ids[0]
-			mask2 = masked_ids[1]
-			Particles1 = self.particlepos[mask1]
+			Particles1 = self.particlepos[masked]
 			Particles2 = self.particlepos[mask2]
 			Particles2[:,0] += MovePartx
 			Particles2[:,1] += MoveParty
@@ -187,7 +185,7 @@ class particles_per_filament():
 			Masked_particle_box = np.concatenate([Particles1, Particles2])
 			return Masked_particles_box
 
-	def masked_particle_indices(self, filament_box, ParticlePos):
+	def masked_particle_indices(self, filament_box):
 		"""
 		Creates a mask of the particles based on the filament box.
 		The function will return particle IDs based on the corresponding mask.
@@ -291,13 +289,15 @@ class particles_per_filament():
 		"""
 		part_box = self.particle_box2(filament, masked_ids)
 		Filament_point_diff = np.linalg.norm(filament[1:] - filament[:-1], axis=1)
+		distances = []
 		for part_pos in part_box:
 			diff1 = part_pos - filament[1:]
 			diff2 = part_pos - filament[:-1]
 			cross_prod = np.cross(diff1, diff2)
 			cross_prod_norm = np.linalg.norm(cross_prod, axis=1)
 			d = cross_prod_norm/Filament_point_diff
-		return np.min(d)
+			distances.append(np.min(d))
+		return np.array(distances)
 
 	def get_masked_ids(self, filament):
 		filbox = self.filament_box(filament)
