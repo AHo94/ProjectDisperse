@@ -1120,12 +1120,12 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		#proc.join()
 		pickle.dump(Distances, open(cachefile_distances, 'wb'))
         
-	NumPartPerFil = []
-	for dist in Distances:
-		Accepted_distances = np.where(dist <= distance_threshold)[0]
-		NumPartPerFil.append(len(Accepted_distances))
+	#NumPartPerFil = []
+	#for dist in Distances:
+	#	Accepted_distances = np.where(dist <= distance_threshold)[0]
+	#	NumPartPerFil.append(len(Accepted_distances))
 	#NumPartPerFil = len(Accepted_distances)
-
+	NumPartPerFil = Distances
 	cache_model = cache_particledata + name + '_particleIDs.p'
 	if os.path.isfile(cache_model):
 		Particle_IDs = pickle.load(open(cache_model, 'rb'))
