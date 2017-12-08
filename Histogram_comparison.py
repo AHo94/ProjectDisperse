@@ -131,7 +131,7 @@ class Histogram_Comparison():
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(self.NumberConnections[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of connected filaments')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of number filament connections \n with '+str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)		
 		plt.legend(self.LegendText)
 		plt.hold(False)
@@ -141,7 +141,7 @@ class Histogram_Comparison():
 		for i in range(self.N):
 			plt.hist(self.FilamentLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of filament length \n with ' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
 		plt.legend(self.LegendText)
 		plt.hold(False)
@@ -155,7 +155,7 @@ class Histogram_Comparison():
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(self.NPointsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of points per filament')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of number of datapoints per filament \n with ' +str(self.nParticles) + '$\mathregular{^3}$ particle'+subsample_text)
 		plt.legend(self.LegendText)
 		plt.hold(False)
@@ -189,7 +189,7 @@ class Histogram_Comparison():
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(Nconnections[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of connected filaments')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of number connections per filament')
 		plt.legend(Legends)
 		plt.hold(False)
@@ -199,7 +199,7 @@ class Histogram_Comparison():
 		for i in range(N):
 			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of filament lengths')
 		plt.legend(Legends)
 		plt.hold(False)
@@ -213,7 +213,7 @@ class Histogram_Comparison():
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(NptsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of points per filament')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of number data points per filament')
 		plt.legend(Legends)
 		plt.hold(False)
@@ -245,7 +245,7 @@ class Histogram_Comparison():
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(Nconnections[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of connected filaments')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of number connections per filament for $\mathregular{\sigma=}$' + str(nsigma))
 		plt.legend(Legends)
 		plt.hold(False)
@@ -255,7 +255,7 @@ class Histogram_Comparison():
 		for i in range(N):
 			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=400, normed=False, histtype='step')
 		plt.xlabel('Filament lengths')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of filament lengths for $\mathregular{\sigma=}$' + str(nsigma))
 		plt.legend(Legends)
 		plt.hold(False)
@@ -269,7 +269,7 @@ class Histogram_Comparison():
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(NptsPerFilament[i], align='mid', rwidth=1, bins=BinList, normed=False, alpha=alphas[i], histtype='step')
 		plt.xlabel('Number of points per filament')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of number data points per filament for $\mathregular{\sigma=}$' + str(nsigma))
 		plt.legend(Legends)
 		plt.hold(False)
@@ -288,7 +288,26 @@ class Histogram_Comparison():
 			plt.show()
 		plt.close('all')
 
-	def Compare_mg_models(self, Nconnections, FilLengths, NptsPerFilament):
+class CompareModels():
+	def __init__(self, savefile, savefigDirectory, savefile_directory, filetype, redshift, dist_thr):
+		self.savefile = savefile
+		self.LCDM_check = LCDM
+		self.SymmA_check = SymmA
+		self.SymmB_check = SymmB
+		self.filetype = filetype
+		self.distance_threshold = distance_threshold
+
+		self.ParticleComparison = False
+		self.ModelComparison = False
+		self.SigmaComparison = False
+
+		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
+		if not os.path.isdir(self.results_dir) and savefile==1:
+			os.makedirs(self.results_dir)
+
+		self.nParticles = nPart
+
+	def Compare_mg_models(self, Nconnections, FilLengths, NptsPerFilament, NumParts, FilMass):
 		""" 
 		Compares all stuff for different models.
 		Relative deviation compares models with respect to the LCDM model.
@@ -310,7 +329,7 @@ class Histogram_Comparison():
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(Nconnections[i], align='mid', rwidth=1, bins=BinList, normed=False, histtype='step')
 		plt.xlabel('Number of connected filaments per filament')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.xscale('log')
 		plt.title('Histogram comparison of number of filament connections for each filmanet')
 		plt.legend(Legends)
@@ -325,7 +344,7 @@ class Histogram_Comparison():
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(Delta, align='mid', rwidth=1, bins=BinList, normed=False, histtype='step')
 		plt.xlabel('Number of connected filaments per filament')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of number of filament connections for each filmanet')
 		plt.legend(Legends)
 		"""
@@ -339,7 +358,7 @@ class Histogram_Comparison():
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=BinList, normed=False, histtype='step')
 		plt.xlabel('Filament length')
-		plt.ylabel('Number of occurances')
+		plt.ylabel('Number of filaments')
 		plt.xscale('log')
 		plt.title('Histogram comparison of filament lengths')
 		plt.legend(Legends)
@@ -357,5 +376,28 @@ class Histogram_Comparison():
 		for i in range(len(distribution)):
 			plt.semilogx(lengths, distribution[i])
 		plt.legend(Legends)
-		plt.xlabel('L = Filament length')
+		plt.xlabel('Filament length [Mpc/h]')
 		plt.ylabel('\mathregular{$N(>L)$}')
+
+		# Number of particles per filament for a given distance threshold
+		NumPart_histogram = plt.figure()
+		for i in range(len(NumParts)):
+			plt.hist(NumParts[i], align='mid', rwidth=1, bins=60, normed=False, histtype='step')
+		plt.xlabel('Number of particles per filament')
+		plt.ylabel('Number of filaments')
+		plt.legend(Legends)
+
+		# Filament mass larger than a given mass: N(>M)
+		Mass_array = np.linspace(np.min(np.min(FilMass)), np.max(np.max(FilMass)))
+		Mass_distribution = []
+		for Filament_mass in FilMass:
+			temp_dist_mass = []
+			for mass in Mass_array:
+				Number_count = len(np.where(Filament_mass >= mass))
+				temp_dist_mass.append(Number_count)
+			Mass_distribution.append(temp_dist_mass)
+		FilMass_massfunc = plt.figure()
+		for i in range(len(Mass_distribution)):
+			plt.semilogx(Mass_array, Mass_distribution[i])
+		plt.xlabel('Filament mass [kg]')
+		plt.ylabel('\mathregular{N(>M)}')
