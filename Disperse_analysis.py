@@ -1526,9 +1526,9 @@ if __name__ == '__main__':
 		fofr5_dir = 'fofr5_data/fofr5_z0_128Particles/Sigma3/'
 		fofr6_dir = 'fofr6_data/fofr6_z0_128Particles/Sigma3/'
 		
-		LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=128, model='LCDM', redshift=0, SigmaArg=3)
-		NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0128_nsig3.a.NDskl')
-		Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
+		#LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=128, model='LCDM', redshift=0, SigmaArg=3)
+		#NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0128_nsig3.a.NDskl')
+		#Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
 		"""
 		SymmA_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_dir+'Plots/', nPart=128, model='SymmA', redshift=0, SigmaArg=3)
 		NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0128_nsig3.a.NDskl')
@@ -1558,7 +1558,7 @@ if __name__ == '__main__':
 		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0128_nsig3.a.NDskl')
 		Fil3dPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
 		"""
-		"""
+		
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		symma_64dir = 'SymmA_data/SymmA_z0_64Particles/'
 		LCDM_test = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_64dir+'Plots/', nPart=64, model='LCDM', redshift=0)
@@ -1571,7 +1571,7 @@ if __name__ == '__main__':
 		FilLengths_list = [FLLCDM, FLSymmA]
 		FilPoints_list = [NPLCDM, NPSymmA]
 
-		"""
+		
 		# Compute number of particles per filament.
 		# Units in Mpc/h for distance threshold and box_expand
 		BoundaryCheck_list2 = [0,0,0,0,0,0]
