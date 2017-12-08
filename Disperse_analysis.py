@@ -209,7 +209,7 @@ class Disperse_Plotter():
 			ConnectedHist = plt.figure()
 			plt.hist(self.NumFilamentConnections, align='left', rwidth=1, bins=Bin_list)
 			plt.xlabel('Number of connected filaments')
-			plt.ylabel('Number of occurances')
+			plt.ylabel('Number of filaments')
 			plt.title('Histogram of number connections between the critical points \n with %.2f critical points. ' \
 						%self.NcritPts + '. Using '+ self.nPart_text+'$\mathregular{^3}$ particles.')
 			plt.xlim([NumMin, NumMax])
@@ -227,7 +227,7 @@ class Disperse_Plotter():
 			#fit = stats.norm.pdf(self.FilLengths, np.mean(self.FilLengths), np.std(self.FilLengths))
 			#plt.plot(self.FilLengths, fit)
 			plt.xlabel('Length of filaments' + LegendText)
-			plt.ylabel('Number of occurances')
+			plt.ylabel('Number of filaments')
 			plt.title('Histogram of filament lengths with ' + self.nPart_text + '$\mathregular{^3}$ particles.')
 			plt.xlim([LenMin, LenMax])
 
@@ -239,7 +239,7 @@ class Disperse_Plotter():
 			FilamentPtsHis = plt.figure()
 			plt.hist(self.NFilamentPoints, align='left', rwidth=1, bins=BinList_FilPts)
 			plt.xlabel('Number of position points for a filament')
-			plt.ylabel('Number of occurances')
+			plt.ylabel('Number of filaments')
 			plt.title('Histogram of number of filament points with ' + self.nPart_text + '$\mathregular{^3}$ particles')
 			#plt.xticks(self.NFilamentPoints)
 			"""
@@ -251,7 +251,7 @@ class Disperse_Plotter():
 				NumParticlesFilamentHist = plt.figure()
 				plt.hist(self.Particles_per_filament, align='left', rwidth=1, bins=600)
 				plt.xlabel('Number of particles per filament')
-				plt.ylabel('Number of occurances')
+				plt.ylabel('Number of filaments')
 				plt.title('Histogram of number of particles per filament with ' + self.nPart_text + '$\mathregular{^3}$ particles')
 			"""
 			
@@ -1016,7 +1016,7 @@ def Argument_parser():
 	parser.add_argument("-sigcomp", "--SigmaComp", help="Set to 1 to compare simulations of different sigmas. 0 by default.", type=int, default=0)
 	parser.add_argument("-modelcomp", "--ModelCompare", help="Set to 1 to compare all the modified gravity models. 0 by default.", type=int, default=0)
 	parser.add_argument("-NpartModel", "--NumPartModel", help="Computes number of particles per filament for an input model. Models may be:" \
-					+ "lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Runs all by default.", type=str)
+					+ "lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Use argument 'all' to run all models. Runs one by default.", type=str, default=False)
 
 	# Parse arguments
 	args = parser.parse_args()
@@ -1100,12 +1100,14 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	else:
 		print 'Computing masked particle indices for ' + name + '. May take a while...'
 		Toggle_distance_computing = 1
+		proc = mp.Pool(parsed_arguments.NumProcesses) 
 		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
 		Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
 		Masked_ids = np.array(proc.map(Fixed_args_ids, Nfils_iterate))
 		pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
-		#proc.close()
-		#proc.join()
+		proc.close()
+		proc.join()
+	
 	Distances = []
 	if os.path.isfile(cachefile_distances):
 		print 'Reading number of particles pickle file for ' + name + '...'
@@ -1119,6 +1121,8 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		#proc.close()
 		#proc.join()
 		pickle.dump(Distances, open(cachefile_distances, 'wb'))
+	else:
+		raise ValueError('Distance pickle file does not exist, and computation not toggled!')
         
 	#NumPartPerFil = []
 	#for dist in Distances:
@@ -1148,6 +1152,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	total = 0
 	#total_partids = []
 	#id_append_check = 0
+	# Sorts number of particles per filament, which adds the number if filament is split due to periodic boundary
 	for i in range(len(FilID)):	
 		if i != len(FilID) - 1:
 			if FilID[i+1] == FilID[i]:
@@ -1566,42 +1571,73 @@ if __name__ == '__main__':
 		FilLengths_list = [FLLCDM, FLSymmA]
 		FilPoints_list = [NPLCDM, NPSymmA]
 
-		CompI = HComp.Histogram_Comparison(savefile=0, savefigDirectory='LOL/', savefile_directory='WHAT/', filetype=filetype, redshift=0, LCDM=1)
-		CompI.Compare_mg_models(NumConnections_list, FilLengths_list, FilPoints_list)
 		"""
 		# Compute number of particles per filament.
 		# Units in Mpc/h for distance threshold and box_expand
-		time_proc_start = time.clock()
-		proc = mp.Pool(parsed_arguments.NumProcesses)
-		print 'Processor preparation: ', time.clock() - time_proc_start, 's'
 		BoundaryCheck_list2 = [0,0,0,0,0,0]
 		Mask_check_list2 = [0,0,0]
 		distance_threshold = 0.3
 		box_expand = 1
+
 		if parsed_arguments.NumPartModel == 'lcdm':
-			NumPartPerFil_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:4], FilID_LCDM[0:4], 128, 3)
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:4], FilID_LCDM[0:4], 128, 3)
+			Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
 		elif parsed_arguments.NumPartModel == 'symmA':
-			NumPartPerFil_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
+			Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
 		elif parsed_arguments.NumPartModel == 'symmB':
-			NumPartPerFil_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
+			Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
 		elif parsed_arguments.NumPartModel == 'symmC':
-			NumPartPerFil_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)	
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)	
+			Accepted_dist_SymmC = np.where(Distances_SymmC >= distance_threshold)[0]
 		elif parsed_arguments.NumPartModel == 'symmD':
-			NumPartPerFil_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
+			Accepted_dist_SymmD = np.where(Distances_SymmD >= distance_threshold)[0]
 		elif parsed_arguments.NumPartModel == 'fofr4':
-			NumPartPerFil_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
+			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
+			Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
 		elif parsed_arguments.NumPartModel == 'fofr5':
-			NumPartPerFil_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
+			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
+			Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
 		elif parsed_arguments.NumPartModel == 'fofr6':
-			NumPartPerFil_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
-		else:
-			NumPartPerFil_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
-			NumPartPerFil_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
-			NumPartPerFil_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
-			NumPartPerFil_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)
-			NumPartPerFil_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
-			NumPartPerFil_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
-			NumPartPerFil_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
-			NumPartPerFil_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
-		proc.close()
-		proc.join()
+			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
+			Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
+		elif parsed_arguments.NumPartPerFil = 'all':
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
+			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
+			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
+			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
+			Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
+			Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
+			Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
+			Accepted_dist_SymmC = np.where(Distances_SymmC >= distance_threshold)[0]
+			Accepted_dist_SymmD = np.where(Distances_SymmD >= distance_threshold)[0]
+			Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
+			Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
+			Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
+		
+		# Values in griddata = mass. Currently normalized to 1.
+		# Compute mass as 0.23*rho_{crit,0}*Volume_box/Num_particles
+		# See discussion with Max		
+		Mpc = 3.08568025e22
+		G_grav = 6.67258e-11
+		H_0 = 0.7*100*1e3/Mpc
+		DM_mass = 0.23*(3*H_0**2/(8*np.pi*G_grav))*(256.0*Mpc/0.7)**3/(512.0)**3
+
+		FilamentMass_LCDM = Accepted_dist_LCDM*DM_mass
+		FilamentMass_SymmA = Accepted_dist_SymmA*DM_mass
+		FilamentMass_SymmB = Accepted_dist_SymmB*DM_mass
+		FilamentMass_SymmC = Accepted_dist_SymmC*DM_mass
+		FilamentMass_SymmD = Accepted_dist_SymmD*DM_mass
+		FilamentMass_fofr4 = Accepted_dist_fofr4*DM_mass
+		FilamentMass_fofr5 = Accepted_dist_fofr5*DM_mass
+		FilamentMass_fofr6 = Accepted_dist_fofr6*DM_mass
+
+		#CompI = HComp.CompareModels(savefile=0, savefigDirectory='LOL/', savefile_directory='WHAT/', filetype=filetype, redshift=0, dist_thr=distance_threshold)
+		#CompI.Compare_mg_models(NumConnections_list, FilLengths_list, FilPoints_list)
+		
