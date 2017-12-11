@@ -15,7 +15,7 @@ class Histogram_Comparison():
 		self.SigmaComparison = False
 
 		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
-		if not os.path.isdir(self.results_dir) and savefile==1:
+		if not os.path.isdir(self.results_dir) and savefile == 1:
 			os.makedirs(self.results_dir)
 
 		if LCDM and not SymmA and not SymmB:
@@ -302,7 +302,7 @@ class CompareModels():
 		self.SigmaComparison = False
 
 		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
-		if not os.path.isdir(self.results_dir) and savefile==1:
+		if not os.path.isdir(self.results_dir) and savefile == 1:
 			os.makedirs(self.results_dir)
 
 		self.nParticles = nPart
@@ -385,6 +385,7 @@ class CompareModels():
 
 		# Relative difference of the lengths. Base model is LCDM.
 		RelDiff_length = plt.figure()
+		plt.semilogx(lengths, np.zeros(len(lengths))
 		for i in range(1,len(distribution)):
 			delta = relative_deviation(np.array(distribution), i)
 			plt.semilogx(lengths, delta)
@@ -414,9 +415,11 @@ class CompareModels():
 			plt.semilogx(Mass_array, Mass_distribution[i])
 		plt.xlabel('Filament mass [kg]')
 		plt.ylabel('\mathregular{N(>M)}')
-        
+		plt.legend(Legends)
+
 		# Relative difference of the masses. Basem odel is LCDM
 		RelDiff_mass = plt.figure()
+		plt.semilogx(Mass_array, np.zeros(len(Mass_array))
 		for i in range(1,len(Mass_distribution)):
 			delta = relative_deviation(np.array(Mass_distribution), i)
 			plt.semilogx(Mass_array, delta)
