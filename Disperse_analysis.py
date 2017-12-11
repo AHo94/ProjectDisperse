@@ -1578,6 +1578,7 @@ if __name__ == '__main__':
 		Mask_check_list2 = [0,0,0]
 		distance_threshold = 0.3
 		box_expand = 1
+		Compute_mass = 1
 
 		if parsed_arguments.NumPartModel == 'lcdm':
 			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:4], FilID_LCDM[0:4], 128, 3)
@@ -1603,7 +1604,7 @@ if __name__ == '__main__':
 		elif parsed_arguments.NumPartModel == 'fofr6':
 			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
 			Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
-		elif parsed_arguments.NumPartPerFil = 'all':
+		elif parsed_arguments.NumPartModel == 'all':
 			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
 			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
 			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
@@ -1620,7 +1621,8 @@ if __name__ == '__main__':
 			Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
 			Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
 			Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
-		
+		else:
+			Compute_mass = 0
 		# Values in griddata = mass. Currently normalized to 1.
 		# Compute mass as 0.23*rho_{crit,0}*Volume_box/Num_particles
 		# See discussion with Max		
@@ -1628,15 +1630,15 @@ if __name__ == '__main__':
 		G_grav = 6.67258e-11
 		H_0 = 0.7*100*1e3/Mpc
 		DM_mass = 0.23*(3*H_0**2/(8*np.pi*G_grav))*(256.0*Mpc/0.7)**3/(512.0)**3
-
-		FilamentMass_LCDM = Accepted_dist_LCDM*DM_mass
-		FilamentMass_SymmA = Accepted_dist_SymmA*DM_mass
-		FilamentMass_SymmB = Accepted_dist_SymmB*DM_mass
-		FilamentMass_SymmC = Accepted_dist_SymmC*DM_mass
-		FilamentMass_SymmD = Accepted_dist_SymmD*DM_mass
-		FilamentMass_fofr4 = Accepted_dist_fofr4*DM_mass
-		FilamentMass_fofr5 = Accepted_dist_fofr5*DM_mass
-		FilamentMass_fofr6 = Accepted_dist_fofr6*DM_mass
+		if Compute_mass:
+			FilamentMass_LCDM = Accepted_dist_LCDM*DM_mass
+			FilamentMass_SymmA = Accepted_dist_SymmA*DM_mass
+			FilamentMass_SymmB = Accepted_dist_SymmB*DM_mass
+			FilamentMass_SymmC = Accepted_dist_SymmC*DM_mass
+			FilamentMass_SymmD = Accepted_dist_SymmD*DM_mass
+			FilamentMass_fofr4 = Accepted_dist_fofr4*DM_mass
+			FilamentMass_fofr5 = Accepted_dist_fofr5*DM_mass
+			FilamentMass_fofr6 = Accepted_dist_fofr6*DM_mass
 
 		#CompI = HComp.CompareModels(savefile=0, savefigDirectory='LOL/', savefile_directory='WHAT/', filetype=filetype, redshift=0, dist_thr=distance_threshold)
 		#CompI.Compare_mg_models(NumConnections_list, FilLengths_list, FilPoints_list)
