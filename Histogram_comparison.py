@@ -314,6 +314,10 @@ class CompareModels():
 		The function assumes that LCDM data is the first in the data list.
 		"""
 		def relative_deviation(data, index):
+			""" 
+			Computes relative deviation of a given physical quantity.
+			This function assumes that the base model is in the first element.
+			"""
 			delta = (data[0] - data[index])/data[0]
 			return delta
 
@@ -364,21 +368,30 @@ class CompareModels():
 		plt.legend(Legends)
 
 		# Number of filaments larger than a given length: N(>L)
-		lengths = np.linspace(np.min(np.min(FilLengths)), np.max(np.max(FilLengths)), 300)
+		lengths = np.linspace(np.min(np.min(FilLengths)), np.max(np.max(FilLengths)), 1000)
 		distribution = []
 		for fils_len in FilLengths:
 			temp_dist = []
 			for lens in lengths:
 				Number_count = len(np.where(fils_lens >= lens)[0])
-				temp_dist.append(Number_count)
+				temp_dist.append(float(Number_count))
 			distribution.append(temp_dist)
 		FilLen_massfunc = plt.figure()
 		for i in range(len(distribution)):
 			plt.semilogx(lengths, distribution[i])
-		plt.legend(Legends)
-		plt.xlabel('Filament length [Mpc/h]')
+		plt.xlabel('Filament length - [Mpc/h]')
 		plt.ylabel('\mathregular{$N(>L)$}')
+		plt.legend(Legends)
 
+		# Relative difference of the lengths. Base model is LCDM.
+		RelDiff_length = plt.figure()
+		for i in range(1,len(distribution)):
+			delta = relative_deviation(np.array(distribution), i)
+			plt.semilogx(lengths, delta)
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('Relative difference of N(>L)')
+		plt.legend(Legends)
+        
 		# Number of particles per filament for a given distance threshold
 		NumPart_histogram = plt.figure()
 		for i in range(len(NumParts)):
@@ -388,16 +401,25 @@ class CompareModels():
 		plt.legend(Legends)
 
 		# Filament mass larger than a given mass: N(>M)
-		Mass_array = np.linspace(np.min(np.min(FilMass)), np.max(np.max(FilMass)))
+		Mass_array = np.linspace(np.min(np.min(FilMass)), np.max(np.max(FilMass)), 1000)
 		Mass_distribution = []
 		for Filament_mass in FilMass:
 			temp_dist_mass = []
 			for mass in Mass_array:
 				Number_count = len(np.where(Filament_mass >= mass))
-				temp_dist_mass.append(Number_count)
-			Mass_distribution.append(temp_dist_mass)
+				temp_dist_mass.append(float(Number_count))
+			Mass_distribution.append(np.array(temp_dist_mass))
 		FilMass_massfunc = plt.figure()
 		for i in range(len(Mass_distribution)):
 			plt.semilogx(Mass_array, Mass_distribution[i])
 		plt.xlabel('Filament mass [kg]')
 		plt.ylabel('\mathregular{N(>M)}')
+        
+		# Relative difference of the masses. Basem odel is LCDM
+		RelDiff_mass = plt.figure()
+		for i in range(1,len(Mass_distribution)):
+			delta = relative_deviation(np.array(Mass_distribution), i)
+			plt.semilogx(Mass_array, delta)
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('Relative difference of N(>M)')
+		plt.legend(Legends)
