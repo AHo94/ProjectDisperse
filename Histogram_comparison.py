@@ -385,7 +385,7 @@ class CompareModels():
 
 		# Relative difference of the lengths. Base model is LCDM.
 		RelDiff_length = plt.figure()
-		plt.semilogx(lengths, np.zeros(len(lengths))
+		plt.semilogx(lengths, np.zeros(len(lengths)))
 		for i in range(1,len(distribution)):
 			delta = relative_deviation(np.array(distribution), i)
 			plt.semilogx(lengths, delta)
@@ -419,7 +419,7 @@ class CompareModels():
 
 		# Relative difference of the masses. Basem odel is LCDM
 		RelDiff_mass = plt.figure()
-		plt.semilogx(Mass_array, np.zeros(len(Mass_array))
+		plt.semilogx(Mass_array, np.zeros(len(Mass_array)))
 		for i in range(1,len(Mass_distribution)):
 			delta = relative_deviation(np.array(Mass_distribution), i)
 			plt.semilogx(Mass_array, delta)
