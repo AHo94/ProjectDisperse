@@ -8,6 +8,7 @@ import cPickle as pickle
 lower_boundary = 0.0
 upper_boundary = 256.0
 class particles_per_filament():
+	"""	A class that computes the distance of the dark matter particles to the filaments. """
 	def __init__(self, model, maskdirs, masklimits, box_expand):
 		self.model = model
 		RGF_instance = ReadGadgetFile.Read_Gadget_file(maskdirs, masklimits)
@@ -268,6 +269,7 @@ class particles_per_filament():
 		""" 
 		Computes the distance from a particle to every segment in the filament.
 		Only the shortest distance is included.
+		Old version, use the ones below.
 		"""
 		distances = []
 		checker = 0
@@ -286,6 +288,9 @@ class particles_per_filament():
 		Computes the distance from a particle to every segment in the filament.
 		Only the shortest distance is included.
 		Input must be filament 3D position and the corresponding particle mask.
+		This version loops through all particles in the masked particle box.
+		Particles distances are thus individually calculated to each segment.
+		Does not scale for large number of particles.
 		"""
 		part_box = self.particle_box2(filament, masked_ids)
 		Filament_point_diff = np.linalg.norm(filament[1:] - filament[:-1], axis=1)
@@ -298,6 +303,27 @@ class particles_per_filament():
 			d = cross_prod_norm/Filament_point_diff
 			distances.append(np.min(d))
 		return np.array(distances)
+
+	def get_distance_v2(filament, part_box):
+		"""
+		Computes the distance from a particle to every segment in the filament.
+		Only the shortest distance is included.
+		Input must be filament 3D position and the corresponding particle masked box.
+		This version loops through every segment and finds the distance from said segment to every particle in the masked box.
+		Once all segemnts are looped over, we find the smallest distance from one particle to each segment.
+		Scales a lot better for larger number of particles.
+		"""
+		dist_temp = []
+		for i in range(len(filament)-1):
+			d1 = part_box - filament[i]
+			d2 = part_box - filament[i+1]
+			cross_prod = np.cross(d1, d2)
+			cross_prod_norm = np.linalg.norm(cross_prod, axis=1)
+			d = cross_prod_norm/np.linalg.norm(filament[i] - filament[i+1])
+			dist_temp.append(d)
+		dist_temp = np.swapaxes(np.asarray(dist_temp), 0, 1)
+		distances = np.min(dist_temp, axis=1)
+		return distances
 
 	def get_masked_ids(self, filament):
 		filbox = self.filament_box(filament)
