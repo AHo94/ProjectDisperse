@@ -6,6 +6,7 @@ class Read_Gadget_file():
 	def __init__(self, mask_check, boundary_list):
 		self.Mask_check_list = mask_check
 		self.Boundary_list = boundary_list
+		self.File_read = 0
 
 	def read_file(self, model):
 		""" 
@@ -60,11 +61,13 @@ class Read_Gadget_file():
 		    istart = istart + npart
 
 		print 'finished reading particles, '
+		# Note: Velocity units in km/s and position in kpc/h
+		# Converting units from kpc/h to Mpc/h
 		self.PartPos = self.PartPos/1000.0
+		self.File_read = 1
 
-		
 	def Create_Mask(self):
-		""" Creates a mask for the dark matter particles """
+		""" Creates a mask for the dark matter particles, based on given masking conditions. """
 		print 'Masking dark matter particles'
 		MaskXdir = self.Mask_check_list[0]
 		MaskYdir = self.Mask_check_list[1]
@@ -116,11 +119,13 @@ class Read_Gadget_file():
 		print "DONE"
 
 	def Histogram_and_bins(self):
+		""" Return 2D histogram of DM particles. Plots density field. Use Gaussian KDE instead. """
 		Hist, xedges, yedges = np.histogram2d(self.PartPosX, self.PartPosY, bins=50)
 		Hist = Hist.T
 		return Hist, xedges, yedges
 
 	def Get_particles(self, modelfile, includeKDTree=True):
+		""" Fetches the particle info, such as positions and particle ID. """
 		toggle = False
 		Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6']
 		for models in Model_check:
@@ -142,6 +147,7 @@ class Read_Gadget_file():
 		return self.PartPosX, self.PartPosY, self.PartPosZ, self.PartIDs, Histogram, xedges, yedges, self.DM_tree
 
 	def Get_3D_particles(self, modelfile):
+		""" Returns 3D positions of the dark matter particles """
 		toggle = False
 		Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6']
 		for models in Model_check:
@@ -160,3 +166,20 @@ class Read_Gadget_file():
 		if not os.path.isfile(cache_model):
 			pickle.dump(self.PartIDs, open(cache_model, 'wb'))
 		return self.PartPos
+
+	def Get_velocities(self, get_3D=False):
+		""" 
+		Returns the particle velocities.
+		Can either return as 3D array or three seperate 1D arrays for each respective component.
+		The gadget file must be read beforehand.
+		"""
+		if not self.File_read:
+			raise ValueError("The gadget files must first be read and saved to memory!")
+
+		if get_3D:
+			return self.PartVel
+		else:
+			vel_X = self.PartVel[:,0]
+			vel_Y = self.PartVel[:,1]
+			vel_Z = self.PartVel[:,2]
+			return vel_X, vel_Y, vel_Z
