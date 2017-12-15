@@ -171,6 +171,7 @@ class Read_Gadget_file():
 		""" 
 		Returns the particle velocities.
 		Can either return as 3D array or three seperate 1D arrays for each respective component.
+		Returns three 1D arrays by default.
 		The gadget file must be read beforehand.
 		"""
 		if not self.File_read:
