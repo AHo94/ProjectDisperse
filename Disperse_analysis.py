@@ -922,82 +922,6 @@ class Disperse_Plotter():
 			Filament_3DPos.append(np.column_stack((self.xdimPos[i], self.ydimPos[i], self.zdimPos[i])))
 		return np.array(Filament_3DPos), self.FilamentIDs
 
-class Read_solve_files():
-	def __init__(self):
-		self.read_solvefile()
-		self.Create_Mask()
-		#self.Create_KDTree()
-
-	def read_solvefile(self):
-		""" 
-		Reads the .solve file which contains dark matter particle positions and velocities
-		Saves all the particles which is later masked
-		"""
-		time_start = time.clock()
-		print 'Reading data for the file: ', solve_file_dir, solve_filename, '. May take a while...'
-		self.PartPosX = []
-		self.PartPosY = []
-		self.PartPosZ = []
-		
-		PartVelX = []
-		PartVelY = []
-		PartVelZ = []
-
-		self.ParticlePos = []
-		with open(os.path.join(file_directory+solve_file_dir, solve_filename), 'r') as datafiles:
-			next(datafiles)
-			for line in datafiles:
-				data_set = line.split()
-				self.ParticlePos.append(np.array([float(data_set[0]),float(data_set[1]),float(data_set[2])])*UnitConverter)
-				#self.PartPosX.append(float(data_set[0])*UnitConverter)
-				#self.PartPosY.append(float(data_set[1])*UnitConverter)
-				#self.PartPosZ.append(float(data_set[2])*UnitConverter)
-				
-			
-		#self.PartPosX = np.asarray(self.PartPosX)
-		#self.PartPosY = np.asarray(self.PartPosY)
-		#self.PartPosZ = np.asarray(self.PartPosZ)
-		self.ParticlePos = np.asarray(self.ParticlePos)
-		#mask = np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir)
-		print 'Read solve file time: ', time.clock() - time_start, 's'
-
-	def Create_Mask(self):
-		""" Creates a mask for the dark matter particles """
-		if not MaskXdir and not MaskYdir and MaskZdir:
-			self.mask = np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir)
-		elif not MaskXdir and MaskYdir and not MaskZdir:
-			self.mask = np.logical_and(self.ParticlePos[:,0] < UpperBoundaryXDir, self.ParticlePos[:,0] > LowerBoundaryXDir)
-		elif not MaskYdir and MaskYdir and not MaskZdir:
-			self.mask = np.logical_and(self.ParticlePos[:,1] < UpperBoundaryYDir, self.ParticlePos[:,1] > LowerBoundaryYDir)
-		elif MaskXdir and not MaskYdir and MaskZdir:
-			self.mask = np.logical_and(np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir),\
-									   np.logical_and(self.ParticlePos[:,0] < UpperBoundaryXDir, self.ParticlePos[:,0] > LowerBoundaryXDir))
-		elif MaskXdir and MaskYdir and not MaskZdir:
-			self.mask = np.logical_and(np.logical_and(self.ParticlePos[:,1] < UpperBoundaryYDir, self.ParticlePos[:,1] > LowerBoundaryYDir),\
-									   np.logical_and(self.ParticlePos[:,0] < UpperBoundaryXDir, self.ParticlePos[:,0] > LowerBoundaryXDir))
-		elif not MaskXdir and MaskYdir and MaskZdir:
-			self.mask = np.logical_and(np.logical_and(self.ParticlePos[:,2] < UpperBoundaryZDir, self.ParticlePos[:,2] > LowerBoundaryZDir),\
-									   np.logical_and(self.ParticlePos[:,1] < UpperBoundaryYDir, self.ParticlePos[:,1] > LowerBoundaryYDir))
-		else:
-			self.mask = False
-
-	def Create_KDTree(self):
-		""" Creates a KDTree of the masked dark matter particles """
-		time_start = time.clock()
-		if self.mask is not False:
-			self.PartPosX = self.ParticlePos[self.mask,0]
-			self.PartPosY = self.ParticlePos[self.mask,1]
-			self.PartPosZ = self.ParticlePos[self.mask,2]
-		else:
-			self.PartPosX = self.ParticlePos[:,0]
-			self.PartPosY = self.ParticlePos[:,1]
-			self.PartPosZ = self.ParticlePos[:,1]
-
-		DM_points = np.dstack((self.PartPosX.ravel(), self.PartPosY.ravel(), self.PartPosZ.ravel()))
-		self.DM_tree = spatial.KDTree(DM_points[0])
-		print 'Dark matter particle KDTRee creation time: ', time.clock() - time_start, 's'
-
-
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
 	print 'Run python code with -h argument to see extra optional arguments'
@@ -1015,8 +939,9 @@ def Argument_parser():
 					+ "Aimed to include seperate simulations for larger number of particles. Defalult to 0 (only runs 64^3 particles)", type=int, default=0)
 	parser.add_argument("-sigcomp", "--SigmaComp", help="Set to 1 to compare simulations of different sigmas. 0 by default.", type=int, default=0)
 	parser.add_argument("-modelcomp", "--ModelCompare", help="Set to 1 to compare all the modified gravity models. 0 by default.", type=int, default=0)
-	parser.add_argument("-NpartModel", "--NumPartModel", help="Computes number of particles per filament for an input model. Models may be:" \
-					+ "lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Use argument 'all' to run all models. Runs one by default.", type=str, default=False)
+	parser.add_argument("-NpartModel", "--NumPartModel", nargs='*', help="Computes number of particles per filament for one or more input models."\
+	 				+ "Models may be: lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Use argument 'all' to run all models. Runs one by default."\
+	 				+ "Do not run seperate models and 'all' at once!", type=str, default=False)
 
 	# Parse arguments
 	args = parser.parse_args()
@@ -1579,32 +1504,40 @@ if __name__ == '__main__':
 		distance_threshold = 0.3
 		box_expand = 1
 		Compute_mass = 1
-
+		Number_particles_list = []
 		if parsed_arguments.NumPartModel == 'lcdm':
-			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:4], FilID_LCDM[0:4], 128, 3)
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
 			Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
-		elif parsed_arguments.NumPartModel == 'symmA':
+			Number_particles_list.append(Accepted_dist_LCDM)
+		if parsed_arguments.NumPartModel == 'symmA':
 			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
 			Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
-		elif parsed_arguments.NumPartModel == 'symmB':
+			Number_particles_list.append(Accepted_dist_SymmA)
+		if parsed_arguments.NumPartModel == 'symmB':
 			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
 			Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
-		elif parsed_arguments.NumPartModel == 'symmC':
+			Number_particles_list.append(Accepted_dist_SymmB)
+		if parsed_arguments.NumPartModel == 'symmC':
 			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)	
 			Accepted_dist_SymmC = np.where(Distances_SymmC >= distance_threshold)[0]
-		elif parsed_arguments.NumPartModel == 'symmD':
+			Number_particles_list.append(Accepted_dist_SymmC)
+		if parsed_arguments.NumPartModel == 'symmD':
 			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
 			Accepted_dist_SymmD = np.where(Distances_SymmD >= distance_threshold)[0]
-		elif parsed_arguments.NumPartModel == 'fofr4':
+			Number_particles_list.append(Accepted_dist_SymmD)
+		if parsed_arguments.NumPartModel == 'fofr4':
 			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
 			Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
-		elif parsed_arguments.NumPartModel == 'fofr5':
+			Number_particles_list.append(Accepted_dist_fofr4)
+		if parsed_arguments.NumPartModel == 'fofr5':
 			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
 			Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
-		elif parsed_arguments.NumPartModel == 'fofr6':
+			Number_particles_list.append(Accepted_dist_fofr5)
+		if parsed_arguments.NumPartModel == 'fofr6':
 			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
 			Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
-		elif parsed_arguments.NumPartModel == 'all':
+			Number_particles_list.append(Accepted_dist_fofr6)
+		if parsed_arguments.NumPartModel == 'all':
 			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
 			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
 			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
@@ -1621,6 +1554,8 @@ if __name__ == '__main__':
 			Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
 			Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
 			Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
+			Number_particles_list = [Accepted_dist_LCDM, Accepted_dist_SymmA, Accepted_dist_SymmB, Accepted_dist_SymmC,
+									Accepted_dist_SymmD, Accepted_dist_fofr4, Accepted_dist_fofr5, Accepted_dist_fofr6]
 		else:
 			Compute_mass = 0
 		# Values in griddata = mass. Currently normalized to 1.
@@ -1630,15 +1565,43 @@ if __name__ == '__main__':
 		G_grav = 6.67258e-11
 		H_0 = 0.7*100*1e3/Mpc
 		DM_mass = 0.23*(3*H_0**2/(8*np.pi*G_grav))*(256.0*Mpc/0.7)**3/(512.0)**3
+		Filament_masses_list = []
 		if Compute_mass:
-			FilamentMass_LCDM = Accepted_dist_LCDM*DM_mass
-			FilamentMass_SymmA = Accepted_dist_SymmA*DM_mass
-			FilamentMass_SymmB = Accepted_dist_SymmB*DM_mass
-			FilamentMass_SymmC = Accepted_dist_SymmC*DM_mass
-			FilamentMass_SymmD = Accepted_dist_SymmD*DM_mass
-			FilamentMass_fofr4 = Accepted_dist_fofr4*DM_mass
-			FilamentMass_fofr5 = Accepted_dist_fofr5*DM_mass
-			FilamentMass_fofr6 = Accepted_dist_fofr6*DM_mass
+			if parsed_arguments.NumPartModel == 'lcdm':
+				FilamentMass_LCDM = Accepted_dist_LCDM*DM_mass
+				Filament_masses_list.append(FilamentMass_LCDM)
+			if parsed_arguments.NumPartModel == 'symmA':
+				FilamentMass_SymmA = Accepted_dist_SymmA*DM_mass
+				Filament_masses_list.append(FilamentMass_SymmA)
+			if parsed_arguments.NumPartModel == 'symmB':
+				FilamentMass_SymmB = Accepted_dist_SymmB*DM_mass
+				Filament_masses_list.append(FilamentMass_SymmB)
+			if parsed_arguments.NumPartModel == 'symmC':
+				FilamentMass_SymmC = Accepted_dist_SymmC*DM_mass
+				Filament_masses_list.append(FilamentMass_SymmC)
+			if parsed_arguments.NumPartModel == 'symmD':
+				FilamentMass_SymmD = Accepted_dist_SymmD*DM_mass
+				Filament_masses_list.append(FilamentMass_SymmD)
+			if parsed_arguments.NumPartModel == 'fofr4':
+				FilamentMass_fofr4 = Accepted_dist_fofr4*DM_mass
+				Filament_masses_list.append(FilamentMass_fofr4)
+			if parsed_arguments.NumPartModel == 'fofr5':
+				FilamentMass_fofr4 = Accepted_dist_fofr4*DM_mass
+				Filament_masses_list.append(FilamentMass_fofr4)
+			if parsed_arguments.NumPartModel == 'fofr6':
+				FilamentMass_fofr4 = Accepted_dist_fofr4*DM_mass
+				Filament_masses_list.append(FilamentMass_fofr4)
+			if parsed_arguments.NumPartModel == 'all':
+				FilamentMass_LCDM = Accepted_dist_LCDM*DM_mass
+				FilamentMass_SymmA = Accepted_dist_SymmA*DM_mass
+				FilamentMass_SymmB = Accepted_dist_SymmB*DM_mass
+				FilamentMass_SymmC = Accepted_dist_SymmC*DM_mass
+				FilamentMass_SymmD = Accepted_dist_SymmD*DM_mass
+				FilamentMass_fofr4 = Accepted_dist_fofr4*DM_mass
+				FilamentMass_fofr5 = Accepted_dist_fofr5*DM_mass
+				FilamentMass_fofr6 = Accepted_dist_fofr6*DM_mass
+				Filament_masses_list = [FilamentMass_LCDM, FilamentMass_SymmA, FilamentMass_SymmB, FilamentMass_SymmC,
+										FilamentMass_SymmD, FilamentMass_fofr4, FilamentMass_fofr5, FilamentMass_LCDM]
 
 		#CompI = HComp.CompareModels(savefile=0, savefigDirectory='LOL/', savefile_directory='WHAT/', filetype=filetype, redshift=0, dist_thr=distance_threshold)
 		#CompI.Compare_mg_models(NumConnections_list, FilLengths_list, FilPoints_list)
