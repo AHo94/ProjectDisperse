@@ -587,6 +587,7 @@ class BoundaryChecker():
 				if np.abs(diffz[j]) > 0.5*self.BoxSize:
 					SplitFilament = 1
 					zBoundary = 1
+
 			# Add final points
 			if xBoundary or yBoundary or zBoundary:
 				get_boundary_point(i, j, xBoundary, yBoundary, zBoundary)
