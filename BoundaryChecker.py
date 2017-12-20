@@ -550,7 +550,6 @@ class BoundaryChecker():
 			self.yTemp.append(Ypoint2)
 			self.zTemp.append(Zpoint2)
 
-
 		for i in range(self.NFils-1):
 			xBoundary = 0
 			yBoundary = 0
@@ -589,10 +588,14 @@ class BoundaryChecker():
 					SplitFilament = 1
 					zBoundary = 1
 			# Add final points
-			self.xyTemp.append(np.array([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
-			self.xTemp.append(self.xdimPos[i][-1])
-			self.yTemp.append(self.ydimPos[i][-1])
-			self.zTemp.append(self.zdimPos[i][-1])
+			if xBoundary or yBoundary or zBoundary:
+				get_boundary_point(i, j, xBoundary, yBoundary, zBoundary)
+				SplitCount += 1   # May not be correct here. Make sure to check the lengths of arrays!
+			else:
+				self.xyTemp.append(np.array([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
+				self.xTemp.append(self.xdimPos[i][-1])
+				self.yTemp.append(self.ydimPos[i][-1])
+				self.zTemp.append(self.zdimPos[i][-1])
 
 			FilPosTemp.append(np.array(self.xyTemp))
 			xPosTemp.append(self.xTemp)
