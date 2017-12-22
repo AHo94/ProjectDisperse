@@ -304,7 +304,7 @@ class particles_per_filament():
 			distances.append(np.min(d))
 		return np.array(distances)
 
-	def get_distance_v2(filament, part_box):
+	def get_distance_scaled(filament, part_box):
 		"""
 		Computes the distance from a particle to every segment in the filament.
 		Only the shortest distance is included.
@@ -324,6 +324,46 @@ class particles_per_filament():
 		dist_temp = np.swapaxes(np.asarray(dist_temp), 0, 1)
 		distances = np.min(dist_temp, axis=1)
 		return distances
+
+
+	def get_distance_seginterp(filament, part_box):
+		"""
+		For each segment, 'interpolate' a set of points between the two connection points in the segment.
+		Create N new 3D coordinate points in the segment.
+		For each point in the segment, compute distance from the point to each particle.
+		The current output should be a (N x Pn)-matrix, where Pn = number of particles.
+		Reshape the output such that it becomes a (Pn x N)-matrix.
+		Find the minimum along the N axis of the matrix.
+		This gives an Pn-array shortest distance for each particle to any of the interpolated points.
+		Repeat this for other segments, will have multiple arrays of 'shortest distance'.
+		Repeat until we have an (Sn x Pn)-matrix, where Sn = number of segments
+		Reshape so we have an (Pn x Sn)-matrix, that is a matrix where each array contains distances of one particle to each seg.
+		Find minimum of each of those to get shortest distance from particles to filament
+
+		This version is used as the previous two versions assumed the segment to be infinitely long.
+		"""
+		true_dist = []
+		for i in range(len(filament)-1):
+			segpoints = []
+			distances = []
+			xlims = np.linspace(filament[i][0], filament[i+1][0], 100)
+			ylims = np.linspace(filament[i][1], filament[i+1][1], 100)
+			zlims = np.linspace(filament[i][2], filament[i+1][2], 100)
+			# Create 3D position array of the segments, based on the interpolated values
+			for i in range(len(xlims)):
+				segpoints.append(np.column_stack((xlims[i], ylims[i], zlims[i])))
+			# Find distance from each point in the segment to every particle
+			for pts in segpoints:
+				distances.append(np.linalg.norm(pts - part_box, axis=1))
+			# Selects the shortest distance between a particle and every segment point.
+			distances = np.swapaxes(np.asarray(distances), 0, 1)
+			shortest = np.min(distances, axis=1)
+			true_dist.append(shortest)
+		# Selects the shortest distance from a particle to every segment
+		true_dist = np.swapaxes(np.asarray(true_dist), 0, 1)
+		dist = np.min(true_dist, axis=1)
+		return dist
+
 
 	def get_masked_ids(self, filament):
 		filbox = self.filament_box(filament)
