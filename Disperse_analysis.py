@@ -939,7 +939,7 @@ def Argument_parser():
 					+ "Aimed to include seperate simulations for larger number of particles. Defalult to 0 (only runs 64^3 particles)", type=int, default=0)
 	parser.add_argument("-sigcomp", "--SigmaComp", help="Set to 1 to compare simulations of different sigmas. 0 by default.", type=int, default=0)
 	parser.add_argument("-modelcomp", "--ModelCompare", help="Set to 1 to compare all the modified gravity models. 0 by default.", type=int, default=0)
-	parser.add_argument("-NpartModel", "--NumPartModel", nargs='*', help="Computes number of particles per filament for one or more input models."\
+	parser.add_argument("-NpartModel", "--NumPartModel", help="Computes number of particles per filament for a model."\
 	 				+ "Models may be: lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Use argument 'all' to run all models. Runs one by default."\
 	 				+ "Do not run seperate models and 'all' at once!", type=str, default=False)
 
@@ -951,9 +951,9 @@ def Argument_parser():
 	Model_check = ['lcdm', 'symmA', 'symmB', 'symmC', 'symmD', 'fofr4', 'fofr5', 'fofr6', 'all']
 	for models in Model_check:
 		if args.NumPartModel == models:
-			Model_ok= True
+			Model_ok = True
 	if not Model_ok:
-		raise ValueError('Model input name %s not correctly set -NpartModel argument.' %name)
+		raise ValueError('Model input name %s not correctly set -NpartModel argument.' %args.NumPartModel)
 
 	return args
 
@@ -1465,7 +1465,7 @@ if __name__ == '__main__':
 		fofr6_dir = 'fofr6_data/fofr6_z0_128Particles/Sigma3/'
 		"""
 		# 64^3 particle run, make a function that automatically selects folders and sigma based on input argument!
-		lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting'
+		lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		SymmA_dir = 'SymmA_data/SymmA_z0_64Particles/Sigma3/'
 		SymmB_dir = 'SymmB_data/SymmB_z0_64Particles/Sigma3/'
 		SymmC_dir = 'SymmC_data/SymmC_z0_64Particles/Sigma3/'
