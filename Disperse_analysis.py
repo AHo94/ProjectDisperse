@@ -945,6 +945,16 @@ def Argument_parser():
 
 	# Parse arguments
 	args = parser.parse_args()
+
+	# Some checks
+	Model_ok = False
+	Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6', 'all']
+	for models in Model_check:
+		if args.NumPartModel == models:
+			Model_ok= True
+	if not Model_ok:
+		raise ValueError('Model input name %s not correctly set -NpartModel argument.' %name)
+
 	return args
 
 def Multiprocess_filament_per_filament(Instance, distance_threshold, Filament, i):
@@ -968,7 +978,8 @@ def Multiprocess_particle_distances(Instance, Masked_ids, Filament, i):
 	Computes the masked particle indices.
 	Input must be 3D filament position.
 	"""
-	Distances = Instance.get_distance(Filament[i], Masked_ids[i])
+	#Distances = Instance.get_distance_scaled(Filament[i], Masked_ids[i])   # Issues with this version!
+	Distances = Instance.get_distance_seginterp(Filament[i], Masked_ids[i])
 	return Distances
 
 def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
@@ -1442,6 +1453,8 @@ if __name__ == '__main__':
 		Runs for all modified gravity simulations.
 		All runs are on 256^3 particle subsample at sigma=5.
 		"""
+		npart = 64
+		"""
 		lcdm_dir = 'lcdm_testing/LCDM_z0_128Particles/Sigma3/'
 		SymmA_dir = 'SymmA_data/SymmA_z0_128Particles/Sigma3/'
 		SymmB_dir = 'SymmB_data/SymmB_z0_128Particles/Sigma3/'
@@ -1450,40 +1463,51 @@ if __name__ == '__main__':
 		fofr4_dir = 'fofr4_data/fofr4_z0_128Particles/Sigma3/'
 		fofr5_dir = 'fofr5_data/fofr5_z0_128Particles/Sigma3/'
 		fofr6_dir = 'fofr6_data/fofr6_z0_128Particles/Sigma3/'
-		
-		#LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=128, model='LCDM', redshift=0, SigmaArg=3)
-		#NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0128_nsig3.a.NDskl')
-		#Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
 		"""
-		SymmA_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_dir+'Plots/', nPart=128, model='SymmA', redshift=0, SigmaArg=3)
-		NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0128_nsig3.a.NDskl')
-		Fil3DPos_SymmA, FilID_SymmA = SymmA_instance.get_3D_pos()
+		# 64^3 particle run, make a function that automatically selects folders and sigma based on input argument!
+		lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting'
+		SymmA_dir = 'SymmA_data/SymmA_z0_64Particles/Sigma3/'
+		SymmB_dir = 'SymmB_data/SymmB_z0_64Particles/Sigma3/'
+		SymmC_dir = 'SymmC_data/SymmC_z0_64Particles/Sigma3/'
+		SymmD_dir = 'SymmD_data/SymmD_z0_64Particles/Sigma3/'
+		fofr4_dir = 'fofr4_data/fofr4_z0_64Particles/Sigma3/'
+		fofr5_dir = 'fofr5_data/fofr5_z0_64Particles/Sigma3/'
+		fofr6_dir = 'fofr6_data/fofr6_z0_64Particles/Sigma3/'
 
-		SymmB_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmB_dir+'Plots/', nPart=128, model='SymmB', redshift=0, SigmaArg=3)
-		NummConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz0128_nsig3.a.NDskl')
-		Fil3DPos_SymmB, FilID_SymmB = SymmB_instance.get_3D_pos()
-		
-		SymmC_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmC_dir+'Plots/', nPart=128, model='SymmC', redshift=0, SigmaArg=3)
-		NummConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz0128_nsig3.a.NDskl')
-		Fil3DPos_SymmC, FilID_SymmC = SymmC_instance.get_3D_pos()
-		
-		SymmD_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmD_dir+'Plots/', nPart=128, model='SymmD', redshift=0, SigmaArg=3)
-		NummConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz0128_nsig3.a.NDskl')
-		Fil3DPos_SymmD, FilID_SymmD = SymmD_instance.get_3D_pos()
-		
-		fofr4_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr4_dir+'Plots/', nPart=128, model='fofr4', redshift=0, SigmaArg=3)
-		NummConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z0128_nsig3.a.NDskl')
-		Fil3dPos_fofr4, FilID_fofr4 = fofr4_instance.get_3D_pos()
-
-		fofr5_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr5_dir+'Plots/', nPart=128, model='fofr5', redshift=0, SigmaArg=3)
-		NummConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z0128_nsig3.a.NDskl')
-		Fil3dPos_fofr5, FilID_fofr5 = fofr5_instance.get_3D_pos()
-		
-		fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=128, model='fofr6', redshift=0, SigmaArg=3)
-		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0128_nsig3.a.NDskl')
-		Fil3dPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
+		if parsed_arguments.NumPartModel == 'lcdm' or parsed_arguments.NumPartModel == 'all':
+			LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=npart, model='LCDM', redshift=0, SigmaArg=3)
+			NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz064_nsig3.a.NDskl')
+			Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
+		if parsed_arguments.NumPartModel == 'symmA' or parsed_arguments.NumPartModel == 'all':
+			SymmA_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_dir+'Plots/', nPart=npart, model='SymmA', redshift=0, SigmaArg=3)
+			NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz064_nsig3.a.NDskl')
+			Fil3DPos_SymmA, FilID_SymmA = SymmA_instance.get_3D_pos()
+		if parsed_arguments.NumPartModel == 'symmB' or parsed_arguments.NumPartModel == 'all':
+			SymmB_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmB_dir+'Plots/', nPart=npart, model='SymmB', redshift=0, SigmaArg=3)
+			NummConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz064_nsig3.a.NDskl')
+			Fil3DPos_SymmB, FilID_SymmB = SymmB_instance.get_3D_pos()
+		if parsed_arguments.NumPartModel == 'symmC' or parsed_arguments.NumPartModel == 'all':
+			SymmC_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmC_dir+'Plots/', nPart=npart, model='SymmC', redshift=0, SigmaArg=3)
+			NummConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz064_nsig3.a.NDskl')
+			Fil3DPos_SymmC, FilID_SymmC = SymmC_instance.get_3D_pos()
+		if parsed_arguments.NumPartModel == 'symmD' or parsed_arguments.NumPartModel == 'all':
+			SymmD_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmD_dir+'Plots/', nPart=npart, model='SymmD', redshift=0, SigmaArg=3)
+			NummConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz064_nsig3.a.NDskl')
+			Fil3DPos_SymmD, FilID_SymmD = SymmD_instance.get_3D_pos()
+		if parsed_arguments.NumPartModel == 'fofr4' or parsed_arguments.NumPartModel == 'all':
+			fofr4_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr4_dir+'Plots/', nPart=npart, model='fofr4', redshift=0, SigmaArg=3)
+			NummConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z064_nsig3.a.NDskl')
+			Fil3dPos_fofr4, FilID_fofr4 = fofr4_instance.get_3D_pos()
+		if parsed_arguments.NumPartModel == 'fofr5' or parsed_arguments.NumPartModel == 'all':
+			fofr5_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr5_dir+'Plots/', nPart=npart, model='fofr5', redshift=0, SigmaArg=3)
+			NummConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z064_nsig3.a.NDskl')
+			Fil3dPos_fofr5, FilID_fofr5 = fofr5_instance.get_3D_pos()
+		if parsed_arguments.NumPartModel == 'fofr6' or parsed_arguments.NumPartModel == 'all':
+			fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=npart, model='fofr6', redshift=0, SigmaArg=3)
+			NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z064_nsig3.a.NDskl')
+			Fil3dPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
+			
 		"""
-		
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		symma_64dir = 'SymmA_data/SymmA_z0_64Particles/'
 		LCDM_test = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_64dir+'Plots/', nPart=64, model='LCDM', redshift=0)
@@ -1495,57 +1519,57 @@ if __name__ == '__main__':
 		NumConnections_list = [NNLCDM, NNSymmA]
 		FilLengths_list = [FLLCDM, FLSymmA]
 		FilPoints_list = [NPLCDM, NPSymmA]
-
+		"""
 		
 		# Compute number of particles per filament.
 		# Units in Mpc/h for distance threshold and box_expand
 		BoundaryCheck_list2 = [0,0,0,0,0,0]
 		Mask_check_list2 = [0,0,0]
 		distance_threshold = 0.3
-		box_expand = 1
+		box_expand = 3
 		Compute_mass = 1
 		Number_particles_list = []
 		if parsed_arguments.NumPartModel == 'lcdm':
-			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, npart, 3)
 			Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_LCDM)
 		if parsed_arguments.NumPartModel == 'symmA':
-			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
 			Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmA)
 		if parsed_arguments.NumPartModel == 'symmB':
-			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
 			Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmB)
 		if parsed_arguments.NumPartModel == 'symmC':
-			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)	
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, npart, 3)	
 			Accepted_dist_SymmC = np.where(Distances_SymmC >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmC)
 		if parsed_arguments.NumPartModel == 'symmD':
-			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
 			Accepted_dist_SymmD = np.where(Distances_SymmD >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmD)
 		if parsed_arguments.NumPartModel == 'fofr4':
-			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
+			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, npart, 3)
 			Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_fofr4)
 		if parsed_arguments.NumPartModel == 'fofr5':
-			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
+			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, npart, 3)
 			Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_fofr5)
 		if parsed_arguments.NumPartModel == 'fofr6':
-			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
+			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, npart, 3)
 			Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_fofr6)
 		if parsed_arguments.NumPartModel == 'all':
-			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, 128, 3)
-			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, 128, 3)
-			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, 128, 3)
-			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, 128, 3)
-			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, 128, 3)
-			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, 128, 3)
-			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, 128, 3)
-			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, 128, 3)
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, npart, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, npart, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
+			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, npart, 3)
+			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, npart, 3)
+			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, npart, 3)
 			Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
 			Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
 			Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
