@@ -43,7 +43,7 @@ class Disperse_Plotter():
 	If provided, it will also analyse the dark matter particles.
 	Note that this class only solves for one model at a time. 
 	"""
-	def __init__(self, savefile, savefigDirectory, nPart, model, redshift, savefile_directory=None, SigmaArg=False):
+	def __init__(self, savefile, savefigDirectory, nPart, model, redshift, SigmaArg=False):
 		self.savefile = savefile
 		self.PlotChecker = 0
 		self.nPart = nPart
@@ -814,7 +814,7 @@ class Disperse_Plotter():
 			else:
 				Mask_instance = FilamentMasking.FilamentMasking(
 						self.FilamentPos, self.xdimPos, self.ydimPos, self.zdimPos,
-						self.FilLengths , self.NFils, Mask_direction_check, Mask_boundary_list
+						self.LengthSplitFilament , self.NFils, Mask_direction_check, Mask_boundary_list
 						)
 				Mask_instance_variables = Mask_instance.Mask_slices()
 				Masked_critpts = MaskCritPts.Mask_CPs(
@@ -947,13 +947,14 @@ def Argument_parser():
 	args = parser.parse_args()
 
 	# Some checks
-	Model_ok = False
-	Model_check = ['lcdm', 'symmA', 'symmB', 'symmC', 'symmD', 'fofr4', 'fofr5', 'fofr6', 'all']
-	for models in Model_check:
-		if args.NumPartModel == models:
-			Model_ok = True
-	if not Model_ok:
-		raise ValueError('Model input name %s not correctly set -NpartModel argument.' %args.NumPartModel)
+	if args.NumPartModel:
+		Model_ok = False
+		Model_check = ['lcdm', 'symmA', 'symmB', 'symmC', 'symmD', 'fofr4', 'fofr5', 'fofr6', 'all']
+		for models in Model_check:
+			if args.NumPartModel == models:
+				Model_ok = True
+		if not Model_ok:
+			raise ValueError('Model input name %s not correctly set -NpartModel argument.' %args.NumPartModel)
 
 	return args
 
@@ -1299,7 +1300,7 @@ if __name__ == '__main__':
 							LCDM=LCDM_model, SymmA=SymmA_model, SymmB=SymmB_model)
 			ModelCompareInstance.Run(NumConnectionsModels_list, FilLengthsModels_list, FilPointsModels_list, nPart=64)
 
-	if HOMEPC == 1:
+	if HOMEPC == 1 and not ModelCompare:
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
 		
@@ -1448,7 +1449,7 @@ if __name__ == '__main__':
 					fig_filpersig.savefig(results_dir_filpersig + 'Filaments_per_sigma_Maxima' + str(N_sigmas) + '.png')
 					fig_filpersig_log.savefig(results_dir_filpersig + 'Filaments_per_sigma_Maxima'+ str(N_sigmas) + '_logarithmic.png')
 
-	if ModelCompare and HOMEPC == 1:
+	if ModelCompare == 1 and HOMEPC == 1:
 		""" 
 		Runs for all modified gravity simulations.
 		All runs are on 256^3 particle subsample at sigma=5.
@@ -1532,35 +1533,35 @@ if __name__ == '__main__':
 		Compute_mass = 1
 		Number_particles_list = []
 		if parsed_arguments.NumPartModel == 'lcdm':
-			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, npart, 3)
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:71], FilID_LCDM[0:71], npart, 3)
 			Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_LCDM)
 		if parsed_arguments.NumPartModel == 'symmA':
-			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA[0:71], FilID_SymmA[0:71], npart, 3)
 			Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmA)
 		if parsed_arguments.NumPartModel == 'symmB':
-			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB[0:71], FilID_SymmB[0:71], npart, 3)
 			Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmB)
 		if parsed_arguments.NumPartModel == 'symmC':
-			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, npart, 3)	
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC[0:71], FilID_SymmC[0:71], npart, 3)	
 			Accepted_dist_SymmC = np.where(Distances_SymmC >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmC)
 		if parsed_arguments.NumPartModel == 'symmD':
-			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD[0:71], FilID_SymmD[0:71], npart, 3)
 			Accepted_dist_SymmD = np.where(Distances_SymmD >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmD)
 		if parsed_arguments.NumPartModel == 'fofr4':
-			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, npart, 3)
+			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4[0:71], FilID_fofr4[0:71], npart, 3)
 			Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_fofr4)
 		if parsed_arguments.NumPartModel == 'fofr5':
-			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, npart, 3)
+			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5[0:71], FilID_fofr5[0:71], npart, 3)
 			Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_fofr5)
 		if parsed_arguments.NumPartModel == 'fofr6':
-			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, npart, 3)
+			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6[0:71], FilID_fofr6[0:71], npart, 3)
 			Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_fofr6)
 		if parsed_arguments.NumPartModel == 'all':
@@ -1632,3 +1633,11 @@ if __name__ == '__main__':
 		#CompI = HComp.CompareModels(savefile=0, savefigDirectory='LOL/', savefile_directory='WHAT/', filetype=filetype, redshift=0, dist_thr=distance_threshold)
 		#CompI.Compare_mg_models(NumConnections_list, FilLengths_list, FilPoints_list)
 		
+	elif ModelCompare == 2 and HOMEPC == 1:
+		print 'This is run!'
+		file_directory = '/mn/stornext/d5/aleh'
+		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
+		fofr6_dir = 'fofr6_data/fofr6_z0_64Particles/Sigma3/'
+		fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=64, model='fofr6', redshift=0, SigmaArg=3)
+		NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z064_nsig3.a.NDskl')
+		Fil3DPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
