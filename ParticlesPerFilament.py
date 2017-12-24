@@ -178,8 +178,8 @@ class particles_per_filament():
 		if not len(masked_ids) == 2:
 			return self.particlepos[masked_ids]
 		else:
-			Particles1 = self.particlepos[masked]
-			Particles2 = self.particlepos[mask2]
+			Particles1 = self.particlepos[masked_ids[0]]
+			Particles2 = self.particlepos[masked_ids[1]]
 			Particles2[:,0] += MovePartx
 			Particles2[:,1] += MoveParty
 			Particles2[:,2] += MovePartz
