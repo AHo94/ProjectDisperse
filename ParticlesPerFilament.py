@@ -304,7 +304,7 @@ class particles_per_filament():
 			distances.append(np.min(d))
 		return np.array(distances)
 
-	def get_distance_scaled(filament, part_box):
+	def get_distance_scaled(self, filament, part_box):
 		"""
 		Computes the distance from a particle to every segment in the filament.
 		Only the shortest distance is included.
@@ -326,7 +326,7 @@ class particles_per_filament():
 		return distances
 
 
-	def get_distance_seginterp(filament, part_box):
+	def get_distance_seginterp(self, filament, part_box):
 		"""
 		For each segment, 'interpolate' a set of points between the two connection points in the segment.
 		Create N new 3D coordinate points in the segment.
