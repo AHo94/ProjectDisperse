@@ -43,7 +43,7 @@ class Disperse_Plotter():
 	If provided, it will also analyse the dark matter particles.
 	Note that this class only solves for one model at a time. 
 	"""
-	def __init__(self, savefile, savefigDirectory, nPart, model, redshift, SigmaArg=False):
+	def __init__(self, savefile, savefigDirectory, nPart, model, redshift, savefile_directory=None, SigmaArg=False):
 		self.savefile = savefile
 		self.PlotChecker = 0
 		self.nPart = nPart
@@ -996,7 +996,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		raise ValueError('Wrong type for name. Current type is %s' %type(name))
 
 	toggle = 0
-	Model_check = ['lcdm', 'symmA', 'symmB', 'symmC', 'symmD', 'fofr4', 'fofr5', 'fofr6']
+	Model_check = ['lcdm', 'symm_A', 'symm_B', 'symm_C', 'symm_D', 'fofr4', 'fofr5', 'fofr6']
 	for models in Model_check:
 		if name == models:
 			toggle = True
@@ -1041,8 +1041,8 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
 		Masked_ids = np.array(proc.map(Fixed_args_ids, Nfils_iterate))
 		pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
-		proc.close()
-		proc.join()
+		#proc.close()
+		#proc.join()
 	
 	Distances = []
 	if os.path.isfile(cachefile_distances):
@@ -1050,12 +1050,12 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		Distances = pickle.load(open(cachefile_distances, 'rb'))
 	elif not os.path.isfile(cachefile_distances) and Toggle_distance_computing:
 		print 'Computing number of particles per filament for ' + name + '. may take a while...'
-		#Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance, Masked_ids, FilPos)
-		#Distances = np.array(proc.map(Fixed_args_distances, Nfils_iterate))
-		for ids in Nfils_iterate:
-			Distances.append(ppf_instance.get_distance(FilPos[ids], Masked_ids[ids]))
-		#proc.close()
-		#proc.join()
+		Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance, Masked_ids, FilPos)
+		Distances = np.array(proc.map(Fixed_args_distances, Nfils_iterate))
+		#for ids in Nfils_iterate:
+		#	Distances.append(ppf_instance.get_distance(FilPos[ids], Masked_ids[ids]))
+		proc.close()
+		proc.join()
 		pickle.dump(Distances, open(cachefile_distances, 'wb'))
 	else:
 		raise ValueError('Distance pickle file does not exist, and computation not toggled!')
@@ -1453,6 +1453,8 @@ if __name__ == '__main__':
 		Runs for all modified gravity simulations.
 		All runs are on 256^3 particle subsample at sigma=5.
 		"""
+		file_directory = '/mn/stornext/d5/aleh'
+		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
 		npart = 64
 		"""
 		lcdm_dir = 'lcdm_testing/LCDM_z0_128Particles/Sigma3/'
@@ -1497,15 +1499,15 @@ if __name__ == '__main__':
 		if parsed_arguments.NumPartModel == 'fofr4' or parsed_arguments.NumPartModel == 'all':
 			fofr4_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr4_dir+'Plots/', nPart=npart, model='fofr4', redshift=0, SigmaArg=3)
 			NummConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z064_nsig3.a.NDskl')
-			Fil3dPos_fofr4, FilID_fofr4 = fofr4_instance.get_3D_pos()
+			Fil3DPos_fofr4, FilID_fofr4 = fofr4_instance.get_3D_pos()
 		if parsed_arguments.NumPartModel == 'fofr5' or parsed_arguments.NumPartModel == 'all':
 			fofr5_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr5_dir+'Plots/', nPart=npart, model='fofr5', redshift=0, SigmaArg=3)
 			NummConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z064_nsig3.a.NDskl')
-			Fil3dPos_fofr5, FilID_fofr5 = fofr5_instance.get_3D_pos()
+			Fil3DPos_fofr5, FilID_fofr5 = fofr5_instance.get_3D_pos()
 		if parsed_arguments.NumPartModel == 'fofr6' or parsed_arguments.NumPartModel == 'all':
 			fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=npart, model='fofr6', redshift=0, SigmaArg=3)
 			NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z064_nsig3.a.NDskl')
-			Fil3dPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
+			Fil3DPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
 			
 		"""
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
@@ -1534,19 +1536,19 @@ if __name__ == '__main__':
 			Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_LCDM)
 		if parsed_arguments.NumPartModel == 'symmA':
-			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symmA', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
 			Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmA)
 		if parsed_arguments.NumPartModel == 'symmB':
-			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symmB', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
 			Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmB)
 		if parsed_arguments.NumPartModel == 'symmC':
-			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symmC', Fil3DPos_SymmC, FilID_SymmC, npart, 3)	
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, npart, 3)	
 			Accepted_dist_SymmC = np.where(Distances_SymmC >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmC)
 		if parsed_arguments.NumPartModel == 'symmD':
-			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symmD', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
 			Accepted_dist_SymmD = np.where(Distances_SymmD >= distance_threshold)[0]
 			Number_particles_list.append(Accepted_dist_SymmD)
 		if parsed_arguments.NumPartModel == 'fofr4':
@@ -1563,10 +1565,10 @@ if __name__ == '__main__':
 			Number_particles_list.append(Accepted_dist_fofr6)
 		if parsed_arguments.NumPartModel == 'all':
 			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, npart, 3)
-			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symmA', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
-			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symmB', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
-			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symmC', Fil3DPos_SymmC, FilID_SymmC, npart, 3)
-			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symmD', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, npart, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
 			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, npart, 3)
 			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, npart, 3)
 			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, npart, 3)
