@@ -1086,7 +1086,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	#		for ids in id_list2:
 	#			temp_id.append(ids)
 	#	Npart_per_fil_partIDs.append(np.array(temp_id))
-
+	"""    
 	total = 0
 	#total_partids = []
 	#id_append_check = 0
@@ -1120,6 +1120,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 			else:
 				Npart_per_fil.append(NumPartPerFil[i])
 				#Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
+	"""
 	print 'Done'
 	return np.array(Npart_per_fil), np.array(Filament_part_IDs)
 
