@@ -1541,42 +1541,42 @@ if __name__ == '__main__':
 		Compute_mass = 1
 		Number_particles_list = []
 		if parsed_arguments.NumPartModel == 'lcdm':
-			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:72], FilID_LCDM[0:72], npart, 3)
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, npart, 3)
 			Add_particle_list(Distances_LCDM)
 			#Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
 			#Number_particles_list.append(Accepted_dist_LCDM)
 		if parsed_arguments.NumPartModel == 'symmA':
-			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA[0:72], FilID_SymmA[0:72], npart, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
 			Add_particle_list(Distances_SymmA)
 			#Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
 			#Number_particles_list.append(Accepted_dist_SymmA)
 		if parsed_arguments.NumPartModel == 'symmB':
-			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB[0:72], FilID_SymmB[0:72], npart, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
 			Add_particle_list(Distances_SymmB)
 			#Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
 			#Number_particles_list.append(Accepted_dist_SymmB)
 		if parsed_arguments.NumPartModel == 'symmC':
-			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC[0:72], FilID_SymmC[0:72], npart, 3)
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, npart, 3)
 			Add_particle_list(Distances_SymmC)
 			#Accepted_dist_SymmC = np.where(Distances_SymmC >= distance_threshold)[0]
 			#Number_particles_list.append(Accepted_dist_SymmC)
 		if parsed_arguments.NumPartModel == 'symmD':
-			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD[0:72], FilID_SymmD[0:72], npart, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
 			Add_particle_list(Distances_SymmD)
 			#Accepted_dist_SymmD = np.where(Distances_SymmD >= distance_threshold)[0]
 			#Number_particles_list.append(Accepted_dist_SymmD)
 		if parsed_arguments.NumPartModel == 'fofr4':
-			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4[0:72], FilID_fofr4[0:72], npart, 3)
+			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, npart, 3)
 			Add_particle_list(Distances_fofr4)
 			#Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
 			#Number_particles_list.append(Accepted_dist_fofr4)
 		if parsed_arguments.NumPartModel == 'fofr5':
-			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5[0:72], FilID_fofr5[0:72], npart, 3)
+			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, npart, 3)
 			Add_particle_list(Distances_fofr5)
 			#Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
 			#Number_particles_list.append(Accepted_dist_fofr5)
 		if parsed_arguments.NumPartModel == 'fofr6':
-			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6[0:72], FilID_fofr6[0:72], npart, 3)
+			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, npart, 3)
 			Add_particle_list(Distances_fofr6)
 			#Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
 			#Number_particles_list.append(Accepted_dist_fofr6)
