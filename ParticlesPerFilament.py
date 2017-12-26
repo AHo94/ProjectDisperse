@@ -184,7 +184,7 @@ class particles_per_filament():
 			Particles2[:,1] += MoveParty
 			Particles2[:,2] += MovePartz
 			Masked_particle_box = np.concatenate([Particles1, Particles2])
-			return Masked_particles_box
+			return Masked_particle_box
 
 	def masked_particle_indices(self, filament_box):
 		"""
@@ -325,8 +325,7 @@ class particles_per_filament():
 		distances = np.min(dist_temp, axis=1)
 		return distances
 
-
-	def get_distance_seginterp(self, filament, part_box):
+	def get_distance_seginterp(self, filament, masked_ids):
 		"""
 		For each segment, 'interpolate' a set of points between the two connection points in the segment.
 		Create N new 3D coordinate points in the segment.
@@ -343,6 +342,7 @@ class particles_per_filament():
 		This version is used as the previous two versions assumed the segment to be infinitely long.
 		"""
 		true_dist = []
+		part_box = self.particle_box2(filament, masked_ids)
 		for i in range(len(filament)-1):
 			segpoints = []
 			distances = []
