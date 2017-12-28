@@ -9,6 +9,7 @@ import cPickle as pickle
 from collections import Counter
 from functools import partial
 import multiprocessing as mp
+import sys
 
 # Numpy, matplotlib and scipy
 import numpy as np
@@ -981,6 +982,7 @@ def Multiprocess_particle_distances(Instance, Masked_ids, Filament, i):
 	"""
 	#Distances = Instance.get_distance_scaled(Filament[i], Masked_ids[i])   # Issues with this version!
 	Distances = Instance.get_distance_seginterp(Filament[i], Masked_ids[i])
+	#print 'Computing distance'
 	return Distances
 
 def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
@@ -1011,7 +1013,6 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		os.makedirs(cachedir_ppf_distances)
 	if not os.path.isdir(cachedir_ppf_ids):
 		os.makedirs(cachedir_ppf_ids)
-		
 	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
 	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p' 
 	"""
@@ -1029,18 +1030,33 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		proc.join()
 		pickle.dump([NumPartPerFil, NumPartPerFil_particleIDs], open(cachefile, 'wb'))
 	"""
+	# Splits the distance computing in multiple pieces
+	# Masked_id array is very, very large, causing the multiprocessing to stop. Must therefore split in smaller segments.
+	# Number of left over indices must be smaller than the range step, else we will not reach all indices.
+	# Number of steps (SplitRun) is based on the number of CPUs used. Range step is the number of CPUs.
+	#Ranges = parsed_arguments.NumProcesses#len(FilPos)/Splitrun
+	#Splitrun = len(FilPos)/Ranges
+	Splitrun = 60
+	Ranges = len(FilPos)/Splitrun
+	LeftOver = len(FilPos) - Ranges*Splitrun
+	if LeftOver >= Ranges:
+		raise ValueError('Number of left over indices should be smaller than the range step! Choose suitable SplitRun (N).')
+	print LeftOver, Splitrun, Ranges
 	Nfils_iterate = range(len(FilPos))
 	if os.path.isfile(cachefile_ids):
 		print 'Reading masked particle IDs for ' + name + '...'
 		Toggle_distance_computing = 0
 		Masked_ids = pickle.load(open(cachefile_ids, 'rb'))
+		print 'done'
 	else:
 		print 'Computing masked particle indices for ' + name + '. May take a while...'
 		Toggle_distance_computing = 1
 		proc = mp.Pool(parsed_arguments.NumProcesses) 
 		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
+		time_start = time.time()
 		Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
 		Masked_ids = np.array(proc.map(Fixed_args_ids, Nfils_iterate))
+		print 'Creating ID mask time: ', time.time() - time_start, 's'
 		pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
 		#proc.close()
 		#proc.join()
@@ -1048,18 +1064,34 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	if os.path.isfile(cachefile_distances):
 		print 'Reading number of particles pickle file for ' + name + '...'
 		Distances = pickle.load(open(cachefile_distances, 'rb'))
-	elif not os.path.isfile(cachefile_distances) and Toggle_distance_computing:
+		print 'done'
+	else:#elif not os.path.isfile(cachefile_distances):# and Toggle_distance_computing:
+		if not Toggle_distance_computing:
+			print 'No processes available, starting new one'
+			proc = mp.Pool(parsed_arguments.NumProcesses)
+			time_start = time.time()
+			mp.Pool(parsed_arguments.NumProcesses)
+		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
 		print 'Computing number of particles per filament for ' + name + '. may take a while...'
-		Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance, Masked_ids, FilPos)
-		Distances = np.array(proc.map(Fixed_args_distances, Nfils_iterate))
+		# MASKED IDS ARRAY IS FUCKING MASSIVE, CAUSES HUGE FUCKING SLOWDOWN IN COMPUTATION, REDUCE THAT SHIT
+		time_start = time.time()
+		Distances = np.array([])
+		for i in range(Splitrun+1):
+			Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance,
+                                           Masked_ids[i*Ranges:i*Ranges+Ranges], FilPos[i*Ranges:i*Ranges+Ranges])
+			max_range = LeftOver if len(FilPos) < i*Ranges + Ranges  else Ranges
+			Result = np.array(proc.map(Fixed_args_distances, range(0, max_range)))
+			Distances = np.concatenate((Distances, Result))
+		print 'Compute distances time: ', time.time() - time_start, 's' 
 		#for ids in Nfils_iterate:
-		#	Distances.append(ppf_instance.get_distance(FilPos[ids], Masked_ids[ids]))
+		#	Distances.append(ppf_instance.get_distance_seginterp(FilPos[ids], Masked_ids[ids]))
 		proc.close()
 		proc.join()
 		pickle.dump(Distances, open(cachefile_distances, 'wb'))
-	else:
-		raise ValueError('Distance pickle file does not exist, and computation not toggled!')
-        
+		print 'done'
+	#else:
+	#	raise ValueError('Distance pickle file does not exist, and computation not toggled!')
+	return 0    
 	#NumPartPerFil = []
 	#for dist in Distances:
 	#	Accepted_distances = np.where(dist <= distance_threshold)[0]
@@ -1122,8 +1154,9 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 				#Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
 	"""
 	print 'Done'
-	return np.array(Npart_per_fil), np.array(Filament_part_IDs)
-
+	#return np.array(Npart_per_fil), np.array(Filament_part_IDs)
+	return Distances, np.array(Filament_part_IDs)
+    
 if __name__ == '__main__':
 	parsed_arguments = Argument_parser()
 	HOMEPC = parsed_arguments.HOMEPC	# Set 1 if working in UiO terminal
@@ -1459,6 +1492,7 @@ if __name__ == '__main__':
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
 		npart = 64
+		
 		"""
 		lcdm_dir = 'lcdm_testing/LCDM_z0_128Particles/Sigma3/'
 		SymmA_dir = 'SymmA_data/SymmA_z0_128Particles/Sigma3/'
