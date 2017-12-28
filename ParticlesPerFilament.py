@@ -341,6 +341,7 @@ class particles_per_filament():
 
 		This version is used as the previous two versions assumed the segment to be infinitely long.
 		"""
+		#print 'Actually computing now'
 		true_dist = []
 		part_box = self.particle_box2(filament, masked_ids)
 		for i in range(len(filament)-1):
@@ -362,6 +363,7 @@ class particles_per_filament():
 		# Selects the shortest distance from a particle to every segment
 		true_dist = np.swapaxes(np.asarray(true_dist), 0, 1)
 		dist = np.min(true_dist, axis=1)
+		#print 'done'
 		return dist
 
 
