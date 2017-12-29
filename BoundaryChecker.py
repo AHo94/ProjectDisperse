@@ -522,13 +522,14 @@ class BoundaryChecker():
 				Zpoint2 = self.UpperBound if Boundary_checkZ else self.LowerBound
 			else:
 				raise ValueError('Something went wrong with setting xbound, ybound or zbound!')
-			add_boundary_point(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint1, Zpoint2, i)
+			add_boundary_point(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint1, Zpoint2, i, j)
 
-		def add_boundary_point(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint1, Zpoint2, i):
+		def add_boundary_point(Xpoint1, Xpoint2, Ypoint1, Ypoint2, Zpoint1, Zpoint2, i, j):
 			""" 
 			Adds the points to respective array for the first boundary point.
 			Clears the temporary lists containing the coordinate points and adds the second boundary points.
 			"""
+			# Add the new interpolated points to the old arrays
 			self.xyTemp.append(np.array([Xpoint1, Ypoint1]))
 			self.xTemp.append(Xpoint1)
 			self.yTemp.append(Ypoint1)
@@ -539,16 +540,22 @@ class BoundaryChecker():
 			yPosTemp.append(self.yTemp)
 			zPosTemp.append(self.zTemp)
 			self.FilamentIDs.append(self.FilID[i])
-			
+			# Create new temporary arrays
 			self.xyTemp = []
 			self.xTemp = []
 			self.yTemp = []
 			self.zTemp = []
 			
+			# Add new extrapolated point to the new arrays
 			self.xyTemp.append(np.array([Xpoint2, Ypoint2]))
 			self.xTemp.append(Xpoint2)
 			self.yTemp.append(Ypoint2)
 			self.zTemp.append(Zpoint2)
+			# Add current point to the new arrays
+			self.xyTemp.append(np.array([self.xdimPos[i][j], self.ydimPos[i][j]]))
+			self.xTemp.append(self.xdimPos[i][j])
+			self.yTemp.append(self.ydimPos[i][j])
+			self.zTemp.append(self.zdimPos[i][j])
 
 		for i in range(self.NFils-1):
 			xBoundary = 0
@@ -590,20 +597,18 @@ class BoundaryChecker():
 
 			# Add final points
 			if xBoundary or yBoundary or zBoundary:
-				get_boundary_point(i, j, xBoundary, yBoundary, zBoundary)
+				get_boundary_point(i, j+1, xBoundary, yBoundary, zBoundary)
 				SplitCount += 1   # May not be correct here. Make sure to check the lengths of arrays!
 			else:
 				self.xyTemp.append(np.array([self.xdimPos[i][-1], self.ydimPos[i][-1]]))
 				self.xTemp.append(self.xdimPos[i][-1])
 				self.yTemp.append(self.ydimPos[i][-1])
 				self.zTemp.append(self.zdimPos[i][-1])
-
 			FilPosTemp.append(np.array(self.xyTemp))
 			xPosTemp.append(self.xTemp)
 			yPosTemp.append(self.yTemp)
 			zPosTemp.append(self.zTemp)
 			self.FilamentIDs.append(self.FilID[i])
-
 			# Compute length of the whole filament
 			Filament_length = self.compute_lengths(self.xdimPos[i], self.ydimPos[i], self.zdimPos[i])
 			self.FilLengths.append(Filament_length)
