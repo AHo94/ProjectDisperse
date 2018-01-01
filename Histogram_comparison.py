@@ -407,7 +407,7 @@ class CompareModels():
 		for Filament_mass in FilMass:
 			temp_dist_mass = []
 			for mass in Mass_array:
-				Number_count = len(np.where(Filament_mass >= mass))
+				Number_count = len(np.where(Filament_mass >= mass)[0])
 				temp_dist_mass.append(float(Number_count))
 			Mass_distribution.append(np.array(temp_dist_mass))
 		FilMass_massfunc = plt.figure()
@@ -417,7 +417,7 @@ class CompareModels():
 		plt.ylabel('\mathregular{N(>M)}')
 		plt.legend(Legends)
 
-		# Relative difference of the masses. Basem odel is LCDM
+		# Relative difference of the masses. Base model is LCDM
 		RelDiff_mass = plt.figure()
 		plt.semilogx(Mass_array, np.zeros(len(Mass_array)))
 		for i in range(1,len(Mass_distribution)):
