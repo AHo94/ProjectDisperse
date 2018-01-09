@@ -301,30 +301,31 @@ class CompareModels():
 		self.ModelComparison = False
 		self.SigmaComparison = False
 
+		sefl.Legends = ['$\mathregular{\Lambda}$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6']
+
 		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
 		if not os.path.isdir(self.results_dir) and savefile == 1:
 			os.makedirs(self.results_dir)
 
 		self.nParticles = nPart
 
-	def Compare_mg_models(self, Nconnections, FilLengths, NptsPerFilament, NumParts, FilMass):
+	def relative_deviation(self, data, index):
 		""" 
-		Compares all stuff for different models.
+		Computes relative deviation of a given physical quantity.
+		This function assumes that the base model is in the first element.
+		"""
+		delta = (data[0] - data[index])/data[0]
+		return delta
+
+	def Compare_disperse_data(self, Nconnections, FilLengths):
+		""" 
+		Compares basic properties of the data given by disperse.
 		Relative deviation compares models with respect to the LCDM model.
 		The function assumes that LCDM data is the first in the data list.
 		"""
-		def relative_deviation(data, index):
-			""" 
-			Computes relative deviation of a given physical quantity.
-			This function assumes that the base model is in the first element.
-			"""
-			delta = (data[0] - data[index])/data[0]
-			return delta
-
 		N = len(Nconnections)
-		ConnectedHistComparison = plt.figure()
-		Legends = ['$\mathregular{\Lambda}$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6']
 		# Histogram for number of filament connections per filament
+		ConnectedHistComparison = plt.figure()
 		NconComparison = plt.figure()
 		for i in range(N):
 			DataMin = min(Nconnections[i])
@@ -336,7 +337,7 @@ class CompareModels():
 		plt.ylabel('Number of filaments')
 		plt.xscale('log')
 		plt.title('Histogram comparison of number of filament connections for each filmanet')
-		plt.legend(Legends)
+		plt.legend(self.Legends)
 		# Relative deviation of number of filament connections
 		"""
 		NconComparison = plt.figure()
@@ -350,7 +351,7 @@ class CompareModels():
 		plt.xlabel('Number of connected filaments per filament')
 		plt.ylabel('Number of filaments')
 		plt.title('Histogram comparison of number of filament connections for each filmanet')
-		plt.legend(Legends)
+		plt.legend(self.Legends)
 		"""
 
 		# Histogram of filament length comparison
@@ -365,7 +366,7 @@ class CompareModels():
 		plt.ylabel('Number of filaments')
 		plt.xscale('log')
 		plt.title('Histogram comparison of filament lengths')
-		plt.legend(Legends)
+		plt.legend(self.Legends)
 
 		# Number of filaments larger than a given length: N(>L)
 		lengths = np.linspace(np.min(np.min(FilLengths)), np.max(np.max(FilLengths)), 1000)
@@ -381,25 +382,27 @@ class CompareModels():
 			plt.semilogx(lengths, distribution[i])
 		plt.xlabel('Filament length - [Mpc/h]')
 		plt.ylabel('\mathregular{$N(>L)$}')
-		plt.legend(Legends)
+		plt.legend(self.Legends)
 
 		# Relative difference of the lengths. Base model is LCDM.
 		RelDiff_length = plt.figure()
 		plt.semilogx(lengths, np.zeros(len(lengths)))
 		for i in range(1,len(distribution)):
-			delta = relative_deviation(np.array(distribution), i)
+			delta = self.relative_deviation(np.array(distribution), i)
 			plt.semilogx(lengths, delta)
 		plt.xlabel('Filament length - [Mpc/h]')
 		plt.ylabel('Relative difference of N(>L)')
-		plt.legend(Legends)
-        
+		plt.legend(self.Legends)
+
+	def Compare_particle_properties(self, NptsPerFilament, NumParts, FilMass):
+		""" Compares properties where the number of particles per filaments are computed """
 		# Number of particles per filament for a given distance threshold
 		NumPart_histogram = plt.figure()
 		for i in range(len(NumParts)):
 			plt.hist(NumParts[i], align='mid', rwidth=1, bins=60, normed=False, histtype='step')
 		plt.xlabel('Number of particles per filament')
 		plt.ylabel('Number of filaments')
-		plt.legend(Legends)
+		plt.legend(self.Legends)
 
 		# Filament mass larger than a given mass: N(>M)
 		Mass_array = np.linspace(np.min(np.min(FilMass)), np.max(np.max(FilMass)), 1000)
@@ -415,14 +418,14 @@ class CompareModels():
 			plt.semilogx(Mass_array, Mass_distribution[i])
 		plt.xlabel('Filament mass [kg]')
 		plt.ylabel('\mathregular{N(>M)}')
-		plt.legend(Legends)
+		plt.legend(self.Legends)
 
 		# Relative difference of the masses. Base model is LCDM
 		RelDiff_mass = plt.figure()
 		plt.semilogx(Mass_array, np.zeros(len(Mass_array)))
 		for i in range(1,len(Mass_distribution)):
-			delta = relative_deviation(np.array(Mass_distribution), i)
+			delta = self.relative_deviation(np.array(Mass_distribution), i)
 			plt.semilogx(Mass_array, delta)
 		plt.xlabel('Filament length - [Mpc/h]')
 		plt.ylabel('Relative difference of N(>M)')
-		plt.legend(Legends)
+		plt.legend(self.Legends)
