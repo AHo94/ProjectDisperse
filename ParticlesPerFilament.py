@@ -372,6 +372,12 @@ class particles_per_filament():
 		masked_ids = self.masked_particle_indices(filbox)
 		return masked_ids
 
+	def get_partbox_and_ids(self, filament):
+		filbox = self.filament_box(filament)
+		masked_ids = self.masked_particle_indices(filbox)
+		partbox = self.particle_box2(filament, masked_ids)
+		return masked_ids, partbox
+
 	def solve(self, filament, distance_threshold):
 		cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
 		cache_model = cachedir + self.model + '_particleIDs.p'
@@ -396,48 +402,42 @@ class particles_per_filament():
 		accepted_particle_ids = np.where(distances <= distance_threshold)[0]
 		return len(accepted_particle_ids),1# masked_part_ids[accepted_particle_ids]
 
-# Everything below is old code for -periodic argument in delaunaya
-def get_filament_box(filament, filament_p2=np.array([])):
-	Box_expand = 1
-	if not filament_p2.any():
-		xmin = np.min(filament[:,0]) - Box_expand
-		xmax = np.max(filament[:,0]) + Box_expand
-		ymin = np.min(filament[:,1]) - Box_expand
-		ymax = np.max(filament[:,1]) + Box_expand
-		zmin = np.min(filament[:,2]) - Box_expand
-		zmax = np.max(filament[:,2]) + Box_expand
-		box = [xmin, xmax, ymin, ymax, zmin, zmax]
-		return [box]
-	else:
-		xmin = np.min(filament[:,0]) - Box_expand
-		xmax = np.max(filament[:,0]) + Box_expand
-		ymin = np.min(filament[:,1]) - Box_expand
-		ymax = np.max(filament[:,1]) + Box_expand
-		zmin = np.min(filament[:,2]) - Box_expand
-		zmax = np.max(filament[:,2]) + Box_expand
-		
-		xmin_p2 = np.min(filament_p2[:,0]) - Box_expand
-		xmax_p2 = np.max(filament_p2[:,0]) + Box_expand
-		ymin_p2 = np.min(filament_p2[:,1]) - Box_expand
-		ymax_p2 = np.max(filament_p2[:,1]) + Box_expand
-		zmin_p2 = np.min(filament_p2[:,2]) - Box_expand
-		zmax_p2 = np.max(filament_p2[:,2]) + Box_expand
-		if (np.abs(np.min(filament[:,0]) - min_boundary) < 1e-3) or (np.abs(np.max(filament[:,0]) - max_boundary) < 1e-3):
-			xmin = np.min(filament[:,0])
-			xmax = np.max(filament[:,0])
-			xmin_p2 = np.min(filament_p2[:,0])
-			xmax_p2 = np.max(filament_p2[:,0])
-		elif (np.abs(np.min(filament[:,1]) - min_boundary) < 1e-3) or (np.abs(np.max(filament[:,1]) - max_boundary) < 1e-3):
-			ymin = np.min(filament[:,1])
-			ymax = np.max(filament[:,1])
-			ymin_p2 = np.min(filament_p2[:,1])
-			ymax_p2 = np.max(filament_p2[:,1])
-		elif (np.abs(np.min(filament[:,2]) - min_boundary) < 1e-3) or (np.abs(np.max(filament[:,2]) - max_boundary) < 1e-3):
-			zmin = np.min(filament[:,2])
-			zmax = np.max(filament[:,2])
-			zmin_p2 = np.min(filament_p2[:,2])
-			zmax_p2 = np.max(filament_p2[:,2])
-			
-		box1 = [xmin, xmax, ymin, ymax, zmin, zmax]
-		box2 = [xmin_p2, xmax_p2, ymin_p2, ymax_p2, zmin_p2, zmax_p2]
-		return [box1, box2]
+def Compute_distance(filament, part_box):
+	"""
+	For each segment, 'interpolate' a set of points between the two connection points in the segment.
+	Create N new 3D coordinate points in the segment.
+	For each point in the segment, compute distance from the point to each particle.
+	The current output should be a (N x Pn)-matrix, where Pn = number of particles.
+	Reshape the output such that it becomes a (Pn x N)-matrix.
+	Find the minimum along the N axis of the matrix.
+	This gives an Pn-array shortest distance for each particle to any of the interpolated points.
+	Repeat this for other segments, will have multiple arrays of 'shortest distance'.
+	Repeat until we have an (Sn x Pn)-matrix, where Sn = number of segments
+	Reshape so we have an (Pn x Sn)-matrix, that is a matrix where each array contains distances of one particle to each seg.
+	Find minimum of each of those to get shortest distance from particles to filament
+	
+	This version is used as the previous two versions assumed the segment to be infinitely long.
+	This version is also outside the class, to not load all the particle positions.
+	"""
+	#print 'Actually computing now'
+	true_dist = []
+	for i in range(len(filament)-1):
+		segpoints = []
+		distances = []
+		xlims = np.linspace(filament[i][0], filament[i+1][0], 100)
+		ylims = np.linspace(filament[i][1], filament[i+1][1], 100)
+		zlims = np.linspace(filament[i][2], filament[i+1][2], 100)
+		# Create 3D position array of the segments, based on the interpolated values
+		for i in range(len(xlims)):
+			segpoints.append(np.column_stack((xlims[i], ylims[i], zlims[i])))
+		# Find distance from each point in the segment to every particle
+		for pts in segpoints:
+			distances.append(np.linalg.norm(pts - part_box, axis=1))
+		# Selects the shortest distance between a particle and every segment point.
+		distances = np.swapaxes(np.asarray(distances), 0, 1)
+		shortest = np.min(distances, axis=1)
+		true_dist.append(shortest)
+	# Selects the shortest distance from a particle to every segment
+	true_dist = np.swapaxes(np.asarray(true_dist), 0, 1)
+	dist = np.min(true_dist, axis=1)
+	return dist
