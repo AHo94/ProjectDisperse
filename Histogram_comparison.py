@@ -289,19 +289,15 @@ class Histogram_Comparison():
 		plt.close('all')
 
 class CompareModels():
-	def __init__(self, savefile, savefigDirectory, savefile_directory, filetype, redshift, dist_thr):
+	def __init__(self, savefile, savefigDirectory, savefile_directory, filetype, redshift, nPart):
 		self.savefile = savefile
-		self.LCDM_check = LCDM
-		self.SymmA_check = SymmA
-		self.SymmB_check = SymmB
 		self.filetype = filetype
-		self.distance_threshold = distance_threshold
 
 		self.ParticleComparison = False
 		self.ModelComparison = False
 		self.SigmaComparison = False
 
-		sefl.Legends = ['$\mathregular{\Lambda}$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6']
+		self.Legends = ['$\mathregular{\Lambda}$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6']
 
 		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
 		if not os.path.isdir(self.results_dir) and savefile == 1:
@@ -314,10 +310,16 @@ class CompareModels():
 		Computes relative deviation of a given physical quantity.
 		This function assumes that the base model is in the first element.
 		"""
-		delta = (data[0] - data[index])/data[0]
+		delta = (data[index] - data[0])/data[0]
 		return delta
 
-	def Compare_disperse_data(self, Nconnections, FilLengths):
+	def savefigure(self, figure, name):
+		""" Function that calls savefig based on figure instance and filename. """
+		if type(name) != str:
+			raise ValueError('filename not a string!')
+		figure.savefig(self.results_dir + name + self.filetype)
+
+	def Compare_disperse_data(self, Nconnections, FilLengths, FilPts):
 		""" 
 		Compares basic properties of the data given by disperse.
 		Relative deviation compares models with respect to the LCDM model.
@@ -326,7 +328,6 @@ class CompareModels():
 		N = len(Nconnections)
 		# Histogram for number of filament connections per filament
 		ConnectedHistComparison = plt.figure()
-		NconComparison = plt.figure()
 		for i in range(N):
 			DataMin = min(Nconnections[i])
 			DataMax = max(Nconnections[i])
@@ -335,7 +336,7 @@ class CompareModels():
 			plt.hist(Nconnections[i], align='mid', rwidth=1, bins=BinList, normed=False, histtype='step')
 		plt.xlabel('Number of connected filaments per filament')
 		plt.ylabel('Number of filaments')
-		plt.xscale('log')
+		#plt.xscale('log')
 		plt.title('Histogram comparison of number of filament connections for each filmanet')
 		plt.legend(self.Legends)
 		# Relative deviation of number of filament connections
@@ -362,16 +363,16 @@ class CompareModels():
 			BinSize = (DataMax - DataMin)/(0.5) + 1
 			BinList = np.linspace(DataMin, DataMax, BinSize)
 			plt.hist(FilLengths[i], align='mid', rwidth=1, bins=BinList, normed=False, histtype='step')
-		plt.xlabel('Filament length')
+		plt.xlabel('Filament length - [Mpc/h]')
 		plt.ylabel('Number of filaments')
-		plt.xscale('log')
+		#plt.xscale('log')
 		plt.title('Histogram comparison of filament lengths')
 		plt.legend(self.Legends)
 
 		# Number of filaments larger than a given length: N(>L)
 		lengths = np.linspace(np.min(np.min(FilLengths)), np.max(np.max(FilLengths)), 1000)
 		distribution = []
-		for fils_len in FilLengths:
+		for fils_lens in FilLengths:
 			temp_dist = []
 			for lens in lengths:
 				Number_count = len(np.where(fils_lens >= lens)[0])
@@ -381,7 +382,7 @@ class CompareModels():
 		for i in range(len(distribution)):
 			plt.semilogx(lengths, distribution[i])
 		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('\mathregular{$N(>L)$}')
+		plt.ylabel('$\mathregular{N(>L)}$')
 		plt.legend(self.Legends)
 
 		# Relative difference of the lengths. Base model is LCDM.
@@ -393,6 +394,15 @@ class CompareModels():
 		plt.xlabel('Filament length - [Mpc/h]')
 		plt.ylabel('Relative difference of N(>L)')
 		plt.legend(self.Legends)
+
+		if self.savefile == 1:
+			print '--- SAVING IN: ', self.results_dir, ' ---'
+			self.savefigure(ConnectedHistComparison, 'Number_Connected_Filaments')
+			self.savefigure(LengthHistComparison, 'Filament_lengths')
+			self.savefigure(FilLen_massfunc, 'Filament_lengths_massfunction')
+			self.savefigure(RelDiff_length, 'Filament_lengths_relative_difference')
+		else:
+			print 'Done! No figures saved.'
 
 	def Compare_particle_properties(self, NptsPerFilament, NumParts, FilMass):
 		""" Compares properties where the number of particles per filaments are computed """
@@ -429,3 +439,11 @@ class CompareModels():
 		plt.xlabel('Filament length - [Mpc/h]')
 		plt.ylabel('Relative difference of N(>M)')
 		plt.legend(self.Legends)
+
+		if self.savefile == 1:
+			print '--- SAVING IN: ', self.results_dir, ' ---'
+			self.savefigure(NumPart_histogram, 'NumberParticles_per_filament')
+			self.savefigure(FilMass_massfunc, 'Filament_mass_massfunction')
+			self.savefigure(RelDiff_mass, 'Filament_mass_relative_difference')
+		else:
+			print 'Done! No figures saved.'
