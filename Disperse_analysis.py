@@ -22,6 +22,10 @@ from scipy import stats
 from scipy import spatial
 from scipy.interpolate import griddata
 
+# ZeroMQ
+import zmq
+import ZMQArraySending as ZMQAS
+
 # Disable warnings from matplotlib	
 import warnings
 import matplotlib.cbook
@@ -48,17 +52,7 @@ class Disperse_Plotter():
 		self.savefile = savefile
 		self.PlotChecker = 0
 		self.nPart = nPart
-		if self.nPart == 64:
-			self.nPart_text = '$\mathregular{64^3}$'
-		elif self.nPart == 128:
-			self.nPart_text = '$\mathregular{128^3}$'
-		elif self.nPart == 256:
-			self.nPart_text = '$\mathregular{256^3}$'
-		elif self.nPart == 512:
-			self.nPart_text = '$\mathregular{512^3}$'
-		else:
-			raise ValueError('Argument nPart must be 64, 128, 256 or 512!')
-
+		self.nPart_text = '$\mathregular{' +str(nPart)+ '}$'
 		if type(savefigDirectory) != str:
 			raise ValueError('Argument savefigDirectory must be a string!')
 
@@ -782,7 +776,7 @@ class Disperse_Plotter():
 
 		if os.path.isfile(Disperse_data_check_fn):
 			## Read filament data from the skeleton file
-			print "reading from filament data pickle file..."
+			print "reading from filament data pickle file for model " + self.model + "..."
 			Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data = pickle.load(open(Disperse_data_check_fn, 'rb'))
 		else:
 			Read_filament_data_instance = ReadFilamentData.read_disperse_output(directory=file_directory, UnitConverter=UnitConverter)
@@ -930,8 +924,8 @@ def Argument_parser():
 	parser = argparse.ArgumentParser()
 	# Optional arguments
 	parser.add_argument("-hp", "--HOMEPC", help="Determines if program is run in UiO or laptop. Set 1 if run in UiO. 0 by default", type=int, default=0)
-	parser.add_argument("-kernel", "--KernelMethod", help="Selects different kernels for interpolation. Default = gaussian. tp = tophat, "\
-						, type=str, default='gaussian')
+	#parser.add_argument("-kernel", "--KernelMethod", help="Selects different kernels for interpolation. Default = gaussian. tp = tophat, "\
+	#					, type=str, default='gaussian')
 	parser.add_argument("-bw_m", "--bwMethod", nargs='*', help="Sets bw_method argument of scipy.stats_gaussian_kde. " \
 					+  "Input arguments can be float values, may be multiple. If using default scipy settings, set argument Scott")
 	parser.add_argument("-Nproc", "--NumProcesses", help="Sets the number of processes for multiprocessing module. Default to all available CPUs", type=int, default=None)
@@ -941,22 +935,33 @@ def Argument_parser():
 	parser.add_argument("-sigcomp", "--SigmaComp", help="Set to 1 to compare simulations of different sigmas. 0 by default.", type=int, default=0)
 	parser.add_argument("-modelcomp", "--ModelCompare", help="Set to 1 to compare all the modified gravity models. 0 by default.", type=int, default=0)
 	parser.add_argument("-NpartModel", "--NumPartModel", help="Computes number of particles per filament for a model."\
-	 				+ "Models may be: lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Use argument 'all' to run all models. Runs one by default."\
+	 				+ "Models may be: lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Use argument 'all' to run all models. Runs none by default."\
 	 				+ "Do not run seperate models and 'all' at once!", type=str, default=False)
 
+	parser.add_argument("-DSPmodel", "--DisperseModel", help="Computes basic properties of the filament data given by DisPerSE, for a given model."\
+	 				+ "Models may be: lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Use argument 'all' to run all models. Runs LCDM by default."\
+	 				+ "Do not run seperate models and 'all' at once!", type=str, default='lcdm')
+	
 	# Parse arguments
 	args = parser.parse_args()
 
 	# Some checks
+	Model_ok = False
+	Model_disperse = False
+	Model_check = ['lcdm', 'symmA', 'symmB', 'symmC', 'symmD', 'fofr4', 'fofr5', 'fofr6', 'all']	
 	if args.NumPartModel:
-		Model_ok = False
-		Model_check = ['lcdm', 'symmA', 'symmB', 'symmC', 'symmD', 'fofr4', 'fofr5', 'fofr6', 'all']
 		for models in Model_check:
 			if args.NumPartModel == models:
 				Model_ok = True
 		if not Model_ok:
 			raise ValueError('Model input name %s not correctly set -NpartModel argument.' %args.NumPartModel)
-
+	if args.DisperseModel:
+		for models in Model_check:
+			if args.DisperseModel == models:
+				Model_disperse = True
+		if not Model_disperse:
+			raise ValueError('Model input name %s not correctly set -DSPmodel argument.' %args.DisperseModel)
+			
 	return args
 
 def Multiprocess_filament_per_filament(Instance, distance_threshold, Filament, i):
@@ -980,9 +985,7 @@ def Multiprocess_particle_distances(Instance, Masked_ids, Filament, i):
 	Computes the masked particle indices.
 	Input must be 3D filament position.
 	"""
-	#Distances = Instance.get_distance_scaled(Filament[i], Masked_ids[i])   # Issues with this version!
 	Distances = Instance.get_distance_seginterp(Filament[i], Masked_ids[i])
-	#print 'Computing distance'
 	return Distances
 
 def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
@@ -1007,96 +1010,179 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		raise ValueError('Model input name %s not correctly set into the number particle per filament saver.' %name)
 	print 'Computing number of particles per filament for model: ', name
 	cachedir_ppf_distances = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/Distances/'
+	cachedir_ppf_partbox = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/Distances/ParticleBoxes/'
 	cachedir_ppf_ids = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/MaskedParticlesIDs/'
 	cache_particledata = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
 	if not os.path.isdir(cachedir_ppf_distances):
 		os.makedirs(cachedir_ppf_distances)
+	if not os.path.isdir(cachedir_ppf_partbox):
+		os.makedirs(cachedir_ppf_partbox)
 	if not os.path.isdir(cachedir_ppf_ids):
 		os.makedirs(cachedir_ppf_ids)
 	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
 	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p' 
-	"""
-	if os.path.isfile(cachefile):
-		print 'Reading number of particles pickle file for ' + name + '...'
-		NumPartPerFil, NumPartPerFil_particleIDs = pickle.load(open(cachefile, 'rb'))
-	else:
-		print 'Computing number of particles per filament for ' + name + '. May take a while...'
-		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
-		Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, FilPos)
-		Multiproc_output = proc.map(Fixed_args, range(len(FilPos)))
-		NumPartPerFil = np.array(Multiproc_output)[:,0]
-		NumPartPerFil_particleIDs = np.array(Multiproc_output)[:,1]
-		proc.close()
-		proc.join()
-		pickle.dump([NumPartPerFil, NumPartPerFil_particleIDs], open(cachefile, 'wb'))
-	"""
-	# Splits the distance computing in multiple pieces
-	# Masked_id array is very, very large, causing the multiprocessing to stop. Must therefore split in smaller segments.
-	# Number of left over indices must be smaller than the range step, else we will not reach all indices.
-	# Number of steps (SplitRun) is based on the number of CPUs used. Range step is the number of CPUs.
-	#Ranges = parsed_arguments.NumProcesses#len(FilPos)/Splitrun
-	#Splitrun = len(FilPos)/Ranges
-	Splitrun = 60
-	Ranges = len(FilPos)/Splitrun
-	LeftOver = len(FilPos) - Ranges*Splitrun
-	if LeftOver >= Ranges:
-		raise ValueError('Number of left over indices should be smaller than the range step! Choose suitable SplitRun (N).')
-	print LeftOver, Splitrun, Ranges
-	Nfils_iterate = range(len(FilPos))
-	if os.path.isfile(cachefile_ids):
-		print 'Reading masked particle IDs for ' + name + '...'
-		Toggle_distance_computing = 0
-		Masked_ids = pickle.load(open(cachefile_ids, 'rb'))
-		print 'done'
-	else:
-		print 'Computing masked particle indices for ' + name + '. May take a while...'
-		Toggle_distance_computing = 1
-		proc = mp.Pool(parsed_arguments.NumProcesses) 
-		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
-		time_start = time.time()
-		Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
-		Masked_ids = np.array(proc.map(Fixed_args_ids, Nfils_iterate))
-		print 'Creating ID mask time: ', time.time() - time_start, 's'
-		pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
-		#proc.close()
-		#proc.join()
-	Distances = []
-	if os.path.isfile(cachefile_distances):
-		print 'Reading number of particles pickle file for ' + name + '...'
-		Distances = pickle.load(open(cachefile_distances, 'rb'))
-		print 'done'
-	else:#elif not os.path.isfile(cachefile_distances):# and Toggle_distance_computing:
-		if not Toggle_distance_computing:
-			print 'No processes available, starting new one'
-			proc = mp.Pool(parsed_arguments.NumProcesses)
+
+	def init_methodOLD():
+		if os.path.isfile(cachefile):
+			print 'Reading number of particles pickle file for ' + name + '...'
+			NumPartPerFil, NumPartPerFil_particleIDs = pickle.load(open(cachefile, 'rb'))
+		else:
+			print 'Computing number of particles per filament for ' + name + '. May take a while...'
+			ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
+			Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, FilPos)
+			Multiproc_output = proc.map(Fixed_args, range(len(FilPos)))
+			NumPartPerFil = np.array(Multiproc_output)[:,0]
+			NumPartPerFil_particleIDs = np.array(Multiproc_output)[:,1]
+			proc.close()
+			proc.join()
+			pickle.dump([NumPartPerFil, NumPartPerFil_particleIDs], open(cachefile, 'wb'))
+		
+	def method1():
+		# Splits the distance computing in multiple pieces
+		# Masked_id array is very, very large, causing the multiprocessing to stop. Must therefore split in smaller segments.
+		# Number of left over indices must be smaller than the range step, else we will not reach all indices.
+		# Number of steps (SplitRun) is based on the number of CPUs used. Range step is the number of CPUs.
+		#Ranges = parsed_arguments.NumProcesses#len(FilPos)/Splitrun
+		#Splitrun = len(FilPos)/Ranges
+		Splitrun = 60
+		Ranges = len(FilPos)/Splitrun
+		LeftOver = len(FilPos) - Ranges*Splitrun
+		if LeftOver >= Ranges:
+			raise ValueError('Number of left over indices should be smaller than the range step! Choose suitable SplitRun (N).')
+		print LeftOver, Splitrun, Ranges
+		Nfils_iterate = range(len(FilPos))
+		if os.path.isfile(cachefile_ids):
+			print 'Reading masked particle IDs for ' + name + '...'
+			Toggle_distance_computing = 0
+			Masked_ids = pickle.load(open(cachefile_ids, 'rb'))
+			print 'done'
+		else:
+			print 'Computing masked particle indices for ' + name + '. May take a while...'
+			Toggle_distance_computing = 1
+			proc = mp.Pool(parsed_arguments.NumProcesses) 
+			ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
 			time_start = time.time()
-			mp.Pool(parsed_arguments.NumProcesses)
-		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
-		print 'Computing number of particles per filament for ' + name + '. may take a while...'
-		# MASKED IDS ARRAY IS FUCKING MASSIVE, CAUSES HUGE FUCKING SLOWDOWN IN COMPUTATION, REDUCE THAT SHIT
-		time_start = time.time()
-		Distances = np.array([])
-		for i in range(Splitrun+1):
-			Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance,
-                                           Masked_ids[i*Ranges:i*Ranges+Ranges], FilPos[i*Ranges:i*Ranges+Ranges])
-			max_range = LeftOver if len(FilPos) < i*Ranges + Ranges  else Ranges
-			Result = np.array(proc.map(Fixed_args_distances, range(0, max_range)))
-			Distances = np.concatenate((Distances, Result))
-		print 'Compute distances time: ', time.time() - time_start, 's' 
-		#for ids in Nfils_iterate:
-		#	Distances.append(ppf_instance.get_distance_seginterp(FilPos[ids], Masked_ids[ids]))
-		proc.close()
-		proc.join()
-		pickle.dump(Distances, open(cachefile_distances, 'wb'))
-		print 'done'
-	#else:
-	#	raise ValueError('Distance pickle file does not exist, and computation not toggled!')
-	return 0    
-	#NumPartPerFil = []
-	#for dist in Distances:
-	#	Accepted_distances = np.where(dist <= distance_threshold)[0]
-	#	NumPartPerFil.append(len(Accepted_distances))
-	#NumPartPerFil = len(Accepted_distances)
+			Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
+			Masked_ids = np.array(proc.map(Fixed_args_ids, Nfils_iterate))
+			print 'Creating ID mask time: ', time.time() - time_start, 's'
+			pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
+			#proc.close()
+			#proc.join()
+		#Distances = []
+		if os.path.isfile(cachefile_distances):
+			print 'Reading number of particles pickle file for ' + name + '...'
+			Distances = pickle.load(open(cachefile_distances, 'rb'))
+			print 'done'
+		else:#elif not os.path.isfile(cachefile_distances):# and Toggle_distance_computing:
+			if not Toggle_distance_computing:
+				print 'No processes available, starting new one'
+				proc = mp.Pool(parsed_arguments.NumProcesses)
+				mp.Pool(parsed_arguments.NumProcesses)
+			ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
+			print 'Computing number of particles per filament for ' + name + '. may take a while...'
+			# MASKED IDS ARRAY IS FUCKING MASSIVE, CAUSES HUGE FUCKING SLOWDOWN IN COMPUTATION, REDUCE THAT SHIT
+			time_start = time.time()
+			Distances = np.array([])
+			for i in range(Splitrun+1):
+				Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance,
+	                                           Masked_ids[i*Ranges:i*Ranges+Ranges], FilPos[i*Ranges:i*Ranges+Ranges])
+				max_range = LeftOver if len(FilPos) < i*Ranges + Ranges  else Ranges
+				Result = np.array(proc.map(Fixed_args_distances, range(0, max_range)))
+				Distances = np.concatenate((Distances, Result))
+			#for i in range(7*Ranges, 7*Ranges + Ranges):
+			#	print i
+			#	Distances.append(ppf_instance.get_distance_seginterp(FilPos[i], Masked_ids[i]))
+			print 'Compute distances time: ', time.time() - time_start, 's' 
+			#for ids in Nfils_iterate:
+			#	Distances.append(ppf_instance.get_distance_seginterp(FilPos[ids], Masked_ids[ids]))
+			proc.close()
+			proc.join()
+			pickle.dump(Distances, open(cachefile_distances, 'wb'))
+			print 'done'
+		#else:
+		#	raise ValueError('Distance pickle file does not exist, and computation not toggled!')
+
+	def method2():
+		Nfils_iterate = range(len(FilPos))
+		if os.path.isfile(cachefile_ids):
+			print 'Reading masked particle IDs for ' + name + '...'
+			Toggle_distance_computing = 0
+			Masked_ids = pickle.load(open(cachefile_ids, 'rb'))
+			Part_box = pickle.load(open(cachefile_partbox, 'rb'))
+			print 'done'
+		else:
+			print 'Computing masked particle indices and particle box for ' + name + '. May take a while...'
+			Toggle_distance_computing = 1
+			proc = mp.Pool(parsed_arguments.NumProcesses) 
+			ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
+			time_start = time.time()
+			Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
+			Result = np.array(proc.map(Fixed_args_ids, Nfils_iterate))
+			Masked_ids = Result[:,0]
+			Part_box = Result[:,1]
+			print 'Creating ID mask and partbox time: ', time.time() - time_start, 's'
+			pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
+			pickle.dump(Part_box, open(cachefile_partbox, 'wb'))
+			#proc.close()
+			#proc.join()
+		#Distances = []
+		if os.path.isfile(cachefile_distances):
+			print 'Reading number of particles pickle file for ' + name + '...'
+			Distances = pickle.load(open(cachefile_distances, 'rb'))
+			print 'done'
+		else:
+			if not Toggle_distance_computing:
+				print 'No processes available, starting new one'
+				proc = mp.Pool(parsed_arguments.NumProcesses)
+				mp.Pool(parsed_arguments.NumProcesses)
+			#ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
+			print 'Computing number of particles per filament for ' + name + '. may take a while...'
+			time_start = time.time()
+			Distances = np.array([])
+			for i in range(Splitrun+1):
+				Fixed_args_distances = partial(Multiprocess_particle_distances, ppf_instance,
+	                                           Masked_ids[i*Ranges:i*Ranges+Ranges], FilPos[i*Ranges:i*Ranges+Ranges])
+				max_range = LeftOver if len(FilPos) < i*Ranges + Ranges  else Ranges
+				Result = np.array(proc.map(Fixed_args_distances, range(0, max_range)))
+				Distances = np.concatenate((Distances, Result))
+			print 'Compute distances time: ', time.time() - time_start, 's' 
+			proc.close()
+			proc.join()
+			pickle.dump(Distances, open(cachefile_distances, 'wb'))
+			print 'done'
+
+	def ZMQMethod():
+		""" Uses ZeroMQ as a way to paralell compute the distances etc """
+		context = zmq.Context()
+		context.linger = 0
+		# Socket to send messages on
+		sender = context.socket(zmq.PUSH)
+		sender.bind("tcp://127.0.0.1:5557")
+
+		# Socket where the data is received from
+		data_receive = context.socket(zmq.PULL)
+		data_receive.bind("tcp://127.0.0.1:5559")
+
+		# Socket where end message is sent to. Used to tell workers the jobs are finished
+		control_sender = context.socket(zmq.PUSH)
+		control_sender.bind("tcp://127.0.0.1:5560")
+
+		# Socket where end message is received from. Used to tell the server that some data are lost
+		stop_messager = context.socket(zmq.PULL)
+		stop_messager.bind("tcp://127.0.0.1:5561")
+
+		# Poller, used to check whether stuff is done or not
+		poller = zmq.Poller()
+		poller.register(control_receive, zmq.POLLIN)
+		poller.register(stop_messager, zmq.POLLIN)
+
+		# Calls the script that starts up a set amount of workers.
+		subprocess.call("./workerscript.sh " + str(parsed_arguments.NumProcesses), shell=True)
+
+		#for i in range(len(FilPos)):
+
+
 	NumPartPerFil = Distances
 	cache_model = cache_particledata + name + '_particleIDs.p'
 	if os.path.isfile(cache_model):
@@ -1110,7 +1196,17 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		else:
 			Filament_part_IDs.append(Particle_IDs[mask])
 
-	Npart_per_fil = []
+	Distances_filamentMerge = []
+	ID_old = -1
+	if len(FilID) != len(Distances):
+		raise ValueError('Length of filament ID array and distance array not equal!')
+	for i in range(len(FilID)):
+		ID = FilID[i]
+		if ID == ID_old:
+			Distances_filamentMerge[-1] = np.concatenate((Distances_filamentMerge[-1], Distances[i]))
+		else:
+			Distances_filamentMerge.append(Distances[i])
+		ID_old = ID
 	#Npart_per_fil_partIDs = []
 	#def append_ids(id_list):
 	#	temp_id = []
@@ -1169,7 +1265,7 @@ if __name__ == '__main__':
 	FilamentColors = 1 			# Set to 1 to get different colors for different filaments
 	ColorBarZDir = 1 			# Set 1 to include colorbar for z-direction
 	ColorBarLength = 1 			# Set 1 to include colorbars based on length of the filament
-	IncludeDMParticles = 1		# Set to 1 to include dark matter particle plots
+	IncludeDMParticles = 0		# Set to 1 to include dark matter particle plots
 	IncludeSlicing = 1			# Set 1 to include slices of the box
 	MaskXdir = 0 				# Set 1 to mask one or more directions.
 	MaskYdir = 0
@@ -1255,7 +1351,7 @@ if __name__ == '__main__':
 	else:
 		raise ValueError('Figure filetype to save not selected.')
 
-
+	# Actual code is run here
 	if HOMEPC == 0:
 		file_directory = 'C:/Users/Alex/Documents/Masters_project/Disperse'
 		savefile_directory = file_directory
@@ -1362,8 +1458,8 @@ if __name__ == '__main__':
 			LCDM_z0_256_dir = 'lcdm_testing/LCDM_z0_256PeriodicTesting/'
 			LCDM_z0_512_dir = 'lcdm_testing/LCDM_z0_512PeriodicTesting/'
 
-			LCDM_z0_64Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plotstest2_periodic_png/', nPart=128, model='LCDM', redshift=0)
-			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_128_dir+'SkelconvOutput_LCDMz0128.a.NDskl')
+			LCDM_z0_64Instance = Disperse_Plotter(savefile=2, savefigDirectory=LCDM_z0_64_dir+'Plotstest2_periodic_png/', nPart=64, model='LCDM', redshift=0)
+			NumConn_64LCDM, FilLen_64LCDM, NPts_64LCDM = LCDM_z0_64Instance.Solve(LCDM_z0_64_dir+'SkelconvOutput_LCDMz064_nsig3.a.NDskl')
 			
 			if parsed_arguments.HigherPart:
 				LCDM_z0_128Instance = Disperse_Plotter(savefile=1, savefigDirectory=LCDM_z0_128_dir+'Plotstest2_png/', nPart=128, model='LCDM', redshift=0)
@@ -1487,64 +1583,78 @@ if __name__ == '__main__':
 	if ModelCompare == 1 and HOMEPC == 1:
 		""" 
 		Runs for all modified gravity simulations.
-		All runs are on 256^3 particle subsample at sigma=5.
+		All runs are on 192^3 particle subsample at sigma=5.
+		Tests of algorithm uses 64^3 particles
 		"""
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-		npart = 64
+		npart = 188
 		
-		"""
-		lcdm_dir = 'lcdm_testing/LCDM_z0_128Particles/Sigma3/'
-		SymmA_dir = 'SymmA_data/SymmA_z0_128Particles/Sigma3/'
-		SymmB_dir = 'SymmB_data/SymmB_z0_128Particles/Sigma3/'
-		SymmC_dir = 'SymmC_data/SymmC_z0_128Particles/Sigma3/'
-		SymmD_dir = 'SymmD_data/SymmD_z0_128Particles/Sigma3/'
-		fofr4_dir = 'fofr4_data/fofr4_z0_128Particles/Sigma3/'
-		fofr5_dir = 'fofr5_data/fofr5_z0_128Particles/Sigma3/'
-		fofr6_dir = 'fofr6_data/fofr6_z0_128Particles/Sigma3/'
-		"""
-		# 64^3 particle run, make a function that automatically selects folders and sigma based on input argument!
-		lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
-		SymmA_dir = 'SymmA_data/SymmA_z0_64Particles/Sigma3/'
-		SymmB_dir = 'SymmB_data/SymmB_z0_64Particles/Sigma3/'
-		SymmC_dir = 'SymmC_data/SymmC_z0_64Particles/Sigma3/'
-		SymmD_dir = 'SymmD_data/SymmD_z0_64Particles/Sigma3/'
-		fofr4_dir = 'fofr4_data/fofr4_z0_64Particles/Sigma3/'
-		fofr5_dir = 'fofr5_data/fofr5_z0_64Particles/Sigma3/'
-		fofr6_dir = 'fofr6_data/fofr6_z0_64Particles/Sigma3/'
+		lcdm_dir = 'lcdm_testing/LCDM_z0_'+str(npart)+'Particles/Sigma3/'
+		SymmA_dir = 'SymmA_data/SymmA_z0_'+str(npart)+'Particles/Sigma3/'
+		SymmB_dir = 'SymmB_data/SymmB_z0_'+str(npart)+'Particles/Sigma3/'
+		SymmC_dir = 'SymmC_data/SymmC_z0_'+str(npart)+'Particles/Sigma3/'
+		SymmD_dir = 'SymmD_data/SymmD_z0_'+str(npart)+'Particles/Sigma3/'
+		fofr4_dir = 'fofr4_data/fofr4_z0_'+str(npart)+'Particles/Sigma3/'
+		fofr5_dir = 'fofr5_data/fofr5_z0_'+str(npart)+'Particles/Sigma3/'
+		fofr6_dir = 'fofr6_data/fofr6_z0_'+str(npart)+'Particles/Sigma3/'
+		
+		NumConnections_list = []
+		FilLengths_list = []
+		FilPoints_list = []
+		def Add_filament_data_list(Nconn, FilLen, FilPts):
+			NumConnections_list.append(Nconn)
+			FilLengths_list.append(FilLen)
+			FilPoints_list.append(FilPts)
 
-		if parsed_arguments.NumPartModel == 'lcdm' or parsed_arguments.NumPartModel == 'all':
+		if parsed_arguments.DisperseModel == 'lcdm' or parsed_arguments.DisperseModel == 'all':
 			LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=npart, model='LCDM', redshift=0, SigmaArg=3)
-			NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz064_nsig3.a.NDskl')
+			NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
-		if parsed_arguments.NumPartModel == 'symmA' or parsed_arguments.NumPartModel == 'all':
+			Add_filament_data_list(NumConn_LCDM, FilLen_LCDM, NPts_LCDM)
+
+		if parsed_arguments.DisperseModel == 'symmA' or parsed_arguments.DisperseModel == 'all':
 			SymmA_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_dir+'Plots/', nPart=npart, model='SymmA', redshift=0, SigmaArg=3)
-			NummConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz064_nsig3.a.NDskl')
+			NumConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_SymmA, FilID_SymmA = SymmA_instance.get_3D_pos()
-		if parsed_arguments.NumPartModel == 'symmB' or parsed_arguments.NumPartModel == 'all':
+			Add_filament_data_list(NumConn_SymmA, FilLen_SymmA, NPts_SymmA)
+
+		if parsed_arguments.DisperseModel == 'symmB' or parsed_arguments.DisperseModel == 'all':
 			SymmB_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmB_dir+'Plots/', nPart=npart, model='SymmB', redshift=0, SigmaArg=3)
-			NummConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz064_nsig3.a.NDskl')
+			NumConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_SymmB, FilID_SymmB = SymmB_instance.get_3D_pos()
-		if parsed_arguments.NumPartModel == 'symmC' or parsed_arguments.NumPartModel == 'all':
+			Add_filament_data_list(NumConn_SymmB, FilLen_SymmB, NPts_SymmB)
+
+		if parsed_arguments.DisperseModel == 'symmC' or parsed_arguments.DisperseModel == 'all':
 			SymmC_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmC_dir+'Plots/', nPart=npart, model='SymmC', redshift=0, SigmaArg=3)
-			NummConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz064_nsig3.a.NDskl')
+			NumConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_SymmC, FilID_SymmC = SymmC_instance.get_3D_pos()
-		if parsed_arguments.NumPartModel == 'symmD' or parsed_arguments.NumPartModel == 'all':
+			Add_filament_data_list(NumConn_SymmC, FilLen_SymmC, NPts_SymmC)
+
+		if parsed_arguments.DisperseModel == 'symmD' or parsed_arguments.DisperseModel == 'all':
 			SymmD_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmD_dir+'Plots/', nPart=npart, model='SymmD', redshift=0, SigmaArg=3)
-			NummConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz064_nsig3.a.NDskl')
+			NumConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_SymmD, FilID_SymmD = SymmD_instance.get_3D_pos()
-		if parsed_arguments.NumPartModel == 'fofr4' or parsed_arguments.NumPartModel == 'all':
+			Add_filament_data_list(NumConn_SymmD, FilLen_SymmD, NPts_SymmD)
+
+		if parsed_arguments.DisperseModel == 'fofr4' or parsed_arguments.DisperseModel == 'all':
 			fofr4_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr4_dir+'Plots/', nPart=npart, model='fofr4', redshift=0, SigmaArg=3)
-			NummConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z064_nsig3.a.NDskl')
+			NumConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_fofr4, FilID_fofr4 = fofr4_instance.get_3D_pos()
-		if parsed_arguments.NumPartModel == 'fofr5' or parsed_arguments.NumPartModel == 'all':
+			Add_filament_data_list(NumConn_fofr4, FilLen_fofr4, NPts_fofr4)
+
+		if parsed_arguments.DisperseModel == 'fofr5' or parsed_arguments.DisperseModel == 'all':
 			fofr5_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr5_dir+'Plots/', nPart=npart, model='fofr5', redshift=0, SigmaArg=3)
-			NummConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z064_nsig3.a.NDskl')
+			NumConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_fofr5, FilID_fofr5 = fofr5_instance.get_3D_pos()
-		if parsed_arguments.NumPartModel == 'fofr6' or parsed_arguments.NumPartModel == 'all':
+			Add_filament_data_list(NumConn_fofr5, FilLen_fofr5, NPts_fofr5)
+
+		if parsed_arguments.DisperseModel == 'fofr6' or parsed_arguments.DisperseModel == 'all':
 			fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=npart, model='fofr6', redshift=0, SigmaArg=3)
-			NummConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z064_nsig3.a.NDskl')
+			NumConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
+			Add_filament_data_list(NumConn_fofr6, FilLen_fofr6, NPts_fofr6)
+
 		"""
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		symma_64dir = 'SymmA_data/SymmA_z0_64Particles/'
@@ -1577,43 +1687,27 @@ if __name__ == '__main__':
 		if parsed_arguments.NumPartModel == 'lcdm':
 			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, npart, 3)
 			Add_particle_list(Distances_LCDM)
-			#Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
-			#Number_particles_list.append(Accepted_dist_LCDM)
 		if parsed_arguments.NumPartModel == 'symmA':
 			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
 			Add_particle_list(Distances_SymmA)
-			#Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
-			#Number_particles_list.append(Accepted_dist_SymmA)
 		if parsed_arguments.NumPartModel == 'symmB':
 			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
 			Add_particle_list(Distances_SymmB)
-			#Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
-			#Number_particles_list.append(Accepted_dist_SymmB)
 		if parsed_arguments.NumPartModel == 'symmC':
 			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, npart, 3)
 			Add_particle_list(Distances_SymmC)
-			#Accepted_dist_SymmC = np.where(Distances_SymmC >= distance_threshold)[0]
-			#Number_particles_list.append(Accepted_dist_SymmC)
 		if parsed_arguments.NumPartModel == 'symmD':
 			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
 			Add_particle_list(Distances_SymmD)
-			#Accepted_dist_SymmD = np.where(Distances_SymmD >= distance_threshold)[0]
-			#Number_particles_list.append(Accepted_dist_SymmD)
 		if parsed_arguments.NumPartModel == 'fofr4':
 			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, npart, 3)
 			Add_particle_list(Distances_fofr4)
-			#Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
-			#Number_particles_list.append(Accepted_dist_fofr4)
 		if parsed_arguments.NumPartModel == 'fofr5':
 			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, npart, 3)
 			Add_particle_list(Distances_fofr5)
-			#Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
-			#Number_particles_list.append(Accepted_dist_fofr5)
 		if parsed_arguments.NumPartModel == 'fofr6':
 			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, npart, 3)
-			Add_particle_list(Distances_fofr6)
-			#Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
-			#Number_particles_list.append(Accepted_dist_fofr6)
+			Add_particle_list(Distances_fofr6)		
 		if parsed_arguments.NumPartModel == 'all':
 			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, npart, 3)
 			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
@@ -1631,16 +1725,6 @@ if __name__ == '__main__':
 			Add_particle_list(Distances_fofr4)
 			Add_particle_list(Distances_fofr5)
 			Add_particle_list(Distances_fofr6)
-			#Accepted_dist_LCDM = np.where(Distances_LCDM >= distance_threshold)[0]
-			#Accepted_dist_SymmA = np.where(Distances_SymmA >= distance_threshold)[0]
-			#Accepted_dist_SymmB = np.where(Distances_SymmB >= distance_threshold)[0]
-			#Accepted_dist_SymmC = np.where(Distances_SymmC >= distance_threshold)[0]
-			#Accepted_dist_SymmD = np.where(Distances_SymmD >= distance_threshold)[0]
-			#Accepted_dist_fofr4 = np.where(Distances_fofr4 >= distance_threshold)[0]
-			#Accepted_dist_fofr5 = np.where(Distances_fofr5 >= distance_threshold)[0]
-			#Accepted_dist_fofr6 = np.where(Distances_fofr6 >= distance_threshold)[0]
-			#Number_particles_list = [Accepted_dist_LCDM, Accepted_dist_SymmA, Accepted_dist_SymmB, Accepted_dist_SymmC,
-			#						Accepted_dist_SymmD, Accepted_dist_fofr4, Accepted_dist_fofr5, Accepted_dist_fofr6]
 		else:
 			Compute_mass = 0
 		# Values in griddata = mass. Currently normalized to 1.
@@ -1688,8 +1772,9 @@ if __name__ == '__main__':
 				Filament_masses_list = [FilamentMass_LCDM, FilamentMass_SymmA, FilamentMass_SymmB, FilamentMass_SymmC,
 										FilamentMass_SymmD, FilamentMass_fofr4, FilamentMass_fofr5, FilamentMass_LCDM]
 
-		#CompI = HComp.CompareModels(savefile=0, savefigDirectory='LOL/', savefile_directory='WHAT/', filetype=filetype, redshift=0, dist_thr=distance_threshold)
-		#CompI.Compare_mg_models(NumConnections_list, FilLengths_list, FilPoints_list)
+		if parsed_arguments.DisperseModel == 'all':
+			CompI = HComp.CompareModels(savefile=1, savefigDirectory='ModelComparisons/', savefile_directory=savefile_directory, filetype=filetype, redshift=0, nPart=npart)
+			CompI.Compare_disperse_data(NumConnections_list, FilLengths_list, FilPoints_list)
 		
 	elif ModelCompare == 2 and HOMEPC == 1:
 		print 'This is run!'

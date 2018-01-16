@@ -2,13 +2,20 @@ import numpy as np
 import ReadGadgetFile
 import os
 import cPickle as pickle
+import sys
+import zmq
+import ZMQArraySending as ZMQAS
+
 
 # Global variables
 # Box boundaries assumed to be from 0 to 256.0 Mpc/h
 lower_boundary = 0.0
 upper_boundary = 256.0
 class particles_per_filament():
-	"""	A class that computes the distance of the dark matter particles to the filaments. """
+	"""	
+	A class that computes the distance of the dark matter particles to the filaments.
+	Used with Python's Multiprocessing module. Check non-class function for ZMQ computing.
+	"""
 	def __init__(self, model, maskdirs, masklimits, box_expand):
 		self.model = model
 		RGF_instance = ReadGadgetFile.Read_Gadget_file(maskdirs, masklimits)
@@ -402,6 +409,174 @@ class particles_per_filament():
 		accepted_particle_ids = np.where(distances <= distance_threshold)[0]
 		return len(accepted_particle_ids),1# masked_part_ids[accepted_particle_ids]
 
+def Argument_parser():
+	""" Parses optional argument when program is run from the command line """
+	parser = argparse.ArgumentParser()
+	# Optional arguments
+	parser.add_argument("-BoxExp", "--BOXEXPAND", help="Determines how far the filament masking box increases from the filament edges. Default = 3.0", type=float, default=3.0)
+	parser.add_argument("-mask", "--MASKING", help="Computes particle masks around a filament if set to 1. Otherwise computes particle distances.", type=int, default=0)
+	# Parse arguments
+	args = parser.parse_args()
+	return args
+
+def filament_box(filament):
+	""" 
+	Determines the max and min x,y and z coordinates based on the filament.
+	The bounding box is defined by these coordinates.
+	"""
+	xmin = np.min(filament[:,0])
+	xmax = np.max(filament[:,0])
+	ymin = np.min(filament[:,1])
+	ymax = np.max(filament[:,1])
+	zmin = np.min(filament[:,2])
+	zmax = np.max(filament[:,2])
+	return xmin, xmax, ymin, ymax, zmin, zmax
+
+def particle_mask(box, ParticlePos):
+	""" Mask the dark matter particles based on the box """
+	xmin = box[0]
+	xmax = box[1]
+	ymin = box[2]
+	ymax = box[3]
+	zmin = box[4]
+	zmax = box[5]
+	maskx = (ParticlePos[:,0] > xmin) & (ParticlePos[:,0] < xmax)
+	masky = (ParticlePos[:,1] > ymin) & (ParticlePos[:,1] < ymax)
+	maskz = (ParticlePos[:,2] > zmin) & (ParticlePos[:,2] < zmax)
+	return maskx*masky*maskz
+
+def masked_particle_indices(filament_box):
+	"""
+	Creates a mask of the particles based on the filament box.
+	The function will return particle IDs based on the corresponding mask.
+	The particle IDs will correspond to the particle box.
+	This function does NOT create a particle box for computation.
+	"""
+	xmin = filament_box[0] - box_expand
+	xmax = filament_box[1] + box_expand
+	ymin = filament_box[2] - box_expand
+	ymax = filament_box[3] + box_expand
+	zmin = filament_box[4] - box_expand
+	zmax = filament_box[5] + box_expand
+	box = [xmin, xmax, ymin, ymax, zmin, zmax]
+	box2 = [xmin, xmax, ymin, ymax, zmin, zmax]
+	MovePartx = 0
+	MoveParty = 0
+	MovePartz = 0
+	Atboundary = 0
+	if np.abs((xmin + box_expand) - lower_boundary) < 1e-3:
+		box[0] = xmin + box_expand
+		Atboundary = 1
+	elif np.abs((xmax - box_expand) - upper_boundary) < 1e-3:
+		box[1] = xmax - box_expand
+		Atboundary = 1
+	if np.abs((ymin + box_expand) - lower_boundary) < 1e-3:
+		box[2] = ymin + box_expand
+		Atboundary = 1
+	elif np.abs((ymax - box_expand) - upper_boundary) < 1e-3:
+		box[3] = ymax - box_expand
+		Atboundary = 1
+	if np.abs((zmin + box_expand) - lower_boundary) < 1e-3:
+		box[4] = zmin + box_expand
+		Atboundary = 1
+	elif np.abs((zmax - box_expand) - upper_boundary) < 1e-3:
+		box[5] = zmax - box_expand
+		Atboundary = 1
+		
+	if Atboundary:
+		box2 = box
+	else:
+		if xmin < lower_boundary:
+			box[0] = lower_boundary
+			box2[1] = upper_boundary
+			box2[0] = upper_boundary + (xmin - lower_boundary)
+		elif xmax > upper_boundary:
+			box[1] = upper_boundary
+			box2[0] = lower_boundary
+			box2[1] = lower_boundary + (xmax - upper_boundary)
+			
+		if ymin < lower_boundary:
+			box[2] = lower_boundary
+			box2[3] = upper_boundary
+			box2[2] = upper_boundary + (ymin - lower_boundary)
+		elif ymax > upper_boundary:
+			box[3] = upper_boundary
+			box2[2] = lower_boundary
+			box2[3] = lower_boundary + (ymax - upper_boundary)
+			
+		if zmin < lower_boundary:
+			box[4] = lower_boundary
+			box2[5] = upper_boundary
+			box2[4] = upper_boundary + (zmin - lower_boundary)
+		elif zmax > upper_boundary:
+			box[5] = upper_boundary
+			box2[4] = lower_boundary
+			box2[5] = lower_boundary + (zmax - upper_boundary)
+		if box == box2:
+			mask = self.particle_mask(box, self.particlepos)
+			return np.where(mask)[0]
+		else:
+			mask1 = self.particle_mask(box, self.particlepos)
+			mask2 = self.particle_mask(box2, self.particlepos)
+			indices1 = np.where(mask1)[0]
+			indices2 = np.where(mask2)[0]
+			return np.array([indices1, indices2])
+
+def particle_box(filament, masked_ids, particlepos):
+	"""
+	Creates a particle box based on the filament box. 
+	The size is increased a little to include more particles. Size increase can be changed.
+	If the box increase surpasses the simulation box, the box will 'continue' on the other side.
+	This will create two seperate boxes. Particles in the second box will be moved to the other boundary.
+
+	Example: Filament is near the left edge of the x-axis, i.e close to xmin.
+	The box_expand causes xmin - box_expand to be less than the boundary, i.e xmin - box_expand < 0.
+	We create a second box at the other side of the boundary, i.e xmax, with the size corresponding of whats left of the difference xmin - lower_boundary.
+	Particles in the other box, the ones close to xmax, will be moved so they are close to xmin.
+	See notes for more details.
+	"""
+	xmin = np.min(filament[:,0]) - box_expand
+	xmax = np.max(filament[:,0]) + box_expand
+	ymin = np.min(filament[:,1]) - box_expand
+	ymax = np.max(filament[:,1]) + box_expand
+	zmin = np.min(filament[:,2]) - box_expand
+	zmax = np.max(filament[:,2]) + box_expand
+	MovePartx = 0
+	MoveParty = 0
+	MovePartz = 0
+	if xmin < lower_boundary:
+		MovePartx = -256.0
+	elif xmax > upper_boundary:
+		MovePartx = 256.0
+			
+	if ymin < lower_boundary:
+		MoveParty = -256.0
+	elif ymax > upper_boundary:
+		MoveParty = 256.0
+			
+	if zmin < lower_boundary:
+		MovePartz = -256.0
+	elif zmax > upper_boundary:
+		MovePartz = 256.0
+
+	if not len(masked_ids) == 2:
+		return particlepos[masked_ids]
+	else:
+		Particles1 = self.particlepos[masked_ids[0]]
+		Particles2 = self.particlepos[masked_ids[1]]
+		Particles2[:,0] += MovePartx
+		Particles2[:,1] += MoveParty
+		Particles2[:,2] += MovePartz
+		Masked_particle_box = np.concatenate([Particles1, Particles2])
+		return Masked_particle_box
+
+
+def Get_masks(filament):
+	filbox = filament_box(filament)
+	masked_ids = masked_particle_indices(filbox)
+	part_box = 
+	return masked_ids
+
 def Compute_distance(filament, part_box):
 	"""
 	For each segment, 'interpolate' a set of points between the two connection points in the segment.
@@ -441,3 +616,80 @@ def Compute_distance(filament, part_box):
 	true_dist = np.swapaxes(np.asarray(true_dist), 0, 1)
 	dist = np.min(true_dist, axis=1)
 	return dist
+
+def ZMQ_get_distances():
+	""" Multiprocessing part for the use of ZMQ """
+	context = zmq.Context()
+
+	# Socket to receive data from
+	receiver = context.socket(zmq.PULL)
+	receiver.connect("tcp://127.0.0.1:5557")
+
+	# Socket to send computed data to
+	sender = context.socket(zmq.PUSH)
+	sender.connect("tcp://127.0.0.1:5558")
+
+	# Socket controller, ensures the worker is killed
+	controller = context.socket(zmq.PULL)
+	controller.connect("tcp://127.0.0.1:5559")
+
+	poller = zmq.Poller()
+	poller.register(receiver, zmq.POLLIN)
+	poller.register(controller, zmq.POLLIN)
+
+	while True:
+		socks = dict(poller.poll())
+		# Computes context when data is recieved
+		if socks.get(receiver) == zmq.POLLIN:
+			FilamentPos, ParticleBox = ZMQAS.recv_array(receiver)
+			Distances = Compute_distance(FilamentPos, ParticleBox)
+			ZMQAS.send_array(sender, Distances)
+
+		# Closes the context when data computing is done
+		if socks.get(controller) == zmq.POLLIN:
+			control_message = controller.recv()
+			if control_message == "FINISHED":
+				break
+
+	# Finished, closing context
+	receiver.close()
+	sender.close()
+	controller.close()
+	context.term()
+
+def ZMQ_get_mask():
+	""" Multiprocessing particle masks around a filament"""
+	context = zmq.Context()
+
+	# Socket to receive data from
+	receiver = context.socket(zmq.PULL)
+	receiver.connect("tcp://127.0.0.1:5557")
+
+	# Socket to send computed data to
+	sender = context.socket(zmq.PUSH)
+	sender.connect("tcp://127.0.0.1:5558")
+
+	# Socket controller, ensures the worker is killed
+	controller = context.socket(zmq.PULL)
+	controller.connect("tcp://127.0.0.1:5559")
+
+	poller = zmq.Poller()
+	poller.register(receiver, zmq.POLLIN)
+	poller.register(controller, zmq.POLLIN)
+
+	while True:
+		socks = dict(poller.poll())
+		# Computes masks when filament coordinate is received
+		if socks.get(receiver) == zmq.POLLIN:
+			FilamentPos = ZMQAS.recv_array(receiver)
+
+if __name__ == '__main__':
+	# This is only called when the script is called from a command line directly.
+	# Will then run ZeroMQ paralellziation function.
+	# Importing the module will not call this.
+	parsed_arguments = Argument_parser()
+	box_expand = parsed_arguments.BOXEXPAND
+	if parsed_arguments.MASKING == 0:
+		ZMQ_get_mask()
+	else:
+		ZMQ_get_distances()
