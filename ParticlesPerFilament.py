@@ -596,6 +596,7 @@ def Compute_distance(filament, part_box):
 	"""
 	#print 'Actually computing now'
 	true_dist = []
+	filaxis_temp = []
 	for i in range(len(filament)-1):
 		segpoints = []
 		distances = []
@@ -603,58 +604,92 @@ def Compute_distance(filament, part_box):
 		ylims = np.linspace(filament[i][1], filament[i+1][1], 100)
 		zlims = np.linspace(filament[i][2], filament[i+1][2], 100)
 		# Create 3D position array of the segments, based on the interpolated values
-		for i in range(len(xlims)):
-			segpoints.append(np.column_stack((xlims[i], ylims[i], zlims[i])))
+		for j in range(len(xlims)):
+			segpoints.append(np.column_stack((xlims[j], ylims[j], zlims[j])))
 		# Find distance from each point in the segment to every particle
 		for pts in segpoints:
 			distances.append(np.linalg.norm(pts - part_box, axis=1))
 		# Selects the shortest distance between a particle and every segment point.
-		distances = np.swapaxes(np.asarray(distances), 0, 1)
-		shortest = np.min(distances, axis=1)
+		distances2 = np.swapaxes(np.asarray(distances), 0, 1)
+		shortest = np.min(distances2, axis=1)
 		true_dist.append(shortest)
+		# Selects the corresponding coordinate index from the segpoints
+		index_segpoint = np.where(np.abs(np.asarray(distances - shortest)) < 1e-16)[0]
+		filaxis_temp.append(index_segpoint + i*100.0)
 	# Selects the shortest distance from a particle to every segment
 	true_dist = np.swapaxes(np.asarray(true_dist), 0, 1)
 	dist = np.min(true_dist, axis=1)
-	return dist
+	# Finds the corresponding segpoint index
+	indices = []
+	for k in range(len(dist)):
+		indices.append(np.where(np.abs(dist[k] - true_dist[k]) < 1e-16)[0])
+	filaxis_swapped = np.swapaxes(np.asarray(filaxis_temp), 0, 1)
+	Segpoint_index = []
+	# Some particles may have similar distance to multiple segment points. Choose the first one
+	for l in range(len(indices)):
+		Segpoint_index.append(filaxis_swapped[l][indices[l][0]])
+	return dist, np.array(Segpoint_index)
 
 def ZMQ_get_distances():
 	""" Multiprocessing part for the use of ZMQ """
 	context = zmq.Context()
+	context.linger = 0
 
 	# Socket to receive data from
 	receiver = context.socket(zmq.PULL)
 	receiver.connect("tcp://127.0.0.1:5557")
 
+	# Socket to receive secondary data
+	receiver2 = context.socket(zmq.PULL)
+	receiver2.connect("tcp://127.0.0.1:5558")
+
 	# Socket to send computed data to
 	sender = context.socket(zmq.PUSH)
-	sender.connect("tcp://127.0.0.1:5558")
+	sender.connect("tcp://127.0.0.1:5559")
 
+	# Socket to send secondary data 
+	sender2 = context.socket(zmq.PUSH)
+	sender2.connect("tcp://127.0.0.1:5560")
 	# Socket controller, ensures the worker is killed
 	controller = context.socket(zmq.PULL)
-	controller.connect("tcp://127.0.0.1:5559")
+	controller.connect("tcp://127.0.0.1:5561")
 
+	# Socket controller that stops worker if server dies
+	stop_messager = context.socket(zmq.PUSH)
+	stop_messager.connect("tcp://127.0.0.1:5562")
+
+	# Only poller for receiver as receiver 2 has similar size
 	poller = zmq.Poller()
 	poller.register(receiver, zmq.POLLIN)
 	poller.register(controller, zmq.POLLIN)
 
 	while True:
-		socks = dict(poller.poll())
+		socks = dict(poller.poll(1000000))
 		# Computes context when data is recieved
 		if socks.get(receiver) == zmq.POLLIN:
-			FilamentPos, ParticleBox = ZMQAS.recv_array(receiver)
-			Distances = Compute_distance(FilamentPos, ParticleBox)
+			FilamentPos = ZMQAS.recv_array(receiver)
+			ParticleBox = ZMQAS.recv_array(receiver2)
+			Distances, Segpoint_index = Compute_distance(FilamentPos, ParticleBox)
 			ZMQAS.send_array(sender, Distances)
+			ZMQAS.send_array(sender2, Segpoint_index)
 
 		# Closes the context when data computing is done
 		if socks.get(controller) == zmq.POLLIN:
 			control_message = controller.recv()
 			if control_message == "FINISHED":
 				break
+		# Closes context when no more data is received. Server may have crashed
+		if not socks:
+			stop_messager.send("NODATA")
+			break
 
 	# Finished, closing context
 	receiver.close()
+	receiver2.close()
 	sender.close()
+	sender2.close()
 	controller.close()
+	stop_messager.close()
 	context.term()
 
 def ZMQ_get_mask():
