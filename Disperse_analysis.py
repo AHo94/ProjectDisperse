@@ -10,6 +10,7 @@ from collections import Counter
 from functools import partial
 import multiprocessing as mp
 import sys
+import subprocess
 
 # Numpy, matplotlib and scipy
 import numpy as np
@@ -977,7 +978,7 @@ def Multiprocess_masked_particle_ids(Instance, Filament, i):
 	Computes the masked particle indices.
 	Input must be 3D filament position.
 	"""
-	Indices = Instance.get_masked_ids(Filament[i])
+	Indices = Instance.get_partbox_and_ids(Filament[i])
 	return Indices
 
 def Multiprocess_particle_distances(Instance, Masked_ids, Filament, i):
@@ -1010,8 +1011,9 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		raise ValueError('Model input name %s not correctly set into the number particle per filament saver.' %name)
 	print 'Computing number of particles per filament for model: ', name
 	cachedir_ppf_distances = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/Distances/'
-	cachedir_ppf_partbox = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/Distances/ParticleBoxes/'
+	cachedir_ppf_partbox = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ParticleBoxes/'
 	cachedir_ppf_ids = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/MaskedParticlesIDs/'
+	cachedir_ppf_segIDs = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/SegIDs/'
 	cache_particledata = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
 	if not os.path.isdir(cachedir_ppf_distances):
 		os.makedirs(cachedir_ppf_distances)
@@ -1019,10 +1021,13 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		os.makedirs(cachedir_ppf_partbox)
 	if not os.path.isdir(cachedir_ppf_ids):
 		os.makedirs(cachedir_ppf_ids)
+	if not os.path.isdir(cachedir_ppf_segIDs):
+		os.makedirs(cachedir_ppf_segIDs)
 	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
 	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
 	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p' 
-
+	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+    
 	def init_methodOLD():
 		if os.path.isfile(cachefile):
 			print 'Reading number of particles pickle file for ' + name + '...'
@@ -1149,12 +1154,12 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 			print 'Compute distances time: ', time.time() - time_start, 's' 
 			proc.close()
 			proc.join()
-			pickle.dump(Distances, open(cachefile_distances, 'wb'))
 			print 'done'
 
 	#def ZMQMethod():
 	# Uses ZeroMQ as a way to paralell compute the distances etc
 	# Masking of particles still uses the usual Multiprocessing module
+	Nfils_iterate = range(len(FilPos))
 	if os.path.isfile(cachefile_ids):
 		print 'Reading masked particle IDs for ' + name + '...'
 		Toggle_distance_computing = 0
@@ -1163,7 +1168,6 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		print 'done'
 	else:
 		print 'Computing masked particle indices and particle box for ' + name + '. May take a while...'
-		Toggle_distance_computing = 1
 		proc = mp.Pool(parsed_arguments.NumProcesses) 
 		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
 		time_start = time.time()
@@ -1176,75 +1180,89 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		pickle.dump(Part_box, open(cachefile_partbox, 'wb'))
 		proc.close()
 		proc.join()
+        
+	def ZMQ_call():
+		context = zmq.Context()
+		context.linger = 0
+		# Socket to send messages on
+		sender = context.socket(zmq.PUSH)
+		sender.bind("tcp://127.0.0.1:5000")
 
-	context = zmq.Context()
-	context.linger = 0
-	# Socket to send messages on
-	sender = context.socket(zmq.PUSH)
-	sender.bind("tcp://127.0.0.1:5557")
+		# Socket to send secondary data
+		sender2 = context.socket(zmq.PUSH)
+		sender2.bind("tcp://127.0.0.1:5001")
 
-	# Socket to send secondary data
-	sender2 = context.socket(zmq.PUSH)
-	sender.bind("tcp://127.0.0.1:5558")
+		# Socket where the data is received from
+		data_receive = context.socket(zmq.PULL)
+		data_receive.bind("tcp://127.0.0.1:5002")
 
-	# Socket where the data is received from
-	data_receive = context.socket(zmq.PULL)
-	data_receive.bind("tcp://127.0.0.1:5559")
+		# Socket where secondary data is received from
+		data_receive2 = context.socket(zmq.PULL)
+		data_receive2.bind("tcp://127.0.0.1:5003")
 
-	# Socket where secondary data is received from
-	data_receive2 = context.socket(zmq.PULL)
-	data_receive2.bind("tcp://127.0.0.1:5560")
+		# Socket where end message is sent to. Used to tell workers the jobs are finished
+		control_sender = context.socket(zmq.PUSH)
+		control_sender.bind("tcp://127.0.0.1:5004")
 
-	# Socket where end message is sent to. Used to tell workers the jobs are finished
-	control_sender = context.socket(zmq.PUSH)
-	control_sender.bind("tcp://127.0.0.1:5561")
+		# Socket where end message is received from. Used to tell the server that some data are lost
+		stop_messager = context.socket(zmq.PULL)
+		stop_messager.bind("tcp://127.0.0.1:5005")
 
-	# Socket where end message is received from. Used to tell the server that some data are lost
-	stop_messager = context.socket(zmq.PULL)
-	stop_messager.bind("tcp://127.0.0.1:5562")
+		# Poller, used to check whether stuff is done or not
+		poller = zmq.Poller()
+		poller.register(data_receive, zmq.POLLIN)
+		poller.register(stop_messager, zmq.POLLIN)
 
-	# Poller, used to check whether stuff is done or not
-	poller = zmq.Poller()
-	poller.register(data_receive, zmq.POLLIN)
-	poller.register(stop_messager, zmq.POLLIN)
+		# Calls the script that starts up a set amount of workers.
+		# Stops program a little bit to let the workers start up
+		subprocess.call("./SpawnWorkers.sh " + str(parsed_arguments.NumProcesses), shell=True)
+		time.sleep(7)
+		time_dist = time.time()
+		# Sends data
+		for i in range(len(FilPos)):
+			ZMQAS.send_array(sender, FilPos[i])
+			ZMQAS.send_array(sender2, Part_box[i])
+		# Give time to send data
+		time.sleep(5)
+    
+		Distances = []
+		FilamentAxis = []
+		for j in range(len(FilPos)):
+			socks = dict(poller.poll())
+			if socks.get(data_receive) == zmq.POLLIN:
+				Distances.append(ZMQAS.recv_array(data_receive))
+				FilamentAxis.append(ZMQAS.recv_array(data_receive2))
+			if socks.get(stop_messager) == zmq.POLLIN:
+				message = stop_messager.recv()
+				if message == "NODATA":
+					print "No more data received from the workers."
+					break
+		control_sender.send("FINISHED")
+		Distances = np.asarray(Distances)
+		FilamentAxis = np.asarray(FilamentAxis)
+		print 'Distance computing time: ', time.time() - time_dist, 's'
+        
+		# Closing context when computing is done
+		sender.close()
+		sender2.close()
+		data_receive.close()
+		data_receive2.close()
+		stop_messager.close()
+		control_sender.close()
+		context.term()
+        
+		pickle.dump(Distances, open(cachefile_distances, 'wb'))
+		pickle.dump(FilamentAxis, open(cachefile_segIDs, 'wb'))
+		return Distances, FilamentAxis
+    
+	if os.path.isfile(cachefile_distances):
+		print 'Reading number of particles pickle file for ' + name + '...'
+		Distances = pickle.load(open(cachefile_distances, 'rb'))
+		FilamentAxis = pickle.load(open(cachefile_segIDs, 'rb'))
+		print 'done'
+	else:
+		Distances, FilamentAxis = ZMQ_call()
 
-	# Calls the script that starts up a set amount of workers.
-	# Stops program a little bit to let the workers start up
-	subprocess.call("./SpawnWorkers.sh s" + str(parsed_arguments.NumProcesses), shell=True)
-	time.sleep(4)
-	time_dist = time.time()
-	# Sends data
-	for i in range(len(FilPos)):
-		ZMQAS.send_array(sender, FilPos)
-		ZMQAS.send_array(sender2, Part_box)
-	# Give time to send data
-	time.sleep(10)
-
-	Distances = []
-	FilamentAxis = []
-	for j in range(len(FilPos)):
-		socks = dict(poller.poll())
-		if socks.get(data_receive) == zmq.POLLIN:
-			Distances.append(ZMQAS.recv_array(data_receive))
-			FilamentAxis.append(ZMQAS.recv_array(data_receive2))
-		if socks.get(stop_messager) == zmq.POLLIN:
-			message = stop_messager.recv()
-			if message == "NODATA":
-				print "No more data received from the workers."
-				break
-	control_sender.send("FINISHED")
-	Distances = np.asarray(Distances)
-	FilamentAxis = np.asarray(FilamentAxis)
-	print 'Distance computing time: ', time.time() - time_dist(), 's'
-	# Closing context when computing is done
-	sender.close()
-	sender2.close()
-	data_receive.close()
-	data_receive2.close()
-	stop_messager.close()
-	control_sender.close()
-	context.term()
-	
 	NumPartPerFil = Distances
 	cache_model = cache_particledata + name + '_particleIDs.p'
 	if os.path.isfile(cache_model):
@@ -1650,7 +1668,7 @@ if __name__ == '__main__':
 		"""
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-		npart = 188
+		npart = 64
 		
 		lcdm_dir = 'lcdm_testing/LCDM_z0_'+str(npart)+'Particles/Sigma3/'
 		SymmA_dir = 'SymmA_data/SymmA_z0_'+str(npart)+'Particles/Sigma3/'
