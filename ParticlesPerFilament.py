@@ -1,10 +1,16 @@
+# Basic modules
 import numpy as np
-import ReadGadgetFile
 import os
-import cPickle as pickle
 import sys
+import argparse
+import cPickle as pickle
+
+# ZMQ modules
 import zmq
 import ZMQArraySending as ZMQAS
+
+# Own modules
+import ReadGadgetFile
 
 
 # Global variables
@@ -414,7 +420,7 @@ def Argument_parser():
 	parser = argparse.ArgumentParser()
 	# Optional arguments
 	parser.add_argument("-BoxExp", "--BOXEXPAND", help="Determines how far the filament masking box increases from the filament edges. Default = 3.0", type=float, default=3.0)
-	parser.add_argument("-mask", "--MASKING", help="Computes particle masks around a filament if set to 1. Otherwise computes particle distances.", type=int, default=0)
+	parser.add_argument("-mask", "--MASKING", help="Computes particle masks around a filament if set to 0. Otherwise computes particle distances. Default 1.", type=int, default=1)
 	# Parse arguments
 	args = parser.parse_args()
 	return args
@@ -570,13 +576,6 @@ def particle_box(filament, masked_ids, particlepos):
 		Masked_particle_box = np.concatenate([Particles1, Particles2])
 		return Masked_particle_box
 
-
-def Get_masks(filament):
-	filbox = filament_box(filament)
-	masked_ids = masked_particle_indices(filbox)
-	part_box = 
-	return masked_ids
-
 def Compute_distance(filament, part_box):
 	"""
 	For each segment, 'interpolate' a set of points between the two connection points in the segment.
@@ -590,6 +589,9 @@ def Compute_distance(filament, part_box):
 	Repeat until we have an (Sn x Pn)-matrix, where Sn = number of segments
 	Reshape so we have an (Pn x Sn)-matrix, that is a matrix where each array contains distances of one particle to each seg.
 	Find minimum of each of those to get shortest distance from particles to filament
+	
+	Also finds the index of the interpolated segment points, which corresponds to the axis along the filament.
+	In the case where particles has the exact same distance to two segment points, choose the first one.
 	
 	This version is used as the previous two versions assumed the segment to be infinitely long.
 	This version is also outside the class, to not load all the particle positions.
@@ -637,32 +639,33 @@ def ZMQ_get_distances():
 
 	# Socket to receive data from
 	receiver = context.socket(zmq.PULL)
-	receiver.connect("tcp://127.0.0.1:5557")
+	receiver.connect("tcp://127.0.0.1:5000")
+	receiver.RCVTIMEO = 100000
 
 	# Socket to receive secondary data
 	receiver2 = context.socket(zmq.PULL)
-	receiver2.connect("tcp://127.0.0.1:5558")
-
+	receiver2.connect("tcp://127.0.0.1:5001")
+	receiver2.RCVTIMEO = 100000
+    
 	# Socket to send computed data to
 	sender = context.socket(zmq.PUSH)
-	sender.connect("tcp://127.0.0.1:5559")
+	sender.connect("tcp://127.0.0.1:5002")
 
 	# Socket to send secondary data 
 	sender2 = context.socket(zmq.PUSH)
-	sender2.connect("tcp://127.0.0.1:5560")
+	sender2.connect("tcp://127.0.0.1:5003")
 	# Socket controller, ensures the worker is killed
 	controller = context.socket(zmq.PULL)
-	controller.connect("tcp://127.0.0.1:5561")
+	controller.connect("tcp://127.0.0.1:5004")
 
 	# Socket controller that stops worker if server dies
 	stop_messager = context.socket(zmq.PUSH)
-	stop_messager.connect("tcp://127.0.0.1:5562")
+	stop_messager.connect("tcp://127.0.0.1:5005")
 
 	# Only poller for receiver as receiver 2 has similar size
 	poller = zmq.Poller()
 	poller.register(receiver, zmq.POLLIN)
 	poller.register(controller, zmq.POLLIN)
-
 	while True:
 		socks = dict(poller.poll(1000000))
 		# Computes context when data is recieved
@@ -672,7 +675,6 @@ def ZMQ_get_distances():
 			Distances, Segpoint_index = Compute_distance(FilamentPos, ParticleBox)
 			ZMQAS.send_array(sender, Distances)
 			ZMQAS.send_array(sender2, Segpoint_index)
-
 		# Closes the context when data computing is done
 		if socks.get(controller) == zmq.POLLIN:
 			control_message = controller.recv()
