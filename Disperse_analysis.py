@@ -1152,37 +1152,99 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 			pickle.dump(Distances, open(cachefile_distances, 'wb'))
 			print 'done'
 
-	def ZMQMethod():
-		""" Uses ZeroMQ as a way to paralell compute the distances etc """
-		context = zmq.Context()
-		context.linger = 0
-		# Socket to send messages on
-		sender = context.socket(zmq.PUSH)
-		sender.bind("tcp://127.0.0.1:5557")
+	#def ZMQMethod():
+	# Uses ZeroMQ as a way to paralell compute the distances etc
+	# Masking of particles still uses the usual Multiprocessing module
+	if os.path.isfile(cachefile_ids):
+		print 'Reading masked particle IDs for ' + name + '...'
+		Toggle_distance_computing = 0
+		Masked_ids = pickle.load(open(cachefile_ids, 'rb'))
+		Part_box = pickle.load(open(cachefile_partbox, 'rb'))
+		print 'done'
+	else:
+		print 'Computing masked particle indices and particle box for ' + name + '. May take a while...'
+		Toggle_distance_computing = 1
+		proc = mp.Pool(parsed_arguments.NumProcesses) 
+		ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2, box_expand)
+		time_start = time.time()
+		Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
+		Result = np.array(proc.map(Fixed_args_ids, Nfils_iterate))
+		Masked_ids = Result[:,0]
+		Part_box = Result[:,1]
+		print 'Creating ID mask and partbox time: ', time.time() - time_start, 's'
+		pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
+		pickle.dump(Part_box, open(cachefile_partbox, 'wb'))
+		proc.close()
+		proc.join()
 
-		# Socket where the data is received from
-		data_receive = context.socket(zmq.PULL)
-		data_receive.bind("tcp://127.0.0.1:5559")
+	context = zmq.Context()
+	context.linger = 0
+	# Socket to send messages on
+	sender = context.socket(zmq.PUSH)
+	sender.bind("tcp://127.0.0.1:5557")
 
-		# Socket where end message is sent to. Used to tell workers the jobs are finished
-		control_sender = context.socket(zmq.PUSH)
-		control_sender.bind("tcp://127.0.0.1:5560")
+	# Socket to send secondary data
+	sender2 = context.socket(zmq.PUSH)
+	sender.bind("tcp://127.0.0.1:5558")
 
-		# Socket where end message is received from. Used to tell the server that some data are lost
-		stop_messager = context.socket(zmq.PULL)
-		stop_messager.bind("tcp://127.0.0.1:5561")
+	# Socket where the data is received from
+	data_receive = context.socket(zmq.PULL)
+	data_receive.bind("tcp://127.0.0.1:5559")
 
-		# Poller, used to check whether stuff is done or not
-		poller = zmq.Poller()
-		poller.register(control_receive, zmq.POLLIN)
-		poller.register(stop_messager, zmq.POLLIN)
+	# Socket where secondary data is received from
+	data_receive2 = context.socket(zmq.PULL)
+	data_receive2.bind("tcp://127.0.0.1:5560")
 
-		# Calls the script that starts up a set amount of workers.
-		subprocess.call("./workerscript.sh " + str(parsed_arguments.NumProcesses), shell=True)
+	# Socket where end message is sent to. Used to tell workers the jobs are finished
+	control_sender = context.socket(zmq.PUSH)
+	control_sender.bind("tcp://127.0.0.1:5561")
 
-		#for i in range(len(FilPos)):
+	# Socket where end message is received from. Used to tell the server that some data are lost
+	stop_messager = context.socket(zmq.PULL)
+	stop_messager.bind("tcp://127.0.0.1:5562")
 
+	# Poller, used to check whether stuff is done or not
+	poller = zmq.Poller()
+	poller.register(data_receive, zmq.POLLIN)
+	poller.register(stop_messager, zmq.POLLIN)
 
+	# Calls the script that starts up a set amount of workers.
+	# Stops program a little bit to let the workers start up
+	subprocess.call("./SpawnWorkers.sh s" + str(parsed_arguments.NumProcesses), shell=True)
+	time.sleep(4)
+	time_dist = time.time()
+	# Sends data
+	for i in range(len(FilPos)):
+		ZMQAS.send_array(sender, FilPos)
+		ZMQAS.send_array(sender2, Part_box)
+	# Give time to send data
+	time.sleep(10)
+
+	Distances = []
+	FilamentAxis = []
+	for j in range(len(FilPos)):
+		socks = dict(poller.poll())
+		if socks.get(data_receive) == zmq.POLLIN:
+			Distances.append(ZMQAS.recv_array(data_receive))
+			FilamentAxis.append(ZMQAS.recv_array(data_receive2))
+		if socks.get(stop_messager) == zmq.POLLIN:
+			message = stop_messager.recv()
+			if message == "NODATA":
+				print "No more data received from the workers."
+				break
+	control_sender.send("FINISHED")
+	Distances = np.asarray(Distances)
+	FilamentAxis = np.asarray(FilamentAxis)
+	print 'Distance computing time: ', time.time() - time_dist(), 's'
+	# Closing context when computing is done
+	sender.close()
+	sender2.close()
+	data_receive.close()
+	data_receive2.close()
+	stop_messager.close()
+	control_sender.close()
+	context.term()
+	
 	NumPartPerFil = Distances
 	cache_model = cache_particledata + name + '_particleIDs.p'
 	if os.path.isfile(cache_model):
