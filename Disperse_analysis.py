@@ -1186,32 +1186,32 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		context.linger = 0
 		# Socket to send messages on
 		sender = context.socket(zmq.PUSH)
-		sender.bind("tcp://127.0.0.1:5000")
+		sender.bind("tcp://127.0.0.1:5050")
 
 		# Socket to send secondary data
 		sender2 = context.socket(zmq.PUSH)
-		sender2.bind("tcp://127.0.0.1:5001")
+		sender2.bind("tcp://127.0.0.1:5051")
 
 		# Socket where the data is received from
 		data_receive = context.socket(zmq.PULL)
-		data_receive.bind("tcp://127.0.0.1:5002")
+		data_receive.bind("tcp://127.0.0.1:5052")
 
 		# Socket where secondary data is received from
 		data_receive2 = context.socket(zmq.PULL)
-		data_receive2.bind("tcp://127.0.0.1:5003")
+		data_receive2.bind("tcp://127.0.0.1:5053")
 
 		# Socket where end message is sent to. Used to tell workers the jobs are finished
 		control_sender = context.socket(zmq.PUSH)
-		control_sender.bind("tcp://127.0.0.1:5004")
+		control_sender.bind("tcp://127.0.0.1:5054")
 
 		# Socket where end message is received from. Used to tell the server that some data are lost
-		stop_messager = context.socket(zmq.PULL)
-		stop_messager.bind("tcp://127.0.0.1:5005")
+		#stop_messager = context.socket(zmq.PULL)
+		#stop_messager.bind("tcp://127.0.0.1:5055")
 
 		# Poller, used to check whether stuff is done or not
 		poller = zmq.Poller()
 		poller.register(data_receive, zmq.POLLIN)
-		poller.register(stop_messager, zmq.POLLIN)
+		#poller.register(stop_messager, zmq.POLLIN)
 
 		# Calls the script that starts up a set amount of workers.
 		# Stops program a little bit to let the workers start up
@@ -1222,21 +1222,27 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		for i in range(len(FilPos)):
 			ZMQAS.send_array(sender, FilPos[i])
 			ZMQAS.send_array(sender2, Part_box[i])
+			if i == len(FilPos)-1:
+				print "all data sent"
 		# Give time to send data
 		time.sleep(5)
     
 		Distances = []
 		FilamentAxis = []
+		print 'Looping through data receiving'
 		for j in range(len(FilPos)):
 			socks = dict(poller.poll())
 			if socks.get(data_receive) == zmq.POLLIN:
 				Distances.append(ZMQAS.recv_array(data_receive))
 				FilamentAxis.append(ZMQAS.recv_array(data_receive2))
-			if socks.get(stop_messager) == zmq.POLLIN:
-				message = stop_messager.recv()
-				if message == "NODATA":
-					print "No more data received from the workers."
-					break
+			if not socks:
+				print "All data received?"
+				break
+			#if socks.get(stop_messager) == zmq.POLLIN:
+			#	message = stop_messager.recv()
+			#	if message == "NODATA":
+			#		print "No more data received from the workers."
+			#		break
 		control_sender.send("FINISHED")
 		Distances = np.asarray(Distances)
 		FilamentAxis = np.asarray(FilamentAxis)
@@ -1247,7 +1253,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		sender2.close()
 		data_receive.close()
 		data_receive2.close()
-		stop_messager.close()
+		#stop_messager.close()
 		control_sender.close()
 		context.term()
         
@@ -1262,7 +1268,6 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		print 'done'
 	else:
 		Distances, FilamentAxis = ZMQ_call()
-
 	NumPartPerFil = Distances
 	cache_model = cache_particledata + name + '_particleIDs.p'
 	if os.path.isfile(cache_model):
