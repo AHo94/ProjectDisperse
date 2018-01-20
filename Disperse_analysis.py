@@ -1189,39 +1189,45 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		sender.bind("tcp://127.0.0.1:5050")
 
 		# Socket to send secondary data
-		sender2 = context.socket(zmq.PUSH)
-		sender2.bind("tcp://127.0.0.1:5051")
+		#sender2 = context.socket(zmq.PUSH)
+		#sender2.bind("tcp://127.0.0.1:5051")
 
 		# Socket where the data is received from
 		data_receive = context.socket(zmq.PULL)
 		data_receive.bind("tcp://127.0.0.1:5052")
 
 		# Socket where secondary data is received from
-		data_receive2 = context.socket(zmq.PULL)
-		data_receive2.bind("tcp://127.0.0.1:5053")
+		#data_receive2 = context.socket(zmq.PULL)
+		#data_receive2.bind("tcp://127.0.0.1:5053")
 
 		# Socket where end message is sent to. Used to tell workers the jobs are finished
 		control_sender = context.socket(zmq.PUSH)
 		control_sender.bind("tcp://127.0.0.1:5054")
 
 		# Socket where end message is received from. Used to tell the server that some data are lost
-		#stop_messager = context.socket(zmq.PULL)
-		#stop_messager.bind("tcp://127.0.0.1:5055")
+		#ReceiveID = context.socket(zmq.PULL)
+		#ReceiveID.bind("tcp://127.0.0.1:5055")
+		#SendID = context.socket(zmq.PUSH)
+		#SendID.bind("tcp://127.0.0.1:5056")
 
 		# Poller, used to check whether stuff is done or not
 		poller = zmq.Poller()
 		poller.register(data_receive, zmq.POLLIN)
+		#poller.register(data_receive2, zmq.POLLIN)
 		#poller.register(stop_messager, zmq.POLLIN)
 
 		# Calls the script that starts up a set amount of workers.
 		# Stops program a little bit to let the workers start up
 		subprocess.call("./SpawnWorkers.sh " + str(parsed_arguments.NumProcesses), shell=True)
-		time.sleep(7)
+		time.sleep(2)
 		time_dist = time.time()
 		# Sends data
+		print "sending data"
 		for i in range(len(FilPos)):
-			ZMQAS.send_array(sender, FilPos[i])
-			ZMQAS.send_array(sender2, Part_box[i])
+			ZMQAS.send_zipped_pickle(sender, [FilPos[i], Part_box[i], i])
+			#ZMQAS.send_array(sender, FilPos[i])
+			#ZMQAS.send_array(sender2, Part_box[i])
+			#SendID.send(str(i))
 			if i == len(FilPos)-1:
 				print "all data sent"
 		# Give time to send data
@@ -1229,15 +1235,22 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
     
 		Distances = []
 		FilamentAxis = []
+		ID_ordering = []
 		print 'Looping through data receiving'
 		for j in range(len(FilPos)):
 			socks = dict(poller.poll())
 			if socks.get(data_receive) == zmq.POLLIN:
-				Distances.append(ZMQAS.recv_array(data_receive))
-				FilamentAxis.append(ZMQAS.recv_array(data_receive2))
+				#Distances.append(ZMQAS.recv_array(data_receive))
+				#FilamentAxis.append(ZMQAS.recv_array(data_receive2))
+				#ID_ordering.append(int(ReceiveID.recv()))
+				data = ZMQAS.recv_zipped_pickle(data_receive)
+				Distances.append(data[0])
+				FilamentAxis.append(data[1])
+				ID_ordering.append(data[2])
 			if not socks:
 				print "All data received?"
 				break
+			#time.sleep(1)
 			#if socks.get(stop_messager) == zmq.POLLIN:
 			#	message = stop_messager.recv()
 			#	if message == "NODATA":
@@ -1246,19 +1259,23 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		control_sender.send("FINISHED")
 		Distances = np.asarray(Distances)
 		FilamentAxis = np.asarray(FilamentAxis)
+		ID_ordering = np.asarray(ID_ordering)
 		print 'Distance computing time: ', time.time() - time_dist, 's'
-        
+		#print ID_ordering
+		Sorted = np.argsort(ID_ordering)
 		# Closing context when computing is done
 		sender.close()
-		sender2.close()
+		#sender2.close()
 		data_receive.close()
-		data_receive2.close()
+		#data_receive2.close()
+		#ReceiveID.close()
+		#SendID.close()
 		#stop_messager.close()
 		control_sender.close()
 		context.term()
         
-		pickle.dump(Distances, open(cachefile_distances, 'wb'))
-		pickle.dump(FilamentAxis, open(cachefile_segIDs, 'wb'))
+		pickle.dump(Distances[Sorted], open(cachefile_distances, 'wb'))
+		pickle.dump(FilamentAxis[Sorted], open(cachefile_segIDs, 'wb'))
 		return Distances, FilamentAxis
     
 	if os.path.isfile(cachefile_distances):
@@ -1268,6 +1285,11 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		print 'done'
 	else:
 		Distances, FilamentAxis = ZMQ_call()
+	print 'check check'
+	for i in range(len(Distances)):
+		if len(Distances[i]) != len(FilamentAxis[i]):
+			print 'Issues at i = ', i, ' ', len(Distances[i]), len(FilamentAxis[i])
+	sys.exit(1)#return 0
 	NumPartPerFil = Distances
 	cache_model = cache_particledata + name + '_particleIDs.p'
 	if os.path.isfile(cache_model):
@@ -1280,7 +1302,6 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 			Filament_part_IDs.append(np.concatenate((Particle_IDs[mask[0]], Particle_IDs[mask[1]])))
 		else:
 			Filament_part_IDs.append(Particle_IDs[mask])
-
 	Distances_filamentMerge = []
 	ID_old = -1
 	if len(FilID) != len(Distances):

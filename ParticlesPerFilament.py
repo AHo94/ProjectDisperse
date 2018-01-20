@@ -491,8 +491,8 @@ def ZMQ_get_distances():
 	#receiver.RCVTIMEO = 1000000
 
 	# Socket to receive secondary data
-	receiver2 = context.socket(zmq.PULL)
-	receiver2.connect("tcp://127.0.0.1:5051")
+	#receiver2 = context.socket(zmq.PULL)
+	#receiver2.connect("tcp://127.0.0.1:5051")
 	#receiver2.RCVTIMEO = 1000000
     
 	# Socket to send computed data to
@@ -500,15 +500,18 @@ def ZMQ_get_distances():
 	sender.connect("tcp://127.0.0.1:5052")
 
 	# Socket to send secondary data 
-	sender2 = context.socket(zmq.PUSH)
-	sender2.connect("tcp://127.0.0.1:5053")
+	#sender2 = context.socket(zmq.PUSH)
+	#sender2.connect("tcp://127.0.0.1:5053")
 	# Socket controller, ensures the worker is killed
 	controller = context.socket(zmq.PULL)
 	controller.connect("tcp://127.0.0.1:5054")
 
 	# Socket controller that stops worker if server dies
-	#stop_messager = context.socket(zmq.PUSH)
-	#stop_messager.connect("tcp://127.0.0.1:5055")
+	#SendID = context.socket(zmq.PUSH)
+	#SendID.connect("tcp://127.0.0.1:5055")
+    
+	#ReceiveID = context.socket(zmq.PULL)
+	#ReceiveID.connect("tcp://127.0.0.1:5056")
 
 	# Only poller for receiver as receiver 2 has similar size
 	poller = zmq.Poller()
@@ -518,11 +521,18 @@ def ZMQ_get_distances():
 		socks = dict(poller.poll(10000))
 		# Computes context when data is recieved
 		if socks.get(receiver) == zmq.POLLIN:
-			FilamentPos = ZMQAS.recv_array(receiver)
-			ParticleBox = ZMQAS.recv_array(receiver2)
+			#FilamentPos = ZMQAS.recv_array(receiver)
+			#ParticleBox = ZMQAS.recv_array(receiver2)
+			#ID = ReceiveID.recv()
+			data = ZMQAS.recv_zipped_pickle(receiver)
+			FilamentPos = data[0]
+			ParticleBox = data[1]
+			ID = data[2]
 			Distances, Segpoint_index = Compute_distance(FilamentPos, ParticleBox)
-			ZMQAS.send_array(sender, Distances)
-			ZMQAS.send_array(sender2, Segpoint_index)
+			ZMQAS.send_zipped_pickle(sender, [Distances, Segpoint_index, ID])
+			#ZMQAS.send_array(sender, Distances)
+			#ZMQAS.send_array(sender2, Segpoint_index)
+			#SendID.send(ID)
 		# Closes the context when data computing is done
 		if socks.get(controller) == zmq.POLLIN:
 			control_message = controller.recv()
@@ -537,10 +547,12 @@ def ZMQ_get_distances():
 
 	# Finished, closing context
 	receiver.close()
-	receiver2.close()
+	#receiver2.close()
 	sender.close()
-	sender2.close()
+	#sender2.close()
 	controller.close()
+	#SendID.close()
+	#ReceiveID.close()
 	#stop_messager.close()
 	context.term()
 
