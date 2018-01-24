@@ -557,7 +557,7 @@ class BoundaryChecker():
 			self.yTemp.append(self.ydimPos[i][j])
 			self.zTemp.append(self.zdimPos[i][j])
 
-		for i in range(self.NFils-1):
+		for i in range(self.NFils):
 			xBoundary = 0
 			yBoundary = 0
 			zBoundary = 0
