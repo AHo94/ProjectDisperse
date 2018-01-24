@@ -1163,7 +1163,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	if os.path.isfile(cachefile_ids):
 		print 'Reading masked particle IDs for ' + name + '...'
 		Toggle_distance_computing = 0
-		Masked_ids = pickle.load(open(cachefile_ids, 'rb'))
+		#Masked_ids = pickle.load(open(cachefile_ids, 'rb'))
 		Part_box = pickle.load(open(cachefile_partbox, 'rb'))
 		print 'done'
 	else:
@@ -1204,11 +1204,13 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 
 		# Calls the script that starts up a set amount of workers.
 		# Stops program a little bit to let the workers start up
+		print "Starting processes"
 		subprocess.call("./SpawnWorkers.sh " + str(parsed_arguments.NumProcesses), shell=True)
-		time.sleep(2)
+		subprocess.call("./RemoteConnect.sh", shell=True)
+		time.sleep(5)
 		time_dist = time.time()
 		# Sends data
-		print "sending data"
+		print "Done, sending data"
 		for i in range(len(FilPos)):
 			ZMQAS.send_zipped_pickle(sender, [FilPos[i], Part_box[i], i])
 			if i == len(FilPos)-1:

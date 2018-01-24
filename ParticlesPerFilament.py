@@ -469,7 +469,7 @@ def Compute_distance(filament, part_box):
 		for k in range(len(shortest)):
 			identical = np.where(np.abs(shortest[k] - distances2[k]) < 1e-16)[0]
 			index_segpoint.append(identical[0])
-		filaxis_temp.append(np.array(index_segpoint) + i*100.0)
+		filaxis_temp.append(np.array(index_segpoint) + i*100)
 	# Selects the shortest distance from a particle to every segment
 	true_dist = np.swapaxes(np.asarray(true_dist), 0, 1)
 	dist = np.min(true_dist, axis=1)
