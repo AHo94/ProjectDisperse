@@ -747,9 +747,9 @@ class Disperse_Plotter():
 			cachedir_foldername_extra += 'TRIM'
 
 		if HOMEPC == 0:
-			cachedir='/PythonCaches/Disperse_analysis/'+cachedir_foldername_extra+'/'
+			cachedir='/PythonCaches/Disperse_analysis/FilamentData/'+cachedir_foldername_extra+'/'
 		else:
-			cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/' + cachedir_foldername_extra + '/'
+			cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/FilamentData/' + cachedir_foldername_extra + '/'
 		if not os.path.isdir(cachedir):
 			os.makedirs(cachedir)
 
@@ -1665,9 +1665,11 @@ if __name__ == '__main__':
 		"""
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-		npart = 64
-		
-		lcdm_dir = 'lcdm_testing/LCDM_z0_'+str(npart)+'Particles/Sigma3/'
+		npart = 188
+		if npart == 64:
+			lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
+		else:
+			lcdm_dir = 'lcdm_testing/LCDM_z0_'+str(npart)+'Particles/Sigma3/'
 		SymmA_dir = 'SymmA_data/SymmA_z0_'+str(npart)+'Particles/Sigma3/'
 		SymmB_dir = 'SymmB_data/SymmB_z0_'+str(npart)+'Particles/Sigma3/'
 		SymmC_dir = 'SymmC_data/SymmC_z0_'+str(npart)+'Particles/Sigma3/'
