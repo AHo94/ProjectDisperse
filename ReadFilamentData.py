@@ -154,7 +154,7 @@ class read_disperse_output():
 		NFilamentPoints = []
 		k = 1
 		NewID = 0
-		for i in range(1, self.NFils):
+		for i in range(1, self.NFils+1):
 			Filstuff = self.Filaments[k]
 			TempPositions = []
 			xtemp = []
