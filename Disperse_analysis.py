@@ -1201,11 +1201,12 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 
 		# Poller, used to check whether stuff is done or not
 		poller = zmq.Poller()
+		poller.register(data_receive, zmq.POLLIN)
 
 		# Calls the script that starts up a set amount of workers.
 		# Stops program a little bit to let the workers start up
 		print "Starting processes"
-		subprocess.call("./SpawnWorkers.sh " + str(parsed_arguments.NumProcesses), shell=True)
+		subprocess.call("./SpawnWorkers.sh " + str(50), shell=True)
 		subprocess.call("./RemoteConnect.sh", shell=True)
 		time.sleep(5)
 		time_dist = time.time()
@@ -1235,12 +1236,13 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 
 		control_sender.send("FINISHED")
 		Distances = np.asarray(Distances)
+		print Distances
 		FilamentAxis = np.asarray(FilamentAxis)
 		ID_ordering = np.asarray(ID_ordering)
 		print 'Distance computing time: ', time.time() - time_dist, 's'
 		Sorted = np.argsort(ID_ordering)
 		# Closing context when computing is done
-		sender.close()		
+		sender.close()
 		data_receive.close()
 		control_sender.close()
 		context.term()
@@ -1665,7 +1667,7 @@ if __name__ == '__main__':
 		"""
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-		npart = 188
+		npart = 64
 		if npart == 64:
 			lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		else:

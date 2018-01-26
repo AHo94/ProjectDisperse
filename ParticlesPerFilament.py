@@ -498,7 +498,7 @@ def ZMQ_get_distances():
 	# Socket to send computed data to
 	sender = context.socket(zmq.PUSH)
 	#sender.connect("tcp://127.0.0.1:5052")
-	sender.connect("tcp://euclid21.uio.no:5050")
+	sender.connect("tcp://euclid21.uio.no:5052")
 
 	# Socket controller, ensures the worker is killed
 	controller = context.socket(zmq.PULL)
@@ -509,9 +509,8 @@ def ZMQ_get_distances():
 	poller = zmq.Poller()
 	poller.register(receiver, zmq.POLLIN)
 	poller.register(controller, zmq.POLLIN)
-
 	while True:
-		socks = dict(poller.poll(10000))
+		socks = dict(poller.poll(500000))
 		# Computes context when data is recieved
 		if socks.get(receiver) == zmq.POLLIN:
 			data = ZMQAS.recv_zipped_pickle(receiver)
