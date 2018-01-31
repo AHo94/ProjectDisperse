@@ -164,18 +164,18 @@ class read_disperse_output():
 			for j in range(1, int(Filstuff[-1])+1):
 				if k+j >= len(self.Filaments):
 					break
-				xPos = np.float16(self.Filaments[k+j][0])*self.UnitConverter
-				yPos = np.float16(self.Filaments[k+j][1])*self.UnitConverter
-				zPos = np.float16(self.Filaments[k+j][2])*self.UnitConverter
-				TempPositions.append(np.array([xPos, yPos],dtype=np.float16))
+				xPos = np.float32(self.Filaments[k+j][0])*self.UnitConverter
+				yPos = np.float32(self.Filaments[k+j][1])*self.UnitConverter
+				zPos = np.float32(self.Filaments[k+j][2])*self.UnitConverter
+				TempPositions.append(np.array([xPos, yPos],dtype=np.float32))
 				xtemp.append(xPos)
 				ytemp.append(yPos)
 				ztemp.append(zPos)		
 			NFilamentPoints.append(np.int16(Filstuff[-1]))
-			FilamentPos.append(np.array(TempPositions, dtype=np.float16))
-			xdimPos.append(np.array(xtemp, dtype=np.float16))
-			ydimPos.append(np.array(ytemp, dtype=np.float16))
-			zdimPos.append(np.array(ztemp, dtype=np.float16))
+			FilamentPos.append(np.array(TempPositions, dtype=np.float32))
+			xdimPos.append(np.array(xtemp, dtype=np.float32))
+			ydimPos.append(np.array(ytemp, dtype=np.float32))
+			zdimPos.append(np.array(ztemp, dtype=np.float32))
 			k += int(Filstuff[-1])+1
 			NewID += 1
 			if self.FilamentLimit:
@@ -184,7 +184,7 @@ class read_disperse_output():
 					break
 
 		FilamentPos = np.array(FilamentPos)
-		NFilamentPoints = np.array(NFilamentPoints, dtype=np.int16)
+		NFilamentPoints = np.array(NFilamentPoints, dtype=np.int32)
 		xdimPos = np.array(xdimPos)
 		ydimPos = np.array(ydimPos)
 		zdimPos = np.array(zdimPos)
