@@ -481,7 +481,7 @@ class Disperse_Plotter():
 				plt.hold(False)
 				plt.title('Dark matter density field over a segment of the particle box. \n Includes filaments with colorbar.'\
 						 +'Colors indicate length of a filament.')
-				
+
 			if parsed_arguments.bwMethod and IncludeDMParticles:
 				if parsed_arguments.bwMethod != 'Scott':
 					if len(parsed_arguments.bwMethod) == 2:
@@ -697,9 +697,9 @@ class Disperse_Plotter():
 
 		self.NFils = Fil_coord[0]
 		self.FilamentPos = Fil_coord[1]
-		self.xdimPos = Fil_coord[2]
-		self.ydimPos = Fil_coord[3]
-		self.zdimPos = Fil_coord[4]
+		self.xdimPos_nonBC = Fil_coord[2]
+		self.ydimPos_nonBC = Fil_coord[3]
+		self.zdimPos_nonBC = Fil_coord[4]
 		self.NFilamentPoints = Fil_coord[5]
 		self.FilID = Fil_coord[6]
 		self.PairIDS = Fil_coord[7]
@@ -785,8 +785,8 @@ class Disperse_Plotter():
 			BC_instance_variables = pickle.load(open(Boundary_check_cachefn, 'rb'))
 		else:
 			BC_instance = BoundaryChecker.BoundaryChecker(
-					self.xmin, self.xmax, self.xdimPos,
-					self.ydimPos, self.zdimPos, self.FilID, self.NFils
+					self.xmin, self.xmax, self.xdimPos_nonBC,
+					self.ydimPos_nonBC, self.zdimPos_nonBC, self.FilID, self.NFils
 					)
 			BC_instance_variables = BC_instance.Get_periodic_boundary()
 			pickle.dump(BC_instance_variables, open(Boundary_check_cachefn, 'wb'))
@@ -904,9 +904,16 @@ class Disperse_Plotter():
 		if not self.SolveRun:
 			raise ValueError('You have not called the solve() function yet! Cannot give 3D filament position.')
 		Filament_3DPos = []
+		Filament_3DPos_nonBC = []
 		for i in range(len(self.xdimPos)):
 			Filament_3DPos.append(np.column_stack((self.xdimPos[i], self.ydimPos[i], self.zdimPos[i])))
-		return np.array(Filament_3DPos), self.FilamentIDs
+		for j in range(len(self.xdimPos_nonBC)):
+			Filament_3DPos_nonBC.append(np.column_stack((self.xdimPos_nonBC[j], self.ydimPos_nonBC[j], self.zdimPos_nonBC[j])))
+		return np.array(Filament_3DPos), self.FilamentIDs, np.array(Filament_3DPos_nonBC), self.FilID
+
+	def get_boxsize(self):
+		BoxSize = self.xmax - self.xmin
+		return BoxSize
 
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
@@ -979,7 +986,7 @@ def Multiprocess_particle_distances(Instance, Masked_ids, Filament, i):
 	Distances = Instance.get_distance_seginterp(Filament[i], Masked_ids[i])
 	return Distances
 
-def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
+def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, nsig):
 	""" 
 	Saves number of particle per filament data in pickle file.
 	Input is the model name and 3D filament positions.
@@ -1013,26 +1020,11 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		os.makedirs(cachedir_ppf_ids)
 	if not os.path.isdir(cachedir_ppf_segIDs):
 		os.makedirs(cachedir_ppf_segIDs)
-	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_IBtest.p'
-	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
-	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p' 
-	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_IBtest.p'
-    
-	def init_methodOLD():
-		if os.path.isfile(cachefile):
-			print 'Reading number of particles pickle file for ' + name + '...'
-			NumPartPerFil, NumPartPerFil_particleIDs = pickle.load(open(cachefile, 'rb'))
-		else:
-			print 'Computing number of particles per filament for ' + name + '. May take a while...'
-			ppf_instance = ParticlesPerFilament.particles_per_filament(name, Mask_check_list2, BoundaryCheck_list2)
-			Fixed_args = partial(Multiprocess_filament_per_filament, ppf_instance, distance_threshold, FilPos)
-			Multiproc_output = proc.map(Fixed_args, range(len(FilPos)))
-			NumPartPerFil = np.array(Multiproc_output)[:,0]
-			NumPartPerFil_particleIDs = np.array(Multiproc_output)[:,1]
-			proc.close()
-			proc.join()
-			pickle.dump([NumPartPerFil, NumPartPerFil_particleIDs], open(cachefile, 'wb'))
-		
+	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p'
+	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p'
+	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p' 
+	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p'
+	
 	# Uses ZeroMQ as a way to paralell compute the distances etc
 	# Masking of particles still uses the usual Multiprocessing module
 	Nfils_iterate = range(len(FilPos))
@@ -1049,14 +1041,28 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		time_start = time.time()
 		Fixed_args_ids = partial(Multiprocess_masked_particle_ids, ppf_instance, FilPos)
 		Result = np.array(proc.map(Fixed_args_ids, Nfils_iterate))
-		Masked_ids = Result[:,0]
-		Part_box = Result[:,1]
-		print 'Creating ID mask and partbox time: ', time.time() - time_start, 's'
+		Masked_ids_nonmerge = Result[:,0]
+		Part_box_nonmerge = Result[:,1]
+		print 'Creating ID mask and partbox time: ', time.time() - time_start, 's. Now merging and saving.'
+		Masked_ids = []
+		Part_box = []
+		ID_old = -1
+		for i in range(len(FilID)):
+			ID = FilID[i]
+			if ID == ID_old:
+				Masked_ids[-1], unique_index = np.unique(np.concatenate((Masked_ids[-1], Masked_ids_nonmerge[i])), return_index=True)
+				Part_box[-1] = np.concatenate((Part_box[-1], Part_box_nonmerge[i]))[unique_index]
+			else:
+				Masked_ids.append(Masked_ids_nonmerge[i])
+				Part_box.append(Part_box_nonmerge[i])
+			ID_old = ID
+		Masked_ids = np.asarray(Masked_ids)
+		Part_box = np.asarray(Part_box)
 		pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
 		pickle.dump(Part_box, open(cachefile_partbox, 'wb'))
 		proc.close()
 		proc.join()
-        
+		
 	def ZMQ_call():
 		context = zmq.Context()
 		context.linger = 0
@@ -1088,18 +1094,18 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		time_dist = time.time()
 		# Sends data
 		print "Done, sending data"
-		for i in range(len(FilPos)):
-			ZMQAS.send_zipped_pickle(sender, [FilPos[i], Part_box[i], i])
+		for i in range(len(FilPosNBC)):
+			ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i, BoxSize])
 			if i == len(FilPos)-1:
 				print "all data sent"
 		# Give time to send data
 		time.sleep(5)
-    
+	
 		Distances = []
 		FilamentAxis = []
 		ID_ordering = []
 		print 'Looping through data receiving'
-		for j in range(len(FilPos)):
+		for j in range(len(FilPosNBC)):
 			socks = dict(poller.poll())
 			if socks.get(data_receive) == zmq.POLLIN:
 				data = ZMQAS.recv_zipped_pickle(data_receive)
@@ -1122,11 +1128,11 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 		data_receive.close()
 		control_sender.close()
 		context.term()
-        
+		
 		pickle.dump(Distances[Sorted], open(cachefile_distances, 'wb'))
 		pickle.dump(FilamentAxis[Sorted], open(cachefile_segIDs, 'wb'))
 		return Distances, FilamentAxis
-    
+	
 	if os.path.isfile(cachefile_distances):
 		print 'Reading number of particles pickle file for ' + name + '...'
 		Distances = pickle.load(open(cachefile_distances, 'rb'))
@@ -1169,7 +1175,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	#		for ids in id_list2:
 	#			temp_id.append(ids)
 	#	Npart_per_fil_partIDs.append(np.array(temp_id))
-	"""    
+	"""	
 	total = 0
 	#total_partids = []
 	#id_append_check = 0
@@ -1207,7 +1213,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, npart, nsig):
 	print 'Done'
 	#return np.array(Npart_per_fil), np.array(Filament_part_IDs)
 	return Distances, np.array(Filament_part_IDs)
-    
+	
 if __name__ == '__main__':
 	parsed_arguments = Argument_parser()
 	HOMEPC = parsed_arguments.HOMEPC	# Set 1 if working in UiO terminal
@@ -1567,49 +1573,57 @@ if __name__ == '__main__':
 		if parsed_arguments.DisperseModel == 'lcdm' or parsed_arguments.DisperseModel == 'all':
 			LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=npart, model='LCDM', redshift=0, SigmaArg=3)
 			NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0'+str(npart)+'_nsig3.a.NDskl')
-			Fil3DPos_LCDM, FilID_LCDM = LCDM_instance.get_3D_pos()
+			Fil3DPos_LCDM, FilID_LCDM, FilPosNBC_LCDM, FilIDNBC_LCDM = LCDM_instance.get_3D_pos()
+			Box_LCDM = LCDM_instance.get_boxsize()
 			Add_filament_data_list(NumConn_LCDM, FilLen_LCDM, NPts_LCDM)
 
 		if parsed_arguments.DisperseModel == 'symmA' or parsed_arguments.DisperseModel == 'all':
 			SymmA_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_dir+'Plots/', nPart=npart, model='SymmA', redshift=0, SigmaArg=3)
 			NumConn_SymmA, FilLen_SymmA, NPts_SymmA = SymmA_instance.Solve(SymmA_dir+'SkelconvOutput_SymmAz0'+str(npart)+'_nsig3.a.NDskl')
-			Fil3DPos_SymmA, FilID_SymmA = SymmA_instance.get_3D_pos()
+			Fil3DPos_SymmA, FilID_SymmA, FilPosNBC_SymmA, FilIDNBC_SymmA = SymmA_instance.get_3D_pos()
+			Box_SymmA = SymmA_instance.get_boxsize()
 			Add_filament_data_list(NumConn_SymmA, FilLen_SymmA, NPts_SymmA)
 
 		if parsed_arguments.DisperseModel == 'symmB' or parsed_arguments.DisperseModel == 'all':
 			SymmB_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmB_dir+'Plots/', nPart=npart, model='SymmB', redshift=0, SigmaArg=3)
 			NumConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz0'+str(npart)+'_nsig3.a.NDskl')
-			Fil3DPos_SymmB, FilID_SymmB = SymmB_instance.get_3D_pos()
+			Fil3DPos_SymmB, FilID_SymmB, FilPosNBC_Symmb, FilIDNBC_SymmB = SymmB_instance.get_3D_pos()
+			Box_SymmB = SymmB_instance.get_boxsize()
 			Add_filament_data_list(NumConn_SymmB, FilLen_SymmB, NPts_SymmB)
 
 		if parsed_arguments.DisperseModel == 'symmC' or parsed_arguments.DisperseModel == 'all':
 			SymmC_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmC_dir+'Plots/', nPart=npart, model='SymmC', redshift=0, SigmaArg=3)
 			NumConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz0'+str(npart)+'_nsig3.a.NDskl')
-			Fil3DPos_SymmC, FilID_SymmC = SymmC_instance.get_3D_pos()
+			Fil3DPos_SymmC, FilID_SymmC, FilPosNBC_SymmC, FilIDNBC_SymmC = SymmC_instance.get_3D_pos()
+			Box_SymmC = SymmC_instance.get_boxsize()
 			Add_filament_data_list(NumConn_SymmC, FilLen_SymmC, NPts_SymmC)
 
 		if parsed_arguments.DisperseModel == 'symmD' or parsed_arguments.DisperseModel == 'all':
 			SymmD_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmD_dir+'Plots/', nPart=npart, model='SymmD', redshift=0, SigmaArg=3)
 			NumConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz0'+str(npart)+'_nsig3.a.NDskl')
-			Fil3DPos_SymmD, FilID_SymmD = SymmD_instance.get_3D_pos()
+			Fil3DPos_SymmD, FilID_SymmD, FilPosNBC_SymmD, FilIDNBC_SymmD = SymmD_instance.get_3D_pos()
+			Box_SymmD = SymmD_instance.get_boxsize()
 			Add_filament_data_list(NumConn_SymmD, FilLen_SymmD, NPts_SymmD)
 
 		if parsed_arguments.DisperseModel == 'fofr4' or parsed_arguments.DisperseModel == 'all':
 			fofr4_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr4_dir+'Plots/', nPart=npart, model='fofr4', redshift=0, SigmaArg=3)
 			NumConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z0'+str(npart)+'_nsig3.a.NDskl')
-			Fil3DPos_fofr4, FilID_fofr4 = fofr4_instance.get_3D_pos()
+			Fil3DPos_fofr4, FilID_fofr4, FilPosNBC_fofr4, FilIDNBC_fofr4 = fofr4_instance.get_3D_pos()
+			Box_fofr4 = fofr4_instance.get_boxsize()
 			Add_filament_data_list(NumConn_fofr4, FilLen_fofr4, NPts_fofr4)
 
 		if parsed_arguments.DisperseModel == 'fofr5' or parsed_arguments.DisperseModel == 'all':
 			fofr5_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr5_dir+'Plots/', nPart=npart, model='fofr5', redshift=0, SigmaArg=3)
 			NumConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z0'+str(npart)+'_nsig3.a.NDskl')
-			Fil3DPos_fofr5, FilID_fofr5 = fofr5_instance.get_3D_pos()
+			Fil3DPos_fofr5, FilID_fofr5, FilPosNBC_fofr5, FilIDNBC_fofr5 = fofr5_instance.get_3D_pos()
+			Box_fofr5 = fofr5_instance.get_boxsize()
 			Add_filament_data_list(NumConn_fofr5, FilLen_fofr5, NPts_fofr5)
 
 		if parsed_arguments.DisperseModel == 'fofr6' or parsed_arguments.DisperseModel == 'all':
 			fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=npart, model='fofr6', redshift=0, SigmaArg=3)
 			NumConn_fofr6, FilLen_fofr6, NPts_fofr6 = fofr6_instance.Solve(fofr6_dir+'SkelconvOutput_fofr6z0'+str(npart)+'_nsig3.a.NDskl')
-			Fil3DPos_fofr6, FilID_fofr6 = fofr6_instance.get_3D_pos()
+			Fil3DPos_fofr6, FilID_fofr6, FilPosNBC_fofr6, FilIDNBC_fofr6 = fofr6_instance.get_3D_pos()
+			Box_fofr6 = fofr6_instance.get_boxsize()
 			Add_filament_data_list(NumConn_fofr6, FilLen_fofr6, NPts_fofr6)
 
 		"""
@@ -1642,38 +1656,38 @@ if __name__ == '__main__':
 		Compute_mass = 1
 		Number_particles_list = []
 		if parsed_arguments.NumPartModel == 'lcdm':
-			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, npart, 3)
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, FilPosNBC_LCDM, FilIDNBC_LCDM, Box_LCDM, npart, 3)
 			Add_particle_list(Distances_LCDM)
 		if parsed_arguments.NumPartModel == 'symmA':
-			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, FilPosNBC_SymmA, FilIDNBC_SymmA, Box_SymmA, npart, 3)
 			Add_particle_list(Distances_SymmA)
 		if parsed_arguments.NumPartModel == 'symmB':
-			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, FilPosNBC_SymmB, FilIDNBC_SymmB, Box_SymmB, npart, 3)
 			Add_particle_list(Distances_SymmB)
 		if parsed_arguments.NumPartModel == 'symmC':
-			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, npart, 3)
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, FilPosNBC_SymmC, FilIDNBC_SymmC, Box_SymmC, npart, 3)
 			Add_particle_list(Distances_SymmC)
 		if parsed_arguments.NumPartModel == 'symmD':
-			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, FilPosNBC_SymmD, FilIDNBC_SymmD, Box_SymmD, npart, 3)
 			Add_particle_list(Distances_SymmD)
 		if parsed_arguments.NumPartModel == 'fofr4':
-			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, npart, 3)
+			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, FilPosNBC_fofr4, FilIDNBC_fofr4, Box_fofr4, npart, 3)
 			Add_particle_list(Distances_fofr4)
 		if parsed_arguments.NumPartModel == 'fofr5':
-			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, npart, 3)
+			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, FilPosNBC_fofr5, FilIDNBC_fofr5, Box_fofr5, npart, 3)
 			Add_particle_list(Distances_fofr5)
 		if parsed_arguments.NumPartModel == 'fofr6':
-			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, npart, 3)
+			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, FilPosNBC_fofr6, FilIDNBC_fofr6, Box_fofr6, npart, 3)
 			Add_particle_list(Distances_fofr6)		
 		if parsed_arguments.NumPartModel == 'all':
-			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, npart, 3)
-			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, npart, 3)
-			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, npart, 3)
-			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, npart, 3)
-			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, npart, 3)
-			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, npart, 3)
-			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, npart, 3)
-			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, npart, 3)
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, FilPosNBC_LCDM, FilIDNBC_LCDM, Box_LCDM, npart, 3)
+			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, FilPosNBC_SymmA, FilIDNBC_SymmA, Box_SymmA, npart, 3)
+			Distances_SymmB, NPPF_ids_SymmB = Save_NumPartPerFil('symm_B', Fil3DPos_SymmB, FilID_SymmB, FilPosNBC_SymmB, FilIDNBC_SymmB, Box_SymmB, npart, 3)
+			Distances_SymmC, NPPF_ids_SymmC = Save_NumPartPerFil('symm_C', Fil3DPos_SymmC, FilID_SymmC, FilPosNBC_SymmC, FilIDNBC_SymmC, Box_SymmC, npart, 3)
+			Distances_SymmD, NPPF_ids_SymmD = Save_NumPartPerFil('symm_D', Fil3DPos_SymmD, FilID_SymmD, FilPosNBC_SymmD, FilIDNBC_SymmD, Box_SymmD, npart, 3)
+			Distances_fofr4, NPPF_ids_fofr4 = Save_NumPartPerFil('fofr4', Fil3DPos_fofr4, FilID_fofr4, FilPosNBC_fofr4, FilIDNBC_fofr4, Box_fofr4, npart, 3)
+			Distances_fofr5, NPPF_ids_fofr5 = Save_NumPartPerFil('fofr5', Fil3DPos_fofr5, FilID_fofr5, FilPosNBC_fofr5, FilIDNBC_fofr5, Box_fofr5, npart, 3)
+			Distances_fofr6, NPPF_ids_fofr6 = Save_NumPartPerFil('fofr6', Fil3DPos_fofr6, FilID_fofr6, FilPosNBC_fofr6, FilIDNBC_fofr6, Box_fofr6, npart, 3)
 			Add_particle_list(Distances_LCDM)
 			Add_particle_list(Distances_SymmA)
 			Add_particle_list(Distances_SymmB)
