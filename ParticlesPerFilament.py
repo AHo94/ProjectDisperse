@@ -425,34 +425,6 @@ def Argument_parser():
 	args = parser.parse_args()
 	return args
 
-def compute_lengths(filament):
-	""" Computes the length of the whole filament. This takes into account for periodic boundaries. """
-	diffx = xpos[1:] - xpos[:-1]
-	diffy = ypos[1:] - ypos[:-1]
-	diffz = zpos[1:] - zpos[:-1]
-
-	diffx[diffx <= -BoxSize/2.0] += BoxSize
-	diffx[diffx >= BoxSize/2.0] -= BoxSize
-	diffy[diffy <= -BoxSize/2.0] += BoxSize
-	diffy[diffy >= BoxSize/2.0] -= BoxSize
-	diffz[diffz <= -BoxSize/2.0] += BoxSize
-	diffz[diffz >= BoxSize/2.0] -= BoxSize
-	 leng = []
-    if not npstuff:
-        diffx = Fil[1:,0] - Fil[:-1,0]
-        diffy = Fil[1:,1] - Fil[:-1,1]
-        diffz = Fil[1:,2] - Fil[:-1,2]
-        diffx[diffx <= -upper_boundary/2.0] += upper_boundary
-        diffx[diffx >= upper_boundary/2.0] -= upper_boundary
-        diffy[diffy <= -upper_boundary/2.0] += upper_boundary
-        diffy[diffy >= upper_boundary/2.0] -= upper_boundary
-        diffz[diffz <= -upper_boundary/2.0] += upper_boundary
-        diffz[diffz >= upper_boundary/2.0] -= upper_boundary
-        for i in range(len(diffx)):
-            leng.append(np.sqrt(diffx[i]**2 + diffy[i]**2 + diffz[i]**2))
-	length = np.sqrt(diffx[j]**2 + diffy[j]**2 + diffz[j]**2)
-	return length
-
 def get_interpolation_points(filament, BoxSize):
 	"""
 	Gives a set amount of interpolation points between the segments based on their length.
