@@ -26,7 +26,7 @@ class particles_per_filament():
 		self.model = model
 		RGF_instance = ReadGadgetFile.Read_Gadget_file(maskdirs, masklimits)
 		self.particlepos = RGF_instance.Get_3D_particles(model)
-		self.box_expand = box_expand
+		self.box_expand = np.float32(box_expand)
 
 	def filament_box(self, filament):
 		""" 
@@ -269,14 +269,15 @@ class particles_per_filament():
 
 		if box == box2:
 			mask = self.particle_mask(box, self.particlepos)
-			return np.where(mask)[0]
+			return (np.where(mask)[0]).astype(np.int32)
 		else:
 			mask1 = self.particle_mask(box, self.particlepos)
 			mask2 = self.particle_mask(box2, self.particlepos)
-			indices1 = np.where(mask1)[0]
-			indices2 = np.where(mask2)[0]
-			#Masked_indices = np.concatenate([indices1, indices2])
-			return np.array([indices1, indices2])
+			indices1 = (np.where(mask1)[0]).astype(np.int32)
+			indices2 = (np.where(mask2)[0]).astype(np.int32)
+			Masked_indices = np.concatenate([indices1, indices2])
+			return Masked_indices
+			#return np.array([indices1, indices2])
 
 	def get_distance_old(self, filament, part_box):
 		""" 
@@ -424,7 +425,66 @@ def Argument_parser():
 	args = parser.parse_args()
 	return args
 
-def Compute_distance(filament, part_box):
+def compute_lengths(filament):
+	""" Computes the length of the whole filament. This takes into account for periodic boundaries. """
+	diffx = xpos[1:] - xpos[:-1]
+	diffy = ypos[1:] - ypos[:-1]
+	diffz = zpos[1:] - zpos[:-1]
+
+	diffx[diffx <= -BoxSize/2.0] += BoxSize
+	diffx[diffx >= BoxSize/2.0] -= BoxSize
+	diffy[diffy <= -BoxSize/2.0] += BoxSize
+	diffy[diffy >= BoxSize/2.0] -= BoxSize
+	diffz[diffz <= -BoxSize/2.0] += BoxSize
+	diffz[diffz >= BoxSize/2.0] -= BoxSize
+	 leng = []
+    if not npstuff:
+        diffx = Fil[1:,0] - Fil[:-1,0]
+        diffy = Fil[1:,1] - Fil[:-1,1]
+        diffz = Fil[1:,2] - Fil[:-1,2]
+        diffx[diffx <= -upper_boundary/2.0] += upper_boundary
+        diffx[diffx >= upper_boundary/2.0] -= upper_boundary
+        diffy[diffy <= -upper_boundary/2.0] += upper_boundary
+        diffy[diffy >= upper_boundary/2.0] -= upper_boundary
+        diffz[diffz <= -upper_boundary/2.0] += upper_boundary
+        diffz[diffz >= upper_boundary/2.0] -= upper_boundary
+        for i in range(len(diffx)):
+            leng.append(np.sqrt(diffx[i]**2 + diffy[i]**2 + diffz[i]**2))
+	length = np.sqrt(diffx[j]**2 + diffy[j]**2 + diffz[j]**2)
+	return length
+
+def get_interpolation_points(filament, BoxSize):
+	"""
+	Gives a set amount of interpolation points between the segments based on their length.
+	The longer the segment is, the more interpolation points it gets.
+	Total number of interpolation points is 100 per segment.
+	If the number of points in the end does not add up, after assigning each segment a set number of points, the last few points goes to the largest segment.
+	"""
+	numpts = (len(filament)-1)*100
+	Segment_lengths = []
+	diffx = filament[1:,0] - filament[:-1,0]
+	diffy = filament[1:,1] - filament[:-1,1]
+	diffz = filament[1:,2] - filament[:-1,2]
+	diffx[diffx <= -BoxSize/2.0] += BoxSize
+	diffx[diffx >= BoxSize/2.0] -= BoxSize
+	diffy[diffy <= -BoxSize/2.0] += BoxSize
+	diffy[diffy >= BoxSize/2.0] -= BoxSize
+	diffz[diffz <= -BoxSize/2.0] += BoxSize
+	diffz[diffz >= BoxSize/2.0] -= BoxSize
+	for i in range(len(diffx)):
+		Segment_lengths.append(np.sqrt(diffx[i]**2 + diffy[i]**2 + diffz[i]**2))
+
+	Total_length = np.sum(Segment_lengths)
+	Percentage = np.array(Segment_lengths)/Total_length
+	numpts_percentage = np.round(Percentage*numpts).astype(np.int32)
+	number_points_now = np.sum(numpts_percentage)
+	if not number_points_now == numpts:
+		diff = numpts - number_points_now
+		largest = np.where(numpts_percentage == np.max(numpts_percentage))[0][0]
+		numpts_percentage[largest] += diff
+	return numpts_percentage
+
+def Compute_distance(filament, part_box, BoxSize):
 	"""
 	For each segment, 'interpolate' a set of points between the two connection points in the segment.
 	Create N new 3D coordinate points in the segment.
@@ -444,15 +504,15 @@ def Compute_distance(filament, part_box):
 	This version is used as the previous two versions assumed the segment to be infinitely long.
 	This version is also outside the class, to not load all the particle positions.
 	"""
-	#print 'Actually computing now'
 	true_dist = []
 	filaxis_temp = []
+	N_seg_pts = get_interpolation_points(filament, BoxSize)
 	for i in range(len(filament)-1):
 		segpoints = []
 		distances = []
-		xlims = np.linspace(filament[i][0], filament[i+1][0], 100)
-		ylims = np.linspace(filament[i][1], filament[i+1][1], 100)
-		zlims = np.linspace(filament[i][2], filament[i+1][2], 100)
+		xlims = np.linspace(filament[i][0], filament[i+1][0], N_seg_pts[i])
+		ylims = np.linspace(filament[i][1], filament[i+1][1], N_seg_pts[i])
+		zlims = np.linspace(filament[i][2], filament[i+1][2], N_seg_pts[i])
 		# Create 3D position array of the segments, based on the interpolated values
 		for j in range(len(xlims)):
 			segpoints.append(np.column_stack((xlims[j], ylims[j], zlims[j])))
@@ -464,7 +524,6 @@ def Compute_distance(filament, part_box):
 		shortest = np.min(distances2, axis=1)
 		true_dist.append(shortest)
 		# Selects the corresponding coordinate index from the segpoints
-		#index_segpoint = np.where(np.abs(np.asarray(distances - shortest)) < 1e-16)[0]
 		index_segpoint = []
 		for k in range(len(shortest)):
 			identical = np.where(np.abs(shortest[k] - distances2[k]) < 1e-16)[0]
@@ -482,7 +541,7 @@ def Compute_distance(filament, part_box):
 	# Some particles may have similar distance to multiple segment points. Choose the first one
 	for l in range(len(indices)):
 		Segpoint_index.append(filaxis_swapped[l][indices[l][0]])
-	return dist, np.array(Segpoint_index)
+	return dist.astype(np.float32), np.array(Segpoint_index, np.int32)
 
 def ZMQ_get_distances():
 	""" Multiprocessing part for the use of ZMQ """
@@ -517,7 +576,8 @@ def ZMQ_get_distances():
 			FilamentPos = data[0]
 			ParticleBox = data[1]
 			ID = data[2]
-			Distances, Segpoint_index = Compute_distance(FilamentPos, ParticleBox)
+			BoxSize = data[3]
+			Distances, Segpoint_index = Compute_distance(FilamentPos, ParticleBox, BoxSize)
 			ZMQAS.send_zipped_pickle(sender, [Distances, Segpoint_index, ID])
 		# Closes the context when data computing is done
 		if socks.get(controller) == zmq.POLLIN:
@@ -538,5 +598,5 @@ if __name__ == '__main__':
 	# Will then run ZeroMQ paralellziation function.
 	# Importing the module will not call this.
 	parsed_arguments = Argument_parser()
-	box_expand = parsed_arguments.BOXEXPAND
+	#box_expand = parsed_arguments.BOXEXPAND
 	ZMQ_get_distances()
