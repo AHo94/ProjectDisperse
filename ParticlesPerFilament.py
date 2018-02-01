@@ -430,9 +430,12 @@ def get_interpolation_points(filament, BoxSize):
 	Gives a set amount of interpolation points between the segments based on their length.
 	The longer the segment is, the more interpolation points it gets.
 	Total number of interpolation points is 100 per segment.
+	Each segment will have at least 5 points.
+
 	If the number of points in the end does not add up, after assigning each segment a set number of points, the last few points goes to the largest segment.
+	If the numbeo of left over points are larger than the number of interpolated points for the largest segment, then it will be distributed evenly.
 	"""
-	numpts = (len(filament)-1)*100
+	nsegs = len(filament) - 1
 	Segment_lengths = []
 	diffx = filament[1:,0] - filament[:-1,0]
 	diffy = filament[1:,1] - filament[:-1,1]
@@ -446,16 +449,34 @@ def get_interpolation_points(filament, BoxSize):
 	for i in range(len(diffx)):
 		Segment_lengths.append(np.sqrt(diffx[i]**2 + diffy[i]**2 + diffz[i]**2))
 
+	numpts = nsegs*100
+	number_points = np.ones(nsegs, dtype=np.int32)*5
+	numpts_new = numpts - 5*nseg
+	
 	Total_length = np.sum(Segment_lengths)
 	Percentage = np.array(Segment_lengths)/Total_length
-	numpts_percentage = np.round(Percentage*numpts).astype(np.int32)
-	number_points_now = np.sum(numpts_percentage)
-	if not number_points_now == numpts:
-		diff = numpts - number_points_now
-		largest = np.where(numpts_percentage == np.max(numpts_percentage))[0][0]
-		numpts_percentage[largest] += diff
-	return numpts_percentage
+	numpts_percentage = np.round(Percentage*numpts_new).astype(np.int32)
+	number_points += numpts_percentage
+	total_number_points = np.sum(number_points)
 
+	if not total_number_points == numpts:
+		diff = numpts - total_number_points
+		if np.abs(diff) > np.max(number_points):
+			diff_share = diff/nsegs
+			diff_left = diff - diff_share*nseg
+			number_points += diff_share
+			left = numpts - np.sum(number_points)
+			if left:
+				if left < numpts:
+					number_points[:left] += 1
+				elif left > numpts:
+					largest = np.where(numpts_percentage == np.max(numpts_percentage))[0][0]
+					number_points[largest] += left
+		else:
+			largest = np.where(numpts_percentage == np.max(numpts_percentage))[0][0]
+			number_points[largest] += diff
+	return number_points
+    
 def Compute_distance(filament, part_box, BoxSize):
 	"""
 	For each segment, 'interpolate' a set of points between the two connection points in the segment.
