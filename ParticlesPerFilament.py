@@ -451,7 +451,7 @@ def get_interpolation_points(filament, BoxSize):
 
 	numpts = nsegs*100
 	number_points = np.ones(nsegs, dtype=np.int32)*5
-	numpts_new = numpts - 5*nseg
+	numpts_new = numpts - 5*nsegs
 	
 	Total_length = np.sum(Segment_lengths)
 	Percentage = np.array(Segment_lengths)/Total_length
@@ -463,7 +463,7 @@ def get_interpolation_points(filament, BoxSize):
 		diff = numpts - total_number_points
 		if np.abs(diff) > np.max(number_points):
 			diff_share = diff/nsegs
-			diff_left = diff - diff_share*nseg
+			diff_left = diff - diff_share*nsegs
 			number_points += diff_share
 			left = numpts - np.sum(number_points)
 			if left:
@@ -476,7 +476,25 @@ def get_interpolation_points(filament, BoxSize):
 			largest = np.where(numpts_percentage == np.max(numpts_percentage))[0][0]
 			number_points[largest] += diff
 	return number_points
-    
+
+def particle_difference_periodic(segpoint, part_box):
+	"""
+	Computes the difference between the filament segment point and the particle point(s).
+	Does not compute the distance between them. This is done outside the function with numpy.linalg.norm
+	Assuming box size is the same as the particle box size, i.e 256.0 Mpc/h every direction
+	"""
+	Difference = segpoint - part_box
+	diffx = Difference[:,0]
+	diffy = Difference[:,1]
+	diffz = Difference[:,2]
+	Difference[diffx <= -256.0/2.0,0] += 256.0
+	Difference[diffx >= 256.0/2.0,0] -= 256.0
+	Difference[diffy <= -256.0/2.0,1] += 256.0
+	Difference[diffy >= 256.0/2.0,1] -= 256.0
+	Difference[diffz <= -256.0/2.0,2] += 256.0
+	Difference[diffz >= 256.0/2.0,2] -= 256.0
+	return Difference   
+
 def Compute_distance(filament, part_box, BoxSize):
 	"""
 	For each segment, 'interpolate' a set of points between the two connection points in the segment.
@@ -511,7 +529,8 @@ def Compute_distance(filament, part_box, BoxSize):
 			segpoints.append(np.column_stack((xlims[j], ylims[j], zlims[j])))
 		# Find distance from each point in the segment to every particle
 		for pts in segpoints:
-			distances.append(np.linalg.norm(pts - part_box, axis=1))
+			differences = particle_difference_periodic(pts, part_box)
+			distances.append(np.linalg.norm(differences, axis=1))
 		# Selects the shortest distance between a particle and every segment point.
 		distances2 = np.swapaxes(np.asarray(distances), 0, 1)
 		shortest = np.min(distances2, axis=1)
@@ -544,18 +563,18 @@ def ZMQ_get_distances():
 	# Socket to receive data from
 	receiver = context.socket(zmq.PULL)
 	#receiver.connect("tcp://127.0.0.1:5050")
-	receiver.connect("tcp://euclid21.uio.no:5060")
+	receiver.connect("tcp://euclid21.uio.no:5070")
 	#receiver.RCVTIMEO = 1000000
     
 	# Socket to send computed data to
 	sender = context.socket(zmq.PUSH)
 	#sender.connect("tcp://127.0.0.1:5052")
-	sender.connect("tcp://euclid21.uio.no:5062")
+	sender.connect("tcp://euclid21.uio.no:5072")
 
 	# Socket controller, ensures the worker is killed
 	controller = context.socket(zmq.PULL)
 	#controller.connect("tcp://127.0.0.1:5054")
-	controller.connect("tcp://euclid21.uio.no:5064")
+	controller.connect("tcp://euclid21.uio.no:5074")
 
 	# Only poller for receiver as receiver 2 has similar size
 	poller = zmq.Poller()
