@@ -523,18 +523,18 @@ def ZMQ_get_distances():
 	# Socket to receive data from
 	receiver = context.socket(zmq.PULL)
 	#receiver.connect("tcp://127.0.0.1:5050")
-	receiver.connect("tcp://euclid21.uio.no:5050")
+	receiver.connect("tcp://euclid21.uio.no:5060")
 	#receiver.RCVTIMEO = 1000000
     
 	# Socket to send computed data to
 	sender = context.socket(zmq.PUSH)
 	#sender.connect("tcp://127.0.0.1:5052")
-	sender.connect("tcp://euclid21.uio.no:5052")
+	sender.connect("tcp://euclid21.uio.no:5062")
 
 	# Socket controller, ensures the worker is killed
 	controller = context.socket(zmq.PULL)
 	#controller.connect("tcp://127.0.0.1:5054")
-	controller.connect("tcp://euclid21.uio.no:5054")
+	controller.connect("tcp://euclid21.uio.no:5064")
 
 	# Only poller for receiver as receiver 2 has similar size
 	poller = zmq.Poller()

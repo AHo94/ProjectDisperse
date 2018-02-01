@@ -1020,10 +1020,10 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		os.makedirs(cachedir_ppf_ids)
 	if not os.path.isdir(cachedir_ppf_segIDs):
 		os.makedirs(cachedir_ppf_segIDs)
-	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p'
-	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p'
-	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p' 
-	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p'
+	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_test.p'
+	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_test.p'
+	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_test.p' 
+	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_test.p'
 	
 	# Uses ZeroMQ as a way to paralell compute the distances etc
 	# Masking of particles still uses the usual Multiprocessing module
@@ -1069,17 +1069,17 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		# Socket to send messages on
 		sender = context.socket(zmq.PUSH)
 		#sender.bind("tcp://127.0.0.1:5050")
-		sender.bind("tcp://*:5050")
+		sender.bind("tcp://*:5060")
 
 		# Socket where the data is received from
 		data_receive = context.socket(zmq.PULL)
 		#data_receive.bind("tcp://127.0.0.1:5052")
-		data_receive.bind("tcp://*:5052")
+		data_receive.bind("tcp://*:5062")
 
 		# Socket where end message is sent to. Used to tell workers the jobs are finished
 		control_sender = context.socket(zmq.PUSH)
 		#control_sender.bind("tcp://127.0.0.1:5054")
-		control_sender.bind("tcp://*:5054")
+		control_sender.bind("tcp://*:5064")
 
 		# Poller, used to check whether stuff is done or not
 		poller = zmq.Poller()
@@ -1088,13 +1088,13 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		# Calls the script that starts up a set amount of workers.
 		# Stops program a little bit to let the workers start up
 		print "Starting processes"
-		subprocess.call("./SpawnWorkers.sh " + str(50), shell=True)
-		subprocess.call("./RemoteConnect.sh", shell=True)
+		subprocess.call("./SpawnWorkers.sh " + str(30), shell=True)
+		#subprocess.call("./RemoteConnect.sh", shell=True)
 		time.sleep(5)
 		time_dist = time.time()
 		# Sends data
 		print "Done, sending data"
-		for i in range(len(FilPosNBC)):
+		for i in range(len(Part_box)):#FilPosNBC)):
 			ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i, BoxSize])
 			if i == len(FilPos)-1:
 				print "all data sent"
@@ -1105,7 +1105,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		FilamentAxis = []
 		ID_ordering = []
 		print 'Looping through data receiving'
-		for j in range(len(FilPosNBC)):
+		for j in range(len(Part_box)):#FilPosNBC)):
 			socks = dict(poller.poll())
 			if socks.get(data_receive) == zmq.POLLIN:
 				data = ZMQAS.recv_zipped_pickle(data_receive)
@@ -1118,7 +1118,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 
 		control_sender.send("FINISHED")
 		Distances = np.asarray(Distances)
-		print Distances
+		#print Distances
 		FilamentAxis = np.asarray(FilamentAxis)
 		ID_ordering = np.asarray(ID_ordering)
 		print 'Distance computing time: ', time.time() - time_dist, 's'
@@ -1129,8 +1129,8 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		control_sender.close()
 		context.term()
 		
-		pickle.dump(Distances[Sorted], open(cachefile_distances, 'wb'))
-		pickle.dump(FilamentAxis[Sorted], open(cachefile_segIDs, 'wb'))
+		#pickle.dump(Distances[Sorted], open(cachefile_distances, 'wb'))
+		#pickle.dump(FilamentAxis[Sorted], open(cachefile_segIDs, 'wb'))
 		return Distances, FilamentAxis
 	
 	if os.path.isfile(cachefile_distances):
@@ -1656,7 +1656,7 @@ if __name__ == '__main__':
 		Compute_mass = 1
 		Number_particles_list = []
 		if parsed_arguments.NumPartModel == 'lcdm':
-			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM, FilID_LCDM, FilPosNBC_LCDM, FilIDNBC_LCDM, Box_LCDM, npart, 3)
+			Distances_LCDM, NPPF_ids_LCDM = Save_NumPartPerFil('lcdm', Fil3DPos_LCDM[0:1000], FilID_LCDM[0:1000], FilPosNBC_LCDM[0:1000], FilIDNBC_LCDM[0:1000], Box_LCDM, npart, 3)
 			Add_particle_list(Distances_LCDM)
 		if parsed_arguments.NumPartModel == 'symmA':
 			Distances_SymmA, NPPF_ids_SymmA = Save_NumPartPerFil('symm_A', Fil3DPos_SymmA, FilID_SymmA, FilPosNBC_SymmA, FilIDNBC_SymmA, Box_SymmA, npart, 3)
