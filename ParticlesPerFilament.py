@@ -421,6 +421,7 @@ def Argument_parser():
 	parser = argparse.ArgumentParser()
 	# Optional arguments
 	parser.add_argument("-BoxExp", "--BOXEXPAND", help="Determines how far the filament masking box increases from the filament edges. Default = 3.0", type=float, default=3.0)
+	parser.add_argument("-euclid21", "--Euclid21Run", help="Connects worker to localhost instead of infiniband if True. Use for workers in euclid21. False by default.", type=int, default=0)
 	# Parse arguments
 	args = parser.parse_args()
 	return args
@@ -555,26 +556,23 @@ def Compute_distance(filament, part_box, BoxSize):
 		Segpoint_index.append(filaxis_swapped[l][indices[l][0]])
 	return dist.astype(np.float32), np.array(Segpoint_index, np.int32)
 
-def ZMQ_get_distances():
+def ZMQ_get_distances(euclid21check):
 	""" Multiprocessing part for the use of ZMQ """
 	context = zmq.Context()
 	context.linger = 0
 
 	# Socket to receive data from
 	receiver = context.socket(zmq.PULL)
-	#receiver.connect("tcp://127.0.0.1:5050")
-	receiver.connect("tcp://euclid21.uio.no:5070")
+	receiver.connect("tcp://127.0.0.1:5070") if euclid21check else receiver.connect("tcp://euclid21.ib.intern:5070")
 	#receiver.RCVTIMEO = 1000000
     
 	# Socket to send computed data to
 	sender = context.socket(zmq.PUSH)
-	#sender.connect("tcp://127.0.0.1:5052")
-	sender.connect("tcp://euclid21.uio.no:5072")
+	sender.connect("tcp://127.0.0.1:5072") if euclid21check else sender.connect("tcp://euclid21.ib.intern:5072")
 
 	# Socket controller, ensures the worker is killed
 	controller = context.socket(zmq.PULL)
-	#controller.connect("tcp://127.0.0.1:5054")
-	controller.connect("tcp://euclid21.uio.no:5074")
+	controller.connect("tcp://127.0.0.1:5074") if euclid21check else controller.connect("tcp://euclid21.ib.intern:5074")
 
 	# Only poller for receiver as receiver 2 has similar size
 	poller = zmq.Poller()
@@ -610,5 +608,6 @@ if __name__ == '__main__':
 	# Will then run ZeroMQ paralellziation function.
 	# Importing the module will not call this.
 	parsed_arguments = Argument_parser()
+	Run_euclid21_workers = parsed_arguments.Euclid21Run
 	#box_expand = parsed_arguments.BOXEXPAND
-	ZMQ_get_distances()
+	ZMQ_get_distances(Run_euclid21_workers)
