@@ -556,6 +556,54 @@ def Compute_distance(filament, part_box, BoxSize):
 		Segpoint_index.append(filaxis_swapped[l][indices[l][0]])
 	return dist.astype(np.float32), np.array(Segpoint_index, np.int32)
 
+def get_distance_analytic(filpoint1, filpoint2, part_box):
+	""" 
+	Computes the distance from a set of particles to a given segment 
+	Let the segment be parametrized by s(t) = s_1 + t*(s_2 - s_1), where s_1 and s_2 are the filament point of a segment
+	We only allow solutions of t to be t = [0, 1]
+	Distance from particle position p to segment is D = |s(t) - p|
+	To find a solution of t, solve the derivative of D^2 = 0, i.e. dD^2/dt = 0, which gives
+	t_solution = [(p-s_1)*(s_2-s_1)]/|s_2 - s_1|^2, dot product in the numerator
+	Ensure that t_solution is between 0 and 1 and use this to compute the distance from particle to segment
+	Takes into account periodic boundary when the differences in 3D are computed
+	"""
+	segment = filpoint2 - filpoint1
+	t_solution = np.dot(part_box - filpoint1, segment)/(np.linalg.norm(segment)**2.0)
+	# Ensure the solution of t is between 0 and 1
+	Smaller0 = t_solution < 0.0
+	Greater1 = t_solution > 1.0
+	t_solution[Smaller0] = 0.0
+	t_solution[Greater1] = 1.0
+	distances = filpoint1 + t_solution.reshape(len(t_solution), 1)*segment - part_box
+	# Apply periodic boundary condition to distances
+	distances[distances <= -256.0/2.0] += 256.0
+	distances[distances >= 256.0/2.0] -= 256.0
+	return np.linalg.norm(distances, axis=1), t_solution
+    
+def Compute_distance_analytic(filament, part_box):
+	""" 
+	Analytical method of finding particle distance to a segment line
+	Computes particle distance to each segment. Returns the shortest distance of all computed distances.
+	Also returns the segment number the particle is closest to.
+	"""
+	true_dist = []
+	filaxis_temp = []
+	t_solutions_all = []
+	Nsegs = len(filament)
+	for i in range(Nsegs-1):
+		distances, t_sol = get_distance_analytic(filament[i], filament[i+1], part_box)
+		true_dist.append(distances)
+		t_solutions_all.append(t_sol)
+	true_dist = np.array(true_dist).swapaxes(0,1)
+	t_solutions_all = np.array(t_solutions_all).swapaxes(0,1)
+	Shortest_dist = np.min(true_dist, axis=1)
+	Segment_ids = true_dist.argmin(axis=1)
+	# Sort the soltuions of t with respect to the corresponding segment that is shortest to a given particle
+	Shortest_t_sol = []
+	for i in range(len(Segment_ids)):
+		Shortest_t_sol.append(t_solutions_all[i][Segment_ids[i]])
+	return Shortest_dist.astype(np.float32), Segment_ids.astype(np.int32), np.array(Shortest_t_sol, np.float32)
+    
 def ZMQ_get_distances(euclid21check):
 	""" Multiprocessing part for the use of ZMQ """
 	context = zmq.Context()
@@ -580,6 +628,7 @@ def ZMQ_get_distances(euclid21check):
 	poller.register(controller, zmq.POLLIN)
 	while True:
 		socks = dict(poller.poll(500000))
+		""" # Numerical brute froce method
 		# Computes context when data is recieved
 		if socks.get(receiver) == zmq.POLLIN:
 			data = ZMQAS.recv_zipped_pickle(receiver)
@@ -589,6 +638,23 @@ def ZMQ_get_distances(euclid21check):
 			BoxSize = data[3]
 			Distances, Segpoint_index = Compute_distance(FilamentPos, ParticleBox, BoxSize)
 			ZMQAS.send_zipped_pickle(sender, [Distances, Segpoint_index, ID])
+		# Closes the context when data computing is done
+		if socks.get(controller) == zmq.POLLIN:
+			control_message = controller.recv()
+			if control_message == "FINISHED":
+				break
+		if not socks:
+			break
+		"""
+		# Analytical method
+		# Computes context when data is recieved
+		if socks.get(receiver) == zmq.POLLIN:
+			data = ZMQAS.recv_zipped_pickle(receiver)
+			FilamentPos = data[0]
+			ParticleBox = data[1]
+			ID = data[2]
+			Distances, Segment_id, t_solution = Compute_distance_analytic(FilamentPos, ParticleBox)
+			ZMQAS.send_zipped_pickle(sender, [Distances, Segment_id, ID, t_solution])
 		# Closes the context when data computing is done
 		if socks.get(controller) == zmq.POLLIN:
 			control_message = controller.recv()
