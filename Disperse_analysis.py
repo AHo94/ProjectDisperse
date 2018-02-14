@@ -1011,6 +1011,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 	cachedir_ppf_partbox = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ParticleBoxes/'
 	cachedir_ppf_ids = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/MaskedParticlesIDs/'
 	cachedir_ppf_segIDs = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/SegIDs/'
+	cachedir_ppf_tsols = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/Tsolutions/'
 	cache_particledata = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
 	if not os.path.isdir(cachedir_ppf_distances):
 		os.makedirs(cachedir_ppf_distances)
@@ -1020,10 +1021,13 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		os.makedirs(cachedir_ppf_ids)
 	if not os.path.isdir(cachedir_ppf_segIDs):
 		os.makedirs(cachedir_ppf_segIDs)
-	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'IB_Periodic.p'
+	if not os.path.isdir(cachedir_ppf_tsols):
+		os.makedirs(cachedir_ppf_tsols)
+	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic.p'
 	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p'
 	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic.p' 
-	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'IB_Periodic.p'
+	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic.p'
+	cachefile_tsols = cachedir_ppf_tsols + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic.p'
 	
 	# Uses ZeroMQ as a way to paralell compute the distances etc
 	# Masking of particles still uses the usual Multiprocessing module
@@ -1095,7 +1099,8 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		# Sends data
 		print "Done, sending data"
 		for i in range(len(FilPosNBC)):
-			ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i, BoxSize])
+			#ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i, BoxSize])    # Brute force method
+			ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i])    # Analytical method
 			if i == len(FilPos)-1:
 				print "all data sent"
 		# Give time to send data
@@ -1104,6 +1109,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		Distances = []
 		FilamentAxis = []
 		ID_ordering = []
+		T_solution = []   # Only include this if analytical method is used
 		print 'Looping through data receiving'
 		for j in range(len(FilPosNBC)):
 			socks = dict(poller.poll())
@@ -1112,6 +1118,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 				Distances.append(data[0])
 				FilamentAxis.append(data[1])
 				ID_ordering.append(data[2])
+				T_solution.append(data[3])    # Only include if analytical method is used
 			if not socks:
 				print "All data received?"
 				break
@@ -1120,7 +1127,8 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		Distances = np.asarray(Distances)
 		#print Distances
 		FilamentAxis = np.asarray(FilamentAxis)
-		ID_ordering = np.asarray(ID_ordering)
+		ID_ordering = np.asarray(ID_ordering)    # Only include if analytical method is used
+		T_solution = np.asarray(T_solution)
 		print 'Distance computing time: ', time.time() - time_dist, 's'
 		Sorted = np.argsort(ID_ordering)
 		# Closing context when computing is done
@@ -1130,8 +1138,10 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		context.term()
 		print len(FilamentAxis)
 		print len(Distances)
+		print len(T_solution)
 		pickle.dump(Distances[Sorted], open(cachefile_distances, 'wb'))
 		pickle.dump(FilamentAxis[Sorted], open(cachefile_segIDs, 'wb'))
+		pickle.dump(T_solution[Sorted], open(cachefile_tsols, 'wb'))   # Only include if analytical method is used
 		return Distances, FilamentAxis
 	
 	if os.path.isfile(cachefile_distances):
