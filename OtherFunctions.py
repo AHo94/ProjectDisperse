@@ -115,6 +115,15 @@ def Bin_mean(X_value, Y_value, binnum=30):
 	binstd = [ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ]
 	return bins, binval, binstd
 
+def Bin_numbers(X_value, Y_value, binnum=30):
+	""" Computes the number of data sets of a given Y-value vs the X-value. E.g number of filaments for a given filament length. """
+	#hist, bins = np.histogram(X_value, bins=binnum)
+	bins = np.linspace(np.min(X_value), np.max(X_value), binnum)
+	index_bin = np.digitize(X_value, bins)
+	binval = np.array([ len(Y_value[i == index_bin]) for i in range(len(bins))])
+	binstd = [ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ]
+	return bins, binval, binstd
+
 
 def filament_box(filament):
 	""" Gives filament box, plotting purposes """
