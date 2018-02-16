@@ -1092,7 +1092,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		# Calls the script that starts up a set amount of workers.
 		# Stops program a little bit to let the workers start up
 		print "Starting processes"
-		subprocess.call("./SpawnWorkers.sh 50 1", shell=True)
+		subprocess.call("./SpawnWorkers.sh 50 0", shell=True)
 		subprocess.call("./RemoteConnect.sh", shell=True)
 		time.sleep(5)
 		time_dist = time.time()

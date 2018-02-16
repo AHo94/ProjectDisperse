@@ -17,6 +17,7 @@ import ReadGadgetFile
 # Box boundaries assumed to be from 0 to 256.0 Mpc/h
 lower_boundary = 0.0
 upper_boundary = 256.0
+halfbox = 256.0/2.0
 class particles_per_filament():
 	"""	
 	A class that computes the distance of the dark matter particles to the filaments.
@@ -488,12 +489,12 @@ def particle_difference_periodic(segpoint, part_box):
 	diffx = Difference[:,0]
 	diffy = Difference[:,1]
 	diffz = Difference[:,2]
-	Difference[diffx <= -256.0/2.0,0] += 256.0
-	Difference[diffx >= 256.0/2.0,0] -= 256.0
-	Difference[diffy <= -256.0/2.0,1] += 256.0
-	Difference[diffy >= 256.0/2.0,1] -= 256.0
-	Difference[diffz <= -256.0/2.0,2] += 256.0
-	Difference[diffz >= 256.0/2.0,2] -= 256.0
+	Difference[diffx <= -halfbox,0] += 256.0
+	Difference[diffx >= halfbox,0] -= 256.0
+	Difference[diffy <= -halfbox,1] += 256.0
+	Difference[diffy >= halfbox,1] -= 256.0
+	Difference[diffz <= -halfbox,2] += 256.0
+	Difference[diffz >= halfbox,2] -= 256.0
 	return Difference   
 
 def Compute_distance(filament, part_box, BoxSize):
@@ -576,8 +577,8 @@ def get_distance_analytic(filpoint1, filpoint2, part_box):
 	t_solution[Greater1] = 1.0
 	distances = filpoint1 + t_solution.reshape(len(t_solution), 1)*segment - part_box
 	# Apply periodic boundary condition to distances
-	distances[distances <= -256.0/2.0] += 256.0
-	distances[distances >= 256.0/2.0] -= 256.0
+	distances[distances <= -halfbox] += 256.0
+	distances[distances >= halfbox] -= 256.0
 	return np.linalg.norm(distances, axis=1), t_solution
     
 def Compute_distance_analytic(filament, part_box):
@@ -611,16 +612,16 @@ def ZMQ_get_distances(euclid21check):
 
 	# Socket to receive data from
 	receiver = context.socket(zmq.PULL)
-	receiver.connect("tcp://127.0.0.1:5070") if euclid21check else receiver.connect("tcp://euclid21.ib.intern:5070")
+	receiver.connect("tcp://euclid21.ib.intern:5070")
 	#receiver.RCVTIMEO = 1000000
     
 	# Socket to send computed data to
 	sender = context.socket(zmq.PUSH)
-	sender.connect("tcp://127.0.0.1:5072") if euclid21check else sender.connect("tcp://euclid21.ib.intern:5072")
+	sender.connect("tcp://euclid21.ib.intern:5072")
 
 	# Socket controller, ensures the worker is killed
 	controller = context.socket(zmq.PULL)
-	controller.connect("tcp://127.0.0.1:5074") if euclid21check else controller.connect("tcp://euclid21.ib.intern:5074")
+	controller.connect("tcp://euclid21.ib.intern:5074")
 
 	# Only poller for receiver as receiver 2 has similar size
 	poller = zmq.Poller()
