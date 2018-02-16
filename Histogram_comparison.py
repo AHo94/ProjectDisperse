@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import OtherFunctions as OF
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, savefile_directory, filetype, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
@@ -305,6 +306,8 @@ class CompareModels():
 
 		self.nParticles = nPart
 
+		self.s = 0.6 	# For figure rescaling etc. Change as you wish.
+
 	def relative_deviation(self, data, index):
 		""" 
 		Computes relative deviation of a given physical quantity.
@@ -328,6 +331,7 @@ class CompareModels():
 		N = len(Nconnections)
 		# Histogram for number of filament connections per filament
 		ConnectedHistComparison = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		for i in range(N):
 			DataMin = min(Nconnections[i])
 			DataMax = max(Nconnections[i])
@@ -357,6 +361,7 @@ class CompareModels():
 
 		# Histogram of filament length comparison
 		LengthHistComparison = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		for i in range(N):
 			DataMin = min(FilLengths[i])
 			DataMax = max(FilLengths[i])
@@ -370,15 +375,17 @@ class CompareModels():
 		plt.legend(self.Legends)
 
 		# Number of filaments larger than a given length: N(>L)
-		lengths = np.linspace(np.min(np.min(FilLengths)), np.max(np.max(FilLengths)), 1000)
+		#lengths = np.linspace(np.min(np.min(FilLengths)), np.max(np.max(FilLengths)), 1000)
 		distribution = []
 		for fils_lens in FilLengths:
 			temp_dist = []
+			lengths = np.linspace(np.min(fils_lens), np.max(fils_lens), 1000)
 			for lens in lengths:
 				Number_count = len(np.where(fils_lens >= lens)[0])
 				temp_dist.append(float(Number_count))
 			distribution.append(temp_dist)
 		FilLen_massfunc = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		for i in range(len(distribution)):
 			plt.semilogx(lengths, distribution[i])
 		plt.xlabel('Filament length - [Mpc/h]')
@@ -387,6 +394,7 @@ class CompareModels():
 
 		# Relative difference of the lengths. Base model is LCDM.
 		RelDiff_length = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		plt.semilogx(lengths, np.zeros(len(lengths)))
 		for i in range(1,len(distribution)):
 			delta = self.relative_deviation(np.array(distribution), i)
@@ -395,12 +403,67 @@ class CompareModels():
 		plt.ylabel('Relative difference of N(>L)')
 		plt.legend(self.Legends)
 
+		# Histogram lengths in bin-line form
+		length_bins = []
+		length_bin_values = []
+		for fillens in FilLengths:
+			bins_, binval_, binstd_ = OF.Bin_numbers(fillens, fillens, binnum=40)
+			length_bins.append(bins_)
+			length_bin_values.append(binval_)
+
+		LengthHistComparison_digitized = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(length_bins)):
+			plt.plot(length_bins[i], length_bin_values[i], 'o-')
+		plt.xlabel('Filament Length  - [Mpc/h]')
+		plt.ylabel('Number of filaments')
+		plt.legend(self.Legends)
+
+		# Without dots indicating bin location
+		LengthHistComparison_digitized_nodot = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(length_bins)):
+			plt.plot(length_bins[i], length_bin_values[i], '-')
+		plt.xlabel('Filament Length  - [Mpc/h]')
+		plt.ylabel('Number of filaments')
+		plt.legend(self.Legends)
+
+		# Cumulative distribution of the lengths
+		cumulative_list = []
+		for i in range(len(length_bin_values)):
+			Cumulative = np.cumsum(length_bin_values[i], dtype=np.float32)
+			cumulative_list.append(Cumulative)
+
+		Cumulative_plot = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(cumulative_list)):
+			plt.plot(length_bins[i], cumulative_list[i])
+		plt.xlabel('Filament Length - [Mpc/h]')
+		plt.ylabel('Number of filaments')
+		plt.title('Cumulative distribution')
+		plt.legend(self.Legends)
+
+		# Relative difference of the cumulative distribution, x-value is the same, using LCDM
+		RelDiff_cumulative_length = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		plt.plot(length_bins[0], np.zeros(len(length_bins[0])))
+		for i in range(1, len(cumulative_list)):
+			delta = self.relative_deviation(cumulative_list,i)
+			plt.plot(length_bins[0], delta)
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('Relative difference of cumulative distribution')
+		plt.legend(self.Legends)
+
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			self.savefigure(ConnectedHistComparison, 'Number_Connected_Filaments')
 			self.savefigure(LengthHistComparison, 'Filament_lengths')
 			self.savefigure(FilLen_massfunc, 'Filament_lengths_massfunction')
 			self.savefigure(RelDiff_length, 'Filament_lengths_relative_difference')
+			self.savefigure(LengthHistComparison_digitized, 'Filament_lengths_digitized')
+			self.savefigure(LengthHistComparison_digitized_nodot, 'Filament_lengths_digitized_nodot')
+			self.savefigure(Cumulative_plot, 'Cumulative_plot_length')
+			self.savefigure(RelDiff_cumulative_length, 'Relative_difference_cumulative_length')
 		else:
 			print 'Done! No figures saved.'
 
@@ -408,6 +471,7 @@ class CompareModels():
 		""" Compares properties where the number of particles per filaments are computed """
 		# Number of particles per filament for a given distance threshold
 		NumPart_histogram = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		for i in range(len(NumParts)):
 			plt.hist(NumParts[i], align='mid', rwidth=1, bins=60, normed=False, histtype='step')
 		plt.xlabel('Number of particles per filament')
@@ -424,6 +488,7 @@ class CompareModels():
 				temp_dist_mass.append(float(Number_count))
 			Mass_distribution.append(np.array(temp_dist_mass))
 		FilMass_massfunc = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		for i in range(len(Mass_distribution)):
 			plt.semilogx(Mass_array, Mass_distribution[i])
 		plt.xlabel('Filament mass [kg]')
@@ -432,6 +497,7 @@ class CompareModels():
 
 		# Relative difference of the masses. Base model is LCDM
 		RelDiff_mass = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		plt.semilogx(Mass_array, np.zeros(len(Mass_array)))
 		for i in range(1,len(Mass_distribution)):
 			delta = self.relative_deviation(np.array(Mass_distribution), i)
