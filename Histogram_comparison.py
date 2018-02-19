@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import OtherFunctions as OF
+plt.rcParams.update({'font.size': 9})    # Change fontsize of figures. Default = 10
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, savefile_directory, filetype, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
@@ -306,7 +307,7 @@ class CompareModels():
 
 		self.nParticles = nPart
 
-		self.s = 0.6 	# For figure rescaling etc. Change as you wish.
+		self.s = 0.7 	# For figure rescaling etc. Change as you wish.
 
 	def relative_deviation(self, data, index):
 		""" 
