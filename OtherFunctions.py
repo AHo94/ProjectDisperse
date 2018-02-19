@@ -231,3 +231,57 @@ def particle_box_plot(filament_box, dist):
 		Particles2[:,2] += MovePartz
 		Masked_particles = np.concatenate([Particles1, Particles2])
 		return Masked_particles
+
+def find_middle_point(filament, fillen):
+	""" 
+	Finds the middle point of a filament 
+	First find which segment is the middle segment. Done by considering segment length and comparing that to total filament length.
+	If added segment lengths are greater than 0.5*filament_length, then we have found the middle segment
+	Parametrize s(t) = s_i + t*(s_{i+1} + s_i), find a t_value such that |s(t)| + segment_lengths = 0.5*filament_length
+	"""
+	seglens = np.linalg.norm(filament[1:] - filament[:-1], axis=1)
+	currlen = 0
+	segnum = 0
+	for i in range(len(seglens)):
+		currlen += seglens[i]
+		if currlen >= fillen/2.0:
+			segnum = i
+			break
+		else:
+			continue
+	Difference = filament[segnum+1] - filament[segnum]
+	diffx = Difference[0]
+	diffy = Difference[1]
+	diffz = Difference[2]
+	diffx += 256.0*(diffx <= -256.0/2.0)
+	diffx -= 256.0*(diffx >= 256.0/2.0)
+	diffy += 256.0*(diffy <= -256.0/2.0)
+	diffy -= 256.0*(diffy >= 256.0/2.0)
+	diffz += 256.0*(diffz <= -256.0/2.0)
+	diffz -= 256.0*(diffz >= 256.0/2.0)
+	
+	a = diffx*diffx + diffy*diffy + diffz*diffz
+	c =  -(fillen*fillen)/4.0
+	t_sol = np.roots([a,0,c])
+	real_t1 = t_sol >= 0
+	
+	t = t_sol[real_t1]	# Only select positive valued t
+	if t > 1.0:
+		t = 1
+	midpoint = filament[segnum] + t*(filament[segnum+1] - filament[segnum])
+	return midpoint
+
+def get_filament_distances(midpts):
+	""" Computes filament distances from the midpoints """
+	Filament_distances = []
+	for i in range(len(midpts)):
+		distances = np.zeros(len(midpts)-1)
+		if i > 0:
+			for k in range(i):
+				distances[k] = Filament_distances[k][-1] if (i == (Num-1)) else Filament_distances[k][i-1]
+		midpts_diff = midpts[i+1:] - midpts[i]
+		midpts_diff[midpts_diff >= 256.0/2.0] -= 256.0
+		midpts_diff[midpts_diff <= -256.0/2.0] += 256.0
+		distances[i:] = np.linalg.norm(midpts_diff, axis=1)
+		Filament_distances.append(distances)
+	return np.array(Filament_distances)
