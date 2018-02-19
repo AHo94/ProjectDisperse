@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import OtherFunctions as OF
-plt.rcParams.update({'font.size': 9})    # Change fontsize of figures. Default = 10
+plt.rcParams.update({'font.size': 9})	# Change fontsize of figures. Default = 10
 
 class Histogram_Comparison():
 	def __init__(self, savefile, savefigDirectory, savefile_directory, filetype, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
@@ -512,5 +512,70 @@ class CompareModels():
 			self.savefigure(NumPart_histogram, 'NumberParticles_per_filament')
 			self.savefigure(FilMass_massfunc, 'Filament_mass_massfunction')
 			self.savefigure(RelDiff_mass, 'Filament_mass_relative_difference')
+		else:
+			print 'Done! No figures saved.'
+
+	def Filament_distances(self, filament_pos, fil_len):
+		""" 
+		Computes the distances between the filaments. 
+		Distances are between the center of the filaments.
+		"""
+		def get_binning(fildist, bins):
+			index_bin = np.digitize(fildist, bins)
+			bin_value = np.array([len(fildist[i == index_bin]) for i in range(len(bins))])
+			return bin_value
+
+		if len(filament_pos) != len(fil_len):
+			raise ValueError("Dataset of filament position and filament lengths are not equal!")
+		# Get filament centers
+		Midpoints = []
+		for j in range(len(filament_pos)):
+			midpt_temp = []
+			for i in range(len(filament_pos[j])):
+				midpoint = OF.find_middle_point(filament_pos[j][i], fil_len[j][i])
+				midpt_temp.append(midpoint)
+			Midpoints.append(np.array(midpt_temp))
+		# Compute distances from filament centers
+		Distances = []
+		for mid in Midpoints:
+			dist = OF.get_filament_distances(mid)
+			Distances.append(dist)
+
+		# Bins the distances, assumes same bins
+		bins = np.linspace(0, 256.0, 70)
+		bin_values = []
+		for i in range(len(Distances)):
+			binval_temp = []
+			for j in range(len(Distances[i])):
+				values = get_binning(Distances[i][j], bins)
+				binval_temp.append(values)
+			bin_values.append(np.array(binval_temp))
+
+		# Find averages of the bins
+		bin_averages = []
+		for i in range(len(bin_values)):
+			bin_avg = OF.Average_hist(bins, bin_values[i])
+			bin_averages.append(bin_avg)
+
+		FilDistancePlot = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(bin_averages)):
+			plt.plot(bins, bin_averages[i], 'o-')
+		plt.xlabel('Filament distances - [Mpc/h]')
+		plt.ylabel('$N$ filaments')
+		plt.legend(self.Legends)
+
+		FilDistancePlot_nodot = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(bin_averages)):
+			plt.plot(bins, bin_averages[i], '-')
+		plt.xlabel('Filament distances - [Mpc/h]')
+		plt.ylabel('$N$ filaments')
+		plt.legend(self.Legends)
+
+		if self.savefile == 1:
+			print '--- SAVING IN: ', self.results_dir, ' ---'
+			self.savefigure(FilDistancePlot, 'FilamentDistances')
+			self.savefigure(FilDistancePlot_nodot, 'FilamentDistances_nodot')
 		else:
 			print 'Done! No figures saved.'
