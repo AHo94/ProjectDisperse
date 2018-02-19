@@ -1582,12 +1582,14 @@ if __name__ == '__main__':
 			FilLengths_list.append(FilLen)
 			FilPoints_list.append(FilPts)
 
+		Filament_3D_positions = []
 		if parsed_arguments.DisperseModel == 'lcdm' or parsed_arguments.DisperseModel == 'all':
 			LCDM_instance = Disperse_Plotter(savefile=2, savefigDirectory=lcdm_dir+'Plots/', nPart=npart, model='LCDM', redshift=0, SigmaArg=3)
 			NumConn_LCDM, FilLen_LCDM, NPts_LCDM = LCDM_instance.Solve(lcdm_dir+'SkelconvOutput_LCDMz0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_LCDM, FilID_LCDM, FilPosNBC_LCDM, FilIDNBC_LCDM = LCDM_instance.get_3D_pos()
 			Box_LCDM = LCDM_instance.get_boxsize()
 			Add_filament_data_list(NumConn_LCDM, FilLen_LCDM, NPts_LCDM)
+			Filament_3D_positions.append(FilPosNBC_LCDM)
 
 		if parsed_arguments.DisperseModel == 'symmA' or parsed_arguments.DisperseModel == 'all':
 			SymmA_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmA_dir+'Plots/', nPart=npart, model='SymmA', redshift=0, SigmaArg=3)
@@ -1595,41 +1597,47 @@ if __name__ == '__main__':
 			Fil3DPos_SymmA, FilID_SymmA, FilPosNBC_SymmA, FilIDNBC_SymmA = SymmA_instance.get_3D_pos()
 			Box_SymmA = SymmA_instance.get_boxsize()
 			Add_filament_data_list(NumConn_SymmA, FilLen_SymmA, NPts_SymmA)
-
+			Filament_3D_positions.append(FilPosNBC_SymmA)
+			
 		if parsed_arguments.DisperseModel == 'symmB' or parsed_arguments.DisperseModel == 'all':
 			SymmB_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmB_dir+'Plots/', nPart=npart, model='SymmB', redshift=0, SigmaArg=3)
 			NumConn_SymmB, FilLen_SymmB, NPts_SymmB = SymmB_instance.Solve(SymmB_dir+'SkelconvOutput_SymmBz0'+str(npart)+'_nsig3.a.NDskl')
-			Fil3DPos_SymmB, FilID_SymmB, FilPosNBC_Symmb, FilIDNBC_SymmB = SymmB_instance.get_3D_pos()
+			Fil3DPos_SymmB, FilID_SymmB, FilPosNBC_SymmB, FilIDNBC_SymmB = SymmB_instance.get_3D_pos()
 			Box_SymmB = SymmB_instance.get_boxsize()
 			Add_filament_data_list(NumConn_SymmB, FilLen_SymmB, NPts_SymmB)
-
+			Filament_3D_positions.append(FilPosNBC_SymmB)
+			
 		if parsed_arguments.DisperseModel == 'symmC' or parsed_arguments.DisperseModel == 'all':
 			SymmC_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmC_dir+'Plots/', nPart=npart, model='SymmC', redshift=0, SigmaArg=3)
 			NumConn_SymmC, FilLen_SymmC, NPts_SymmC = SymmC_instance.Solve(SymmC_dir+'SkelconvOutput_SymmCz0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_SymmC, FilID_SymmC, FilPosNBC_SymmC, FilIDNBC_SymmC = SymmC_instance.get_3D_pos()
 			Box_SymmC = SymmC_instance.get_boxsize()
 			Add_filament_data_list(NumConn_SymmC, FilLen_SymmC, NPts_SymmC)
-
+			Filament_3D_positions.append(FilPosNBC_SymmC)
+			
 		if parsed_arguments.DisperseModel == 'symmD' or parsed_arguments.DisperseModel == 'all':
 			SymmD_instance = Disperse_Plotter(savefile=2, savefigDirectory=SymmD_dir+'Plots/', nPart=npart, model='SymmD', redshift=0, SigmaArg=3)
 			NumConn_SymmD, FilLen_SymmD, NPts_SymmD = SymmD_instance.Solve(SymmD_dir+'SkelconvOutput_SymmDz0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_SymmD, FilID_SymmD, FilPosNBC_SymmD, FilIDNBC_SymmD = SymmD_instance.get_3D_pos()
 			Box_SymmD = SymmD_instance.get_boxsize()
 			Add_filament_data_list(NumConn_SymmD, FilLen_SymmD, NPts_SymmD)
-
+			Filament_3D_positions.append(FilPosNBC_SymmD)
+			
 		if parsed_arguments.DisperseModel == 'fofr4' or parsed_arguments.DisperseModel == 'all':
 			fofr4_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr4_dir+'Plots/', nPart=npart, model='fofr4', redshift=0, SigmaArg=3)
 			NumConn_fofr4, FilLen_fofr4, NPts_fofr4 = fofr4_instance.Solve(fofr4_dir+'SkelconvOutput_fofr4z0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_fofr4, FilID_fofr4, FilPosNBC_fofr4, FilIDNBC_fofr4 = fofr4_instance.get_3D_pos()
 			Box_fofr4 = fofr4_instance.get_boxsize()
 			Add_filament_data_list(NumConn_fofr4, FilLen_fofr4, NPts_fofr4)
-
+			Filament_3D_positions.append(FilPosNBC_fofr4)
+			
 		if parsed_arguments.DisperseModel == 'fofr5' or parsed_arguments.DisperseModel == 'all':
 			fofr5_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr5_dir+'Plots/', nPart=npart, model='fofr5', redshift=0, SigmaArg=3)
 			NumConn_fofr5, FilLen_fofr5, NPts_fofr5 = fofr5_instance.Solve(fofr5_dir+'SkelconvOutput_fofr5z0'+str(npart)+'_nsig3.a.NDskl')
 			Fil3DPos_fofr5, FilID_fofr5, FilPosNBC_fofr5, FilIDNBC_fofr5 = fofr5_instance.get_3D_pos()
 			Box_fofr5 = fofr5_instance.get_boxsize()
 			Add_filament_data_list(NumConn_fofr5, FilLen_fofr5, NPts_fofr5)
+			Filament_3D_positions.append(FilPosNBC_fofr5)
 
 		if parsed_arguments.DisperseModel == 'fofr6' or parsed_arguments.DisperseModel == 'all':
 			fofr6_instance = Disperse_Plotter(savefile=2, savefigDirectory=fofr6_dir+'Plots/', nPart=npart, model='fofr6', redshift=0, SigmaArg=3)
@@ -1637,6 +1645,7 @@ if __name__ == '__main__':
 			Fil3DPos_fofr6, FilID_fofr6, FilPosNBC_fofr6, FilIDNBC_fofr6 = fofr6_instance.get_3D_pos()
 			Box_fofr6 = fofr6_instance.get_boxsize()
 			Add_filament_data_list(NumConn_fofr6, FilLen_fofr6, NPts_fofr6)
+			Filament_3D_positions.append(FilPosNBC_fofr6)
 
 		"""
 		lcdm_64dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
@@ -1758,6 +1767,7 @@ if __name__ == '__main__':
 		if parsed_arguments.DisperseModel == 'all':
 			CompI = HComp.CompareModels(savefile=1, savefigDirectory='ModelComparisons/', savefile_directory=savefile_directory, filetype=filetype, redshift=0, nPart=npart)
 			CompI.Compare_disperse_data(NumConnections_list, FilLengths_list, FilPoints_list)
+			CompI.Filament_distances(Filament_3D_positions, FilLengths_list)
 		
 	elif ModelCompare == 2 and HOMEPC == 1:
 		print 'This is run!'
