@@ -894,7 +894,7 @@ class Disperse_Plotter():
 				self.Plot_Figures(filename, ndim)
 		
 		self.SolveRun = True
-		return self.NumFilamentConnections, sorted(self.FilLengths), self.NFilamentPoints
+		return self.NumFilamentConnections, self.FilLengths, self.NFilamentPoints
 
 	def get_3D_pos(self):
 		""" 
@@ -1560,7 +1560,8 @@ if __name__ == '__main__':
 		"""
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-		npart = 64
+		npart = 188
+		print '== Running with '+ str(npart) + ' particles! =='
 		if npart == 64:
 			lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		else:
