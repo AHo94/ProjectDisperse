@@ -124,6 +124,14 @@ def Bin_numbers(X_value, Y_value, binnum=30):
 	binstd = [ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ]
 	return bins, binval, binstd
 
+def Bin_numbers_logX(X_value, Y_value, binnum=30):
+	""" Computes the number of data sets of a given Y-value vs the X-value. E.g number of filaments for a given filament length. """
+	#hist, bins = np.histogram(X_value, bins=binnum)
+	bins = np.exp(np.linspace(np.log(np.min(X_value)), np.log(np.max(X_value)), binnum))
+	index_bin = np.digitize(X_value, bins)
+	binval = np.array([ len(Y_value[i == index_bin]) for i in range(len(bins))])
+	binstd = [ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ]
+	return bins, binval, binstd
 
 def filament_box(filament):
 	""" Gives filament box, plotting purposes """
@@ -278,7 +286,7 @@ def get_filament_distances(midpts):
 		distances = np.zeros(len(midpts)-1)
 		if i > 0:
 			for k in range(i):
-				distances[k] = Filament_distances[k][-1] if (i == (Num-1)) else Filament_distances[k][i-1]
+				distances[k] = Filament_distances[k][-1] if (i == (len(midpts)-1)) else Filament_distances[k][i-1]
 		midpts_diff = midpts[i+1:] - midpts[i]
 		midpts_diff[midpts_diff >= 256.0/2.0] -= 256.0
 		midpts_diff[midpts_diff <= -256.0/2.0] += 256.0
