@@ -5,7 +5,7 @@ import OtherFunctions as OF
 plt.rcParams.update({'font.size': 9})	# Change fontsize of figures. Default = 10
 
 class Histogram_Comparison():
-	def __init__(self, savefile, savefigDirectory, savefile_directory, filetype, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
+	def __init__(self, savefile, foldername, savefile_directory, filetype, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
 		self.savefile = savefile
 		self.LCDM_check = LCDM
 		self.SymmA_check = SymmA
@@ -16,7 +16,7 @@ class Histogram_Comparison():
 		self.ModelComparison = False
 		self.SigmaComparison = False
 
-		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
+		self.results_dir = os.path.join(savefile_directory, foldername)
 		if not os.path.isdir(self.results_dir) and savefile == 1:
 			os.makedirs(self.results_dir)
 
@@ -291,7 +291,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 class CompareModels():
-	def __init__(self, savefile, savefigDirectory, savefile_directory, filetype, redshift, nPart):
+	def __init__(self, savefile, foldername, savefile_directory, filetype, redshift, nPart):
 		self.savefile = savefile
 		self.filetype = filetype
 
@@ -301,13 +301,18 @@ class CompareModels():
 
 		self.Legends = ['$\mathregular{\Lambda}$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6']
 
-		self.results_dir = os.path.join(savefile_directory, savefigDirectory)
+		if filetype == '.png':
+			foldername += 'PNG/'
+		elif filetype == '.pdf':
+			foldername += 'PDF/'
+
+		self.results_dir = os.path.join(savefile_directory, foldername)
 		if not os.path.isdir(self.results_dir) and savefile == 1:
 			os.makedirs(self.results_dir)
 
 		self.nParticles = nPart
 
-		self.s = 0.7 	# For figure rescaling etc. Change as you wish.
+		self.s = 0.8 	# For figure rescaling etc. Change as you wish.
 
 	def relative_deviation(self, data, index):
 		""" 
@@ -322,6 +327,11 @@ class CompareModels():
 		if type(name) != str:
 			raise ValueError('filename not a string!')
 		figure.savefig(self.results_dir + name + self.filetype)
+
+	def Compute_errors(self, databins):
+		""" Computes the errorbars of the length data. Assumes Poisson distribution. """
+		error = [np.sqrt(data) for data in databins]
+		return np.array(error)
 
 	def Compare_disperse_data(self, Nconnections, FilLengths, FilPts):
 		""" 
@@ -393,6 +403,35 @@ class CompareModels():
 		plt.ylabel('$\mathregular{N(>L)}$')
 		plt.legend(self.Legends)
 
+		# Loglog scale of the number filaments larger than a given length
+		FilLen_massfunc_loglog = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(distribution)):
+			plt.loglog(lengths, distribution[i])
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('$\mathregular{N(>L)}$')
+		plt.legend(self.Legends)
+
+		# Density of the number of filaments larger than a given length. 
+		# Divided by box volume of particles (256^3), can use box size of disperse?
+		FilLen_massfunc_density = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(distribution)):
+			plt.semilogx(lengths, np.array(distribution[i])/(256.0**3))
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('$\mathregular{N(>L)}/V$')
+		plt.legend(self.Legends)
+
+		# Density of the number of filaments larger than a given length. Loglogscale
+		# Divided by box volume of particles (256^3), can use box size of disperse?
+		FilLen_massfunc_density_loglog = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(distribution)):
+			plt.loglog(lengths, np.array(distribution[i])/(256.0**3))
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('$\mathregular{N(>L)}/V$')
+		plt.legend(self.Legends)
+
 		# Relative difference of the lengths. Base model is LCDM.
 		RelDiff_length = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
@@ -429,6 +468,54 @@ class CompareModels():
 		plt.ylabel('Number of filaments')
 		plt.legend(self.Legends)
 
+		# Histogram lengths in bin-line form - Logarithmic x-scale
+		length_bins_logX = []
+		length_bin_values_logX = []
+		for fillens in FilLengths:
+			bins_, binval_, binstd_ = OF.Bin_numbers_logX(fillens, fillens, binnum=80)
+			length_bins_logX.append(bins_)
+			length_bin_values_logX.append(binval_)
+		# Computes errors
+		Standard_deviations = []
+		for val in length_bin_values_logX:
+			Standard_deviations.append(self.Compute_errors(val))
+
+		# Plotting, with dots
+		LengthHistComparison_digitized_logX = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(length_bins_logX)):
+			plt.plot(length_bins_logX[i], length_bin_values_logX[i], 'o-')
+		plt.xlabel('Filament Length  - [Mpc/h]')
+		plt.ylabel('Number of filaments')
+		plt.legend(self.Legends)
+
+		# Without dots indicating bin location
+		LengthHistComparison_digitized_nodot_logX = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(length_bins_logX)):
+			plt.plot(length_bins_logX[i], length_bin_values_logX[i], '-')
+		plt.xlabel('Filament Length  - [Mpc/h]')
+		plt.ylabel('Number of filaments')
+		plt.legend(self.Legends)
+
+		# Errorbar of the lengths
+		LengthHistComparison_erorbar_logX = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(length_bins_logX)):
+			plt.errorbar(length_bins_logX[i], length_bin_values_logX[i], Standard_deviations[i])
+		plt.xlabel('Filament Length  - [Mpc/h]')
+		plt.ylabel('Number of filaments')
+		plt.legend(self.Legends)
+		
+		# Without dots indicating bin location, LOGLOG scale
+		LengthHistComparison_digitized_nodot_logX_loglog = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		for i in range(len(length_bins_logX)):
+			plt.loglog(length_bins_logX[i], length_bin_values_logX[i], '-')
+		plt.xlabel('Filament Length  - [Mpc/h]')
+		plt.ylabel('Number of filaments')
+		plt.legend(self.Legends)
+
 		# Cumulative distribution of the lengths
 		cumulative_list = []
 		for i in range(len(length_bin_values)):
@@ -460,9 +547,16 @@ class CompareModels():
 			self.savefigure(ConnectedHistComparison, 'Number_Connected_Filaments')
 			self.savefigure(LengthHistComparison, 'Filament_lengths')
 			self.savefigure(FilLen_massfunc, 'Filament_lengths_massfunction')
+			self.savefigure(FilLen_massfunc_loglog, 'Filament_lengths_massfunction_loglog')
+			self.savefigure(FilLen_massfunc_density, 'Filament_lengths_massfunction_density')
+			self.savefigure(FilLen_massfunc_density_loglog, 'Filament_lengths_massfunction_density_loglog')
 			self.savefigure(RelDiff_length, 'Filament_lengths_relative_difference')
 			self.savefigure(LengthHistComparison_digitized, 'Filament_lengths_digitized')
 			self.savefigure(LengthHistComparison_digitized_nodot, 'Filament_lengths_digitized_nodot')
+			self.savefigure(LengthHistComparison_digitized_logX, 'Filament_lengths_digitized_logX')
+			self.savefigure(LengthHistComparison_digitized_nodot_logX, 'Filament_lengths_digitized_nodot_logX')
+			self.savefigure(LengthHistComparison_erorbar_logX, 'Filament_lengths_errorbar')
+			self.savefigure(LengthHistComparison_digitized_nodot_logX_loglog, 'Filament_lengths_digitized_nodot_logX_loglog')
 			self.savefigure(Cumulative_plot, 'Cumulative_plot_length')
 			self.savefigure(RelDiff_cumulative_length, 'Relative_difference_cumulative_length')
 		else:
