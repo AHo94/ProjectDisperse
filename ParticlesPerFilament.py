@@ -569,13 +569,24 @@ def get_distance_analytic(filpoint1, filpoint2, part_box):
 	Takes into account periodic boundary when the differences in 3D are computed
 	"""
 	segment = filpoint2 - filpoint1
-	t_solution = np.dot(part_box - filpoint1, segment)/(np.linalg.norm(segment)**2.0)
+	segment[segment >= halfbox] -= 256.0
+	segment[segment <= -halfbox] += 256.0
+	particle_dist = part_box - filpoint1
+	particle_dist[particle_dist[:,0] >= halfbox, 0] -= 256.0
+	particle_dist[particle_dist[:,0] <= -halfbox, 0] += 256.0
+	particle_dist[particle_dist[:,1] >= halfbox, 1] -= 256.0
+	particle_dist[particle_dist[:,1] <= -halfbox, 1] += 256.0
+	particle_dist[particle_dist[:,2] >= halfbox, 2] -= 256.0
+	particle_dist[particle_dist[:,2] <= -halfbox, 2] += 256.0
+	#t_solution = np.dot(part_box - filpoint1, segment)/(np.linalg.norm(segment)**2.0)
+	t_solution = np.dot(particle_dist, segment)/(np.linalg.norm(segment)**2.0)
 	# Ensure the solution of t is between 0 and 1
 	Smaller0 = t_solution < 0.0
 	Greater1 = t_solution > 1.0
 	t_solution[Smaller0] = 0.0
 	t_solution[Greater1] = 1.0
-	distances = filpoint1 + t_solution.reshape(len(t_solution), 1)*segment - part_box
+	#distances = filpoint1 + t_solution.reshape(len(t_solution), 1)*segment - part_box
+	distances = t_solution.reshape(len(t_solution), 1)*segment - particle_dist
 	# Apply periodic boundary condition to distances
 	distances[distances <= -halfbox] += 256.0
 	distances[distances >= halfbox] -= 256.0
