@@ -763,12 +763,24 @@ class CompareModels():
 		# Length binned histogram, nodot
 		Symm_legends = ['$\mathregular{\Lambda}$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD']
 		fofr_legends = ['$\mathregular{\Lambda}$CDM', 'fofr4', 'fofr5', 'fofr6']
-		Symm_lengths_bins = length_bins_logX[0:5]
-		Symm_lengths_values = length_bin_values_logX[0:5]
+		Symm_length_bins = length_bins_logX[0:5]
+		Symm_length_values = length_bin_values_logX[0:5]
 		fofr_length_bins = np.array([length_bins_logX[i] for i in [0,5,6,7]])
 		fofr_length_values = np.array([length_bin_values_logX[i] for i in [0,5,6,7]])
-		Sep_FilLengths_S = self.Call_plot(Symm_lengths_bins, Symm_lengths_values, 'Filament Length  - [Mpc/h]', 'Number of filaments', Symm_legends, style='-')
-		Sep_FilLengths_F = self.Call_plot(fofr_length_bins, fofr_length_values,  'Filament Length  - [Mpc/h]', 'Number of filaments', fofr_legends, style='-')
+		Sep_FilLengths_S = self.Call_plot(Symm_length_bins, Symm_length_values, 'Filament Length  - [Mpc/h]', 'Number of filaments', Symm_legends, style='-')
+		Sep_FilLengths_F = self.Call_plot(fofr_length_bins, fofr_length_values, 'Filament Length  - [Mpc/h]', 'Number of filaments', fofr_legends, style='-')
+
+		# 'massfunction' of lengths
+		Distribution_symm = distribution[0:5]
+		Distribution_fofr = np.array([distribution[i] for i in [0,5,6,7]])
+		Lengths_symm = lengths[0:5]
+		Lengths_fofr = np.array([lengths[i] for i in [0,5,6,7]])
+
+		Distribution_lengths_S = self.Call_plot(Lengths_symm, Distribution_symm, 'Filament Length  - [Mpc/h]', '$\mathregular{N(>L)}$', Symm_legends, logscale='logx')
+		Distribution_lengths_F = self.Call_plot(Lengths_fofr, Distribution_fofr, 'Filament Length  - [Mpc/h]', '$\mathregular{N(>L)}$', fofr_legends, logscale='logx')
+		Distribution_lengths_S_loglog = self.Call_plot(Lengths_symm, Distribution_symm, 'Filament Length  - [Mpc/h]', '$\mathregular{N(>L)}$', Symm_legends, logscale='loglog')
+		Distribution_lengths_F_loglog = self.Call_plot(Lengths_fofr, Distribution_fofr, 'Filament Length  - [Mpc/h]', '$\mathregular{N(>L)}$', fofr_legends, logscale='loglog')
+
 
 		# Relative differences
 		Sep_RelDiff_length_S = plt.figure()
@@ -795,10 +807,10 @@ class CompareModels():
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			self.savefigure(ConnectedHistComparison, 'Number_Connected_Filaments')
 			self.savefigure(LengthHistComparison, 'Filament_lengths')
-			self.savefigure(FilLen_massfunc, 'Filament_lengths_massfunction')
-			self.savefigure(FilLen_massfunc_loglog, 'Filament_lengths_massfunction_loglog')
-			self.savefigure(FilLen_massfunc_density, 'Filament_lengths_massfunction_density')
-			self.savefigure(FilLen_massfunc_density_loglog, 'Filament_lengths_massfunction_density_loglog')
+			self.savefigure(FilLen_massfunc, 'Length_distribution')
+			self.savefigure(FilLen_massfunc_loglog, 'Length_distribution_loglog')
+			self.savefigure(FilLen_massfunc_density, 'Density_distribution')
+			self.savefigure(FilLen_massfunc_density_loglog, 'Density_distribution_loglog')
 			self.savefigure(RelDiff_length, 'Filament_lengths_relative_difference')
 			self.savefigure(LengthHistComparison_digitized, 'Filament_lengths_digitized')
 			self.savefigure(LengthHistComparison_digitized_nodot, 'Filament_lengths_digitized_nodot')
@@ -812,6 +824,11 @@ class CompareModels():
 			self.savefigure(Sep_FilLengths_F, 'Filament_lengths_cFofr')
 			self.savefigure(Sep_RelDiff_length_S, 'Filament_lengths_relative_difference_cSymmetron')
 			self.savefigure(Sep_RelDiff_length_F, 'Filament_lengths_relative_difference_cFofr')
+			self.savefigure(Distribution_lengths_S, 'Length_distribution_cSymmetron')
+			self.savefigure(Distribution_lengths_F, 'Length_distribution_cFofr')
+			self.savefigure(Distribution_lengths_S_loglog, 'Length_distribution_cSymmetron_loglog')
+			self.savefigure(Distribution_lengths_F_loglog, 'Length_distribution_cFofr_loglog')
+			
 		else:
 			print 'Done! No figures saved.'
 
