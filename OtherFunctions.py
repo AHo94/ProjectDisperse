@@ -38,36 +38,25 @@ def compute_avg_bins(bins_all, bin_values, binnum=30):
 
 def Compute_speed(vx, vy, vz):
 	""" Computes the speed of a particle, given velocity components """
-	velocity_3d = []
-	for i in range(len(vx)):
-		velocity_3d.append(np.array([vx[i], vy[i], vz[i]]))
-	Speeds = []
-	for vel in velocity_3d:
-		Speeds.append(np.linalg.norm(vel))
+	velocity_3d = Get_3D_vel(vx, vy, vz)
+	Speeds = np.linalg.norm(velocity_3d, axis=1)
 	return np.array(Speeds)
 
 def Get_3D(px, py, pz, vx, vy, vz):
 	""" Returns 3D velocity AND particle position coordinates"""
-	velocity_3d = []
-	position_3d = []
-	for i in range(len(vx)):
-		velocity_3d.append(np.array([vx[i], vy[i], vz[i]]))
-		position_3d.append(np.array([px[i], py[i], pz[i]]))
-	return np.asarray(position_3d), np.asarray(velocity_3d)
+	position_3d = np.column_stack((px, py, pz))
+	velocity_3d = np.column_stack((vx, vy, vz))
+	return position_3d, velocity_3d
 
 def Get_3D_vel(vx, vy, vz):
 	""" Returns 3D velocity coordinates """
-	velocity_3d = []
-	for i in range(len(vx)):
-		velocity_3d.append(np.array([vx[i], vy[i], vz[i]]))
-	return np.asarray(velocity_3d)
+	velocity_3d = np.column_stack((vx, vy, vz))
+	return velocity_3d
 
 def Get_3D_partpos(px, py, pz):
 	""" Returns 3D particle position coordinates """
-	position_3d = []
-	for i in range(len(px)):
-		position_3d.append(np.array([px[i], py[i], pz[i]]))
-	return np.asarray(position_3d)
+	position_3d = np.column_stack((px, py, pz))
+	return position_3d
 
 def Get_segaxis(FilamentPos, SegPoints):
 	""" 
