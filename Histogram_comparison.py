@@ -802,7 +802,49 @@ class CompareModels():
 		plt.xlabel('Filament length - [Mpc/h]')
 		plt.ylabel('Relative difference of N(>L)')
 		plt.legend(fofr_legends)
+
+		# Differences in Number of filaments and not N(>L)
+		Sep_AbsDiff_Number_S = plt.figure
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		plt.plot(lengths[0], np.zeros(len(lengths[0])))
+		for i in range(1,5):
+			delta_abs = length_bin_values_logX[i] - length_bin_values_logX[0]
+			plt.plot(lengths[i], delta_abs)
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('Absolute difference of N (filaments)')
+		plt.legend(Symm_legends)
+			
+		Sep_AbsDiff_Number_F = plt.figure
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		plt.plot(lengths[0], np.zeros(len(lengths[0])))
+		for i in range(5,8):
+			delta_abs = length_bin_values_logX[i] - length_bin_values_logX[0]
+			plt.plot(lengths[i], delta_abs)
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('Absolute difference of N (filaments)')
+		plt.legend(fofr_legends)
 		
+		# Relative differences in Number of filaments and not N(>L)
+		Sep_RelDiff_Number_S = plt.figure
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		plt.plot(lengths[0], np.zeros(len(lengths[0])))
+		for i in range(1,5):
+			delta = self.relative_deviation(np.array(length_bin_values_logX), i)
+			plt.plot(lengths[i], delta)
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('Relative difference of N (filaments)')
+		plt.legend(Symm_legends)
+			
+		Sep_RelDiff_Number_F = plt.figure
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		plt.plot(lengths[0], np.zeros(len(lengths[0])))
+		for i in range(5,8):
+			delta = self.relative_deviation(np.array(length_bin_values_logX), i)
+			plt.plot(lengths[i], delta)
+		plt.xlabel('Filament length - [Mpc/h]')
+		plt.ylabel('Relative difference of N (filaments)')
+		plt.legend(fofr_legends)
+
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			self.savefigure(ConnectedHistComparison, 'Number_Connected_Filaments')
@@ -828,7 +870,10 @@ class CompareModels():
 			self.savefigure(Distribution_lengths_F, 'Length_distribution_cFofr')
 			self.savefigure(Distribution_lengths_S_loglog, 'Length_distribution_cSymmetron_loglog')
 			self.savefigure(Distribution_lengths_F_loglog, 'Length_distribution_cFofr_loglog')
-			
+			self.savefigure(Sep_AbsDiff_Number_S, 'Number_filaments_absDiff_cSymmetron')
+			self.savefigure(Sep_AbsDiff_Number_F, 'Number_filaments_absDiff_cFofr')
+			self.savefigure(Sep_RelDiff_Number_S, 'Number_filaments_relDiff_cSymmetron')
+			self.savefigure(Sep_RelDiff_Number_F, 'Number_filaments_relDiff_cFofr')
 		else:
 			print 'Done! No figures saved.'
 
