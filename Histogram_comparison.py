@@ -370,7 +370,7 @@ class CompareModels():
 		plt.title('') if title == 'None' else plt.title(title)
 		return figure
 
-	def Plot_differences(self, xdata, ydata, xlabe, ylabel, legend, logscale='normal', style='-', title='None', diff='rel'):
+	def Plot_differences(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None', diff='rel'):
 		""" Plots relative or absolute differences. Base data assumed to be the first element of xdata and ydata """
 		if len(xdata) != len(ydata):
 			raise ValueError("xdata and ydata not of same length!")
@@ -382,7 +382,7 @@ class CompareModels():
 				deltas.append(self.relative_deviation(ydata, i))
 		elif diff == 'abs':
 			for i in range(1, len(xdata)):
-				deltas.append(xdata[i] - xdata[0])
+				deltas.append(ydata[i] - ydata[0])
 		else:
 			raise ValueError("Argument diff not properly set! Use either diff='rel' or diff='abs'")
 
