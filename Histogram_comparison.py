@@ -333,6 +333,13 @@ class CompareModels():
 		error = [np.sqrt(data) for data in databins]
 		return np.array(error)
 
+	def Check_ok_parameters(self, parameter):
+		ok_scales = np.array(['normal', 'logx', 'logy', 'loglog'])
+		is_there_ok = ok_scales == parameter
+		if not is_there_ok.any():
+			raise ValueError("logscale parameter not entered properly!. Use either normal, logx, logy or loglog.")
+		
+
 	def Call_plot(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None'):
 		""" 
 		Calls plotting, xdata and ydata must be same size 
@@ -341,11 +348,7 @@ class CompareModels():
 		"""
 		if len(xdata) != len(ydata):
 			raise ValueError("xdata and ydata not of same length!")
-
-		ok_scales = np.array(['normal', 'logx', 'logy', 'loglog'])
-		is_there_ok = ok_scales == logscale
-		if not is_there_ok.any():
-			raise ValueError("logscale parameter not entered properly!. Use either normal, logx, logy or loglog.")
+		self.Check_ok_parameters(logscale)
 
 		figure = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
@@ -361,6 +364,46 @@ class CompareModels():
 		elif logscale == 'loglog':
 			for i in range(len(xdata)):
 				plt.loglog(xdata[i], ydata[i], style)
+		plt.xlabel(xlabel)
+		plt.ylabel(ylabel)
+		plt.legend(legend)
+		plt.title('') if title == 'None' else plt.title(title)
+		return figure
+
+	def Plot_differences(self, xdata, ydata, xlabe, ylabel, legend, logscale='normal', style='-', title='None', diff='rel'):
+		""" Plots relative or absolute differences. Base data assumed to be the first element of xdata and ydata """
+		if len(xdata) != len(ydata):
+			raise ValueError("xdata and ydata not of same length!")
+		self.Check_ok_parameters(logscale)
+		
+		deltas = []
+		if diff == 'rel':
+			for i in range(1, len(xdata)):
+				deltas.append(self.relative_deviation(ydata, i))
+		elif diff == 'abs':
+			for i in range(1, len(xdata)):
+				deltas.append(xdata[i] - xdata[0])
+		else:
+			raise ValueError("Argument diff not properly set! Use either diff='rel' or diff='abs'")
+
+		figure = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		if logscale == 'normal':
+			plt.plot(xdata[0], np.zeros(len(xdata[0])), style)
+			for i in range(1, len(xdata)):
+				plt.plot(xdata[i], deltas[i-1], style)
+		elif logscale == 'logx':
+			plt.semilogx(xdata[0], np.zeros(len(xdata[0])), style)
+			for i in range(1, len(xdata)):
+				plt.semilogx(xdata[i], deltas[i-1], style)
+		elif logscale == 'logy':
+			plt.semilogy(xdata[0], np.zeros(len(xdata[0])), style)
+			for i in range(1, len(xdata)):
+				plt.semilogy(xdata[i], deltas[i-1], style)
+		elif logscale == 'loglog':
+			plt.loglog(xdata[0], np.zeros(len(xdata[0])), style)
+			for i in range(1, len(xdata)):
+				plt.loglog(xdata[i], deltas[i-1], style)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
 		plt.legend(legend)
@@ -684,15 +727,12 @@ class CompareModels():
 		FilLen_massfunc_density_loglog = self.Call_plot(lengths, np.array(distribution)/(256.0**3), 'Filament length - [Mpc/h]', '$\mathregular{N(>L)}/V$', self.Legends, logscale='loglog')
 
 		# Relative difference of the lengths. Base model is LCDM.
-		RelDiff_length = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.semilogx(lengths[0], np.zeros(len(lengths[0])))
-		for i in range(1,len(distribution)):
-			delta = self.relative_deviation(np.array(distribution), i)
-			plt.semilogx(lengths[i], delta)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Relative difference of N(>L)')
-		plt.legend(self.Legends)
+		Deltas = []
+		for i in range(1, len(distribution)):
+			Deltas.append(self.relative_deviation(np.array(distribution), i))
+		Deltas = np.array(Deltas)
+
+		RelDiff_length = self.Plot_differences(lengths, distribution, 'Filament length - [Mpc/h]', 'Relative difference of N(>L)', self.Legends, logscale='logx')
 
 		# Histogram lengths in bin-line form
 		length_bins = []
@@ -749,15 +789,7 @@ class CompareModels():
 		Cumulative_plot = self.Call_plot(length_bins, cumulative_list, 'Filament Length - [Mpc/h]', 'Number of filaments', self.Legends, title='Cumulative distribution')
 
 		# Relative difference of the cumulative distribution, x-value is the same, using LCDM
-		RelDiff_cumulative_length = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.plot(length_bins[0], np.zeros(len(length_bins[0])))
-		for i in range(1, len(cumulative_list)):
-			delta = self.relative_deviation(cumulative_list,i)
-			plt.plot(length_bins[0], delta)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Relative difference of cumulative distribution')
-		plt.legend(self.Legends)
+		RelDiff_cumulative_length = self.Plot_differences(length_bins, cumulative_list, 'Filament length - [Mpc/h]', 'Relative difference of cumulative distribution', self.Legends)
 
 		#### SEPARATING SYMMMETRON AND f(R) MODELS. Data includes LCDM as default
 		# Length binned histogram, nodot
@@ -783,109 +815,25 @@ class CompareModels():
 
 
 		# Relative differences
-		Sep_RelDiff_length_S = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.semilogx(lengths[0], np.zeros(len(lengths[0])))
-		for i in range(1,5):
-			delta = self.relative_deviation(np.array(distribution), i)
-			plt.semilogx(lengths[i], delta)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Relative difference of N(>L)')
-		plt.legend(Symm_legends)
-		
-		Sep_RelDiff_length_F = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.semilogx(lengths[0], np.zeros(len(lengths[0])))
-		for i in range(5,8):
-			delta = self.relative_deviation(np.array(distribution), i)
-			plt.semilogx(lengths[i], delta)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Relative difference of N(>L)')
-		plt.legend(fofr_legends)
+		Sep_RelDiff_length_S = self.Plot_differences(Lengths_symm, Distribution_symm, 'Filament length - [Mpc/h]', 'Relative difference of N(>L)', Symm_legends, logscale='logx')
+		Sep_RelDiff_length_F = self.Plot_differences(Lengths_fofr, Distribution_fofr, 'Filament length - [Mpc/h]', 'Relative difference of N(>L)', fofr_legends, logscale='logx')
 
-		# Differences in Number of filaments and not N(>L)
-		Sep_AbsDiff_Number_S = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.plot(length_bins_logX[0], np.zeros(len(length_bins_logX[0])))
-		for i in range(1,5):
-			delta_abs = length_bin_values_logX[i] - length_bin_values_logX[0]
-			plt.plot(length_bins_logX[i], delta_abs)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Absolute difference of N (filaments)')
-		plt.legend(Symm_legends)
-			
-		Sep_AbsDiff_Number_F = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.plot(length_bins_logX[0], np.zeros(len(length_bins_logX[0])))
-		for i in range(5,8):
-			delta_abs = length_bin_values_logX[i] - length_bin_values_logX[0]
-			plt.plot(length_bins_logX[i], delta_abs)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Absolute difference of N (filaments)')
-		plt.legend(fofr_legends)
+		# Absolute Differences in Number of filaments and not N(>L)
+		Sep_AbsDiff_Number_S = self.Plot_differences(Symm_length_bins, Symm_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', Symm_legends, diff='abs')
+		Sep_AbsDiff_Number_F = self.Plot_differences(fofr_length_bins, fofr_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', fofr_legends, diff='abs')
 		
-		# Relative differences in Number of filaments and not N(>L)
-		Sep_RelDiff_Number_S = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.plot(length_bins_logX[0], np.zeros(len(length_bins_logX[0])))
-		for i in range(1,5):
-			delta = self.relative_deviation(np.array(length_bin_values_logX), i)
-			plt.plot(length_bins_logX[i], delta)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Relative difference of N (filaments)')
-		plt.legend(Symm_legends)
-			
-		Sep_RelDiff_Number_F = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.plot(length_bins_logX[0], np.zeros(len(length_bins_logX[0])))
-		for i in range(5,8):
-			delta = self.relative_deviation(np.array(length_bin_values_logX), i)
-			plt.plot(length_bins_logX[i], delta)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Relative difference of N (filaments)')
-		plt.legend(fofr_legends)
+		# Relative differences in Number of filaments and not N(>L) 
+		Sep_RelDiff_Number_S = self.Plot_differences(Symm_length_bins, Symm_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', Symm_legends)
+		Sep_RelDiff_Number_F = self.Plot_differences(fofr_length_bins, fofr_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', fofr_legends)
 
-		# Differences in Number of filaments and not N(>L) LOGX PLOT
-		Sep_AbsDiff_Number_S_logx = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.semilogx(length_bins_logX[0], np.zeros(len(length_bins_logX[0])))
-		for i in range(1,5):
-			delta_abs = length_bin_values_logX[i] - length_bin_values_logX[0]
-			plt.semilogx(length_bins_logX[i], delta_abs)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Absolute difference of N (filaments)')
-		plt.legend(Symm_legends)
-			
-		Sep_AbsDiff_Number_F_logx = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.semilogx(length_bins_logX[0], np.zeros(len(length_bins_logX[0])))
-		for i in range(5,8):
-			delta_abs = length_bin_values_logX[i] - length_bin_values_logX[0]
-			plt.semilogx(length_bins_logX[i], delta_abs)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Absolute difference of N (filaments)')
-		plt.legend(fofr_legends)
+		# Absolute differences in Number of filaments and not N(>L). Logscale x
+		Sep_AbsDiff_Number_S_logx = self.Plot_differences(Symm_length_bins, Symm_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', Symm_legends, logscale='logx', diff='abs')
+		Sep_AbsDiff_Number_F_logx = self.Plot_differences(fofr_length_bins, fofr_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', fofr_legends, logscale='logx', diff='abs')
 		
-		# Relative differences in Number of filaments and not N(>L)
-		Sep_RelDiff_Number_S_logx = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.semilogx(length_bins_logX[0], np.zeros(len(length_bins_logX[0])))
-		for i in range(1,5):
-			delta = self.relative_deviation(np.array(length_bin_values_logX), i)
-			plt.semilogx(length_bins_logX[i], delta)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Relative difference of N (filaments)')
-		plt.legend(Symm_legends)
-			
-		Sep_RelDiff_Number_F_logx = plt.figure()
-		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		plt.semilogx(length_bins_logX[0], np.zeros(len(length_bins_logX[0])))
-		for i in range(5,8):
-			delta = self.relative_deviation(np.array(length_bin_values_logX), i)
-			plt.semilogx(length_bins_logX[i], delta)
-		plt.xlabel('Filament length - [Mpc/h]')
-		plt.ylabel('Relative difference of N (filaments)')
-		plt.legend(fofr_legends)
+		# Relative differences in Number of filaments and not N(>L). Logscale x
+		Sep_RelDiff_Number_S_logx = self.Plot_differences(Symm_length_bins, Symm_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', Symm_legends, logscale='logx')			
+		Sep_RelDiff_Number_F_logx = self.Plot_differences(fofr_length_bins, fofr_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', fofr_legends, logscale='logx')
+
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			self.savefigure(ConnectedHistComparison, 'Number_Connected_Filaments')
