@@ -124,15 +124,19 @@ def Bin_numbers_logX(X_value, Y_value, binnum=30):
 
 def Get_common_bin(Data, binnum=30):
 	""" Gets a common binning based on the dataset given. Assumes multiple dataset in one variable, e.g [[data1], [data2], ...] """
-	Max_value = np.max(np.max(Data))
-	Min_value = np.min(np.min(Data))
+	Minima = np.array([np.min(Data[i]) for i in range(len(Data))])
+	Maxima = np.array([np.max(Data[i]) for i in range(len(Data))])
+	Max_value = np.max(Maxima)
+	Min_value = np.min(Minima)
 	Bin = np.linspace(Min_value, Max_value, binnum)
 	return Bin
 
 def Get_common_bin_logX(Data, binnum=30):
 	""" Gets a common binning based on the dataset given. Assumes multiple dataset in one variable, e.g [[data1], [data2], ...] """
-	Max_value = np.max(np.max(Data))
-	Min_value = np.min(np.min(Data))
+	Minima = np.array([np.min(Data[i]) for i in range(len(Data))])
+	Maxima = np.array([np.max(Data[i]) for i in range(len(Data))])
+	Max_value = np.max(Maxima)
+	Min_value = np.min(Minima)
 	Bin = np.exp(np.linspace(np.log(Min_value), np.log(Max_value), binnum))
 	return Bin
 
