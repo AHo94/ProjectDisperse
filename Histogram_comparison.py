@@ -770,7 +770,9 @@ class CompareModels():
 		plt.legend(self.Legends)
 
 		# Number of filaments larger than a given length: N(>L)
-		lengths = np.linspace(np.min(np.min(FilLengths)), np.max(np.max(FilLengths)), 1000)
+		Minima = np.array([np.min(FilLengths[i]) for i in range(len(FilLengths))])
+		Maxima = np.array([np.max(FilLengths[i]) for i in range(len(FilLengths))])
+		lengths = np.linspace(np.min(Minima), np.max(Maxima), 1000)
 		distribution = []
 		#lengths = []
 		for fils_lens in FilLengths:
@@ -810,7 +812,7 @@ class CompareModels():
 		for fillens in FilLengths:
 			#bins_, binval_, binstd_ = OF.Bin_numbers(fillens, fillens, binnum=40)
 			#length_bins.append(bins_)
-			binval_, binstd_ = OF.Bin_numbers_common(fillens, fillens, length_bins, binnum=40, std='poisson')
+			binval_, binstd_ = OF.Bin_numbers_common(fillens, fillens, length_bins, std='poisson')
 			length_bin_values.append(binval_)
 			length_bin_error.append(binstd_)
 
@@ -826,7 +828,7 @@ class CompareModels():
 		length_bin_values_logX = []
 		length_bin_std_logX = []
 		for fillens in FilLengths:
-			binval_, binstd_ = OF.Bin_numbers_common(fillens, fillens, length_bins_logX, binnum=80)
+			binval_, binstd_ = OF.Bin_numbers_common(fillens, fillens, length_bins_logX)
 			#length_bins_logX.append(bins_)
 			length_bin_values_logX.append(binval_)
 			length_bin_std_logX.append(binstd_)
@@ -845,7 +847,7 @@ class CompareModels():
 		# Errorbar of the lengths
 		LengthHistComparison_erorbar_logX = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
-		for i in range(len(length_bins_logX)):
+		for i in range(len(length_bin_values_logX)):
 			plt.errorbar(length_bins_logX, length_bin_values_logX[i], Poisson_errors[i])
 		plt.xlabel('Filament Length  - [Mpc/h]')
 		plt.ylabel('Number of filaments')
@@ -894,20 +896,20 @@ class CompareModels():
 		Sep_RelDiff_length_F = self.Plot_differences_sameX(lengths, Distribution_fofr, 'Filament length - [Mpc/h]', 'Relative difference of N(>L)', fofr_legends, logscale='logx')
 
 		# Absolute Differences in Number of filaments and not N(>L)
-		Sep_AbsDiff_Number_S = self.Plot_differences_sameX(lengths, Symm_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', Symm_legends, diff='abs')
-		Sep_AbsDiff_Number_F = self.Plot_differences_sameX(lengths, fofr_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', fofr_legends, diff='abs')
+		Sep_AbsDiff_Number_S = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', Symm_legends, diff='abs')
+		Sep_AbsDiff_Number_F = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', fofr_legends, diff='abs')
 		
 		# Relative differences in Number of filaments and not N(>L) 
-		Sep_RelDiff_Number_S = self.Plot_differences_sameX(lengths, Symm_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', Symm_legends)
-		Sep_RelDiff_Number_F = self.Plot_differences_sameX(lengths, fofr_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', fofr_legends)
+		Sep_RelDiff_Number_S = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', Symm_legends)
+		Sep_RelDiff_Number_F = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', fofr_legends)
 
 		# Absolute differences in Number of filaments and not N(>L). Logscale x
-		Sep_AbsDiff_Number_S_logx = self.Plot_differences_sameX(lengths, Symm_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', Symm_legends, logscale='logx', diff='abs')
-		Sep_AbsDiff_Number_F_logx = self.Plot_differences_sameX(lengths, fofr_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', fofr_legends, logscale='logx', diff='abs')
+		Sep_AbsDiff_Number_S_logx = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', Symm_legends, logscale='logx', diff='abs')
+		Sep_AbsDiff_Number_F_logx = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, 'Filament length - [Mpc/h]', 'Absolute difference of N (filaments)', fofr_legends, logscale='logx', diff='abs')
 		
 		# Relative differences in Number of filaments and not N(>L). Logscale x
-		Sep_RelDiff_Number_S_logx = self.Plot_differences_sameX(lengths, Symm_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', Symm_legends, logscale='logx')			
-		Sep_RelDiff_Number_F_logx = self.Plot_differences_sameX(lengths, fofr_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', fofr_legends, logscale='logx')
+		Sep_RelDiff_Number_S_logx = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', Symm_legends, logscale='logx')			
+		Sep_RelDiff_Number_F_logx = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, 'Filament length - [Mpc/h]', 'Relative difference of N (filaments)', fofr_legends, logscale='logx')
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
