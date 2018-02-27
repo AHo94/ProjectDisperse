@@ -122,6 +122,43 @@ def Bin_numbers_logX(X_value, Y_value, binnum=30):
 	binstd = [ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ]
 	return bins, binval, binstd
 
+def Get_common_bin(Data, binnum=30):
+	""" Gets a common binning based on the dataset given. Assumes multiple dataset in one variable, e.g [[data1], [data2], ...] """
+	Max_value = np.max(np.max(Data))
+	Min_value = np.min(np.min(Data))
+	Bin = np.linspace(Min_value, Max_value, binnum)
+	return Bin
+
+def Get_common_bin_logX(Data, binnum=30):
+	""" Gets a common binning based on the dataset given. Assumes multiple dataset in one variable, e.g [[data1], [data2], ...] """
+	Max_value = np.max(np.max(Data))
+	Min_value = np.min(np.min(Data))
+	Bin = np.exp(np.linspace(np.log(Min_value), np.log(Max_value), binnum))
+	return Bin
+
+def Bin_numbers_common(X_value, Y_value, bins, std='std'):
+	""" 
+	Computes number of data set of a given Y-value vs the X-value. Uses common binning. 
+	Two different errors to be chosen:
+	1) Standard deviation
+	2) Poisson distribution, where error = sqrt(N), N = number of data in a given bin.
+	"""
+	index_bin = np.digitize(X_value, bins)
+	binval = np.array([ len(Y_value[i == index_bin]) for i in range(len(bins))])
+	if std == 'std':
+		binstd = np.array([ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ])
+	elif std == 'poisson':
+		binstd = np.array([np.sqrt(numbers) for numbers in binval])
+	else:
+		raise ValueError("Argument std not set properly! Try std='std' or std='poisson'")
+	return binval, binstd
+
+def Bin_mean_common(X_value, Y_value, bins):
+	index_bin = np.digitize(X_value, bins)
+	binval = np.array([ np.mean(Y_value[i == index_bin]) for i in range(len(bins))])
+	binstd = np.array([ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ])
+	return binval, binstd
+
 def filament_box(filament):
 	""" Gives filament box, plotting purposes """
 	xmin = np.min(filament[:,0])
