@@ -499,7 +499,6 @@ class CompareModels():
 
 		Max_yval = np.array([np.max(ydata[i]) for i in range(len(ydata))])
 		Min_yval = np.array([np.min(ydata[i]) for i in range(len(ydata))])
-
 		figure = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		if diff:
@@ -508,10 +507,10 @@ class CompareModels():
 			for i in range(len(ydata)):
 				plt.plot(xdata, ydata[i])
 				plt.fill_between(xdata, ydata[i]-error[i], ydata[i]+error[i], alpha=0.3)
+			plt.ylim((-1.0, 0.5))
 		else:
 			for i in range(len(ydata)):
 				plt.errorbar(xdata, ydata[i], error[i])
-			plt.ylim((np.min(Min_yval), np.max(Max_yval)))
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
 		
@@ -803,7 +802,7 @@ class CompareModels():
 		# Number of filaments larger than a given length: N(>L)
 		Minima = np.array([np.min(FilLengths[i]) for i in range(len(FilLengths))])
 		Maxima = np.array([np.max(FilLengths[i]) for i in range(len(FilLengths))])
-		lengths = np.linspace(np.min(Minima), np.max(Maxima), 1000)
+		lengths = np.linspace(np.min(Minima), np.max(Maxima), 80)
 		distribution = []
 		for fils_lens in FilLengths:
 			temp_dist = []
@@ -886,9 +885,8 @@ class CompareModels():
 		RelDiff_cumulative_reverse = self.Plot_differences_sameX(length_bins, Cumulative_distribution, 'Filament length - [Mpc/h]', '$\mathregular{N(>L)}$', self.Legends)
 
 		# Computes propagated error on the relative difference of N(>L)
-		Propagated_errors = np.array([self.Propagate_error_relNum(distribution[0], distribution[i], length_bin_error_logX[0], length_bin_error_logX[i]
-										 for i in range(1,len(FilLengths)))])
-		Prop_error_reldiff_N = self.Plot_errobar_sameX(lengths, distribution[1:], Propagated_errors, 'Filament Length - [Mpc/h]', 'Relative difference of $\mathregular{N(>L)}$', self.Legends, fill_between=True, diff=True)
+		Propagated_errors = np.array([self.Propagate_error_relNum(distribution[0], distribution[i], length_bin_error_logX[0], length_bin_error_logX[i]) for i in range(1,len(FilLengths))])
+		Prop_error_reldiff_N = self.Plot_errobar_sameX(lengths, Deltas, Propagated_errors, 'Filament Length - [Mpc/h]', 'Relative difference of $\mathregular{N(>L)}$', self.Legends, fill_between=True, diff=True)
 
 		#### SEPARATING SYMMMETRON AND f(R) MODELS. Data includes LCDM as default
 		# Length binned histogram, nodot
@@ -933,8 +931,10 @@ class CompareModels():
 		# Relative differences of N(>L) with propagated errors
 		Prop_err_symm = Propagated_errors[0:4]
 		Prop_err_fofr = Propagated_errors[4:]
-		Sep_RelDiff_length_PropErr_S = self.Plot_errobar_sameX(lengths, Distribution_symm[1:], Prop_err_symm, 'Filament Length - [Mpc/h]', 'Relative difference of $\mathregular{N(>L)}$', Symm_legends, fill_between=True, diff=True)
-		Sep_RelDiff_length_PropErr_F = self.Plot_errobar_sameX(lengths, Distribution_fofr[1:], Prop_err_fofr, 'Filament Length - [Mpc/h]', 'Relative difference of $\mathregular{N(>L)}$', fofr_legends, fill_between=True, diff=True)
+		Deltas_symm = Deltas[0:4]
+		Deltas_fofr = Deltas[4:]
+		Sep_RelDiff_length_PropErr_S = self.Plot_errobar_sameX(lengths, Deltas_symm, Prop_err_symm, 'Filament Length - [Mpc/h]', 'Relative difference of $\mathregular{N(>L)}$', Symm_legends, fill_between=True, diff=True)
+		Sep_RelDiff_length_PropErr_F = self.Plot_errobar_sameX(lengths, Deltas_fofr, Prop_err_fofr, 'Filament Length - [Mpc/h]', 'Relative difference of $\mathregular{N(>L)}$', fofr_legends, fill_between=True, diff=True)
 		
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
