@@ -323,3 +323,55 @@ def get_filament_distances(midpts):
 		distances[i:] = np.linalg.norm(midpts_diff, axis=1)
 		Filament_distances.append(distances)
 	return np.array(Filament_distances)
+
+def Periodic_slicing(limit_crossing, boundary, Yslices):
+	""" Used to determine which particle slice box the filament requires. """
+	min_crossing = limit_crossing[0]
+	max_crossing = limit_crossing[1]
+	if boundary == 'upper':
+		Max_cross = max_crossing - 256.0
+		Min_cross = 0.0
+		max_crossing = 256.0
+		Mask_t = (Yslices[:,0] <= max_crossing) & (Yslices[:,1] >= min_crossing)
+		Mask_b = (Yslices[:,0] <= Max_cross) & (Yslices[:,1] >= Min_cross)
+		indices1 = np.where(Mask_t)[0]
+		indices2 = np.where(Mask_b)[0]
+		idx_cross = np.concatenate((indices1, indices2))
+	elif boundary == 'lower':
+		Min_cross = min_crossing + 256.0
+		Max_cross = 256.0
+		min_crossing = 0.0
+		Mask_t = (Yslices[:,0] <= max_crossing) & (Yslices[:,1] >= min_crossing)
+		Mask_b = (Yslices[:,0] <= Max_cross) & (Yslices[:,1] >= Min_cross)
+		indices1 = np.where(Mask_t)[0]
+		indices2 = np.where(Mask_b)[0]
+		idx_cross = np.concatenate((indices1, indices2))
+	elif boundary == 'none':
+		Mask_t = (Yslices[:,0] <= max_crossing) & (Yslices[:,1] >= min_crossing)
+		idx_cross = np.where(Mask_t)[0]
+	else:	   
+		raise ValueError("Boundary not set properly!")
+	return idx_cross
+
+
+def get_indices_slicing(Filament_slice, Yslices):
+	""" Gets indices of the slice array. Used to determine which slice box is sent for masking. """
+	Ymax = np.max(Filament_slice[:,1]) + 3
+	Ymin = np.min(Filament_slice[:,1]) - 3
+	Zmax = np.max(Filament_slice[:,2]) + 3
+	Zmin = np.min(Filament_slice[:,2]) - 3
+
+	if Ymax > 256.0:
+		idY = Periodic_slicing([Ymin, Ymax], 'upper', Yslices)
+	elif Ymin < 0.0:
+		idY = Periodic_slicing([Ymin, Ymax], 'lower', Yslices)
+	else:
+		idY = Periodic_slicing([Ymin, Ymax], 'none', Yslices)
+	if Zmax > 256.0:
+		idZ = Periodic_slicing([Zmin, Zmax], 'upper', Yslices)
+	elif Zmin < 0.0:
+		idZ = Periodic_slicing([Zmin, Zmax], 'lower', Yslices)
+	else:
+		idZ = Periodic_slicing([Zmin, Zmax], 'none', Yslices)
+
+	return idY, idZ
