@@ -158,13 +158,13 @@ class Read_Gadget_file():
 
 		self.read_file(modelfile)
 		
-		cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
-		if not os.path.isdir(cachedir):
-			os.makedirs(cachedir)
+		#cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticleData/'
+		#if not os.path.isdir(cachedir):
+		#	os.makedirs(cachedir)
 
-		cache_model = cachedir + modelfile + '_particleIDs.p'
-		if not os.path.isfile(cache_model):
-			pickle.dump(self.PartIDs, open(cache_model, 'wb'))
+		#cache_model = cachedir + modelfile + '_particleIDs.p'
+		#if not os.path.isfile(cache_model):
+		#	pickle.dump(self.PartIDs, open(cache_model, 'wb'))
 		return self.PartPos
 
 	def Get_velocities(self, get_3D=False):
