@@ -621,12 +621,12 @@ def ZMQ_get_distances(euclid21check):
 	context = zmq.Context()
 	context.linger = 0
 
-	# Socket to receive data from
+	# Socket to receive data from, i.e. the ventilator
 	receiver = context.socket(zmq.PULL)
 	receiver.connect("tcp://euclid21.ib.intern:5070")
 	#receiver.RCVTIMEO = 1000000
     
-	# Socket to send computed data to
+	# Socket to send computed data to, i.e. back to ventilator
 	sender = context.socket(zmq.PUSH)
 	sender.connect("tcp://euclid21.ib.intern:5072")
 
@@ -680,7 +680,7 @@ def ZMQ_get_distances(euclid21check):
 	sender.close()
 	controller.close()
 	context.term()
-
+	
 if __name__ == '__main__':
 	# This is only called when the script is called from a command line directly.
 	# Will then run ZeroMQ paralellziation function.
