@@ -1,10 +1,21 @@
 # Basic modules
 import numpy as np
+import os
+import sys
+import argparse
 
 # ZMQ modules
 import zmq
 import ZMQArraySending as ZMQAS
 
+def Argument_parser():
+	""" Parses optional argument when program is run from the command line """
+	parser = argparse.ArgumentParser()
+	# Optional arguments
+	parser.add_argument("-ID", "--WorkID", help="Worker ID", type=int, default=0)
+	# Parse arguments
+	args = parser.parse_args()
+	return args
 
 def filament_box(filament):
 	""" Creates a box around the filament """
@@ -29,17 +40,17 @@ def particle_mask(box, ParticlePos_):
 	maskz = (ParticlePos_[:,2] > zmin) & (ParticlePos_[:,2] < zmax)
 	return maskx*masky*maskz
 
-def masked_particle_indices(filament_box, ParticlePos_):
+def masked_particle_indices(filament_box, ParticlePos_, box_expand):
 	""" 
 	Masks particle indices based on the filament box and particle positions.
 	The indices may be used to identify velocities etc.
 	"""
-	xmin = filament_box[0] - 3.0
-	xmax = filament_box[1] + 3.0
-	ymin = filament_box[2] - 3.0
-	ymax = filament_box[3] + 3.0
-	zmin = filament_box[4] - 3.0
-	zmax = filament_box[5] + 3.0
+	xmin = filament_box[0] - box_expand
+	xmax = filament_box[1] + box_expand
+	ymin = filament_box[2] - box_expand
+	ymax = filament_box[3] + box_expand
+	zmin = filament_box[4] - box_expand
+	zmax = filament_box[5] + box_expand
 	box = [xmin, xmax, ymin, ymax, zmin, zmax]
 	box2 = [xmin, xmax, ymin, ymax, zmin, zmax]
 	MovePartx = 0
@@ -47,23 +58,23 @@ def masked_particle_indices(filament_box, ParticlePos_):
 	MovePartz = 0
 	Atboundary = 0
 	# Check which boundary it crosses
-	if np.abs((xmin + 3.0) - 0.0) < 1e-3:
-		box[0] = xmin + 3.0
+	if np.abs((xmin + box_expand) - 0.0) < 1e-3:
+		box[0] = xmin + box_expand
 		Atboundary = 1
-	elif np.abs((xmax - 3.0) - 256.0) < 1e-3:
-		box[1] = xmax - 3.0
+	elif np.abs((xmax - box_expand) - 256.0) < 1e-3:
+		box[1] = xmax - box_expand
 		Atboundary = 1
-	if np.abs((ymin + 3.0) - 0.0) < 1e-3:
-		box[2] = ymin + 3.0
+	if np.abs((ymin + box_expand) - 0.0) < 1e-3:
+		box[2] = ymin + box_expand
 		Atboundary = 1
-	elif np.abs((ymax - 3.0) - 256.0) < 1e-3:
-		box[3] = ymax - 3.0
+	elif np.abs((ymax - box_expand) - 256.0) < 1e-3:
+		box[3] = ymax - box_expand
 		Atboundary = 1
-	if np.abs((zmin + 3.0) - 0.0) < 1e-3:
-		box[4] = zmin + 3.0
+	if np.abs((zmin + box_expand) - 0.0) < 1e-3:
+		box[4] = zmin + box_expand
 		Atboundary = 1
-	elif np.abs((zmax - 3.0) - 256.0) < 1e-3:
-		box[5] = zmax - 3.0
+	elif np.abs((zmax - box_expand) - 256.0) < 1e-3:
+		box[5] = zmax - box_expand
 		Atboundary = 1
 		
 	# If boundary is crossed, create a new box
@@ -108,17 +119,17 @@ def masked_particle_indices(filament_box, ParticlePos_):
 		Masked_indices = np.concatenate([indices1, indices2])
 		return Masked_indices
 
-def particle_box(filament_box, masked_ids, ParticlePos_):
+def particle_box(filament_box, masked_ids, ParticlePos_, box_expand):
 	""" 
 	Creates a particle box and masks off the particles within the filament box.
 	Returns particle positions and not IDs.
 	"""
-	xmin = filament_box[0] - 3.0
-	xmax = filament_box[1] + 3.0
-	ymin = filament_box[2] - 3.0
-	ymax = filament_box[3] + 3.0
-	zmin = filament_box[4] - 3.0
-	zmax = filament_box[5] + 3.0
+	xmin = filament_box[0] - box_expand
+	xmax = filament_box[1] + box_expand
+	ymin = filament_box[2] - box_expand
+	ymax = filament_box[3] + box_expand
+	zmin = filament_box[4] - box_expand
+	zmax = filament_box[5] + box_expand
 	MovePartx = 0
 	MoveParty = 0
 	MovePartz = 0
@@ -157,38 +168,43 @@ def ZMQ_mask_particles():
 
 	# Socket to receive data from
 	receiver = context.socket(zmq.PULL)
-	receiver.connect("tcp://euclid21.ib.intern:6070")
+	receiver.connect("tcp://euclid21.ib.intern:5080")
 	
 	# Socket to send computed data to
 	sender = context.socket(zmq.PUSH)
-	sender.connect("tcp://euclid21.ib.intern:6072")
+	sender.connect("tcp://euclid21.ib.intern:5082")
 
 	# Socket controller, ensures the worker is killed
 	controller = context.socket(zmq.PULL)
-	controller.connect("tcp://euclid21.ib.intern:6074")
+	controller.connect("tcp://euclid21.ib.intern:5084")
 
 	# Only poller for receiver as receiver 2 has similar size
 	poller = zmq.Poller()
 	poller.register(receiver, zmq.POLLIN)
 	poller.register(controller, zmq.POLLIN)
+	#print 'WORKER READY', WORKER_ID
 	while True:
+		socks = dict(poller.poll(100000))
 		if socks.get(receiver) == zmq.POLLIN:
 			data = ZMQAS.recv_zipped_pickle(receiver)
 			FilamentPos = data[0]
 			ParticleBox = data[1]
 			ID = data[2]
+			box_expand = data[3]
 			filbox = filament_box(FilamentPos)
-			Masked_ids = masked_particle_indices(filbox, ParticleBox)
-			Masked_part_box = particle_box(filbox, Masked_ids, ParticleBox)
+			Masked_ids = masked_particle_indices(filbox, ParticleBox, box_expand)
+			Masked_part_box = particle_box(filbox, Masked_ids, ParticleBox, box_expand)
+			#print 'ID = ', ID, WORKER_ID
 			ZMQAS.send_zipped_pickle(sender, [Masked_ids, Masked_part_box, ID])
+			#ZMQAS.send_zipped_pickle(sender, [FilamentPos*ParticleBox, ID*box_expand, ID])
 		# Closes the context when data computing is done
 		if socks.get(controller) == zmq.POLLIN:
 			control_message = controller.recv()
 			if control_message == "FINISHED":
 				break
 		if not socks:
+			print 'Did not receive shit, closing...'#, WORKER_ID
 			break
-	
 	# Finished, closing context
 	receiver.close()
 	sender.close()
@@ -199,4 +215,6 @@ if __name__ == '__main__':
 	# This is only called when the script is called from a command line directly.
 	# Will then run ZeroMQ paralellziation function.
 	# Importing the module will not call this.
+	parsed_arguments = Argument_parser()
+	WORKER_ID = parsed_arguments.WorkID
 	ZMQ_mask_particles()
