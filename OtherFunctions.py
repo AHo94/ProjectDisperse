@@ -354,12 +354,12 @@ def Periodic_slicing(limit_crossing, boundary, Yslices):
 	return idx_cross
 
 
-def get_indices_slicing(Filament_slice, Yslices):
+def get_indices_slicing(Filament_slice, Yslices, box_expand):
 	""" Gets indices of the slice array. Used to determine which slice box is sent for masking. """
-	Ymax = np.max(Filament_slice[:,1]) + 3
-	Ymin = np.min(Filament_slice[:,1]) - 3
-	Zmax = np.max(Filament_slice[:,2]) + 3
-	Zmin = np.min(Filament_slice[:,2]) - 3
+	Ymax = np.max(Filament_slice[:,1]) + box_expand
+	Ymin = np.min(Filament_slice[:,1]) - box_expand
+	Zmax = np.max(Filament_slice[:,2]) + box_expand
+	Zmin = np.min(Filament_slice[:,2]) - box_expand
 
 	if Ymax > 256.0:
 		idY = Periodic_slicing([Ymin, Ymax], 'upper', Yslices)
