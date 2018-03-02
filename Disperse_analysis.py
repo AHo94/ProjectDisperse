@@ -43,6 +43,7 @@ import ReadFilamentData
 import InterpolateDensity
 import ParticlesPerFilament
 import OtherFunctions as OF
+import ParticleMasking as PM
 
 class Disperse_Plotter():
 	"""
@@ -1169,6 +1170,90 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		#pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
 		#pickle.dump(Part_box, open(cachefile_partbox, 'wb'))
 		return Masked_ids, Part_box
+
+	def Masking_singleCPU():
+		""" Masks the particle using a single CPU. """
+		# Calls for particle positions, 3D
+		MaskDM = np.array([0,0,0,0,0,0])*256.0
+		Gadget_instance = ReadGadgetFile.Read_Gadget_file([0,0,0], MaskDM)
+		ParticlePos = Gadget_instance.Get_3D_particles(name)
+
+		# Slicing the box in slices. Only send a small portion of the particle box to mask particles near filament
+		Nslices = 20
+		SliceSize = 256.0/Nslices
+		Yslices = []
+		Yparts = []
+		timer = time.time()
+		for i in range(Nslices):
+			MM = (ParticlePos[:,1] > SliceSize*i) & (ParticlePos[:,1] < SliceSize*(i+1))
+			Yparts.append(ParticlePos[MM])
+
+		SlicedParts = []
+		for i in range(Nslices):
+			TempSlices = []
+			for j in range(Nslices):
+				Ybox = Yparts[i]
+				MM = (Ybox[:,2] > SliceSize*j) & (Ybox[:,2] < SliceSize*(j+1))
+				TempSlices.append(Yparts[i][MM])
+			SlicedParts.append(np.array(TempSlices))
+		print 'Slicing time: ', time.time() - timer, 's'
+		SlicedParts = np.asarray(SlicedParts)
+		# Ranges of each slice
+		for i in range(Nslices):
+			Yslices.append([i*SliceSize, (i+1)*SliceSize])
+		Yslices = np.array(Yslices)
+		
+		# Computes particle and ID masks
+		Masked_ids_nonmerge = []
+		Part_box_nonmerge = []
+		time_mask = time.time()
+		for i in range(len(FilPos)):
+			# Finds indices of slices box and sends the corresponding box along with the filament positions
+			idY, idZ = OF.get_indices_slicing(FilPos[i], Yslices, box_expand)
+			Sent_particles = []
+			for idys in idY:
+				for idzs in idZ:
+					Sent_particles.append(SlicedParts[idys][idzs])
+			Sent_particles = np.array(Sent_particles)
+			if len(Sent_particles) >= 2:
+				Sent_particles_real = np.concatenate((Sent_particles[0], Sent_particles[1]))
+				for k in range(2,len(Sent_particles)-1):
+					Sent_particles_real = np.concatenate((Sent_particles_real, Sent_particles[k]))
+			else:
+				Sent_particles_real = Sent_particles[0]
+
+			filbox = PM.filament_box(FilPos[i])
+			masked_ids = PM.masked_particle_indices(filbox, Sent_particles_real, box_expand)
+			masked_part_box = particle_box(filbox, masked_ids, Sent_particles_real, box_expand)
+			Masked_ids_nonmerge.append(masked_ids)
+			Part_box_nonmerge.append(masked_part_box)
+
+		Masked_ids_nonmerge = np.asarray(Masked_ids_nonmerge)
+		Part_box_nonmerge = np.asarray(Part_box_nonmerge)
+		print len(Masked_ids_nonmerge)
+		print len(Masked_ids_nonmerge[0])
+		print 'Masking time: ', time.time() - time_mask, 's. Now merging and saving.'
+		#sys.exit(1)
+		# Merge the particle boxes and masked particle IDs so dataset corresponds to filament without periodic boundary alrogithm applied.
+		Masked_ids = []
+		Part_box = []
+		ID_old = -1
+		for i in range(len(FilID)):
+			ID = FilID[i]
+			if ID == ID_old:
+				Masked_ids[-1], unique_index = np.unique(np.concatenate((Masked_ids[-1], Masked_ids_nonmerge[i])), return_index=True)
+				Part_box[-1] = np.concatenate((Part_box[-1], Part_box_nonmerge[i]))[unique_index]
+			else:
+				Masked_ids.append(Masked_ids_nonmerge[i])
+				Part_box.append(Part_box_nonmerge[i])
+			ID_old = ID
+		Masked_ids = np.asarray(Masked_ids)
+		Part_box = np.asarray(Part_box)
+
+		print 'Merging and sorting done, dumping to pickle file...'
+		pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
+		pickle.dump(Part_box, open(cachefile_partbox, 'wb'))
+		return Masked_ids, Part_box
 	
 	# Uses ZeroMQ as a way to paralell compute the distances etc
 	# Masking of particles still uses the usual Multiprocessing module
@@ -1209,8 +1294,8 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		proc.close()
 		proc.join()
 		"""
-		Masked_ids, Part_box = ZMQ_masking()
-
+		#Masked_ids, Part_box = ZMQ_masking()
+		Masked_ids, Part_box = Masking_singleCPU()
 	
 	def ZMQ_call():
 		context = zmq.Context()
