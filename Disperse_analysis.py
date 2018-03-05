@@ -1179,26 +1179,33 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		ParticlePos = Gadget_instance.Get_3D_particles(name)
 
 		# Slicing the box in slices. Only send a small portion of the particle box to mask particles near filament
-		Nslices = 20
+		Nslices = 10
 		SliceSize = 256.0/Nslices
-		Yslices = []
 		Yparts = []
+		IDparts = []
+		PartIDs = np.linspace(0, len(ParticlePos)-1, len(ParticlePos), dtype=np.int32)
 		timer = time.time()
 		for i in range(Nslices):
 			MM = (ParticlePos[:,1] > SliceSize*i) & (ParticlePos[:,1] < SliceSize*(i+1))
 			Yparts.append(ParticlePos[MM])
-
+			IDparts.append(PartIDs[MM])
 		SlicedParts = []
+		SlicedIDs = []
 		for i in range(Nslices):
 			TempSlices = []
+			TempIDSlices = []
 			for j in range(Nslices):
 				Ybox = Yparts[i]
 				MM = (Ybox[:,2] > SliceSize*j) & (Ybox[:,2] < SliceSize*(j+1))
 				TempSlices.append(Yparts[i][MM])
+				TempIDSlices.append(IDparts[i][MM])
 			SlicedParts.append(np.array(TempSlices))
+			SlicedIDs.append(np.array(TempIDSlices))
 		print 'Slicing time: ', time.time() - timer, 's'
 		SlicedParts = np.asarray(SlicedParts)
+		SlicedIDs = np.asarray(SlicedIDs)
 		# Ranges of each slice
+		Yslices = []
 		for i in range(Nslices):
 			Yslices.append([i*SliceSize, (i+1)*SliceSize])
 		Yslices = np.array(Yslices)
@@ -1211,20 +1218,27 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 			# Finds indices of slices box and sends the corresponding box along with the filament positions
 			idY, idZ = OF.get_indices_slicing(FilPos[i], Yslices, box_expand)
 			Sent_particles = []
+			IDs_sent = []
 			for idys in idY:
 				for idzs in idZ:
 					Sent_particles.append(SlicedParts[idys][idzs])
+					IDs_sent.append(SlicedIDs[idys][idzs])
 			Sent_particles = np.array(Sent_particles)
+			IDs_sent = np.array(IDs_sent)
 			if len(Sent_particles) >= 2:
+				Particle_indices = (np.concatenate((IDs_sent[0], IDs_sent[1])))
 				Sent_particles_real = np.concatenate((Sent_particles[0], Sent_particles[1]))
 				for k in range(2,len(Sent_particles)-1):
+					Particle_indices = (np.concatenate((Particle_indices, IDs_sent[k])))
 					Sent_particles_real = np.concatenate((Sent_particles_real, Sent_particles[k]))
 			else:
+				Particle_indices = IDs_sent[0]
 				Sent_particles_real = Sent_particles[0]
 
 			filbox = PM.filament_box(FilPos[i])
-			masked_ids = PM.masked_particle_indices(filbox, Sent_particles_real, box_expand)
-			masked_part_box = particle_box(filbox, masked_ids, Sent_particles_real, box_expand)
+			masked_ids_slice = PM.masked_particle_indices(filbox, Sent_particles_real, box_expand)
+			masked_part_box = PM.particle_box(filbox, masked_ids_slice, Sent_particles_real, box_expand)
+			masked_ids = np.unique(Particle_indices[masked_ids_slice])
 			Masked_ids_nonmerge.append(masked_ids)
 			Part_box_nonmerge.append(masked_part_box)
 
@@ -1352,8 +1366,8 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 			if not socks:
 				print "All data received?"
 				break
-
-		control_sender.send("FINISHED")
+		for i in range(51 + 150):
+			control_sender.send("FINISHED")
 		Distances = np.asarray(Distances)
 		#print Distances
 		FilamentAxis = np.asarray(FilamentAxis)
@@ -1373,8 +1387,8 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 	
 	if os.path.isfile(cachefile_distances):
 		print 'Reading number of particles pickle file for ' + name + '...'
-		Distances = pickle.load(open(cachefile_distances, 'rb'))
-		FilamentAxis = pickle.load(open(cachefile_segIDs, 'rb'))
+		#Distances = pickle.load(open(cachefile_distances, 'rb'))
+		#FilamentAxis = pickle.load(open(cachefile_segIDs, 'rb'))
 		print 'done'
 	else:
 		Distances, FilamentAxis = ZMQ_call()
