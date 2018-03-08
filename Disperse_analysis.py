@@ -1025,11 +1025,11 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		os.makedirs(cachedir_ppf_segIDs)
 	if not os.path.isdir(cachedir_ppf_tsols):
 		os.makedirs(cachedir_ppf_tsols)
-	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask.p'
-	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask.p'
-	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask.p' 
-	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask.p'
-	cachefile_tsols = cachedir_ppf_tsols + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask.p'
+	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n10.p'
+	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask_n10.p'
+	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask_n10.p' 
+	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n10.p'
+	cachefile_tsols = cachedir_ppf_tsols + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n10.p'
 	
 
 	def ZMQ_masking():
@@ -1228,7 +1228,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 			if len(Sent_particles) >= 2:
 				Particle_indices = (np.concatenate((IDs_sent[0], IDs_sent[1])))
 				Sent_particles_real = np.concatenate((Sent_particles[0], Sent_particles[1]))
-				for k in range(2,len(Sent_particles)-1):
+				for k in range(2,len(Sent_particles)):
 					Particle_indices = (np.concatenate((Particle_indices, IDs_sent[k])))
 					Sent_particles_real = np.concatenate((Sent_particles_real, Sent_particles[k]))
 			else:
@@ -1237,9 +1237,10 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 
 			filbox = PM.filament_box(FilPos[i])
 			masked_ids_slice = PM.masked_particle_indices(filbox, Sent_particles_real, box_expand)
-			masked_part_box = PM.particle_box(filbox, masked_ids_slice, Sent_particles_real, box_expand)
-			masked_ids = np.unique(Particle_indices[masked_ids_slice])
-			Masked_ids_nonmerge.append(masked_ids)
+			#masked_part_box = PM.particle_box(filbox, masked_ids_slice, Sent_particles_real, box_expand)
+			masked_part_box = Sent_particles_real[masked_ids_slice]
+			#masked_ids = np.unique(Particle_indices[masked_ids_slice])
+			Masked_ids_nonmerge.append(masked_ids_slice)
 			Part_box_nonmerge.append(masked_part_box)
 
 		Masked_ids_nonmerge = np.asarray(Masked_ids_nonmerge)
@@ -1336,8 +1337,8 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		# Calls the script that starts up a set amount of workers.
 		# Stops program a little bit to let the workers start up
 		print "Starting processes"
-		subprocess.call("./SpawnWorkers.sh 50 0", shell=True)
-		subprocess.call("./RemoteConnect.sh", shell=True)
+		subprocess.call("./SpawnWorkers.sh 25 0", shell=True)
+		#subprocess.call("./RemoteConnect.sh", shell=True)
 		time.sleep(5)
 		time_dist = time.time()
 		# Sends data
@@ -1503,8 +1504,8 @@ if __name__ == '__main__':
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
-	SaveAsPNG = 1				# Set 1 to save figures as PNG
-	SaveAsPDF = 0 				# Set 1 to save figures as PDF
+	SaveAsPNG = 0				# Set 1 to save figures as PNG
+	SaveAsPDF = 1 				# Set 1 to save figures as PDF
 
 	print '=== INFORMATION ==='
 	# Some if tests before the simulation runs
@@ -1801,7 +1802,7 @@ if __name__ == '__main__':
 		"""
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-		npart = 64
+		npart = 188
 		print '== Running with '+ str(npart) + ' particles! =='
 		if npart == 64:
 			lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
