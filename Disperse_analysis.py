@@ -941,7 +941,7 @@ def Argument_parser():
 	parser.add_argument("-DSPmodel", "--DisperseModel", help="Computes basic properties of the filament data given by DisPerSE, for a given model."\
 	 				+ "Models may be: lcdm, symmX (X=A,B,C,D) or fofrY (Y=4,5,6). Use argument 'all' to run all models. Runs LCDM by default."\
 	 				+ "Do not run seperate models and 'all' at once!", type=str, default='lcdm')
-	
+	parser.add_argument("-Nparts", "--NumberParticles", help="Run with a set number of particles. Default 64.", type=int, default=64)
 	# Parse arguments
 	args = parser.parse_args()
 
@@ -1025,11 +1025,11 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		os.makedirs(cachedir_ppf_segIDs)
 	if not os.path.isdir(cachedir_ppf_tsols):
 		os.makedirs(cachedir_ppf_tsols)
-	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n10.p'
-	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask_n10.p'
-	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask_n10.p' 
-	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n10.p'
-	cachefile_tsols = cachedir_ppf_tsols + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n10.p'
+	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n20.p'
+	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask_n20.p'
+	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask_n20.p' 
+	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n20.p'
+	cachefile_tsols = cachedir_ppf_tsols + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n20.p'
 	
 
 	def ZMQ_masking():
@@ -1179,7 +1179,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		ParticlePos = Gadget_instance.Get_3D_particles(name)
 
 		# Slicing the box in slices. Only send a small portion of the particle box to mask particles near filament
-		Nslices = 10
+		Nslices = 20
 		SliceSize = 256.0/Nslices
 		Yparts = []
 		IDparts = []
@@ -1239,14 +1239,12 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 			masked_ids_slice = PM.masked_particle_indices(filbox, Sent_particles_real, box_expand)
 			#masked_part_box = PM.particle_box(filbox, masked_ids_slice, Sent_particles_real, box_expand)
 			masked_part_box = Sent_particles_real[masked_ids_slice]
-			#masked_ids = np.unique(Particle_indices[masked_ids_slice])
-			Masked_ids_nonmerge.append(masked_ids_slice)
+			masked_ids = Particle_indices[masked_ids_slice]
+			Masked_ids_nonmerge.append(masked_ids)
 			Part_box_nonmerge.append(masked_part_box)
 
 		Masked_ids_nonmerge = np.asarray(Masked_ids_nonmerge)
 		Part_box_nonmerge = np.asarray(Part_box_nonmerge)
-		print len(Masked_ids_nonmerge)
-		print len(Masked_ids_nonmerge[0])
 		print 'Masking time: ', time.time() - time_mask, 's. Now merging and saving.'
 		#sys.exit(1)
 		# Merge the particle boxes and masked particle IDs so dataset corresponds to filament without periodic boundary alrogithm applied.
@@ -1504,8 +1502,8 @@ if __name__ == '__main__':
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
-	SaveAsPNG = 0				# Set 1 to save figures as PNG
-	SaveAsPDF = 1 				# Set 1 to save figures as PDF
+	SaveAsPNG = 1				# Set 1 to save figures as PNG
+	SaveAsPDF = 0 				# Set 1 to save figures as PDF
 
 	print '=== INFORMATION ==='
 	# Some if tests before the simulation runs
@@ -1802,7 +1800,7 @@ if __name__ == '__main__':
 		"""
 		file_directory = '/mn/stornext/d5/aleh'
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-		npart = 188
+		npart = parsed_arguments.NumberParticles
 		print '== Running with '+ str(npart) + ' particles! =='
 		if npart == 64:
 			lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
