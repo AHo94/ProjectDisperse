@@ -45,6 +45,10 @@ def masked_particle_indices(filament_box, ParticlePos_, box_expand):
 	Masks particle indices based on the filament box and particle positions.
 	The indices may be used to identify velocities etc.
 	"""
+	""" 
+	Masks particle indices based on the filament box and particle positions.
+	The indices may be used to identify velocities etc.
+	"""
 	xmin = filament_box[0] - box_expand
 	xmax = filament_box[1] + box_expand
 	ymin = filament_box[2] - box_expand
@@ -53,62 +57,52 @@ def masked_particle_indices(filament_box, ParticlePos_, box_expand):
 	zmax = filament_box[5] + box_expand
 	box = [xmin, xmax, ymin, ymax, zmin, zmax]
 	box2 = [xmin, xmax, ymin, ymax, zmin, zmax]
-	MovePartx = 0
-	MoveParty = 0
-	MovePartz = 0
-	Atboundary = 0
-	# Check which boundary it crosses
-	if np.abs((xmin + box_expand) - 0.0) < 1e-3:
-		box[0] = xmin + box_expand
-		Atboundary = 1
-	elif np.abs((xmax - box_expand) - 256.0) < 1e-3:
-		box[1] = xmax - box_expand
-		Atboundary = 1
-	if np.abs((ymin + box_expand) - 0.0) < 1e-3:
-		box[2] = ymin + box_expand
-		Atboundary = 1
-	elif np.abs((ymax - box_expand) - 256.0) < 1e-3:
-		box[3] = ymax - box_expand
-		Atboundary = 1
-	if np.abs((zmin + box_expand) - 0.0) < 1e-3:
-		box[4] = zmin + box_expand
-		Atboundary = 1
-	elif np.abs((zmax - box_expand) - 256.0) < 1e-3:
-		box[5] = zmax - box_expand
-		Atboundary = 1
-		
-	# If boundary is crossed, create a new box
-	if Atboundary:
-		box2 = box
+	SingleBox = 0
+	leftovers = np.array([0.0, 0.0, 0.0])
+	# Check if filament crosses beyond the particle box. Limits the first box
+	if xmin < 0.0:
+		box[0] = 0.0
+		leftovers[0] = xmin
+	elif xmax > 256.0:
+		box[1] = 256.0
+		leftovers[0] = xmax - 256.0
+	if ymin < 0.0:
+		box[2] = 0.0
+		leftovers[1] = ymin
+	elif ymax > 256.0:
+		box[3] = 256.0
+		leftovers[1] = ymax - 256.0
+	if zmin < 0.0:
+		box[4] = 0.0
+		leftovers[2] = zmin
+	elif zmax > 256.0:
+		box[5] = 256.0
+		leftovers[2] = zmax - 256.0
+
+	# If boundary is crossed, create a new box that covers the other side of the boundary
+	if not leftovers.any():
+		SingleBox = 1
 	else:
 		if xmin < 0.0:
-			box[0] = 0.0
 			box2[1] = 256.0
-			box2[0] = 256.0 + (xmin - 0.0)
+			box2[0] = 256.0 + leftovers[0]
 		elif xmax > 256.0:
-			box[1] = 256.0
 			box2[0] = 0.0
-			box2[1] = 0.0 + (xmax - 256.0)
-			
+			box2[1] = leftovers[0]
 		if ymin < 0.0:
-			box[2] = 0.0
 			box2[3] = 256.0
-			box2[2] = 256.0 + (ymin - 0.0)
+			box2[2] = 256.0 + leftovers[1]
 		elif ymax > 256.0:
-			box[3] = 256.0
 			box2[2] = 0.0
-			box2[3] = 0.0 + (ymax - 256.0)
-			
+			box2[3] = leftovers[1]
 		if zmin < 0.0:
-			box[4] = 0.0
 			box2[5] = 256.0
-			box2[4] = 256.0 + (zmin - 0.0)
+			box2[4] = 256.0 + leftovers[2]
 		elif zmax > 256.0:
-			box[5] = 256.0
 			box2[4] = 0.0
-			box2[5] = 0.0 + (zmax - 256.0)
-
-	if box == box2:
+			box2[5] = leftovers[2]
+            
+	if SingleBox:
 		mask = particle_mask(box, ParticlePos_)
 		return (np.where(mask)[0]).astype(np.int32)
 	else:
@@ -118,6 +112,7 @@ def masked_particle_indices(filament_box, ParticlePos_, box_expand):
 		indices2 = (np.where(mask2)[0]).astype(np.int32)
 		Masked_indices = np.concatenate([indices1, indices2])
 		return Masked_indices
+
 
 def particle_box(filament_box, masked_ids, ParticlePos_, box_expand):
 	""" 
