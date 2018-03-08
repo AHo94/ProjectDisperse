@@ -419,6 +419,14 @@ class CompareModels():
 		plt.ylabel(ylabel)
 		plt.legend(legend)
 		plt.title('') if title == 'None' else plt.title(title)
+		max_yvalues = np.max(ydata)
+		min_yvalues = np.min(ydata)
+		if np.max(max_yvalues) > 1000 or np.min(min_yvalues) < 1:
+			#plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0), useOffset=True)
+			#plt.gca().get_yaxis().get_major_formatter().set_powerlimits((0,0))
+			xfmt = plt.ScalarFormatter()
+			xfmt.set_powerlimits((0,0))
+			plt.gca().yaxis.set_major_formatter(xfmt)
 		return figure
 
 	def Plot_differences(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None', diff='rel'):
@@ -502,7 +510,7 @@ class CompareModels():
 		plt.title('') if title == 'None' else plt.title(title)
 		return figure
 
-	def Plot_errobar_sameX(self, xdata, ydata, error, xlabel, ylabel, legend, logscale='normal', fill_between=False, diff=False):
+	def Plot_errobar_sameX(self, xdata, ydata, error, xlabel, ylabel, legend, logscale='normal', fill_between=False, diff=False, limit_yaxis=True):
 		if len(ydata) != len(error):
 			raise ValueError("ydata and error data not of same length!")
 		self.Check_ok_parameters(logscale)
@@ -519,7 +527,8 @@ class CompareModels():
 			for i in range(len(ydata)):
 				plt.plot(xdata, ydata[i])
 				plt.fill_between(xdata, ydata[i]-error[i], ydata[i]+error[i], alpha=0.3)
-			plt.ylim((-1.0, 0.5))
+			if limit_yaxis:
+				plt.ylim((-1.0, 1))
 		else:
 			for i in range(len(ydata)):
 				plt.errorbar(xdata, ydata[i], error[i])
@@ -958,13 +967,15 @@ class CompareModels():
 		Sep_RelDiff_length_PropErr_F = self.Plot_errobar_sameX(lengths, Deltas_fofr, Prop_err_fofr, xlabel_len, 'Relative difference of $N(>L)$', fofr_legends, fill_between=True, diff=True)
 		
 		# Absolute difference of N, with propagated errors
-		Propagated_errors_lengths = np.array([Propagate_error_absNum(length_bin_error_logX[0], length_bin_error_logX[i]) for i in range(1, len(FilLengths))])
+		Propagated_errors_lengths = np.array([self.Propagate_error_absNum(length_bin_error_logX[0], length_bin_error_logX[i]) for i in range(1, len(FilLengths))])
 		Propp_err_lens_symm = Propagated_errors_lengths[0:4]
 		Propp_err_lens_fofr = Propagated_errors_lengths[4:]
-		Sep_AbsDiff_Number_error_S_logx = self.Plot_errobar_sameX(length_bins_logX, Symm_length_values, Propp_err_lens_symm, xlabel_len, '$\Delta N$ filaments',
-																Symm_legends, fill_Between=True, diff=True)
-		Sep_AbsDiff_Number_error_F_logx = self.Plot_errobar_sameX(length_bins_logX, fofr_length_values, Propp_err_lens_fofr, xlabel_len, '$\Delta N$ filaments',
-																fofr_legends, fill_Between=True, diff=True)
+		AbsDiff_symm = np.array([Symm_length_values[i] - Symm_length_values[0] for i in range(1, len(Symm_length_values))])
+		AbsDiff_fofr = np.array([fofr_length_values[i] - fofr_length_values[0] for i in range(1, len(fofr_length_values))])
+		Sep_AbsDiff_Number_error_S_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_symm, Propp_err_lens_symm, xlabel_len, '$\Delta N$ filaments',
+																Symm_legends, fill_between=True, diff=True, limit_yaxis=False)
+		Sep_AbsDiff_Number_error_F_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_fofr, Propp_err_lens_fofr, xlabel_len, '$\Delta N$ filaments',
+																fofr_legends, fill_between=True, diff=True, limit_yaxis=False)
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			self.savefigure(ConnectedHistComparison, 'Number_Connected_Filaments')
