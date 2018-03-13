@@ -306,7 +306,7 @@ class CompareModels():
 			foldername += 'PNG/'
 		elif filetype == '.pdf':
 			foldername += 'PDF/'
-		sigma_name_folder = str(Nsigma) + '/'
+		sigma_name_folder = 'Sigma'+str(Nsigma) + '/'
 		foldername += sigma_name_folder
 
 		self.results_dir = os.path.join(savefile_directory, foldername)
