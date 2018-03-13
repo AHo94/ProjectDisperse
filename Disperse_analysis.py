@@ -1336,7 +1336,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		# Calls the script that starts up a set amount of workers.
 		# Stops program a little bit to let the workers start up
 		print "Starting processes"
-		subprocess.call("./SpawnWorkers.sh 25 0", shell=True)
+		subprocess.call("./SpawnWorkers.sh 40 0", shell=True)
 		#subprocess.call("./RemoteConnect.sh", shell=True)
 		time.sleep(5)
 		time_dist = time.time()
@@ -1366,7 +1366,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 			if not socks:
 				print "All data received?"
 				break
-		for i in range(51 + 150):
+		for i in range(41 + 101):
 			control_sender.send("FINISHED")
 		Distances = np.asarray(Distances)
 		#print Distances
@@ -1503,8 +1503,8 @@ if __name__ == '__main__':
 		
 	# Global properties to be set
 	IncludeUnits = 1			# Set to 1 to include 'rockstar' units, i.e Mpc/h and km/s
-	SaveAsPNG = 1				# Set 1 to save figures as PNG
-	SaveAsPDF = 0 				# Set 1 to save figures as PDF
+	SaveAsPNG = 0				# Set 1 to save figures as PNG
+	SaveAsPDF = 1 				# Set 1 to save figures as PDF
 
 	print '=== INFORMATION ==='
 	# Some if tests before the simulation runs
@@ -1803,7 +1803,7 @@ if __name__ == '__main__':
 		savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
 		npart = parsed_arguments.NumberParticles
 		disperse_sigma = parsed_arguments.Nsigma_disperse
-		print '== Running with '+ str(npart) + ' particles! at sigma ' + str(disperse_sigma)' =='
+		print '== Running with '+ str(npart) + ' particles, at sigma ' + str(disperse_sigma) + '! =='
 		if npart == 64:
 			lcdm_dir = 'lcdm_testing/LCDM_z0_64PeriodicTesting/'
 		else:
@@ -2007,7 +2007,7 @@ if __name__ == '__main__':
 										FilamentMass_SymmD, FilamentMass_fofr4, FilamentMass_fofr5, FilamentMass_LCDM]
 
 		if parsed_arguments.DisperseModel == 'all':
-			CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/', savefile_directory=savefile_directory, filetype=filetype, redshift=0, nPart=npart)
+			CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/', savefile_directory=savefile_directory, filetype=filetype, redshift=0, nPart=npart, Nsigma=disperse_sigma)
 			#CompI.Compare_disperse_data(NumConnections_list, FilLengths_list, FilPoints_list)
 			CompI.Compare_disperse_data_clean(NumConnections_list, FilLengths_list, FilPoints_list)
 			#CompI.Filament_distances(Filament_3D_positions, FilLengths_list)
