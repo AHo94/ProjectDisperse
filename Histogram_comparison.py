@@ -292,7 +292,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 class CompareModels():
-	def __init__(self, savefile, foldername, savefile_directory, filetype, redshift, nPart):
+	def __init__(self, savefile, foldername, savefile_directory, filetype, redshift, nPart, Nsigma=3):
 		self.savefile = savefile
 		self.filetype = filetype
 
@@ -306,6 +306,8 @@ class CompareModels():
 			foldername += 'PNG/'
 		elif filetype == '.pdf':
 			foldername += 'PDF/'
+		sigma_name_folder = str(Nsigma) + '/'
+		foldername += sigma_name_folder
 
 		self.results_dir = os.path.join(savefile_directory, foldername)
 		if not os.path.isdir(self.results_dir) and savefile == 1:
@@ -972,10 +974,16 @@ class CompareModels():
 		Propp_err_lens_fofr = Propagated_errors_lengths[4:]
 		AbsDiff_symm = np.array([Symm_length_values[i] - Symm_length_values[0] for i in range(1, len(Symm_length_values))])
 		AbsDiff_fofr = np.array([fofr_length_values[i] - fofr_length_values[0] for i in range(1, len(fofr_length_values))])
-		Sep_AbsDiff_Number_error_S_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_symm, Propp_err_lens_symm, xlabel_len, '$\Delta N$ filaments',
+		Sep_AbsDiff_Number_error_S = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_symm, Propp_err_lens_symm, xlabel_len, '$\Delta N$ filaments',
 																Symm_legends, fill_between=True, diff=True, limit_yaxis=False)
-		Sep_AbsDiff_Number_error_F_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_fofr, Propp_err_lens_fofr, xlabel_len, '$\Delta N$ filaments',
+		Sep_AbsDiff_Number_error_F = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_fofr, Propp_err_lens_fofr, xlabel_len, '$\Delta N$ filaments',
 																fofr_legends, fill_between=True, diff=True, limit_yaxis=False)
+		# Absolute difference of N, with propagated errors. LogX scale
+		Sep_AbsDiff_Number_error_S_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_symm, Propp_err_lens_symm, xlabel_len, '$\Delta N$ filaments',
+																Symm_legends, logscale='logx', fill_between=True, diff=True, limit_yaxis=False)
+		Sep_AbsDiff_Number_error_F_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_fofr, Propp_err_lens_fofr, xlabel_len, '$\Delta N$ filaments',
+																fofr_legends, logscale='logx', fill_between=True, diff=True, limit_yaxis=False)
+        
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			self.savefigure(ConnectedHistComparison, 'Number_Connected_Filaments')
@@ -1013,8 +1021,10 @@ class CompareModels():
 			self.savefigure(Sep_RelDiff_Number_F_logx, 'Number_filaments_relDiff_LOGX_cFofr')
 			self.savefigure(Sep_RelDiff_length_PropErr_S, 'Filament_lengths_relative_difference_PropErr_cSymmetron')
 			self.savefigure(Sep_RelDiff_length_PropErr_F, 'Filament_lengths_relative_difference_PropErr_cFofr')
-			self.savefigure(Sep_AbsDiff_Number_error_S_logx, 'Filament_lengths_absolute_difference_PropErr_cSymmetron')
-			self.savefigure(Sep_AbsDiff_Number_error_F_logx, 'Filament_lengths_absolute_difference_PropErr_cFofr')
+			self.savefigure(Sep_AbsDiff_Number_error_S, 'Filament_lengths_absolute_difference_PropErr_cSymmetron')
+			self.savefigure(Sep_AbsDiff_Number_error_F, 'Filament_lengths_absolute_difference_PropErr_cFofr')
+			self.savefigure(Sep_AbsDiff_Number_error_S_logx, 'Filament_lengths_absolute_difference_PropErr_logX_cSymmetron')
+			self.savefigure(Sep_AbsDiff_Number_error_F_logx, 'Filament_lengths_absolute_difference_PropErr_logX_cFofr')
 		else:
 			print 'Done! No figures saved.'
 
