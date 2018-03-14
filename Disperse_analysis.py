@@ -1026,11 +1026,11 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		os.makedirs(cachedir_ppf_segIDs)
 	if not os.path.isdir(cachedir_ppf_tsols):
 		os.makedirs(cachedir_ppf_tsols)
-	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n10.p'
-	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask_n10.p'
-	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '_Periodic_ZMQmask_n10.p' 
-	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n10.p'
-	cachefile_tsols = cachedir_ppf_tsols + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'Analytic_Periodic_ZMQmask_n10.p'
+	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p' 
+	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+	cachefile_tsols = cachedir_ppf_tsols + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
 	
 
 	def ZMQ_masking():
@@ -1180,7 +1180,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		ParticlePos = Gadget_instance.Get_3D_particles(name)
 
 		# Slicing the box in slices. Only send a small portion of the particle box to mask particles near filament
-		Nslices = 10
+		Nslices = 20
 		SliceSize = 256.0/Nslices
 		Yparts = []
 		IDparts = []
@@ -1337,7 +1337,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		# Stops program a little bit to let the workers start up
 		print "Starting processes"
 		subprocess.call("./SpawnWorkers.sh 40 0", shell=True)
-		#subprocess.call("./RemoteConnect.sh", shell=True)
+		subprocess.call("./RemoteConnect.sh", shell=True)
 		time.sleep(5)
 		time_dist = time.time()
 		# Sends data
