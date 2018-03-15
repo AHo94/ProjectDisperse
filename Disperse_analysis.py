@@ -1026,152 +1026,20 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		os.makedirs(cachedir_ppf_segIDs)
 	if not os.path.isdir(cachedir_ppf_tsols):
 		os.makedirs(cachedir_ppf_tsols)
-	cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
-	cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
-	cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p' 
-	cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
-	cachefile_tsols = cachedir_ppf_tsols + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+
+	Common_name = name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + 'TESTING.p'
+	#cachefile_distances = cachedir_ppf_distances + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+	#cachefile_partbox = cachedir_ppf_partbox + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+	#cachefile_ids = cachedir_ppf_ids + name +  '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p' 
+	#cachefile_segIDs = cachedir_ppf_segIDs + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
+	#cachefile_tsols = cachedir_ppf_tsols + name + '_' + str(npart) + 'part_nsig' + str(nsig) + '_BoxExpand' + str(box_expand) + '.p'
 	
-
-	def ZMQ_masking():
-		""" Masking of particles using ZMQ procedure. """
-		context = zmq.Context()
-		context.linger = 0
-		# Socket to send messages on
-		sender = context.socket(zmq.PUSH)
-		sender.bind("tcp://*:5080")
-
-		# Socket where the data is received from
-		data_receive = context.socket(zmq.PULL)
-		data_receive.bind("tcp://*:5082")
-
-		# Socket where end message is sent to. Used to tell workers the jobs are finished
-		control_sender = context.socket(zmq.PUSH)
-		control_sender.bind("tcp://*:5084")
-
-		# Poller, used to check whether stuff is done or not
-		poller = zmq.Poller()
-		poller.register(data_receive, zmq.POLLIN)
-        
-		# Calls for particle positions, 3D
-		MaskDM = np.array([0,0,0,0,0,0])*256.0
-		Gadget_instance = ReadGadgetFile.Read_Gadget_file([0,0,0], MaskDM)
-		ParticlePos = Gadget_instance.Get_3D_particles(name)
-
-		# Slicing the box in slices. Only send a small portion of the particle box to mask particles near filament
-		Nslices = 20
-		SliceSize = 256.0/Nslices
-		Yslices = []
-		Yparts = []
-		timer = time.time()
-		for i in range(Nslices):
-			MM = (ParticlePos[:,1] > SliceSize*i) & (ParticlePos[:,1] < SliceSize*(i+1))
-			Yparts.append(ParticlePos[MM])
-
-		SlicedParts = []
-		for i in range(Nslices):
-			TempSlices = []
-			for j in range(Nslices):
-				Ybox = Yparts[i]
-				MM = (Ybox[:,2] > SliceSize*j) & (Ybox[:,2] < SliceSize*(j+1))
-				TempSlices.append(Yparts[i][MM])
-			SlicedParts.append(np.array(TempSlices))
-		print 'Slicing time: ', time.time() - timer, 's'
-		SlicedParts = np.asarray(SlicedParts)
-		# Ranges of each slice
-		for i in range(Nslices):
-			Yslices.append([i*SliceSize, (i+1)*SliceSize])
-		Yslices = np.array(Yslices)
-		
-		# Calls the script that starts up a set amount of workers.
-		# Stops program a little bit to let the workers start up
-		print 'Starting process for particle masking'
-		Nworkers = parsed_arguments.NumProcesses
-		subprocess.call("./SpawnWorkers_masking.sh " + str(Nworkers), shell=True)
-		#subprocess.call("./RemoteConnect_masking.sh", shell=True)
-		time.sleep(5)
-		time_mask = time.time()
-		# Sends data
-		print "Done, sending data"
-		for i in range(len(FilPos)):
-			# Finds indices of slices box and sends the corresponding box along with the filament positions
-			idY, idZ = OF.get_indices_slicing(FilPos[i], Yslices, box_expand)
-			Sent_particles = []
-			for idys in idY:
-				for idzs in idZ:
-					Sent_particles.append(SlicedParts[idys][idzs])
-			Sent_particles = np.array(Sent_particles)
-			if len(Sent_particles) >= 2:
-				Sent_particles_real = np.concatenate((Sent_particles[0], Sent_particles[1]))
-				for k in range(2,len(Sent_particles)-1):
-					Sent_particles_real = np.concatenate((Sent_particles_real, Sent_particles[k]))
-			else:
-				Sent_particles_real = Sent_particles[0]
-			
-			# Send to worker(s)
-			ZMQAS.send_zipped_pickle(sender, [FilPos[i], Sent_particles_real, i, box_expand])
-			#ZMQAS.send_zipped_pickle(sender,[i,i,i,0])
-			
-			if i == len(FilPos)-1:
-				print "all data sent"
-		# Give time to send data
-		time.sleep(5)
-        
-		Masked_ids_nonmerge = []
-		Part_box_nonmerge = []
-		ID_ordering = []
-		print 'Looping through data receiving'
-		for j in range(len(FilPos)):
-			socks = dict(poller.poll())
-			if socks.get(data_receive) == zmq.POLLIN:
-				data = ZMQAS.recv_zipped_pickle(data_receive)
-				Masked_ids_nonmerge.append(data[0])
-				Part_box_nonmerge.append(data[1])
-				ID_ordering.append(data[2])
-			if not socks:
-				print "All data received?"
-				break
-		for i in range(Nworkers+1):
-			control_sender.send("FINISHED")
-		Masked_ids_nonmerge = np.asarray(Masked_ids_nonmerge)
-		Part_box_nonmerge = np.asarray(Part_box_nonmerge)
-		#print Masked_ids_nonmerge
-		#print ID_ordering
-		print len(Masked_ids_nonmerge)
-		print len(Masked_ids_nonmerge[0])
-		#print Part_box_nonmerge
-		ID_ordering = np.asarray(ID_ordering)
-		print 'Masking time: ', time.time() - time_mask, 's. Now merging and saving.'
-		# Closing context when computing is done
-		sender.close()
-		data_receive.close()
-		control_sender.close()
-		context.term()
-		#sys.exit(1)
-		Sorted = np.argsort(ID_ordering)
-		Masked_ids_nonmerge = Masked_ids_nonmerge[Sorted]
-		Part_box_nonmerge = Part_box_nonmerge[Sorted]
-		# Merge the particle boxes and masked particle IDs so dataset corresponds to filament without periodic boundary alrogithm applied.
-		Masked_ids = []
-		Part_box = []
-		ID_old = -1
-		for i in range(len(FilID)):
-			ID = FilID[i]
-			if ID == ID_old:
-				Masked_ids[-1], unique_index = np.unique(np.concatenate((Masked_ids[-1], Masked_ids_nonmerge[i])), return_index=True)
-				Part_box[-1] = np.concatenate((Part_box[-1], Part_box_nonmerge[i]))[unique_index]
-			else:
-				Masked_ids.append(Masked_ids_nonmerge[i])
-				Part_box.append(Part_box_nonmerge[i])
-			ID_old = ID
-		Masked_ids = np.asarray(Masked_ids)
-		Part_box = np.asarray(Part_box)
-
-		print 'Merging and sorting done, dumping to pickle file...'
-		#pickle.dump(Masked_ids, open(cachefile_ids, 'wb'))
-		#pickle.dump(Part_box, open(cachefile_partbox, 'wb'))
-		return Masked_ids, Part_box
-
+	cachefile_distances = cachedir_ppf_distances + Common_name
+	cachefile_partbox = cachedir_ppf_partbox + Common_name
+	cachefile_ids = cachedir_ppf_ids + Common_name 
+	cachefile_segIDs = cachedir_ppf_segIDs + Common_name
+	cachefile_tsols = cachedir_ppf_tsols + Common_name
+	
 	def Masking_singleCPU():
 		""" Masks the particle using a single CPU. """
 		# Calls for particle positions, 3D
@@ -1270,7 +1138,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		return Masked_ids, Part_box
 	
 	# Uses ZeroMQ as a way to paralell compute the distances etc
-	# Masking of particles still uses the usual Multiprocessing module
+	# Masking of particles still uses the usual Multiprocessing module -- OLD
 	Nfils_iterate = range(len(FilPos))
 	if os.path.isfile(cachefile_ids):
 		print 'Reading masked particle IDs for ' + name + '...'
@@ -1342,37 +1210,55 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		time_dist = time.time()
 		# Sends data
 		print "Done, sending data"
-		for i in range(len(FilPosNBC)):
-			#ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i, BoxSize])	# Brute force method
-			ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i])	# Analytical method
-			if i == len(FilPosNBC)-1:
-				print "all data sent"
-		# Give time to send data
-		time.sleep(5)
-	
-		Distances = []
-		FilamentAxis = []
-		ID_ordering = []
-		T_solution = []   # Only include this if analytical method is used
-		print 'Looping through data receiving'
-		for j in range(len(FilPosNBC)):
-			socks = dict(poller.poll())
-			if socks.get(data_receive) == zmq.POLLIN:
-				data = ZMQAS.recv_zipped_pickle(data_receive)
-				Distances.append(data[0])
-				FilamentAxis.append(data[1])
-				ID_ordering.append(data[2])
-				T_solution.append(data[3])	# Only include if analytical method is used
-			if not socks:
-				print "All data received?"
+		NumFils = len(FilPosNBC):
+		Fil_slices = 15
+		Numfil_p_slice = NumFils/Fil_slices
+		Distances = np.array([])
+		FilamentAxis = np.array([])
+		ID_ordering = np.array([])
+		T_solution = np.array([])
+		for k in range(Fil_slices+1):
+			Sent_filaments = FilPosNBC[k*Fil_slices:(k+1)*Fil_slices]
+			Sent_Pboxes = Part_box[k*Fil_slices:(k+1)*Fil_slices]
+			if Sent_filaments.any():
+				for i in range(len(Sent_filaments)):
+					#ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i, BoxSize])	# Brute force method
+					#ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i])	# Analytical method
+					ZMQAS.send_zipped_pickle(sender, [Sent_filaments[i], Sent_Pboxes[i], i])
+					#if i == len(FilPosNBC)-1:
+					#	print "all data sent"
+				print "Iteration ", k,' of ', Fil_slices+1,' sent'
+				# Give time to send data
+				time.sleep(5)
+				Distances_temp = []
+				FilamentAxis_temp = []
+				ID_ordering_temp = []
+				T_solution_temp = []   # Only include this if analytical method is used
+				#print 'Looping through data receiving'
+				for j in range(len(Sent_filaments)):
+					socks = dict(poller.poll())
+					if socks.get(data_receive) == zmq.POLLIN:
+						data = ZMQAS.recv_zipped_pickle(data_receive)
+						Distances_temp.append(data[0])
+						FilamentAxis_temp.append(data[1])
+						ID_ordering_temp.append(data[2])
+						T_solution_temp.append(data[3])	# Only include if analytical method is used
+					if not socks:
+						print "All data received?"
+						break
+				Distances = np.concatenate((Distances, np.asarray(Distances_temp)))
+				FilamentAxis = np.concatenate((FilamentAxis, np.asarray(FilamentAxis_temp)))
+				ID_ordering = np.concatenate((ID_ordering, np.asarray(ID_ordering_temp)))
+				T_solution = np.concatenate((T_solution, np.asarray(T_solution_temp)))
+			else:
 				break
 		for i in range(41 + 101):
 			control_sender.send("FINISHED")
-		Distances = np.asarray(Distances)
-		#print Distances
-		FilamentAxis = np.asarray(FilamentAxis)
-		ID_ordering = np.asarray(ID_ordering)
-		T_solution = np.asarray(T_solution)		# Only include if analytical method is used
+		#Distances = np.asarray(Distances)
+		print len(Distances)
+		#FilamentAxis = np.asarray(FilamentAxis)
+		#ID_ordering = np.asarray(ID_ordering)
+		#T_solution = np.asarray(T_solution)		# Only include if analytical method is used
 		print 'Distance computing time: ', time.time() - time_dist, 's'
 		Sorted = np.argsort(ID_ordering)
 		# Closing context when computing is done
