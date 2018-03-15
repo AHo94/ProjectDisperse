@@ -58,6 +58,21 @@ def Get_3D_partpos(px, py, pz):
 	position_3d = np.column_stack((px, py, pz))
 	return position_3d
 
+def Get_filament_length(FilamentPos, boxsize):
+	""" Returns length of a filament. Periodic boundary are taken into account """
+	box_particle = 256.0/2.0
+	FilPos_diff = FilamentPos[1:] - FilamentPos[:-1]
+	FilPos_diff[FilPos_diff[:,1] >= bbb,1] -= boxsize
+	FilPos_diff[FilPos_diff[:,1] <= -bbb,1] += boxsize
+	FilPos_diff[FilPos_diff[:,0] >= bbb,0] -= boxsize
+	FilPos_diff[FilPos_diff[:,0] <= -bbb,0] += boxsize
+	FilPos_diff[FilPos_diff[:,2] >= bbb,2] -= boxsize
+	FilPos_diff[FilPos_diff[:,2] <= -bbb,2] += boxsize
+
+	seglens = np.linalg.norm(FilPos_diff, axis=1)
+	fillength = np.sum(seglens)
+	return fillength
+
 def Get_segaxis(FilamentPos, SegPoints):
 	""" 
 	Receives segment axis, of a filament, based on the pre-determined segment points.
