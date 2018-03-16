@@ -6,9 +6,8 @@ class BoundaryChecker():
 	A class that is used to ensure that the filaments passes the boundary with periodic boundary conditions.
 	This class and algorithm assumes that the box is a square box, where the upper and lower boundaries for all directions are the same.
 	"""
-	def __init__(self, lower_boundary, upper_boundary, xpoints, ypoints, zpoints, FilID, NumFilaments):
-		self.UpperBound = upper_boundary
-		self.LowerBound = lower_boundary
+	def __init__(self, xpoints, ypoints, zpoints, FilID, NumFilaments):
+		self.BoxSize = 256.0
 		self.xdimPos = xpoints
 		self.ydimPos = ypoints
 		self.zdimPos = zpoints
@@ -24,7 +23,7 @@ class BoundaryChecker():
 		"""
 		time_start = time.clock()
 		print 'Checking boundaries'
-		BoxSize = self.UpperBound - self.LowerBound
+		BoxSize = self.BoxSize
 		FilPosTemp = []
 		xPosTemp = []
 		yPosTemp = []
@@ -449,7 +448,6 @@ class BoundaryChecker():
 		"""
 		print 'Checking boundaries'
 		time_start = time.clock()
-		self.BoxSize = self.UpperBound - self.LowerBound
 		FilPosTemp = []
 		xPosTemp = []
 		yPosTemp = []

@@ -58,9 +58,10 @@ def Get_3D_partpos(px, py, pz):
 	position_3d = np.column_stack((px, py, pz))
 	return position_3d
 
-def Get_filament_length(FilamentPos, boxsize):
+def Get_filament_length(FilamentPos):
 	""" Returns length of a filament. Periodic boundary are taken into account """
-	box_particle = 256.0/2.0
+	boxsize = 256.0
+	bbb = boxsize/2.0
 	FilPos_diff = FilamentPos[1:] - FilamentPos[:-1]
 	FilPos_diff[FilPos_diff[:,1] >= bbb,1] -= boxsize
 	FilPos_diff[FilPos_diff[:,1] <= -bbb,1] += boxsize

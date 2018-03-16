@@ -786,8 +786,7 @@ class Disperse_Plotter():
 			print "reading from boundary check pickle file..."
 			BC_instance_variables = pickle.load(open(Boundary_check_cachefn, 'rb'))
 		else:
-			BC_instance = BoundaryChecker.BoundaryChecker(
-					self.xmin, self.xmax, self.xdimPos_nonBC,
+			BC_instance = BoundaryChecker.BoundaryChecker(self.xdimPos_nonBC,
 					self.ydimPos_nonBC, self.zdimPos_nonBC, self.FilID, self.NFils
 					)
 			BC_instance_variables = BC_instance.Get_periodic_boundary()
