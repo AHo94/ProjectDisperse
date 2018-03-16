@@ -1284,71 +1284,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		if len(Distances[i]) != len(FilamentAxis[i]):
 			print 'Issues at i = ', i, ' ', len(Distances[i]), len(FilamentAxis[i])
 	sys.exit(1)#return 0
-	NumPartPerFil = Distances
-	cache_model = cache_particledata + name + '_particleIDs.p'
-	if os.path.isfile(cache_model):
-		Particle_IDs = pickle.load(open(cache_model, 'rb'))
-	else:
-		raise ValueError("Particle ID pickle file does not exist!")
-	Filament_part_IDs = []
-	for mask in Masked_ids:
-		if len(mask) == 2:
-			Filament_part_IDs.append(np.concatenate((Particle_IDs[mask[0]], Particle_IDs[mask[1]])))
-		else:
-			Filament_part_IDs.append(Particle_IDs[mask])
-	Distances_filamentMerge = []
-	ID_old = -1
-	if len(FilID) != len(Distances):
-		raise ValueError('Length of filament ID array and distance array not equal!')
-	for i in range(len(FilID)):
-		ID = FilID[i]
-		if ID == ID_old:
-			Distances_filamentMerge[-1] = np.concatenate((Distances_filamentMerge[-1], Distances[i]))
-		else:
-			Distances_filamentMerge.append(Distances[i])
-		ID_old = ID
-	#Npart_per_fil_partIDs = []
-	#def append_ids(id_list):
-	#	temp_id = []
-	#	for id_list2 in id_list:
-	#		for ids in id_list2:
-	#			temp_id.append(ids)
-	#	Npart_per_fil_partIDs.append(np.array(temp_id))
-	"""	
-	total = 0
-	#total_partids = []
-	#id_append_check = 0
-	# Sorts number of particles per filament, which adds the number if filament is split due to periodic boundary
-	for i in range(len(FilID)):	
-		if i != len(FilID) - 1:
-			if FilID[i+1] == FilID[i]:
-				#total_partids.append(NumPartPerFil_particleIDs[i])
-				total += NumPartPerFil[i]
-				if i == len(FilID) - 2:
-					#id_append_check = 1
-					Npart_per_fil.append(total)
-			else:
-				if total != 0:
-					Npart_per_fil.append(total)
-					#append_ids(total_partids)
-					total = 0
-					#total_partids = []
-				else:
-					Npart_per_fil.append(NumPartPerFil[i])
-					#Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
-		else:
-			if FilID[i] == FilID[i-1]:
-				Npart_per_fil[-1] += NumPartPerFil[i]
-				#if id_append_check:
-				#	total_partids.append(NumPartPerFil_particleIDs[i])
-				#	append_ids(total_partids)
-				#else:
-				#	raise ValueError("Something went wrong with id_append_check if test!")
-				
-			else:
-				Npart_per_fil.append(NumPartPerFil[i])
-				#Npart_per_fil_partIDs.append(NumPartPerFil_particleIDs[i])
-	"""
+	
 	print 'Done'
 	#return np.array(Npart_per_fil), np.array(Filament_part_IDs)
 	return Distances, np.array(Filament_part_IDs)
