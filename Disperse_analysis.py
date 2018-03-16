@@ -1205,12 +1205,12 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		# Stops program a little bit to let the workers start up
 		print "Starting processes"
 		subprocess.call("./SpawnWorkers.sh 40 0", shell=True)
-		subprocess.call("./RemoteConnect.sh", shell=True)
+		#subprocess.call("./RemoteConnect.sh", shell=True)
 		time.sleep(5)
 		time_dist = time.time()
 		# Sends data
 		print "Done, sending data"
-		NumFils = len(FilPosNBC):
+		NumFils = len(FilPosNBC)
 		Fil_slices = 15
 		Numfil_p_slice = NumFils/Fil_slices
 		Distances = np.array([])
@@ -1218,9 +1218,9 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 		ID_ordering = np.array([])
 		T_solution = np.array([])
 		for k in range(Fil_slices+1):
-			Sent_filaments = FilPosNBC[k*Fil_slices:(k+1)*Fil_slices]
-			Sent_Pboxes = Part_box[k*Fil_slices:(k+1)*Fil_slices]
-			if Sent_filaments.any():
+			Sent_filaments = FilPosNBC[k*Numfil_p_slice:(k+1)*Numfil_p_slice]
+			Sent_Pboxes = Part_box[k*Numfil_p_slice:(k+1)*Numfil_p_slice]
+			if len(Sent_filaments):
 				for i in range(len(Sent_filaments)):
 					#ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i, BoxSize])	# Brute force method
 					#ZMQAS.send_zipped_pickle(sender, [FilPosNBC[i], Part_box[i], i])	# Analytical method
@@ -1250,6 +1250,7 @@ def Save_NumPartPerFil(name, FilPos, FilID, FilPosNBC, FilIDBC, BoxSize, npart, 
 				FilamentAxis = np.concatenate((FilamentAxis, np.asarray(FilamentAxis_temp)))
 				ID_ordering = np.concatenate((ID_ordering, np.asarray(ID_ordering_temp)))
 				T_solution = np.concatenate((T_solution, np.asarray(T_solution_temp)))
+				print "Iteration ", k, "done"
 			else:
 				break
 		for i in range(41 + 101):
