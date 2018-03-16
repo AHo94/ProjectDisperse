@@ -7,6 +7,8 @@ class BoundaryChecker():
 	This class and algorithm assumes that the box is a square box, where the upper and lower boundaries for all directions are the same.
 	"""
 	def __init__(self, xpoints, ypoints, zpoints, FilID, NumFilaments):
+		self.LowerBound = 0
+		self.UpperBound = 256.0
 		self.BoxSize = 256.0
 		self.xdimPos = xpoints
 		self.ydimPos = ypoints
