@@ -391,3 +391,35 @@ def get_indices_slicing(Filament_slice, Yslices, box_expand):
 		idZ = Periodic_slicing([Zmin, Zmax], 'none', Yslices)
 
 	return idY, idZ
+
+def Get_particle_box_slices(ParticlePos):
+	""" Creates slices of the particle box, for a speed up in masking. """
+	Nslices = 20
+	SliceSize = 256.0/Nslices
+	Yparts = []
+	IDparts = []
+	PartIDs = np.linspace(0, len(ParticlePos)-1, len(ParticlePos), dtype=np.int32)
+	for i in range(Nslices):
+		MM = (ParticlePos[:,1] > SliceSize*i) & (ParticlePos[:,1] < SliceSize*(i+1))
+		Yparts.append(ParticlePos[MM])
+		IDparts.append(PartIDs[MM])
+	SlicedParts = []
+	SlicedIDs = []
+	for i in range(Nslices):
+		TempSlices = []
+		TempIDSlices = []
+		for j in range(Nslices):
+			Ybox = Yparts[i]
+			MM = (Ybox[:,2] > SliceSize*j) & (Ybox[:,2] < SliceSize*(j+1))
+			TempSlices.append(Yparts[i][MM])
+			TempIDSlices.append(IDparts[i][MM])
+		SlicedParts.append(np.array(TempSlices))
+		SlicedIDs.append(np.array(TempIDSlices))
+	SlicedParts = np.asarray(SlicedParts)
+	SlicedIDs = np.asarray(SlicedIDs)
+	# Ranges of each slice
+	SliceRanges = []
+	for i in range(Nslices):
+		SliceRanges.append([i*SliceSize, (i+1)*SliceSize])
+	SliceRanges = np.asarray(SliceRanges)
+	return SlicedParts, SlicedIDs, SliceRanges
