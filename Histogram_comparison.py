@@ -329,7 +329,7 @@ class CompareModels():
 		""" Function that calls savefig based on figure instance and filename. """
 		if type(name) != str:
 			raise ValueError('filename not a string!')
-		figure.savefig(self.results_dir + name + self.filetype)
+		figure.savefig(self.results_dir + name + self.filetype, bbox_inches='tight')
 
 	def Compute_errors(self, databins):
 		""" Computes the errorbars of the length data. Assumes Poisson distribution. """
