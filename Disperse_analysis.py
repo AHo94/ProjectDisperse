@@ -1829,9 +1829,10 @@ if __name__ == '__main__':
 										FilamentMass_SymmD, FilamentMass_fofr4, FilamentMass_fofr5, FilamentMass_LCDM]
 
 		if parsed_arguments.DisperseModel == 'all':
-			CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/', savefile_directory=savefile_directory, filetype=filetype, redshift=0, nPart=npart, Nsigma=disperse_sigma)
+			print 'ok'
+			#CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/', savefile_directory=savefile_directory, filetype=filetype, redshift=0, nPart=npart, Nsigma=disperse_sigma)
 			#CompI.Compare_disperse_data(NumConnections_list, FilLengths_list, FilPoints_list)
-			CompI.Compare_disperse_data_clean(NumConnections_list, FilLengths_list, FilPoints_list)
+			#CompI.Compare_disperse_data_clean(NumConnections_list, FilLengths_list, FilPoints_list)
 			#CompI.Filament_distances(Filament_3D_positions, FilLengths_list)
 		
 	elif ModelCompare == 2 and HOMEPC == 1:
