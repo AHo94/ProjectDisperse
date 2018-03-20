@@ -3,13 +3,15 @@ import numpy as np
 import cPickle as pickle
 import os
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 import argparse
+import time
 
 # Own modules
 import ReadGadgetFile as RGF
 import OtherFunctions as OF
 import ParticleMasking as PMA
-import ParticlePerFilament as PPF
+import ParticlesPerFilament as PPF
 
 # Global variables as constants
 Mpc = 3.08568025e22
@@ -29,7 +31,7 @@ class FilterParticlesAndFilaments():
 		elif model == 'symm_A':
 			self.Dispersemodel = 'SymmA'
 		elif model == 'symm_B':
-			self.Dispersemodel = 'SymmD'
+			self.Dispersemodel = 'SymmB'
 		elif model == 'symm_C':
 			self.Dispersemodel = 'SymmC'
 		elif model == 'symm_D':
@@ -40,9 +42,12 @@ class FilterParticlesAndFilaments():
 		self.model = model
 		self.npart = npart
 		self.sigma = sigma
+		print 'Reading filament and particle data for model: ', model
 		self.Read_basic_data(model, npart, sigma)
+		print 'Filtering particles'
+		filter_time = time.time()
 		self.Do_filter_particles()   # Filters the halo particles
-		#self.Get_threshold_and_noise()
+		print 'Filering time:', time.time() - filter_time, 's'
 
 	def Read_basic_data(self, model, npart, sigma):
 		""" Reads filament data from DisPerSE """
@@ -61,12 +66,13 @@ class FilterParticlesAndFilaments():
 		# Read filament from pickle and creates 3D coordinates of filament positions
 		Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data = pickle.load(open(Disperse_data_check_fn, 'rb'))
 		self.Unpack_filament_data(Box_boundaries, Filament_coordinate_data)
+		Filament_3DPos = []
 		for j in range(len(self.xdimPos)):
 			Filament_3DPos.append(np.column_stack((self.xdimPos[j], self.ydimPos[j], self.zdimPos[j])))
 		self.Filament_3DPos = np.array(Filament_3DPos)
 		self.FilamentLength = []
 		for i in range(len(Filament_3DPos)):
-			fillen = OF.Get_filament_length(Filament_3DPos[i], self.xmax-self.xmin)
+			fillen = OF.Get_filament_length(Filament_3DPos[i])
 			self.FilamentLength.append(fillen)
 		self.FilamentLength = np.asarray(self.FilamentLength)
 
@@ -89,9 +95,9 @@ class FilterParticlesAndFilaments():
 
 		self.NFils = Fil_coord[0]
 		self.FilamentPos = Fil_coord[1]
-		self.xdimPos_nonBC = Fil_coord[2]
-		self.ydimPos_nonBC = Fil_coord[3]
-		self.zdimPos_nonBC = Fil_coord[4]
+		self.xdimPos = Fil_coord[2]
+		self.ydimPos = Fil_coord[3]
+		self.zdimPos = Fil_coord[4]
 		self.NFilamentPoints = Fil_coord[5]
 		self.FilID = Fil_coord[6]
 		self.PairIDS = Fil_coord[7]
@@ -142,7 +148,8 @@ class FilterParticlesAndFilaments():
 		# Particle position of the particle box
 		cachedir_ppf_pbox = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ParticleBoxes/'
 		cachefile_pbox = cachedir_ppf_pbox + Common_filename
-		ParticleBoxes = np.load(cachefile_pbox)
+		#ParticleBoxes = np.load(cachefile_pbox)
+		ParticleBoxes = 1
 		return Distances, Segment_index, Tsolutions, Masked_IDs, ParticleBoxes
 
 	def accepted_distance_func_histogram(self, distance_arr, binnum=150):
@@ -191,16 +198,17 @@ class FilterParticlesAndFilaments():
 		The thickness is at the distance at which the average density is smaller than the threshold.
 		Threshold = 10*rho_crit
 		"""
-		Nparts = len(particle_distances)
-		Filtered_part = self.Filter_halo_particles(filpos, segids, tsols, fillen, np.array(range(Nparts)))
-		p_dist = particle_distances[Filtered_part]
-		distances_sorted = np.sort(p_dist)
-		
+		#Nparts = len(particle_distances)
+		#Filtered_part = self.Filter_halo_particles(filpos, segids, tsols, fillen, np.array(range(Nparts)))
+		#p_dist = particle_distances[Filtered_part]
+		#distances_sorted = np.sort(p_dist)
+		distances_sorted = np.sort(particle_distances)
+
 		Nparts2 = len(distances_sorted)
 		N_smallR = np.linspace(1, Nparts2, Nparts2)
 		Volumes = np.pi*fillen*distances_sorted**2
 		average_densities = pre_rho*N_smallR/Volumes
-		first_smaller_crit = (np.where(average_densities[20:]/rho_crit_ < 10.0)[0])[0]
+		first_smaller_crit = (np.where(average_densities[20:]/rho_crit < 10.0)[0])[0]
 		OK_dist = distances_sorted[first_smaller_crit]
 		return OK_dist
 
@@ -288,7 +296,7 @@ class FilterParticlesAndFilaments():
 		Filters the halo particles around the filaments. This should be run first before the thickness is defined.
 		All the filtered values are saved in pickle files.
 		"""
-		boxexpand = 3
+		boxexpand = 6
 		#Common_filename =  self.model + '_' + str(self.npart) + 'part_nsig' + str(self.sigma)+ '_BoxExpand' + str(boxexpand) + '.p'  # Pickle
 		Common_filename =  self.model + '_' + str(self.npart) + 'part_nsig' + str(self.sigma)+ '_BoxExpand' + str(boxexpand) + '.npy' # Numpy
 		cachedir_ppf_distances = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/FilteredParts/Distances/'
@@ -329,28 +337,30 @@ class FilterParticlesAndFilaments():
 			self.Filtered_masks = np.load(cachefile_masks)
 			self.Filtered_tsols = np.load(cachefile_tsols)
 			self.Filtered_segids = np.load(cachefile_segIDs)
-			self.Filtered_partbox = np.load(cachefile_pbox)
+			#self.Filtered_partbox = np.load(cachefile_pbox)
 		else:
-			Distances, Segment_index, Tsolutions, Masked_IDs, ParticleBoxes = self.Read_particle_data(self.model, self.npart, self.sigma, 3)
+			Distances, Segment_index, Tsolutions, Masked_IDs, ParticleBoxes = self.Read_particle_data_numpy(self.model, self.npart, self.sigma, 6)
 			self.Filtered_distances = []
 			self.Filtered_masks = []
 			self.Filtered_tsols = []
 			self.Filtered_segids = []
 			self.Filtered_partbox = []
+			filter_time = time.time()
 			for i in range(len(self.Filament_3DPos)):
 				All_ids = np.array(range(len(Distances[i])))
 				Part_filter = self.Filter_halo_particles(self.Filament_3DPos[i], Segment_index[i], Tsolutions[i],
-														 FilamentLength[i], All_ids)
-				self.Filtered_distances.append(Distances[Part_filter])
-				self.Filtered_masks.append(Masked_IDs[Part_filter])
-				self.Filtered_tsols.append(Tsolutions[Part_filter])
-				self.Filtered_segids.append(Segment_index[Part_filter])
-				self.Filtered_partbox.append(ParticleBoxes[Part_filter])
+														 self.FilamentLength[i], All_ids)
+				self.Filtered_distances.append(Distances[i][Part_filter])
+				self.Filtered_masks.append(Masked_IDs[i][Part_filter])
+				self.Filtered_tsols.append(Tsolutions[i][Part_filter])
+				self.Filtered_segids.append(Segment_index[i][Part_filter])
+				#self.Filtered_partbox.append(ParticleBoxes[i][Part_filter])
 			self.Filtered_distances = np.asarray(self.Filtered_distances)
 			self.Filtered_masks = np.asarray(self.Filtered_masks)
 			self.Filtered_tsols = np.asarray(self.Filtered_tsols)
 			self.Filtered_segids = np.asarray(self.Filtered_segids)
-			self.Filtered_partbox = np.asarray(self.Filtered_partbox)
+			print 'Filering time:', time.time() - filter_time, 's'
+			#self.Filtered_partbox = np.asarray(self.Filtered_partbox)
 			# Save as pickle
 			#pickle.dump(self.Filtered_distances, open(cachefile_distances, 'wb'))
 			#pickle.dump(self.Filtered_masks, open(cachefile_masks, 'wb'))
@@ -358,13 +368,13 @@ class FilterParticlesAndFilaments():
 			#pickle.dump(self.Filtered_segids, open(cachefile_segIDs, 'wb'))
 			#pickle.dump(self.Filtered_partbox, open(cachefile_pbox, 'wb'))
 			# Save as numpy files
-			np.save(self.Filtered_distances, cachefile_distances)
-			np.save(self.Filtered_masks, cachefile_masks)
-			np.save(self.Filtered_tsols, cachefile_tsols)
-			np.save(self.Filtered_segids, cachefile_segIDs)
-			np.save(self.Filtered_partbox, cachefile_pbox)
+			np.save(cachefile_distances, self.Filtered_distances)
+			np.save(cachefile_masks, self.Filtered_masks)
+			np.save(cachefile_tsols, self.Filtered_tsols)
+			np.save(cachefile_segIDs, self.Filtered_segids)
+			#np.save(cachefile_pbox, self.Filtered_partbox)
 	
-	def Filter_filament_density_threshold(Fpos, particle_distances, fillen, number, tsols, segids):
+	def Filter_filament_density_threshold(self, Fpos, particle_distances, fillen, number, tsols, segids):
 		""" 
 		Filter filaments that does not reach a given threshold density.
 		Loop through the distances, in a sorted array, as a radius R. Computes the density of the filament as
@@ -386,11 +396,11 @@ class FilterParticlesAndFilaments():
 		
 		for i in range(len(particle_distances)):
 			# First filter halo particles
-			Filtered_part = Get_filament_axis_filter_analytic(Fpos[number[i]], segids[number[i]], tsols[number[i]], fillen[i], 
-																np.array(range(len(segids[number[i]]))))
-			p_dist = particle_distances[i][Filtered_part]
+			#Filtered_part = Get_filament_axis_filter_analytic(Fpos[number[i]], segids[number[i]], tsols[number[i]], fillen[i], 
+			#													np.array(range(len(segids[number[i]]))))
+			#p_dist = particle_distances[i][Filtered_part]
 			
-			distances_sorted = np.sort(p_dist)
+			distances_sorted = np.sort(particle_distances[i])
 			average_densities = []
 			pre_volume = np.pi*fillen[i]
 			Noise_filament = 0
@@ -406,7 +416,7 @@ class FilterParticlesAndFilaments():
 			if not Noise_filament:
 				if np.max(np.array(average_densities)/rho_crit) < 10:
 					Filtered_filaments.append(i)
-				if np.min(average_densities[1:])/rho_crit_ > 10:
+				if np.min(average_densities[1:])/rho_crit > 10:
 					larger_threshold.append(i)
 				else:
 					Included_filaments.append(i)
@@ -418,15 +428,16 @@ class FilterParticlesAndFilaments():
 		Recomputes particle distances and masks for an increased box expand. 
 		Only used for filaments whose density is always larger than the given threshold.
 		"""
-		SlicedParts, SlicedIDs, SliceRanges = OF.Get_particle_box_slices()
+		SlicedParts, SlicedIDs, SliceRanges = OF.Get_particle_box_slices(self.ParticlePos)
 		Nf_Distances = []
 		Nf_Segids = []
 		Nf_Tsolutions = []
 		Nf_ParticleBoxes = []
 		Nf_Masked_IDs = []
 		for number in Over_IDs:
+			#print self.Filament_3DPos[number]
 			Dist_new, SegID_new, Tsols_new, Pbox_new, MaskIDs_new = self.Mask_and_compute_distances_again(self.Filament_3DPos[number], box_exp_multiplier*6, 
-																										SlicedParts, SlicedIDs, SlicedParts)
+																										SlicedParts, SlicedIDs, SliceRanges)
 			Nf_Distances.append(Dist_new)
 			Nf_Segids.append(SegID_new)
 			Nf_Tsolutions.append(Tsols_new)
@@ -498,15 +509,16 @@ class FilterParticlesAndFilaments():
 		Determines which filament is filtered out, based on the density thresholds.
 		Recomputes filaments whose density is always larger than the density thresholds. Continues until none of these exists. 
 		"""
-		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(self.Filament_3DPos, self.Filtered_distances, self.FilamentLength,
-																				 			 range(0, len(self.Filtered_distances)), self.Filtered_tsols,
-																				 			 self.Filtered_segids)
+		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(self.Filament_3DPos, self.Filtered_distances, self.FilamentLength, range(0, len(self.Filtered_distances)), self.Filtered_tsols, self.Filtered_segids)
 		multiplier = 1
 		while OverThreshold.any():
 			multiplier += 1
 			New_incFils, New_filtFils, OverThreshold = self.Recompute_densities(OverThreshold, multiplier)
-			Included_fils = np.concatenate(Included_fils, New_incFils)
-			Filtered_fils = np.concatenate(Filtered_fils, New_filtFils)
+			Included_fils = np.concatenate(Included_fils, New_incFils) if New_incFils.any() else Included_fils
+			Filtered_fils = np.concatenate(Filtered_fils, New_filtFils) if New_filtFils.any() else Filtered_fils
+			if multiplier > 3:
+				print 'Multiplier threshold over 3, stopping the box expand computation'
+				break
 
 		Distance_thresholds = []
 		for index in Included_fils:
@@ -521,7 +533,7 @@ class FilterParticlesAndFilaments():
 		Accepted_box_particles = []
 		for i in range(len(Distance_thresholds)):
 			index = Included_fils[i]
-			Filament_thickness = np.where(self.Filtered_distances[index] <= Distance_threshold[i])[0]
+			Filament_thickness = np.where(self.Filtered_distances[index] <= Distance_thresholds[i])[0]
 			Accepted_box_particles.append(Filament_thickness)
 			Particles_accepted.append(self.Filtered_masks[index][Filament_thickness])
 			Distances_accepted.append(self.Filtered_distances[index][Filament_thickness])
@@ -537,7 +549,7 @@ class FilterParticlesAndFilaments():
 		cachedir_OKfils = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/IncludedFilaments/'
 		cachedir_thresholds = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/DistanceThresholds/'
 		cachedir_BoxParts = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/AcceptedBoxPartIDs/'
-		cachedir_OKParts = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/AccetedParticleIDs/'
+		cachedir_OKParts = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/AcceptedParticleIDs/'
 		cachedir_OKDists = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/AcceptedDistances/'
 		if not os.path.isdir(cachedir_OKfils):
 			os.makedirs(cachedir_OKfils)
@@ -550,20 +562,24 @@ class FilterParticlesAndFilaments():
 		if not os.path.isdir(cachedir_OKDists):
 			os.makedirs(cachedir_OKDists)
 
-		Common_filename =  self.model + '_' + str(self.npart) + 'part_nsig' + str(self.sigma)+ '_BoxExpand' + str(boxexpand) + '.npy'
+		Common_filename =  self.model + '_' + str(self.npart) + 'part_nsig' + str(self.sigma)+ '_BoxExpand' + str(6) + '.npy'
 		cachefile_okfils = cachedir_OKfils + Common_filename
 		cachefile_thresholds = cachedir_thresholds + Common_filename
 		cachefile_boxparts = cachedir_BoxParts + Common_filename
 		cachefile_okparts = cachedir_OKParts + Common_filename
 		cachefile_okdists = cachedir_OKDists + Common_filename
 		if os.path.isfile(cachefile_okfils):
+			print 'Reading thresholds and accepted particles from numpy files...'
 			Included_fils = np.load(cachefile_okfils)
 			Distance_thresholds = np.load(cachefile_thresholds)
 			Accepted_box_particles = np.load(cachefile_boxparts)
 			Particles_accepted = np.load(cachefile_okparts)
 			Distances_accepted = np.load(cachefile_okdists)
 		else:
+			print 'Computing thresholds and accepted particles ...'
+			computing_time = time.time()
 			Included_fils, Distance_thresholds, Accepted_box_particles, Particles_accepted, Distances_accepted = self.Compute_threshold_and_noise()
+			print 'Threshold computing time: ', time.time() - computing_time, 's. Now saving to numpy files'
 			np.save(cachefile_okfils, Included_fils)
 			np.save(cachefile_thresholds, Distance_thresholds)
 			np.save(cachefile_boxparts, Accepted_box_particles)
@@ -572,24 +588,87 @@ class FilterParticlesAndFilaments():
 		
 		return Included_fils, Distance_thresholds, Accepted_box_particles, Particles_accepted, Distances_accepted
 
+	def Velocity_components(self, FilamentPos, segids, PartVel_3D):
+		""" 
+		Computes the speeds of the different velocity components. 
+		"""
+		Speed = np.linalg.norm(PartVel_3D, axis=1)
+		s_vectors = FilamentPos[1:] - FilamentPos[:-1]
+		s_vectors_normed = np.array([stuff/np.linalg.norm(stuff) for stuff in s_vectors])
+		s_vector_part = np.array([s_vectors_normed[segids[i]] for i in range(len(segids))])
+		
+		# Projects normal vector on the filament to the plane to the particle
+		Plane_vectors = np.cross(PartVel_3D, s_vector_part)
+		PlanevsSegment = np.cross(Plane_vectors, s_vector_part)
+		
+		Normal_vectors = PlanevsSegment/np.linalg.norm(PlanevsSegment, axis=1).reshape(len(Plane_vectors),1)
+		# Computes the speeds of the parallel and orthogonal components
+		Orthogonal_velocity = np.array([np.dot(PartVel_3D[i], Normal_vectors[i]) for i in range(len(PartVel_3D))])
+		Parallel_velocity = np.array([np.dot(PartVel_3D[i], s_vector_part[i]) for i in range(len(PartVel_3D))])
+		
+		return Parallel_velocity, Orthogonal_velocity, Speed
+
+	def Compute_speed_components(self, filpos, Part_accept):
+		segids = self.Filtered_segids
+		Parallel_speeds = []
+		Orthogonal_speeds = []
+		All_speeds = []
+		#for accepted_ids in Part_accept:
+		for i in range(len(Part_accept)):
+			Pvel3D = self.ParticleVel[Part_accept[i]]
+			Para_speed, Orth_speed, Speed = Velocity_components_A(filpos[i], segids[Part_accept[i]], PVel3D)
+			Parallel_speeds.append(Para_speed), Orthogonal_speeds.append(Orth_speed), All_speeds.append(Speed)
+		return np.array(Parallel_speeds), np.array(Orthogonal_speeds), np.array(All_speeds)
+
+	def Get_speed_components(self, filpos, Part_accept):
+		cachedir_speed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/Speed/'
+		cachedir_Ospeed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/OrthogonalComp/'
+		cachedir_Pspeed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/ParallelComp/'
+		if not os.path.isdir(cachedir_speed):
+			os.makedirs(cachedir_speed)
+		if not os.path.isdir(cachedir_Ospeed):
+			os.makedirs(cachedir_Ospeed)
+		if not os.path.isdir(cachedir_Pspeed):
+			os.makedirs(cachedir_Pspeed)
+
+		Common_filename =  self.model + '_' + str(self.npart) + 'part_nsig' + str(self.sigma)+ '_BoxExpand' + str(6) + '.npy'
+		cachefile_speed = cachedir_speed + Common_filename
+		cachefile_Ospeed = cachedir_Ospeed + Common_filename
+		cachefile_Pspeed = cachedir_Pspeed + Common_filename
+		if os.path.isfile(cachefile_speed):
+			print 'Reading from speed component numpy files...'
+			All_speeds = np.load(cachefile_speed)
+			Orthogonal_speeds = np.load(cachefile_Ospeed)
+			Parallel_speeds = np.load(cachefile_Pspeed)
+		else:
+			print 'Computing speed components'
+			Speed_timer = time.time()
+			Parallel_speeds, Orthogonal_speeds, All_speeds = self.Compute_speed_components(filpos, Part_accept)
+			print 'Speed computing time: ', time.time() - Speed_timer, 's'
+			np.save(cachefile_speed, All_speeds)
+			np.save(cachefile_Ospeed, Orthogonal_speeds)
+			np.save(cachefile_Pspeed, Parallel_speeds)
+		return All_speeds, Orthogonal_speeds, Parallel_speeds
+
+
 class Plot_results():
 	def __init__(self, models, Nsigma, foldername, filetype='png'):
 		if filetype == 'png':
 			foldername += 'PNG/'
 		elif filetype == 'pdf':
 			foldername += 'PDF/'
+		self.filetype = filetype
 		sigma_name_folder = 'Sigma'+str(Nsigma) + '/'
 		foldername += sigma_name_folder
 
 		self.results_dir = os.path.join(savefile_directory, foldername)
-		if not os.path.isdir(self.results_dir) and savefile == 1:
+		if not os.path.isdir(self.results_dir):
 			os.makedirs(self.results_dir)
 
 		self.All_legends = []
 		self.Symm_legends = []
 		self.fofr_legends = []
 		self.Get_legends(models)
-
 
 	def Get_legends(self, models):
 		def append_legends(name, mod=0):
@@ -624,33 +703,74 @@ class Plot_results():
 		""" Function that calls savefig based on figure instance and filename. """
 		if type(name) != str:
 			raise ValueError('filename not a string!')
-		figure.savefig(self.results_dir + name + self.filetype)
+		figure.savefig(self.results_dir + name + self.filetype, bbox_inches='tight')
 
-	def Particle_profiles(self, Thresholds):
+	def Particle_profiles(self, Thresholds, Accepted_parts):
 		""" Plots data related to the particles """
+		# Computes masses of the filament. Done for all models
+		self.Filament_masses = []
+		for i in range(len(Accepted_parts)):
+			Mass_array_temp = np.array([len(Accepted_parts[i][j]) for j in range(len(Accepted_parts[i]))])
+			self.Filament_masses.append(Mass_array_temp)
+		Common_bin_mass = OF.Get_common_bin_logX(self.Filament_masses, binnum=40)
+		Number_mass = []
+		Error_mass = []
+		for i in range(len(self.Filament_masses)):
+			bin_value, bin_err = OF.Get_numbers_common(self.Filament_masses, self.Filament_masses, Common_bin_mass, std='Poisson')
+			Number_mass.append(bin_value)
+			Error_mass.append(bin_err)
+
 		# Thickness of filaments as a binned histogram, using np.digitize
 		Common_bin_thickness = OF.Get_common_bin_logX(Thresholds, binnum=40)
 		Number_thickness = []
 		for i in range(len(Thresholds)):
-			index_bin = np.digitize(Thresholds[i], Common_bin_thickness)
-			bin_value = np.array([len(Thresholds[i][index_bin == j]) for j in range(len(Common_bin_thickness))])
+			#index_bin = np.digitize(Thresholds[i], Common_bin_thickness)
+			#bin_value = np.array([len(Thresholds[i][index_bin == j]) for j in range(len(Common_bin_thickness))])
+			bin_value, bin_std = OF.Get_numbers_common(Thresholds, Thresholds, Common_bin_thickness)
 			Number_thickness.append(bin_value)
 		
+		####### Plotting #######
+		# Mass histogramof all filaments
+		NumMass_all = plt.figure()
+		for i in range(len(self.Filament_masses)):
+			plt.loglog(Common_bin_mass, self.Filament_masses[i], 'o-')
+		
+
+
+		# Thickness histogram of all filaments
 		NumThickness_all = plt.figure()
 		for i in range(len(Thresholds)):
 			plt.loglog(Common_bin_thickness, Number_thickness[i], 'o-')
 		plt.legend(self.All_legends)
 		plt.xlabel('Filament thickness - [Mpc/h]')
 		plt.ylabel('$N$ filaments')
-		#for i in range(0,5):
-
-		#NumThickness_Symm = plt.figure()
-
-		#NumThickness_fofr = plt.figure()
+		# Thickness hisotgram of lcdm + symmetron filaments
+		NumThickness_Symm = plt.figure()
+		for i in range(0,5):
+			plt.loglog(Common_bin_thickness, Number_thickness[i], 'o-')
+		plt.legend(self.Symm_legends)
+		plt.xlabel('Filament thickness - [Mpc/h]')
+		plt.ylabel('$N$ filaments')
+		# Thickness histogram of lcdm + f(R) filaments
+		NumThickness_fofr = plt.figure()
+		for i in [0,5,6,7]:
+			plt.loglog(Common_bin_thickness, Number_thickness[i], 'o-')
+		plt.legend(self.fofr_legends)
+		plt.xlabel('Filament thickness - [Mpc/h]')
+		plt.ylabel('$N$ filaments')
+		
+		print '--- SAVING IN: ', self.results_dir, ' ---'
 		self.savefigure(NumThickness_all, 'Filament_Thickness_distribution')
+		self.savefigure(NumThickness_Symm, 'Filament_Thickness_distribution_cSymmetron')
+		self.savefigure(NumThickness_fofr, 'Filament_Thickness_distribution_cFofr')
 
-	def Velocity_profiles(self):
-		c = 1 
+	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds):
+		""" Plots data related to the velocity profiles """
+		Filament_masses = []   # A list of all filament masses for all models
+		for i in range()
+
+	#def Similar_profiles(self, All_speeds, ):
+
 
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
@@ -662,6 +782,7 @@ def Argument_parser():
 	 				+ "Do not run seperate models and 'all' at once! Defaults at lcdm", type=str, default='lcdm')
 	parser.add_argument("-Nparts", "--NumberParticles", help="Run with a set number of particles. Default 64.", type=int, default=64)
 	parser.add_argument("-Nsigma", "--Nsigma_disperse", help="Sigma value used for DisPerSE. Default at 3.", type=int, default=3)
+	parser.add_argument("-filetype", "--Filetype", help="Filetype the figures are saved in. Can be pdf or png (default)", type=str, default='png')
 	# Parse arguments
 	args = parser.parse_args()
 	# Some checks
@@ -683,15 +804,24 @@ if __name__ == '__main__':
 	# Parse the arguments
 	parsed_arguments = Argument_parser()
 	p_model = parsed_arguments.Model
-	N_parts = parsed_arguments.Nparts
-	N_sigma = parsed_arguments.Nsigma
-
+	N_parts = parsed_arguments.NumberParticles
+	N_sigma = parsed_arguments.Nsigma_disperse
+	Filetype = parsed_arguments.Filetype
+	print '====== Information ======'
+	print 'Running for model:', p_model
+	print 'Number of particles: ', N_parts
+	print 'Sigma value: ', N_sigma
+	print '========================='
 	Filament_ids = []
 	Dist_thresholds = []
 	OK_box_particles = []
 	Part_accepted = []
 	Dist_accepted = []
 	Models_included = []
+	All_speed_list = []
+	Par_speed_list = []
+	Orth_speed_list = []
+
 	def Append_data(Fid, D_thres, OK_pbox, OK_part, OK_dist, modelname):
 		""" Appends common data to a common list """
 		Filament_ids.append(Fid)
@@ -701,44 +831,50 @@ if __name__ == '__main__':
 		Dist_accepted.append(OK_dist)
 		Models_included.append(modelname)
 
+	def Append_data_speeds(AllS, OrthS, ParaS):
+		All_speed_list.append(AllS)
+		Par_speed_list.append(ParaS)
+		Orth_speed_list.append(OrthS)
+
 	if p_model == 'lcdm' or p_model == 'all':
-		LCDM_instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
+		LCDM_instance = FilterParticlesAndFilaments('lcdm', N_parts, N_sigma)
 		OK_fils_LCDM, LCDM_thresholds, OK_pbox_LDCM, OK_particles_LCDM, OK_distances_LCDM = LCDM_instance.Get_threshold_and_noise()
-		Append_data(OK_fils_LCDM, LCDM_thresholds, OK_pbox_LDCM, OK_particles_LCDM, OK_distances_LCDM, p_model)
+		Append_data(OK_fils_LCDM, LCDM_thresholds, OK_pbox_LDCM, OK_particles_LCDM, OK_distances_LCDM, 'lcdm')
 
 	if p_model == 'symmA' or p_model == 'all':
-		SA_instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
+		SA_instance = FilterParticlesAndFilaments('symm_A', N_parts, N_sigma)
 		OK_fils_SA, SA_thresholds, OK_pbox_SA, OK_particles_SA, OK_distances_SA = SA_instance.Get_threshold_and_noise()
-		Append_data(OK_fils_SA, SA_thresholds, OK_pbox_SA, OK_particles_SA, OK_distances_SA, p_model)
+		Append_data(OK_fils_SA, SA_thresholds, OK_pbox_SA, OK_particles_SA, OK_distances_SA, 'symmA')
 
 	if p_model == 'symmB' or p_model == 'all':
-		SB_instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
+		SB_instance = FilterParticlesAndFilaments('symm_B', N_parts, N_sigma)
 		OK_fils_SB, SB_thresholds, OK_pbox_SB, OK_particles_SB, OK_distances_SB = SB_instance.Get_threshold_and_noise()
-		Append_data(OK_fils_SB, SB_thresholds, OK_pbox_SB, OK_particles_SB, OK_distances_SB, p_model)
+		Append_data(OK_fils_SB, SB_thresholds, OK_pbox_SB, OK_particles_SB, OK_distances_SB, 'symmB')
 
 	if p_model == 'symmC' or p_model == 'all':
-		SC_instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
+		SC_instance = FilterParticlesAndFilaments('symm_C', N_parts, N_sigma)
 		OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC = SC_instance.Get_threshold_and_noise()
-		Append_data(OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC, p_model)
+		Append_data(OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC, 'symmC')
 
 	if p_model == 'symmD' or p_model == 'all':
-		SD_instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
+		SD_instance = FilterParticlesAndFilaments('symm_D', N_parts, N_sigma)
 		OK_fils_SD, SD_thresholds, OK_pbox_SD, OK_particles_SD, OK_distances_SD = SD_instance.Get_threshold_and_noise()
-		Append_data(OK_fils_SD, SD_thresholds, OK_pbox_SD, OK_particles_SD, OK_distances_SD, p_model)
+		Append_data(OK_fils_SD, SD_thresholds, OK_pbox_SD, OK_particles_SD, OK_distances_SD, 'symmD')
 
 	if p_model == 'fofr4' or p_model == 'all':
-		F4_instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
+		F4_instance = FilterParticlesAndFilaments('fofr4', N_parts, N_sigma)
 		OK_fils_F4, F4_thresholds, OK_pbox_F4, OK_particles_F4, OK_distances_F4 = F4_instance.Get_threshold_and_noise()
-		Append_data(OK_fils_F4, F4_thresholds, OK_pbox_F4, OK_particles_F4, OK_distances_F4, p_model)
+		Append_data(OK_fils_F4, F4_thresholds, OK_pbox_F4, OK_particles_F4, OK_distances_F4, 'fofr4')
 
 	if p_model == 'fofr5' or p_model == 'all':
-		F5_instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
+		F5_instance = FilterParticlesAndFilaments('fofr5', N_parts, N_sigma)
 		OK_fils_F5, F5_thresholds, OK_pbox_F5, OK_particles_F5, OK_distances_F5 = F5_instance.Get_threshold_and_noise()
-		Append_data(OK_fils_F5, F5_thresholds, OK_pbox_F5, OK_particles_F5, OK_distances_F5, p_model)
+		Append_data(OK_fils_F5, F5_thresholds, OK_pbox_F5, OK_particles_F5, OK_distances_F5, 'fofr5')
 
 	if p_model == 'fofr6' or p_model == 'all':
-		F6_instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
+		F6_instance = FilterParticlesAndFilaments('fofr6', N_parts, N_sigma)
 		OK_fils_F6, F6_thresholds, OK_pbox_F6, OK_particles_F6, OK_distances_F6 = F6_instance.Get_threshold_and_noise()
-		Append_data(OK_fils_F6, F6_thresholds, OK_pbox_F6, OK_particles_F6, OK_distances_F6, p_model)
+		Append_data(OK_fils_F6, F6_thresholds, OK_pbox_F6, OK_particles_F6, OK_distances_F6, 'fofr6')
 
-	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/')
+	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
+	Plot_instance.Particle_profiles(Dist_thresholds)
