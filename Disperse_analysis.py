@@ -177,7 +177,7 @@ class Disperse_Plotter():
 			""" Function that calls savefig based on figure instance and filename. """
 			if type(name) != str:
 				raise ValueError('filename not a string!')
-			figure.savefig(self.results_dir + name + self.ModelFilename)
+			figure.savefig(self.results_dir + name + self.ModelFilename, bbox_inches='tight')
 
 		print 'Plotting'
 		if FilamentColors:
