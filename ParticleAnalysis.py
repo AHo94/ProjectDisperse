@@ -703,33 +703,34 @@ class Plot_results():
 
 	def Particle_profiles(self, Thresholds, Accepted_parts):
 		""" Plots data related to the particles """
+		if len(Thresholds) != len(Accepted_parts):
+			raise ValueError("Threshold data not same length as Accepted particles!")
 		######## Computing relevant data
 		# Computes masses of the filament. Done for all models
+		NModels = len(Thresholds)
 		self.Filament_masses = []
-		for i in range(len(Accepted_parts)):
+		for i in range(NModels):
 			Mass_array_temp = np.array([len(Accepted_parts[i][j]) for j in range(len(Accepted_parts[i]))])
 			self.Filament_masses.append(Mass_array_temp)
 		Common_bin_mass = OF.Get_common_bin_logX(self.Filament_masses, binnum=40)
 		Number_mass = []
 		Error_mass = []
-		for i in range(len(self.Filament_masses)):
+		for i in range(NModels):
 			bin_value, bin_err = OF.Get_numbers_common(self.Filament_masses, self.Filament_masses, Common_bin_mass, std='Poisson')
 			Number_mass.append(bin_value)
 			Error_mass.append(bin_err)
-
 		# Relative difference of the masses. Basemodel lcdm
-		RelativeDiff_mass = [OF.relative_deviation(Number_mass, i) for i in range(1, len(self.Filament_masses))]
+		RelativeDiff_mass = [OF.relative_deviation(Number_mass, i) for i in range(1, len(NModels))]
+		Prop_error_mass = [OF.Propagate_error_reldiff(Number_mass[0], Number_mass[i], Error_mass[0], Error_mass[i]) for i in range(1, NModels)]
 
 		# Thickness of filaments as a binned histogram, using np.digitize
 		Common_bin_thickness = OF.Get_common_bin_logX(Thresholds, binnum=40)
 		Number_thickness = []
-		for i in range(len(Thresholds)):
+		for i in range(NModels):
 			#index_bin = np.digitize(Thresholds[i], Common_bin_thickness)
 			#bin_value = np.array([len(Thresholds[i][index_bin == j]) for j in range(len(Common_bin_thickness))])
 			bin_value, bin_std = OF.Get_numbers_common(Thresholds, Thresholds, Common_bin_thickness)
 			Number_thickness.append(bin_value)
-
-		# Com
 		
 		####### Plotting #######
 		######## Mass histograms 
@@ -754,6 +755,7 @@ class Plot_results():
 		plt.legend(self.fofr_legends)
 		plt.xlabel('Filament mass - $M_\odot h^2$')
 		plt.ylabel('$N$ filaments')
+		# 
 
 		######## Thickness histograms
 		# Thickness histogram of all filaments
