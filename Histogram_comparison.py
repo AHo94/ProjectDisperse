@@ -322,6 +322,7 @@ class CompareModels():
 		Computes relative deviation of a given physical quantity.
 		This function assumes that the base model is in the first element.
 		"""
+		#delta = (data[index].astype(np.float32) - data[0].astype(np.float32))/data[0].astype(np.float32)
 		delta = (data[index] - data[0])/data[0]
 		return delta
 
@@ -329,7 +330,7 @@ class CompareModels():
 		""" Function that calls savefig based on figure instance and filename. """
 		if type(name) != str:
 			raise ValueError('filename not a string!')
-		figure.savefig(self.results_dir + name + self.filetype, bbox_inches='tight')
+		figure.savefig(self.results_dir + name + self.filetype)
 
 	def Compute_errors(self, databins):
 		""" Computes the errorbars of the length data. Assumes Poisson distribution. """
@@ -871,7 +872,6 @@ class CompareModels():
 			binval_, binstd_ = OF.Bin_numbers_common(fillens, fillens, length_bins, std='poisson')
 			length_bin_values.append(binval_)
 			length_bin_error.append(binstd_)
-
 		# With dots indicating bin location
 		LengthHistComparison_digitized = self.Call_plot_sameX(length_bins, length_bin_values, xlabel_len, '$N$ filaments', self.Legends, style='o-')
 
@@ -879,14 +879,13 @@ class CompareModels():
 		LengthHistComparison_digitized_nodot = self.Call_plot_sameX(length_bins, length_bin_values, xlabel_len, '$N$ filaments', self.Legends, style='-')
 
 		# Histogram lengths in bin-line form - Logarithmic x-scale
-		length_bins_logX = OF.Get_common_bin_logX(FilLengths, binnum=80)
+		length_bins_logX = OF.Get_common_bin_logX(FilLengths, binnum=40)
 		length_bin_values_logX = []
 		length_bin_error_logX = []
 		for fillens in FilLengths:
 			binval_, binstd_ = OF.Bin_numbers_common(fillens, fillens, length_bins_logX, std='poisson')
 			length_bin_values_logX.append(binval_)
 			length_bin_error_logX.append(binstd_)
-
 		# Plotting, with dots
 		LengthHistComparison_digitized_logX = self.Call_plot_sameX(length_bins_logX, length_bin_values_logX, xlabel_len, '$N$ filaments', self.Legends, style='o-')
 
@@ -908,9 +907,6 @@ class CompareModels():
 			cumulative_list.append(Cumulative)
 
 		Cumulative_plot = self.Call_plot_sameX(length_bins, cumulative_list, xlabel_len, 'Number of filaments', self.Legends, title='Cumulative distribution')
-
-		# Relative difference of the cumulative distribution, x-value is the same, using LCDM
-		RelDiff_cumulative_length = self.Plot_differences_sameX(length_bins, cumulative_list, xlabel_len, 'Relative difference of cumulative distribution', self.Legends)
 
 		# Relative difference of N(>L) using the cumulative data
 		Cumulative_distribution = np.array([len(FilLengths[i]) - cumulative_list[i] for i in range(len(FilLengths))])
@@ -960,6 +956,10 @@ class CompareModels():
 		Sep_RelDiff_Number_S_logx = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', Symm_legends, logscale='logx')			
 		Sep_RelDiff_Number_F_logx = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', fofr_legends, logscale='logx')
 
+		# Relative differences in Number of filaments and not N(>L). LogLog scale
+		Sep_RelDiff_Number_S_loglog = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', Symm_legends, logscale='loglog')			
+		Sep_RelDiff_Number_F_loglog = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', fofr_legends, logscale='loglog')        
+
 		# Relative differences of N(>L) with propagated errors
 		Prop_err_symm = Propagated_errors[0:4]
 		Prop_err_fofr = Propagated_errors[4:]
@@ -1000,7 +1000,6 @@ class CompareModels():
 			self.savefigure(LengthHistComparison_erorbar_logX, 'Filament_lengths_errorbar')
 			self.savefigure(LengthHistComparison_digitized_nodot_logX_loglog, 'Filament_lengths_digitized_nodot_logX_loglog')
 			self.savefigure(Cumulative_plot, 'Cumulative_plot_length')
-			self.savefigure(RelDiff_cumulative_length, 'Relative_difference_cumulative_length')
 			self.savefigure(RelDiff_cumulative_reverse, 'Filament_lengths_relative_difference_CumulativeData')
 			self.savefigure(Prop_error_reldiff_N, 'Filament_lengths_relative_difference_propagatedError')
 			self.savefigure(Sep_FilLengths_S, 'Filament_lengths_cSymmetron')
@@ -1019,6 +1018,8 @@ class CompareModels():
 			self.savefigure(Sep_AbsDiff_Number_F_logx, 'Number_filaments_absDiff_LOGX_cFofr')
 			self.savefigure(Sep_RelDiff_Number_S_logx, 'Number_filaments_relDiff_LOGX_cSymmetron')
 			self.savefigure(Sep_RelDiff_Number_F_logx, 'Number_filaments_relDiff_LOGX_cFofr')
+			self.savefigure(Sep_RelDiff_Number_S_loglog, 'Number_filaments_relDiff_LOGLOG_cSymmetron')
+			self.savefigure(Sep_RelDiff_Number_F_loglog, 'Number_filaments_relDiff_LOGLOG_cFofr')
 			self.savefigure(Sep_RelDiff_length_PropErr_S, 'Filament_lengths_relative_difference_PropErr_cSymmetron')
 			self.savefigure(Sep_RelDiff_length_PropErr_F, 'Filament_lengths_relative_difference_PropErr_cFofr')
 			self.savefigure(Sep_AbsDiff_Number_error_S, 'Filament_lengths_absolute_difference_PropErr_cSymmetron')
