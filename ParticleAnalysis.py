@@ -145,12 +145,7 @@ class FilterParticlesAndFilaments():
 		cachedir_ppf_masks = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/MaskedParticlesIDs/'
 		cachefile_masks = cachedir_ppf_masks + Common_filename
 		Masked_IDs = np.load(cachefile_masks)
-		# Particle position of the particle box
-		cachedir_ppf_pbox = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ParticleBoxes/'
-		cachefile_pbox = cachedir_ppf_pbox + Common_filename
-		#ParticleBoxes = np.load(cachefile_pbox)
-		ParticleBoxes = 1
-		return Distances, Segment_index, Tsolutions, Masked_IDs, ParticleBoxes
+		return Distances, Segment_index, Tsolutions, Masked_IDs
 
 	def accepted_distance_func_histogram(self, distance_arr, binnum=150):
 		"""
@@ -310,9 +305,6 @@ class FilterParticlesAndFilaments():
 		# Particle IDs of the particle box
 		cachedir_ppf_masks = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/FilteredParts/MaskedParticlesIDs/'
 		cachefile_masks = cachedir_ppf_masks + Common_filename
-		# Particle position of the particle box
-		cachedir_ppf_pbox = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/FilteredParts/ParticleBoxes/'
-		cachefile_pbox = cachedir_ppf_pbox + Common_filename
 
 		if not os.path.isdir(cachedir_ppf_distances):
 			os.makedirs(cachedir_ppf_distances)
@@ -322,24 +314,20 @@ class FilterParticlesAndFilaments():
 			os.makedirs(cachedir_ppf_tsols)
 		if not os.path.isdir(cachedir_ppf_masks):
 			os.makedirs(cachedir_ppf_masks)
-		if not os.path.isdir(cachedir_ppf_pbox):
-			os.makedirs(cachedir_ppf_pbox)
 
 		if os.path.isfile(cachefile_distances):
 			# Read as Pickle file
 			#self.Filtered_distances = pickle.load(open(cachefile_distances, 'rb'))
 			#self.Filtered_masks = pickle.load(open(cachefile_masks, 'rb'))
 			#self.Filtered_tsols = pickle.load(open(cachefile_tsols, 'rb'))
-			#self.Filtered_segids = pickle.load(open(cachefile_segIDs, 'rb'))
-			#self.Filtered_partbox = pickle.load(open(cachefile_pbox, 'rb'))		
+			#self.Filtered_segids = pickle.load(open(cachefile_segIDs, 'rb'))	
 			# Read as numpy file
 			self.Filtered_distances = np.load(cachefile_distances)
 			self.Filtered_masks = np.load(cachefile_masks)
 			self.Filtered_tsols = np.load(cachefile_tsols)
 			self.Filtered_segids = np.load(cachefile_segIDs)
-			#self.Filtered_partbox = np.load(cachefile_pbox)
 		else:
-			Distances, Segment_index, Tsolutions, Masked_IDs, ParticleBoxes = self.Read_particle_data_numpy(self.model, self.npart, self.sigma, 6)
+			Distances, Segment_index, Tsolutions, Masked_IDs = self.Read_particle_data_numpy(self.model, self.npart, self.sigma, 6)
 			self.Filtered_distances = []
 			self.Filtered_masks = []
 			self.Filtered_tsols = []
@@ -354,13 +342,11 @@ class FilterParticlesAndFilaments():
 				self.Filtered_masks.append(Masked_IDs[i][Part_filter])
 				self.Filtered_tsols.append(Tsolutions[i][Part_filter])
 				self.Filtered_segids.append(Segment_index[i][Part_filter])
-				#self.Filtered_partbox.append(ParticleBoxes[i][Part_filter])
 			self.Filtered_distances = np.asarray(self.Filtered_distances)
 			self.Filtered_masks = np.asarray(self.Filtered_masks)
 			self.Filtered_tsols = np.asarray(self.Filtered_tsols)
 			self.Filtered_segids = np.asarray(self.Filtered_segids)
 			print 'Filering time:', time.time() - filter_time, 's'
-			#self.Filtered_partbox = np.asarray(self.Filtered_partbox)
 			# Save as pickle
 			#pickle.dump(self.Filtered_distances, open(cachefile_distances, 'wb'))
 			#pickle.dump(self.Filtered_masks, open(cachefile_masks, 'wb'))
@@ -372,7 +358,6 @@ class FilterParticlesAndFilaments():
 			np.save(cachefile_masks, self.Filtered_masks)
 			np.save(cachefile_tsols, self.Filtered_tsols)
 			np.save(cachefile_segIDs, self.Filtered_segids)
-			#np.save(cachefile_pbox, self.Filtered_partbox)
 	
 	def Filter_filament_density_threshold(self, Fpos, particle_distances, fillen, number, tsols, segids):
 		""" 
@@ -707,6 +692,7 @@ class Plot_results():
 
 	def Particle_profiles(self, Thresholds, Accepted_parts):
 		""" Plots data related to the particles """
+		######## Computing relevant data
 		# Computes masses of the filament. Done for all models
 		self.Filament_masses = []
 		for i in range(len(Accepted_parts)):
@@ -730,13 +716,30 @@ class Plot_results():
 			Number_thickness.append(bin_value)
 		
 		####### Plotting #######
-		# Mass histogramof all filaments
+		######## Mass histograms 
+		# Mass histogram of all filaments
 		NumMass_all = plt.figure()
 		for i in range(len(self.Filament_masses)):
 			plt.loglog(Common_bin_mass, self.Filament_masses[i], 'o-')
-		
+		plt.legend(self.All_legends)
+		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.ylabel('$N$ filaments')
+		# Mass histogram of lcdm + symmetron filaments
+		NumMass_Symm = plt.figure()
+		for i in range(0,5):
+			plt.loglog(Common_bin_mass, self.Filament_masses[i], 'o-')
+		plt.legend(self.Symm_legends)
+		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.ylabel('$N$ filaments')
+		# Mass histogram of all filaments
+		NumMass_fofr = plt.figure()
+		for i in [0,5,6,7]:
+			plt.loglog(Common_bin_mass, self.Filament_masses[i], 'o-')
+		plt.legend(self.fofr_legends)
+		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.ylabel('$N$ filaments')
 
-
+		######## Thickness histograms
 		# Thickness histogram of all filaments
 		NumThickness_all = plt.figure()
 		for i in range(len(Thresholds)):
@@ -767,7 +770,7 @@ class Plot_results():
 	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds):
 		""" Plots data related to the velocity profiles """
 		Filament_masses = []   # A list of all filament masses for all models
-		for i in range()
+		#for i in range()
 
 	#def Similar_profiles(self, All_speeds, ):
 
