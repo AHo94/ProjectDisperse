@@ -186,17 +186,13 @@ class FilterParticlesAndFilaments():
 				counter = 0
 		return accept_distance_threshold
 
-	def Accepted_distance_density(self, particle_distances, fillen, filpos, tsols, segids):
+	def Accepted_distance_density(self, particle_distances, fillen):
 		""" 
 		Determines the thickness of the filament, based on the filament density. 
 		Filament will start with a large density and decrease as the radius increases.
 		The thickness is at the distance at which the average density is smaller than the threshold.
 		Threshold = 10*rho_crit
 		"""
-		#Nparts = len(particle_distances)
-		#Filtered_part = self.Filter_halo_particles(filpos, segids, tsols, fillen, np.array(range(Nparts)))
-		#p_dist = particle_distances[Filtered_part]
-		#distances_sorted = np.sort(p_dist)
 		distances_sorted = np.sort(particle_distances)
 
 		Nparts2 = len(distances_sorted)
@@ -359,7 +355,7 @@ class FilterParticlesAndFilaments():
 			np.save(cachefile_tsols, self.Filtered_tsols)
 			np.save(cachefile_segIDs, self.Filtered_segids)
 	
-	def Filter_filament_density_threshold(self, Fpos, particle_distances, fillen, number, tsols, segids):
+	def Filter_filament_density_threshold(self, Fpos, particle_distances, fillen):
 		""" 
 		Filter filaments that does not reach a given threshold density.
 		Loop through the distances, in a sorted array, as a radius R. Computes the density of the filament as
@@ -380,11 +376,6 @@ class FilterParticlesAndFilaments():
 		Included_filaments = []
 		
 		for i in range(len(particle_distances)):
-			# First filter halo particles
-			#Filtered_part = Get_filament_axis_filter_analytic(Fpos[number[i]], segids[number[i]], tsols[number[i]], fillen[i], 
-			#													np.array(range(len(segids[number[i]]))))
-			#p_dist = particle_distances[i][Filtered_part]
-			
 			distances_sorted = np.sort(particle_distances[i])
 			average_densities = []
 			pre_volume = np.pi*fillen[i]
@@ -435,8 +426,7 @@ class FilterParticlesAndFilaments():
 		Nf_Masked_IDs = np.array(Nf_Masked_IDs)
 
 		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(self.Filament_3DPos[Over_IDs], Nf_Distances,
-																							 self.FilamentLength[Over_IDs], range(0, len(Over_IDs)),
-																							 Nf_Tsolutions, Nf_Segids)
+																							 self.FilamentLength[Over_IDs])
 		Return_included = Over_IDs[Included_fils] if Included_fils.any() else np.array([])
 		Return_excluded = Over_IDs[Filtered_fils] if Filtered_fils.any() else np.array([])
 		Return_overIDs = Over_IDs[OverThreshold] if OverThreshold.any() else np.array([])
@@ -506,8 +496,7 @@ class FilterParticlesAndFilaments():
 		SegIDs = self.Filtered_segids#[Small_filaments]
 		Masks = self.Filtered_masks#[Small_filaments]
 
-		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(FilamentPos, Distances, FilLengths, range(0, len(Distances)),
-																							 Tsols, SegIDs)
+		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(FilamentPos, Distances, FilLengths)
 		# Recomputes filaments where densities are always larger than threshold
 		multiplier = 1
 		while OverThreshold.any():
@@ -524,7 +513,7 @@ class FilterParticlesAndFilaments():
 		print OverThreshold
 		Distance_thresholds = []
 		for index in Included_fils:
-			OK_distance = self.Accepted_distance_density(Distances[index], FilLengths[index], FilamentPos[index], Tsols[index], SegIDs[index])
+			OK_distance = self.Accepted_distance_density(Distances[index], FilLengths[index])
 			Distance_thresholds.append(OK_distance)
 		Distance_thresholds = np.asarray(Distance_thresholds)
 		# ADD PART TO RECOMPUTE THICKNESS IF 2*THICKNESS < THRESHOLD
