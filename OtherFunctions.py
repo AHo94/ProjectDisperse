@@ -164,14 +164,14 @@ def Bin_numbers_common(X_value, Y_value, bins, std='std'):
 	2) Poisson distribution, where error = sqrt(N), N = number of data in a given bin.
 	"""
 	index_bin = np.digitize(X_value, bins)
-	binval = np.array([ len(Y_value[i == index_bin]) for i in range(len(bins))])
+	binval = np.array([float(len(Y_value[i == index_bin])) for i in range(len(bins))])
 	if std == 'std':
 		binstd = np.array([ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ])
 	elif std == 'poisson':
 		binstd = np.array([np.sqrt(numbers) for numbers in binval])
 	else:
 		raise ValueError("Argument std not set properly! Try std='std' or std='poisson'")
-	return binval.astype(np.float32), binstd
+	return binval, binstd
 
 def Bin_mean_common(X_value, Y_value, bins):
 	index_bin = np.digitize(X_value, bins)
