@@ -42,12 +42,20 @@ class FilterParticlesAndFilaments():
 		self.model = model
 		self.npart = npart
 		self.sigma = sigma
-		print 'Reading filament and particle data for model: ', model
-		self.Read_basic_data(model, npart, sigma)
-		print 'Filtering particles'
-		filter_time = time.time()
-		self.Do_filter_particles()   # Filters the halo particles
-		print 'Filering time:', time.time() - filter_time, 's'
+
+		cachedir_OKfils = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/IncludedFilaments/'
+		cachedir_speed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/Speed/'
+		Common_filename =  self.model + '_' + str(self.npart) + 'part_nsig' + str(self.sigma)+ '_BoxExpand' + str(6) + '.npy'
+		cachefile_okfils = cachedir_OKfils + Common_filename
+		cachefile_speed = cachedir_speed + Common_filename
+		
+		if not os.path.isfile(cachefile_okfils):#  or not os.path: 	# FIXME: include lack of particle speed file
+			print 'Reading filament and particle data for model: ', model
+			self.Read_basic_data(model, npart, sigma)
+			print 'Filtering particles'
+			filter_time = time.time()
+			self.Do_filter_particles()   # Filters the halo particles
+			print 'Filering time:', time.time() - filter_time, 's'
 
 	def Read_basic_data(self, model, npart, sigma):
 		""" Reads filament data from DisPerSE """
@@ -723,7 +731,7 @@ class Plot_results():
 		for i in range(NModels):
 			#index_bin = np.digitize(Thresholds[i], Common_bin_thickness)
 			#bin_value = np.array([len(Thresholds[i][index_bin == j]) for j in range(len(Common_bin_thickness))])
-			bin_value, bin_std = OF.Get_numbers_common(Thresholds, Thresholds, Common_bin_thickness)
+			bin_value, bin_std = OF.Bin_numbers_common(Thresholds, Thresholds, Common_bin_thickness)
 			Number_thickness.append(bin_value)
 		
 		####### Plotting #######
@@ -781,7 +789,7 @@ class Plot_results():
 
 	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds):
 		""" Plots data related to the velocity profiles """
-		
+		a = 1
 
 	#def Similar_profiles(self, All_speeds, ):
 
