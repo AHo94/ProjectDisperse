@@ -171,7 +171,7 @@ def Bin_numbers_common(X_value, Y_value, bins, std='std'):
 		binstd = np.array([np.sqrt(numbers) for numbers in binval])
 	else:
 		raise ValueError("Argument std not set properly! Try std='std' or std='poisson'")
-	return binval, binstd
+	return binval.astype(np.float32), binstd
 
 def Bin_mean_common(X_value, Y_value, bins):
 	index_bin = np.digitize(X_value, bins)
