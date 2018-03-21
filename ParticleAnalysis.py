@@ -494,7 +494,17 @@ class FilterParticlesAndFilaments():
 		Determines which filament is filtered out, based on the density thresholds.
 		Recomputes filaments whose density is always larger than the density thresholds. Continues until none of these exists. 
 		"""
-		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(self.Filament_3DPos, self.Filtered_distances, self.FilamentLength, range(0, len(self.Filtered_distances)), self.Filtered_tsols, self.Filtered_segids)
+		# Filter filaments of lengths less or equal to 1 Mpc/h
+		Small_filaments = self.FilamentLength > 1.0
+		FilamentPos = self.Filament_3DPos[Small_filaments]
+		Distances = self.Filtered_distances[Small_filaments]
+		FilLengths = self.FilamentLength[Small_filaments]
+		Tsols = self.Filtered_tsols[Small_filaments]
+		SegIDs = self.Filtered_segids[Small_filaments]
+		Masks = self.Filtered_masks[Small_filaments]
+
+		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(FilamentPos, Distances, FilLengths, range(0, len(Distances)),
+																							 Tsols, SegIDs)
 		multiplier = 1
 		while OverThreshold.any():
 			multiplier += 1
@@ -507,8 +517,7 @@ class FilterParticlesAndFilaments():
 
 		Distance_thresholds = []
 		for index in Included_fils:
-			OK_distance = self.Accepted_distance_density(self.Filtered_distances[index], self.FilamentLength[index], self.Filament_3DPos[index],
-														 self.Filtered_tsols[index], self.Filtered_segids[index])
+			OK_distance = self.Accepted_distance_density(Distances[index], FilLengths[index], FilPos[index], Tsols[index], SegIDs[index])
 			Distance_thresholds.append(OK_distance)
 		Distance_thresholds = np.asarray(Distance_thresholds)
 		# ADD PART TO RECOMPUTE THICKNESS IF 2*THICKNESS < THRESHOLD
@@ -518,10 +527,10 @@ class FilterParticlesAndFilaments():
 		Accepted_box_particles = []
 		for i in range(len(Distance_thresholds)):
 			index = Included_fils[i]
-			Filament_thickness = np.where(self.Filtered_distances[index] <= Distance_thresholds[i])[0]
+			Filament_thickness = np.where(Distances[index] <= Distance_thresholds[i])[0]
 			Accepted_box_particles.append(Filament_thickness)
-			Particles_accepted.append(self.Filtered_masks[index][Filament_thickness])
-			Distances_accepted.append(self.Filtered_distances[index][Filament_thickness])
+			Particles_accepted.append(Masks[index][Filament_thickness])
+			Distances_accepted.append(Distances[index][Filament_thickness])
 		Accepted_box_particles = np.asarray(Accepted_box_particles)
 		Particles_accepted = np.asarray(Particles_accepted)
 		Distances_accepted = np.asarray(Distances_accepted)
