@@ -440,7 +440,9 @@ class FilterParticlesAndFilaments():
 		Return_included = Over_IDs[Included_fils] if Included_fils.any() else np.array([])
 		Return_excluded = Over_IDs[Filtered_fils] if Filtered_fils.any() else np.array([])
 		Return_overIDs = Over_IDs[OverThreshold] if OverThreshold.any() else np.array([])
-		return Return_included, Return_excluded, Return_overIDs
+		return_dist = Nf_Distances[Included_fils] if Included_fils.any() else Nf_Distances
+		return_masks = Nf_Masked_IDs[Included_fils] if Included_fils.any() else Nf_Masked_IDs
+		return Return_included, Return_excluded, Return_overIDs, return_dist, return_masks
 
 	def Mask_and_compute_distances_again(self, FilPos, boxexp, SlicedParts, SlicedIDs, SliceRanges):
 		""" 
@@ -497,12 +499,12 @@ class FilterParticlesAndFilaments():
 		"""
 		# Filter filaments of lengths less or equal to 1 Mpc/h
 		Small_filaments = self.FilamentLength > 1.0
-		FilamentPos = self.Filament_3DPos[Small_filaments]
-		Distances = self.Filtered_distances[Small_filaments]
-		FilLengths = self.FilamentLength[Small_filaments]
-		Tsols = self.Filtered_tsols[Small_filaments]
-		SegIDs = self.Filtered_segids[Small_filaments]
-		Masks = self.Filtered_masks[Small_filaments]
+		FilamentPos = self.Filament_3DPos#[Small_filaments]
+		Distances = self.Filtered_distances#[Small_filaments]
+		FilLengths = self.FilamentLength#[Small_filaments]
+		Tsols = self.Filtered_tsols#[Small_filaments]
+		SegIDs = self.Filtered_segids#[Small_filaments]
+		Masks = self.Filtered_masks#[Small_filaments]
 
 		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(FilamentPos, Distances, FilLengths, range(0, len(Distances)),
 																							 Tsols, SegIDs)
@@ -510,16 +512,19 @@ class FilterParticlesAndFilaments():
 		multiplier = 1
 		while OverThreshold.any():
 			multiplier += 1
-			New_incFils, New_filtFils, OverThreshold = self.Recompute_densities(OverThreshold, multiplier)
+			New_incFils, New_filtFils, OverThreshold, Nf_distances, Nf_masks = self.Recompute_densities(OverThreshold, multiplier)
 			Included_fils = np.concatenate((Included_fils, New_incFils)) if New_incFils.any() else Included_fils
 			Filtered_fils = np.concatenate((Filtered_fils, New_filtFils)) if New_filtFils.any() else Filtered_fils
+			if New_incFils.any():
+				Distances[New_incFils] = Nf_distances
+				Masks[New_incFils] = Nf_masks
 			if multiplier > 3:
 				print 'Multiplier threshold over 3, stopping the box expand computation'
 				break
-
+		print OverThreshold
 		Distance_thresholds = []
 		for index in Included_fils:
-			OK_distance = self.Accepted_distance_density(Distances[index], FilLengths[index], FilPos[index], Tsols[index], SegIDs[index])
+			OK_distance = self.Accepted_distance_density(Distances[index], FilLengths[index], FilamentPos[index], Tsols[index], SegIDs[index])
 			Distance_thresholds.append(OK_distance)
 		Distance_thresholds = np.asarray(Distance_thresholds)
 		# ADD PART TO RECOMPUTE THICKNESS IF 2*THICKNESS < THRESHOLD
@@ -897,4 +902,4 @@ if __name__ == '__main__':
 		Append_data(OK_fils_F6, F6_thresholds, OK_pbox_F6, OK_particles_F6, OK_distances_F6, 'fofr6')
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
-	Plot_instance.Particle_profiles(Dist_thresholds)
+	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted)
