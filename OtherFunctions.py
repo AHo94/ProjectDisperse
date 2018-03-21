@@ -424,7 +424,7 @@ def Get_particle_box_slices(ParticlePos):
 	SliceRanges = np.asarray(SliceRanges)
 	return SlicedParts, SlicedIDs, SliceRanges
 
-def relative_deviation(self, data, index):
+def relative_deviation(data, index):
 	""" 
 	Computes relative deviation of a given physical quantity.
 	This function assumes that the base model is in the first element.
@@ -432,7 +432,7 @@ def relative_deviation(self, data, index):
 	delta = (data[index] - data[0])/data[0]
 	return delta
 
-def Propagate_error_reldiff(self, data_0, data, error_0, error):
+def Propagate_error_reldiff(data_0, data, error_0, error):
 	""" 
 	Propagated error of the relative difference F = (B - A)/A, A = base model
 	This function assumes the derivatives is with the data itself
