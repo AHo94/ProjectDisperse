@@ -851,10 +851,10 @@ if __name__ == '__main__':
 		OK_fils_SB, SB_thresholds, OK_pbox_SB, OK_particles_SB, OK_distances_SB = SB_instance.Get_threshold_and_noise()
 		Append_data(OK_fils_SB, SB_thresholds, OK_pbox_SB, OK_particles_SB, OK_distances_SB, 'symmB')
 
-	if p_model == 'symmC' or p_model == 'all':
-		SC_instance = FilterParticlesAndFilaments('symm_C', N_parts, N_sigma)
-		OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC = SC_instance.Get_threshold_and_noise()
-		Append_data(OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC, 'symmC')
+	#if p_model == 'symmC' or p_model == 'all':
+	#	SC_instance = FilterParticlesAndFilaments('symm_C', N_parts, N_sigma)
+	#	OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC = SC_instance.Get_threshold_and_noise()
+	#	Append_data(OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC, 'symmC')
 
 	if p_model == 'symmD' or p_model == 'all':
 		SD_instance = FilterParticlesAndFilaments('symm_D', N_parts, N_sigma)
