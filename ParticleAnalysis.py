@@ -492,7 +492,8 @@ class FilterParticlesAndFilaments():
 	def Compute_threshold_and_noise(self):
 		"""
 		Determines which filament is filtered out, based on the density thresholds.
-		Recomputes filaments whose density is always larger than the density thresholds. Continues until none of these exists. 
+		Recomputes filaments whose density is always larger than the density thresholds.
+		Stops after 3 iterations, where box_expandNew = 3*box_expand, currently box_expand = 6 
 		"""
 		# Filter filaments of lengths less or equal to 1 Mpc/h
 		Small_filaments = self.FilamentLength > 1.0
@@ -505,12 +506,13 @@ class FilterParticlesAndFilaments():
 
 		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(FilamentPos, Distances, FilLengths, range(0, len(Distances)),
 																							 Tsols, SegIDs)
+		# Recomputes filaments where densities are always larger than threshold
 		multiplier = 1
 		while OverThreshold.any():
 			multiplier += 1
 			New_incFils, New_filtFils, OverThreshold = self.Recompute_densities(OverThreshold, multiplier)
-			Included_fils = np.concatenate(Included_fils, New_incFils) if New_incFils.any() else Included_fils
-			Filtered_fils = np.concatenate(Filtered_fils, New_filtFils) if New_filtFils.any() else Filtered_fils
+			Included_fils = np.concatenate((Included_fils, New_incFils)) if New_incFils.any() else Included_fils
+			Filtered_fils = np.concatenate((Filtered_fils, New_filtFils)) if New_filtFils.any() else Filtered_fils
 			if multiplier > 3:
 				print 'Multiplier threshold over 3, stopping the box expand computation'
 				break
@@ -715,6 +717,9 @@ class Plot_results():
 			Number_mass.append(bin_value)
 			Error_mass.append(bin_err)
 
+		# Relative difference of the masses. Basemodel lcdm
+		RelativeDiff_mass = [OF.relative_deviation(Number_mass, i) for i in range(1, len(self.Filament_masses))]
+
 		# Thickness of filaments as a binned histogram, using np.digitize
 		Common_bin_thickness = OF.Get_common_bin_logX(Thresholds, binnum=40)
 		Number_thickness = []
@@ -723,6 +728,8 @@ class Plot_results():
 			#bin_value = np.array([len(Thresholds[i][index_bin == j]) for j in range(len(Common_bin_thickness))])
 			bin_value, bin_std = OF.Get_numbers_common(Thresholds, Thresholds, Common_bin_thickness)
 			Number_thickness.append(bin_value)
+
+		# Com
 		
 		####### Plotting #######
 		######## Mass histograms 
@@ -778,8 +785,7 @@ class Plot_results():
 
 	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds):
 		""" Plots data related to the velocity profiles """
-		Filament_masses = []   # A list of all filament masses for all models
-		#for i in range()
+		
 
 	#def Similar_profiles(self, All_speeds, ):
 
