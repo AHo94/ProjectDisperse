@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import argparse
 import time
+import sys
 
 # Own modules
 import ReadGadgetFile as RGF
@@ -712,17 +713,17 @@ class Plot_results():
 		NModels = len(Thresholds)
 		self.Filament_masses = []
 		for i in range(NModels):
-			Mass_array_temp = np.array([len(Accepted_parts[i][j]) for j in range(len(Accepted_parts[i]))])
+			Mass_array_temp = np.array([len(Accepted_parts[i][j]) for j in range(len(Accepted_parts[i]))]).astype(np.float32)
 			self.Filament_masses.append(Mass_array_temp)
 		Common_bin_mass = OF.Get_common_bin_logX(self.Filament_masses, binnum=40)
 		Number_mass = []
 		Error_mass = []
 		for i in range(NModels):
-			bin_value, bin_err = OF.Get_numbers_common(self.Filament_masses, self.Filament_masses, Common_bin_mass, std='Poisson')
+			bin_value, bin_err = OF.Bin_numbers_common(self.Filament_masses[i], self.Filament_masses[i], Common_bin_mass, std='poisson')
 			Number_mass.append(bin_value)
 			Error_mass.append(bin_err)
 		# Relative difference of the masses. Basemodel lcdm
-		RelativeDiff_mass = [OF.relative_deviation(Number_mass, i) for i in range(1, len(NModels))]
+		RelativeDiff_mass = [OF.relative_deviation(Number_mass, i) for i in range(1, NModels)]
 		Prop_error_mass = [OF.Propagate_error_reldiff(Number_mass[0], Number_mass[i], Error_mass[0], Error_mass[i]) for i in range(1, NModels)]
 
 		# Thickness of filaments as a binned histogram, using np.digitize
@@ -731,58 +732,103 @@ class Plot_results():
 		for i in range(NModels):
 			#index_bin = np.digitize(Thresholds[i], Common_bin_thickness)
 			#bin_value = np.array([len(Thresholds[i][index_bin == j]) for j in range(len(Common_bin_thickness))])
-			bin_value, bin_std = OF.Bin_numbers_common(Thresholds, Thresholds, Common_bin_thickness)
+			bin_value, bin_std = OF.Bin_numbers_common(Thresholds[i], Thresholds[i], Common_bin_thickness)
 			Number_thickness.append(bin_value)
-		
+		""" 
+		!!!!!!!!!
+		AS OF 21.03.2018, RANGES DOES NOT INCLUDE SYMMETRON C MODEL. FIX RANGES WHEN SYMMETRON C MODEL IS FIXED
+		!!!!!!!!!
+		"""
 		####### Plotting #######
 		######## Mass histograms 
 		# Mass histogram of all filaments
 		NumMass_all = plt.figure()
-		for i in range(len(self.Filament_masses)):
-			plt.loglog(Common_bin_mass, self.Filament_masses[i], 'o-')
+		for i in range(NModels):
+			plt.loglog(Common_bin_mass, Number_mass[i], 'o-')
 		plt.legend(self.All_legends)
 		plt.xlabel('Filament mass - $M_\odot h^2$')
 		plt.ylabel('$N$ filaments')
 		# Mass histogram of lcdm + symmetron filaments
 		NumMass_Symm = plt.figure()
-		for i in range(0,5):
-			plt.loglog(Common_bin_mass, self.Filament_masses[i], 'o-')
+		for i in range(0,4):
+			plt.loglog(Common_bin_mass, Number_mass[i], 'o-')
 		plt.legend(self.Symm_legends)
 		plt.xlabel('Filament mass - $M_\odot h^2$')
 		plt.ylabel('$N$ filaments')
-		# Mass histogram of all filaments
+		# Mass histogram of lcdm + f(R) filaments
 		NumMass_fofr = plt.figure()
-		for i in [0,5,6,7]:
-			plt.loglog(Common_bin_mass, self.Filament_masses[i], 'o-')
+		for i in [0,4,5,6]:
+			plt.loglog(Common_bin_mass, Number_mass[i], 'o-')
 		plt.legend(self.fofr_legends)
 		plt.xlabel('Filament mass - $M_\odot h^2$')
 		plt.ylabel('$N$ filaments')
-		# 
-
+		# Relative differene of all models
+		RelDiff_mass_all = plt.figure()
+		plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
+		for i in range(NModels-1):
+			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i])
+		plt.legend(self.All_legends)
+		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.ylabel('Relative difference of $N$ filament')
+		# Relative difference of lcdm + symmetron
+		RelDiff_mass_Symm = plt.figure()
+		#plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
+		for i in range(3):
+			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i])
+		plt.legend(self.Symm_legends[1:])
+		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.ylabel('Relative difference of $N$ filament')
+		# Relative difference of lcdm + f(R)
+		RelDiff_mass_fofr = plt.figure()
+		#plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
+		for i in range(3, NModels-1):
+			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i])
+		plt.legend(self.fofr_legends[1:])
+		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.ylabel('Relative difference of $N$ filament')
+		# Relative difference of lcdm + symmetron, with error
+		RelDiff_mass_Symm_err = plt.figure()
+		#plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)))
+		#plt.fill_between(Common_bin_mass, np.zeros(len(Common_bin_mass)), np.zeros(len(Common_bin_mass)))
+		for i in range(0, 3):
+			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i])
+			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i], alpha=0.3)
+		plt.legend(self.Symm_legends[1:])
+		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.ylabel('Relative difference of filament masses')
+		plt.xscale('log')
+		#plt.yscale('log')
 		######## Thickness histograms
 		# Thickness histogram of all filaments
 		NumThickness_all = plt.figure()
-		for i in range(len(Thresholds)):
+		for i in range(NModels):
 			plt.loglog(Common_bin_thickness, Number_thickness[i], 'o-')
 		plt.legend(self.All_legends)
 		plt.xlabel('Filament thickness - [Mpc/h]')
 		plt.ylabel('$N$ filaments')
 		# Thickness hisotgram of lcdm + symmetron filaments
 		NumThickness_Symm = plt.figure()
-		for i in range(0,5):
+		for i in range(0,4):
 			plt.loglog(Common_bin_thickness, Number_thickness[i], 'o-')
 		plt.legend(self.Symm_legends)
 		plt.xlabel('Filament thickness - [Mpc/h]')
 		plt.ylabel('$N$ filaments')
 		# Thickness histogram of lcdm + f(R) filaments
 		NumThickness_fofr = plt.figure()
-		for i in [0,5,6,7]:
+		for i in [0,4,5,6]:
 			plt.loglog(Common_bin_thickness, Number_thickness[i], 'o-')
 		plt.legend(self.fofr_legends)
 		plt.xlabel('Filament thickness - [Mpc/h]')
 		plt.ylabel('$N$ filaments')
 		
 		print '--- SAVING IN: ', self.results_dir, ' ---'
+		self.savefigure(NumMass_all, 'Filament_mass_distribution')
+		self.savefigure(NumMass_Symm, 'Filament_mass_distribution_cSymmetron')
+		self.savefigure(NumMass_fofr, 'Filament_mass_distribution_cFofr')
+		self.savefigure(RelDiff_mass_all, 'Relative_difference_mass')
+		self.savefigure(RelDiff_mass_Symm, 'Relative_difference_mass_cSymmetron')
+		self.savefigure(RelDiff_mass_fofr, 'Relative_difference_mass_cFofr')
+		self.savefigure(RelDiff_mass_Symm_err, 'Relative_difference_mass_error_cSymmetron')
 		self.savefigure(NumThickness_all, 'Filament_Thickness_distribution')
 		self.savefigure(NumThickness_Symm, 'Filament_Thickness_distribution_cSymmetron')
 		self.savefigure(NumThickness_fofr, 'Filament_Thickness_distribution_cFofr')
