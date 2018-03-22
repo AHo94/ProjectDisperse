@@ -572,7 +572,7 @@ class FilterParticlesAndFilaments():
 		Distances_accepted = np.asarray(Distances_accepted)
 
 		# Filter filaments with less than 100 particles
-		Number_particles = np.array([len(Particles_accepted[i]) for i in range(Particles_accepted)])
+		Number_particles = np.array([len(Particles_accepted[i]) for i in range(len(Particles_accepted))])
 		Few_particles = np.where(Number_particles > 100)[0]
 		Included_fils = Included_fils[Few_particles]
 		Distance_thresholds = Distance_thresholds[Few_particles]
@@ -615,9 +615,9 @@ class FilterParticlesAndFilaments():
 			Particles_accepted = np.load(cachefile_okparts)
 			Distances_accepted = np.load(cachefile_okdists)
 		else:
-			if not do_read_data:
-				print 'Reading filament and particle data for model: ', model
-				self.Read_basic_data(model, npart, sigma)
+			if not self.do_read_data:
+				print 'Reading filament and particle data for model: ', self.model
+				self.Read_basic_data(self.model, self.npart, self.sigma)
 				print 'Filtering particles'
 				filter_time = time.time()
 				self.Do_filter_particles()   # Filters the halo particles
@@ -689,8 +689,8 @@ class FilterParticlesAndFilaments():
 			Parallel_speeds = np.load(cachefile_Pspeed)
 		else:
 			if not self.do_read_data:
-				print 'Reading filament and particle data for model: ', model
-				self.Read_basic_data(model, npart, sigma)
+				print 'Reading filament and particle data for model: ', self.model
+				self.Read_basic_data(self.model, self.npart, self.sigma)
 				print 'Filtering particles'
 				filter_time = time.time()
 				self.Do_filter_particles()
