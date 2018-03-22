@@ -177,7 +177,8 @@ def Bin_mean_common(X_value, Y_value, bins):
 	index_bin = np.digitize(X_value, bins)
 	binval = np.array([ np.mean(Y_value[i == index_bin]) for i in range(len(bins))])
 	binstd = np.array([ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ])
-	return binval, binstd
+	Number_points = np.array([len(Y_value[i == index_bin]) for i in range(len(bins))]).astype(np.float32)
+	return binval, binstd/Number_points
 
 def filament_box(filament):
 	""" Gives filament box, plotting purposes """
