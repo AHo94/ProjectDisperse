@@ -13,6 +13,7 @@ import ReadGadgetFile as RGF
 import OtherFunctions as OF
 import ParticleMasking as PMA
 import ParticlesPerFilament as PPF
+import PlotFunctions as pf
 
 # Global variables as constants
 Mpc = 3.08568025e22
@@ -21,9 +22,9 @@ H_0 = 100*1e3/Mpc   # h/s, h = some constant usually h = 0.7
 Solmass = 1.98191*1e30 # kg
 rho_crit = 3.0*H_0**2/(8*np.pi*G_grav)  # kg*h^2/m^3
 Npart_box_total = 512.0**3
-Box_volume = (256.0*Mpc)**3.0/Npart_box_total   # m^3 per particle
-DM_mass = 0.23*rho_crit*Box_volume/Solmass  # Units of solar masses * h^2 per particle
-pre_rho = DM_mass*Solmass/(Mpc**3)	
+Box_volume = (256.0*Mpc)**3.0/Npart_box_total   # m^3/h^3
+DM_mass = 0.23*rho_crit*Box_volume/Solmass  # Units of M_sun/h
+pre_rho = DM_mass*Solmass/(Mpc**3)
 
 class FilterParticlesAndFilaments():
 	def __init__(self, model, npart, sigma):
@@ -44,6 +45,8 @@ class FilterParticlesAndFilaments():
 		self.npart = npart
 		self.sigma = sigma
 
+		self.do_read_data = 0
+		"""
 		cachedir_OKfils = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/IncludedFilaments/'
 		cachedir_speed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/Speed/'
 		Common_filename =  self.model + '_' + str(self.npart) + 'part_nsig' + str(self.sigma)+ '_BoxExpand' + str(6) + '.npy'
@@ -57,7 +60,7 @@ class FilterParticlesAndFilaments():
 			filter_time = time.time()
 			self.Do_filter_particles()   # Filters the halo particles
 			print 'Filering time:', time.time() - filter_time, 's'
-
+		"""
 	def Read_basic_data(self, model, npart, sigma):
 		""" Reads filament data from DisPerSE """
 		cachedir_foldername_extra = self.Dispersemodel + 'npart'+str(npart)
@@ -91,7 +94,34 @@ class FilterParticlesAndFilaments():
 		PartPosX, PartPosY, PartPosZ, PartID, HistDM, BinXEDM, BinYEDM, KDTREE = GadgetInstance.Get_particles(model, includeKDTree=False)
 		Part_velx, Part_vely, Part_velz = GadgetInstance.Get_velocities()
 		
+		self.Small_filaments = self.FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
+		
 		self.ParticlePos, self.ParticleVel = OF.Get_3D(PartPosX, PartPosY, PartPosZ, Part_velx, Part_vely, Part_velz)
+
+	def Get_filament_length(self):
+		""" Only reads and returns filament lengths of a given model """
+		cachedir_foldername_extra = self.Dispersemodel + 'npart'+str(self.npart)
+		if sigma:
+			cachedir_foldername_extra += 'nsig'+str(self.sigma)
+		else:
+			cachedir_foldername_extra += 'nsig3'
+		cachedir = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/FilamentData/' + cachedir_foldername_extra + '/'
+		
+		# Pickle filenames and folder directory
+		Disperse_data_check_fn = cachedir + 'Disperse_data.p'
+		# Read filament from pickle and creates 3D coordinates of filament positions
+		Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data = pickle.load(open(Disperse_data_check_fn, 'rb'))
+		self.Unpack_filament_data(Box_boundaries, Filament_coordinate_data)
+		Filament_3DPos = []
+		for j in range(len(self.xdimPos)):
+			Filament_3DPos.append(np.column_stack((self.xdimPos[j], self.ydimPos[j], self.zdimPos[j])))
+		self.Filament_3DPos = np.array(Filament_3DPos)
+		self.FilamentLength = []
+		for i in range(len(Filament_3DPos)):
+			fillen = OF.Get_filament_length(Filament_3DPos[i])
+			self.FilamentLength.append(fillen)
+		return np.asarray(self.FilamentLength)
+		
 
 	def Unpack_filament_data(self, Box_info, Fil_coord):
 		""" Unpacks filament data from the read filament data module. """
@@ -441,7 +471,8 @@ class FilterParticlesAndFilaments():
 		Return_overIDs = Over_IDs[OverThreshold] if OverThreshold.any() else np.array([])
 		return_dist = Nf_Distances[Included_fils] if Included_fils.any() else Nf_Distances
 		return_masks = Nf_Masked_IDs[Included_fils] if Included_fils.any() else Nf_Masked_IDs
-		return Return_included, Return_excluded, Return_overIDs, return_dist, return_masks
+		return_segids = Nf_Segids[Included_fils] if Included_fils.any() else Nf_Segids
+		return Return_included, Return_excluded, Return_overIDs, return_dist, return_masks, return_segids
 
 	def Mask_and_compute_distances_again(self, FilPos, boxexp, SlicedParts, SlicedIDs, SliceRanges):
 		""" 
@@ -497,36 +528,36 @@ class FilterParticlesAndFilaments():
 		Stops after 3 iterations, where box_expandNew = 3*box_expand, currently box_expand = 6 
 		"""
 		# Filter filaments of lengths less or equal to 1 Mpc/h
-		Small_filaments = self.FilamentLength > 1.0
-		FilamentPos = self.Filament_3DPos#[Small_filaments]
-		Distances = self.Filtered_distances#[Small_filaments]
-		FilLengths = self.FilamentLength#[Small_filaments]
-		Tsols = self.Filtered_tsols#[Small_filaments]
-		SegIDs = self.Filtered_segids#[Small_filaments]
-		Masks = self.Filtered_masks#[Small_filaments]
+		FilamentPos = self.Filament_3DPos[self.Small_filaments]
+		Distances = self.Filtered_distances[self.Small_filaments]
+		FilLengths = self.FilamentLength[self.Small_filaments]
+		Tsols = self.Filtered_tsols[self.Small_filaments]
+		SegIDs = self.Filtered_segids[self.Small_filaments]
+		Masks = self.Filtered_masks[self.Small_filaments]
 
 		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(FilamentPos, Distances, FilLengths)
 		# Recomputes filaments where densities are always larger than threshold
 		multiplier = 1
 		while OverThreshold.any():
 			multiplier += 1
-			New_incFils, New_filtFils, OverThreshold, Nf_distances, Nf_masks = self.Recompute_densities(OverThreshold, multiplier)
+			New_incFils, New_filtFils, OverThreshold, Nf_distances, Nf_masks, Nf_Segids = self.Recompute_densities(OverThreshold, multiplier)
 			Included_fils = np.concatenate((Included_fils, New_incFils)) if New_incFils.any() else Included_fils
 			Filtered_fils = np.concatenate((Filtered_fils, New_filtFils)) if New_filtFils.any() else Filtered_fils
 			if New_incFils.any():
 				Distances[New_incFils] = Nf_distances
 				Masks[New_incFils] = Nf_masks
+				SegIDs[New_incFils] = Nf_Segids
 			if multiplier > 3:
 				print 'Multiplier threshold over 3, stopping the box expand computation'
 				break
-		print OverThreshold
+
+		self.Expanded_segIDs = SegIDs
 		Distance_thresholds = []
 		for index in Included_fils:
 			OK_distance = self.Accepted_distance_density(Distances[index], FilLengths[index])
 			Distance_thresholds.append(OK_distance)
 		Distance_thresholds = np.asarray(Distance_thresholds)
-		# ADD PART TO RECOMPUTE THICKNESS IF 2*THICKNESS < THRESHOLD
-		
+		# ADD PART TO RECOMPUTE THICKNESS IF 2*THICKNESS < THRESHOLD 
 		Particles_accepted = []
 		Distances_accepted = []
 		Accepted_box_particles = []
@@ -539,6 +570,15 @@ class FilterParticlesAndFilaments():
 		Accepted_box_particles = np.asarray(Accepted_box_particles)
 		Particles_accepted = np.asarray(Particles_accepted)
 		Distances_accepted = np.asarray(Distances_accepted)
+
+		# Filter filaments with less than 100 particles
+		Number_particles = np.array([len(Particles_accepted[i]) for i in range(Particles_accepted)])
+		Few_particles = np.where(Number_particles > 100)[0]
+		Included_fils = Included_fils[Few_particles]
+		Distance_thresholds = Distance_thresholds[Few_particles]
+		Accepted_box_particles = Accepted_box_particles[Few_particles]
+		Particles_accepted = Particles_accepted[Few_particles]
+		Distances_accepted = Distances_accepted[Few_particles]
 		return Included_fils, Distance_thresholds, Accepted_box_particles, Particles_accepted, Distances_accepted
 		
 	def Get_threshold_and_noise(self):
@@ -575,6 +615,14 @@ class FilterParticlesAndFilaments():
 			Particles_accepted = np.load(cachefile_okparts)
 			Distances_accepted = np.load(cachefile_okdists)
 		else:
+			if not do_read_data:
+				print 'Reading filament and particle data for model: ', model
+				self.Read_basic_data(model, npart, sigma)
+				print 'Filtering particles'
+				filter_time = time.time()
+				self.Do_filter_particles()   # Filters the halo particles
+				print 'Filering time:', time.time() - filter_time, 's'
+				self.do_read_data = 1
 			print 'Computing thresholds and accepted particles ...'
 			computing_time = time.time()
 			Included_fils, Distance_thresholds, Accepted_box_particles, Particles_accepted, Distances_accepted = self.Compute_threshold_and_noise()
@@ -608,18 +656,18 @@ class FilterParticlesAndFilaments():
 		return Parallel_velocity, Orthogonal_velocity, Speed
 
 	def Compute_speed_components(self, filpos, Part_accept):
-		segids = self.Filtered_segids
+		segids = self.Expanded_segIDs
 		Parallel_speeds = []
 		Orthogonal_speeds = []
 		All_speeds = []
 		#for accepted_ids in Part_accept:
 		for i in range(len(Part_accept)):
 			Pvel3D = self.ParticleVel[Part_accept[i]]
-			Para_speed, Orth_speed, Speed = Velocity_components_A(filpos[i], segids[Part_accept[i]], PVel3D)
+			Para_speed, Orth_speed, Speed = self.Velocity_components(filpos[i], segids[Part_accept[i]], PVel3D)
 			Parallel_speeds.append(Para_speed), Orthogonal_speeds.append(Orth_speed), All_speeds.append(Speed)
 		return np.array(Parallel_speeds), np.array(Orthogonal_speeds), np.array(All_speeds)
 
-	def Get_speed_components(self, filpos, Part_accept):
+	def Get_speed_components(self, Part_accept):
 		cachedir_speed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/Speed/'
 		cachedir_Ospeed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/OrthogonalComp/'
 		cachedir_Pspeed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/ParallelComp/'
@@ -640,9 +688,16 @@ class FilterParticlesAndFilaments():
 			Orthogonal_speeds = np.load(cachefile_Ospeed)
 			Parallel_speeds = np.load(cachefile_Pspeed)
 		else:
+			if not self.do_read_data:
+				print 'Reading filament and particle data for model: ', model
+				self.Read_basic_data(model, npart, sigma)
+				print 'Filtering particles'
+				filter_time = time.time()
+				self.Do_filter_particles()
+				self.do_read_data = 1
 			print 'Computing speed components'
 			Speed_timer = time.time()
-			Parallel_speeds, Orthogonal_speeds, All_speeds = self.Compute_speed_components(filpos, Part_accept)
+			Parallel_speeds, Orthogonal_speeds, All_speeds = self.Compute_speed_components(self.Filament_3DPos, Part_accept)
 			print 'Speed computing time: ', time.time() - Speed_timer, 's'
 			np.save(cachefile_speed, All_speeds)
 			np.save(cachefile_Ospeed, Orthogonal_speeds)
@@ -704,18 +759,21 @@ class Plot_results():
 			raise ValueError('filename not a string!')
 		figure.savefig(self.results_dir + name + self.filetype, bbox_inches='tight')
 
-	def Particle_profiles(self, Thresholds, Accepted_parts):
+	def Particle_profiles(self, Thresholds, Accepted_parts, FilLengths):
 		""" Plots data related to the particles """
 		if len(Thresholds) != len(Accepted_parts):
 			raise ValueError("Threshold data not same length as Accepted particles!")
 		######## Computing relevant data
 		# Computes masses of the filament. Done for all models
+		#num, bins = np.histogram(Thresholds[0], bins='fd')
+		#binnum = len(bins)
+		binnum = 50
 		NModels = len(Thresholds)
 		self.Filament_masses = []
 		for i in range(NModels):
 			Mass_array_temp = np.array([len(Accepted_parts[i][j]) for j in range(len(Accepted_parts[i]))]).astype(np.float32)
-			self.Filament_masses.append(Mass_array_temp)
-		Common_bin_mass = OF.Get_common_bin_logX(self.Filament_masses, binnum=40)
+			self.Filament_masses.append(Mass_array_temp*DM_mass)
+		Common_bin_mass = OF.Get_common_bin_logX(self.Filament_masses, binnum=binnum)
 		Number_mass = []
 		Error_mass = []
 		for i in range(NModels):
@@ -727,58 +785,74 @@ class Plot_results():
 		Prop_error_mass = [OF.Propagate_error_reldiff(Number_mass[0], Number_mass[i], Error_mass[0], Error_mass[i]) for i in range(1, NModels)]
 
 		# Thickness of filaments as a binned histogram, using np.digitize
-		Common_bin_thickness = OF.Get_common_bin_logX(Thresholds, binnum=40)
+		Common_bin_thickness = OF.Get_common_bin_logX(Thresholds, binnum=binnum)
 		Number_thickness = []
 		for i in range(NModels):
-			#index_bin = np.digitize(Thresholds[i], Common_bin_thickness)
-			#bin_value = np.array([len(Thresholds[i][index_bin == j]) for j in range(len(Common_bin_thickness))])
 			bin_value, bin_std = OF.Bin_numbers_common(Thresholds[i], Thresholds[i], Common_bin_thickness)
 			Number_thickness.append(bin_value)
+
+		# Computing 
 		""" 
 		!!!!!!!!!
 		AS OF 21.03.2018, RANGES DOES NOT INCLUDE SYMMETRON C MODEL. FIX RANGES WHEN SYMMETRON C MODEL IS FIXED
+		When symm C is included, ranges should be (not including LCDM):
+		Symmetron: range(1, 5)  --- Currently range(0,4)
+		Fofr: range(5,Nmodels) --- Currently range(4, Nmodels) 
 		!!!!!!!!!
 		"""
+		Mass_label = 'Filament mass - [$M_\odot / h$]'
+		Number_label = '$N$ filaments'
+		Thickness_label = 'Filament thickness - [Mpc/h]'
+		SymmLCDM = np.array([0,1,2,3])
+		FofrLCDM = np.array([0,4,5,6])
 		####### Plotting #######
 		######## Mass histograms 
-		# Mass histogram of all filaments
-		NumMass_all = plt.figure()
-		for i in range(NModels):
-			plt.loglog(Common_bin_mass, Number_mass[i], 'o-')
-		plt.legend(self.All_legends)
-		plt.xlabel('Filament mass - $M_\odot h^2$')
-		plt.ylabel('$N$ filaments')
-		# Mass histogram of lcdm + symmetron filaments
-		NumMass_Symm = plt.figure()
+		### Mass histogram of all filaments
+		NumMass_all = pf.Call_plot_sameX(Common_bin_mass, Number_mass, Mass_label, Number_label, self.All_legends, logscale='loglog')
+		### Mass histogram of lcdm + symmetron filaments
+		NumMass_Symm = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends, logscale='loglog')
+		### Mass histogram of lcdm + f(R) filaments
+		NumMass_fofr = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends, logscale='loglog')
+		### Mass histogram of lcdm + symmetron filaments - Semilog x scale
+		NumMass_Symm_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends, logscale='logx')
+		### Mass histogram of lcdm + f(R) filaments - Semilog x scale
+		NumMass_fofr_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends, logscale='logx')
+		### Mass histograms with errors, lcdm + symmetron
+		NumMass_error_symm = plt.figure()
 		for i in range(0,4):
-			plt.loglog(Common_bin_mass, Number_mass[i], 'o-')
+			plt.plot(Common_bin_mass, Number_mass[i], alpha=0.7)
+			plt.fill_between(Common_bin_mass, Number_mass[i]-Error_mass[i], Number_mass[i]+Error_mass[i], alpha=0.3)
 		plt.legend(self.Symm_legends)
-		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.xlabel('Filament mass - $M_\odot / h$')
 		plt.ylabel('$N$ filaments')
-		# Mass histogram of lcdm + f(R) filaments
-		NumMass_fofr = plt.figure()
+		plt.xscale('log')
+		### Mass histograms with errors, lcdm + f(R)
+		NumMass_error_fofr = plt.figure()
 		for i in [0,4,5,6]:
-			plt.loglog(Common_bin_mass, Number_mass[i], 'o-')
+			plt.plot(Common_bin_mass, Number_mass[i], alpha=0.7)
+			plt.fill_between(Common_bin_mass, Number_mass[i]-Error_mass[i], Number_mass[i]+Error_mass[i], alpha=0.3)
 		plt.legend(self.fofr_legends)
-		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.xlabel('Filament mass - $M_\odot/h$')
 		plt.ylabel('$N$ filaments')
-		# Relative differene of all models
+		plt.xscale('log')
+
+		### Relative differene of all models
 		RelDiff_mass_all = plt.figure()
 		plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
 		for i in range(NModels-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i])
 		plt.legend(self.All_legends)
-		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.xlabel('Filament mass - $M_\odot / h$')
 		plt.ylabel('Relative difference of $N$ filament')
-		# Relative difference of lcdm + symmetron
+		### Relative difference of lcdm + symmetron
 		RelDiff_mass_Symm = plt.figure()
 		#plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
 		for i in range(3):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i])
 		plt.legend(self.Symm_legends[1:])
-		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.xlabel('Filament mass - $M_\odot / h$')
 		plt.ylabel('Relative difference of $N$ filament')
-		# Relative difference of lcdm + f(R)
+		### Relative difference of lcdm + f(R)
 		RelDiff_mass_fofr = plt.figure()
 		#plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
 		for i in range(3, NModels-1):
@@ -786,7 +860,7 @@ class Plot_results():
 		plt.legend(self.fofr_legends[1:])
 		plt.xlabel('Filament mass - $M_\odot h^2$')
 		plt.ylabel('Relative difference of $N$ filament')
-		# Relative difference of lcdm + symmetron, with error
+		### Relative difference of lcdm + symmetron, with error
 		RelDiff_mass_Symm_err = plt.figure()
 		#plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)))
 		#plt.fill_between(Common_bin_mass, np.zeros(len(Common_bin_mass)), np.zeros(len(Common_bin_mass)))
@@ -798,33 +872,28 @@ class Plot_results():
 		plt.ylabel('Relative difference of filament masses')
 		plt.xscale('log')
 		#plt.yscale('log')
+
 		######## Thickness histograms
-		# Thickness histogram of all filaments
-		NumThickness_all = plt.figure()
-		for i in range(NModels):
-			plt.loglog(Common_bin_thickness, Number_thickness[i], 'o-')
-		plt.legend(self.All_legends)
-		plt.xlabel('Filament thickness - [Mpc/h]')
-		plt.ylabel('$N$ filaments')
-		# Thickness hisotgram of lcdm + symmetron filaments
-		NumThickness_Symm = plt.figure()
-		for i in range(0,4):
-			plt.loglog(Common_bin_thickness, Number_thickness[i], 'o-')
-		plt.legend(self.Symm_legends)
-		plt.xlabel('Filament thickness - [Mpc/h]')
-		plt.ylabel('$N$ filaments')
-		# Thickness histogram of lcdm + f(R) filaments
-		NumThickness_fofr = plt.figure()
-		for i in [0,4,5,6]:
-			plt.loglog(Common_bin_thickness, Number_thickness[i], 'o-')
-		plt.legend(self.fofr_legends)
-		plt.xlabel('Filament thickness - [Mpc/h]')
-		plt.ylabel('$N$ filaments')
+		### Thickness histogram of all filaments
+		NumThickness_all = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness, Thickness_label, Number_label, self.All_legends, logscale='loglog')
+		### Thickness hisotgram of lcdm + symmetron filaments, including logX scale
+		NumThickness_Symm = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[SymmLCDM], Thickness_label, Number_label, self.Symm_legends, logscale='loglog')
+		NumThickness_Symm_logX = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[SymmLCDM], Thickness_label, Number_label, self.Symm_legends, logscale='logx')
+		### Thickness histogram of lcdm + f(R) filaments, including LogX scale
+		NumThickness_fofr = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[FofrLCDM], Thickness_label, Number_label, self.fofr_legends, logscale='loglog')
+		NumThickness_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[FofrLCDM], Thickness_label, Number_label, self.fofr_legends, logscale='logx')
+
+		
+		########
 		
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		self.savefigure(NumMass_all, 'Filament_mass_distribution')
 		self.savefigure(NumMass_Symm, 'Filament_mass_distribution_cSymmetron')
 		self.savefigure(NumMass_fofr, 'Filament_mass_distribution_cFofr')
+		self.savefigure(NumMass_Symm_logx, 'Filament_mass_distribution_logX_cSymmetron')
+		self.savefigure(NumMass_fofr_logx, 'Filament_mass_distribution_logX_cFofr')
+		self.savefigure(NumMass_error_symm, 'Filament_mass_distribution_error_cSymmetron')
+		self.savefigure(NumMass_error_fofr , 'Filament_mass_distribution_error_cFofr')
 		self.savefigure(RelDiff_mass_all, 'Relative_difference_mass')
 		self.savefigure(RelDiff_mass_Symm, 'Relative_difference_mass_cSymmetron')
 		self.savefigure(RelDiff_mass_fofr, 'Relative_difference_mass_cFofr')
@@ -832,6 +901,8 @@ class Plot_results():
 		self.savefigure(NumThickness_all, 'Filament_Thickness_distribution')
 		self.savefigure(NumThickness_Symm, 'Filament_Thickness_distribution_cSymmetron')
 		self.savefigure(NumThickness_fofr, 'Filament_Thickness_distribution_cFofr')
+		self.savefigure(NumThickness_Symm_logX, 'Filament_Thickness_distribution_logX_cSymmetron')
+		self.savefigure(NumThickness_fofr_logX, 'Filament_Thickness_distribution_logX_cFofr')
 
 	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds):
 		""" Plots data related to the velocity profiles """
@@ -886,6 +957,7 @@ if __name__ == '__main__':
 	Part_accepted = []
 	Dist_accepted = []
 	Models_included = []
+	Filament_lengths = []
 	All_speed_list = []
 	Par_speed_list = []
 	Orth_speed_list = []
@@ -907,41 +979,49 @@ if __name__ == '__main__':
 	if p_model == 'lcdm' or p_model == 'all':
 		LCDM_instance = FilterParticlesAndFilaments('lcdm', N_parts, N_sigma)
 		OK_fils_LCDM, LCDM_thresholds, OK_pbox_LDCM, OK_particles_LCDM, OK_distances_LCDM = LCDM_instance.Get_threshold_and_noise()
+		Filament_lengths.append(LCDM_instance.Get_filament_length())
 		Append_data(OK_fils_LCDM, LCDM_thresholds, OK_pbox_LDCM, OK_particles_LCDM, OK_distances_LCDM, 'lcdm')
 
 	if p_model == 'symmA' or p_model == 'all':
 		SA_instance = FilterParticlesAndFilaments('symm_A', N_parts, N_sigma)
 		OK_fils_SA, SA_thresholds, OK_pbox_SA, OK_particles_SA, OK_distances_SA = SA_instance.Get_threshold_and_noise()
+		Filament_lengths.append(SA_instance.Get_filament_length())
 		Append_data(OK_fils_SA, SA_thresholds, OK_pbox_SA, OK_particles_SA, OK_distances_SA, 'symmA')
 
 	if p_model == 'symmB' or p_model == 'all':
 		SB_instance = FilterParticlesAndFilaments('symm_B', N_parts, N_sigma)
 		OK_fils_SB, SB_thresholds, OK_pbox_SB, OK_particles_SB, OK_distances_SB = SB_instance.Get_threshold_and_noise()
+		Filament_lengths.append(SB_instance.Get_filament_length())
 		Append_data(OK_fils_SB, SB_thresholds, OK_pbox_SB, OK_particles_SB, OK_distances_SB, 'symmB')
 
 	#if p_model == 'symmC' or p_model == 'all':
 	#	SC_instance = FilterParticlesAndFilaments('symm_C', N_parts, N_sigma)
 	#	OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC = SC_instance.Get_threshold_and_noise()
+	#	Filament_lengths.append(SC_instance.Get_filament_length())	
 	#	Append_data(OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC, 'symmC')
 
 	if p_model == 'symmD' or p_model == 'all':
 		SD_instance = FilterParticlesAndFilaments('symm_D', N_parts, N_sigma)
 		OK_fils_SD, SD_thresholds, OK_pbox_SD, OK_particles_SD, OK_distances_SD = SD_instance.Get_threshold_and_noise()
+		Filament_lengths.append(SD_instance.Get_filament_length())
 		Append_data(OK_fils_SD, SD_thresholds, OK_pbox_SD, OK_particles_SD, OK_distances_SD, 'symmD')
 
 	if p_model == 'fofr4' or p_model == 'all':
 		F4_instance = FilterParticlesAndFilaments('fofr4', N_parts, N_sigma)
 		OK_fils_F4, F4_thresholds, OK_pbox_F4, OK_particles_F4, OK_distances_F4 = F4_instance.Get_threshold_and_noise()
+		Filament_lengths.append(F4_instance.Get_filament_length())
 		Append_data(OK_fils_F4, F4_thresholds, OK_pbox_F4, OK_particles_F4, OK_distances_F4, 'fofr4')
 
 	if p_model == 'fofr5' or p_model == 'all':
 		F5_instance = FilterParticlesAndFilaments('fofr5', N_parts, N_sigma)
 		OK_fils_F5, F5_thresholds, OK_pbox_F5, OK_particles_F5, OK_distances_F5 = F5_instance.Get_threshold_and_noise()
+		Filament_lengths.append(F5_instance.Get_filament_length())
 		Append_data(OK_fils_F5, F5_thresholds, OK_pbox_F5, OK_particles_F5, OK_distances_F5, 'fofr5')
 
 	if p_model == 'fofr6' or p_model == 'all':
 		F6_instance = FilterParticlesAndFilaments('fofr6', N_parts, N_sigma)
 		OK_fils_F6, F6_thresholds, OK_pbox_F6, OK_particles_F6, OK_distances_F6 = F6_instance.Get_threshold_and_noise()
+		Filament_lengths.append(F6_instance.Get_filament_length())
 		Append_data(OK_fils_F6, F6_thresholds, OK_pbox_F6, OK_particles_F6, OK_distances_F6, 'fofr6')
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
