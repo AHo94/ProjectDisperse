@@ -39,8 +39,8 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
 	Extra parameter logscal determines the plotting method
 	normal = plot(), logx = semilogx(), etc.
 	"""
-	if len(xdata) != len(ydata):
-		raise ValueError("xdata and ydata not of same length!")
+	#if len(xdata) != len(ydata[0]):
+	#	raise ValueError("xdata and ydata not of same length!")
 	figure = plt.figure()
 	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 	for i in range(len(ydata)):
