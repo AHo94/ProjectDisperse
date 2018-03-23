@@ -714,6 +714,7 @@ class Plot_results():
 		elif filetype == 'pdf':
 			foldername += 'PDF/'
 		self.filetype = '.' + filetype
+		self.raw_filetype = filetype
 		sigma_name_folder = 'Sigma'+str(Nsigma) + '/'
 		foldername += sigma_name_folder
 
@@ -769,13 +770,22 @@ class Plot_results():
 		""" Plots data related to the particles """
 		if len(Thresholds) != len(Accepted_parts):
 			raise ValueError("Threshold data not same length as Accepted particles!")
-		######## Computing relevant data
-		# Computes masses of the filament. Done for all models
-		#num, bins = np.histogram(Thresholds[0], bins='fd')
-		#binnum = len(bins)
+		######## Computing relevant data ########
 		s_variable = 0.7
 		binnum = 50
 		NModels = len(Thresholds)
+		Mass_label = 'Filament mass - [$M_\odot / h$]'
+		Number_label = '$N$ filaments'
+		Thickness_label = 'Filament thickness - [Mpc/h]'
+		Length_label = 'Filament length - [Mpc/h]'
+		Mean_Mass_label = 'Mean filament mass - [$M_\odot / h$]'
+		Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
+		SymmLCDM = np.array([0,1,2,3])
+		FofrLCDM = np.array([0,4,5,6])
+		Symm_only = np.array([1,2,3])
+		Fofr_only = np.array([4,5,6])
+		self.Thresholds = np.array(Thresholds)
+		#### Computes masses of the filament. Done for all models
 		self.Filament_masses = []
 		for i in range(NModels):
 			Mass_array_temp = np.array([len(Accepted_parts[i][j]) for j in range(len(Accepted_parts[i]))]).astype(np.float32)
@@ -840,20 +850,10 @@ class Plot_results():
 		AS OF 21.03.2018, RANGES DOES NOT INCLUDE SYMMETRON C MODEL. FIX RANGES WHEN SYMMETRON C MODEL IS FIXED
 		When symm C is included, ranges should be (not including LCDM):
 		Symmetron: range(1, 5)  --- Currently range(0,4)
-		Fofr: range(5,Nmodels) --- Currently range(4, Nmodels) 
+		Fofr: range(5,NModels) --- Currently range(4, NModels) 
 		!!!!!!!!!
 		"""
-		Mass_label = 'Filament mass - [$M_\odot / h$]'
-		Number_label = '$N$ filaments'
-		Thickness_label = 'Filament thickness - [Mpc/h]'
-		Length_label = 'Filament length - [Mpc/h]'
-		Mean_Mass_label = 'Mean filament mass - [$M_\odot / h$]'
-		Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
-		SymmLCDM = np.array([0,1,2,3])
-		FofrLCDM = np.array([0,4,5,6])
-		Symm_only = np.array([1,2,3])
-		Fofr_only = np.array([4,5,6])
-		####### Plotting #######
+		######## Plotting ########
 		######## Mass histograms 
 		### Mass histogram of all filaments
 		NumMass_all = pf.Call_plot_sameX(Common_bin_mass, Number_mass, Mass_label, Number_label, self.All_legends, logscale='loglog')
@@ -965,7 +965,6 @@ class Plot_results():
 		plt.xlabel(Length_label)
 		plt.ylabel('Relative difference of thickness')
 		plt.xscale('log')
-		#plt.close('all')	# Clear all current windows to free memory
 
 		### Mass as a function of length, LCDM + Symmetron and LCDM + f(R)
 		MassVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_mass[SymmLCDM], Length_label, Mean_Mass_label, self.Symm_legends, logscale='loglog')
@@ -1034,11 +1033,117 @@ class Plot_results():
 		self.savefigure(MassVsLen_RelErr_Symm, 'MassVsLength_Reldiff_cSymmetron')
 		self.savefigure(MassVsLen_RelErr_fofr, 'MassVsLength_Reldiff_cFofr')		
 		self.savefigure(MassVsThick, 'MassVsThickness')
+		plt.close('all')	# Clear all current windows to free memory
 
-	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds):
+	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds, Part_distances):
 		""" Plots data related to the velocity profiles """
-		a = 1
+		velocity_savefile_dir = 'ModelComparisons/VelocityAnalysis/'
+		if self.raw_filetype == 'png':
+			velocity_savefile_dir += 'PNG/'
+		elif self.raw_filetype == 'pdf':
+			velocity_savefile_dir += 'PDF/'
+		self.filetype = '.' + filetype
+		sigma_name_folder = 'Sigma'+str(Nsigma) + '/'
+		velocity_savefile_dir += sigma_name_folder
 
+		velocity_results_dir = os.path.join(savefile_directory, velocity_savefile_dir)
+		if not os.path.isdir(velocity_results_dir):
+			os.makedirs(velocity_results_dir)
+
+		######## Compute relevant stuff ########
+		binnum = 50
+		NModels = len(All_speeds)
+		s_variable = 0.7
+		Mass_label = 'Filament mass - [$M_\odot / h$]'
+		Number_label = '$N$ filaments'
+		Thickness_label = 'Filament thickness - [Mpc/h]'
+		Length_label = 'Filament length - [Mpc/h]'
+		Mean_Mass_label = 'Mean filament mass - [$M_\odot / h$]'
+		Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
+		Average_speed_label = 'Average particle speed - [km/s]'
+		SymmLCDM = np.array([0,1,2,3])
+		FofrLCDM = np.array([0,4,5,6])
+		Symm_only = np.array([1,2,3])
+		Fofr_only = np.array([4,5,6])
+		
+		#### Average speed of all filaments as a function of 
+		Normalized_part_distances = []
+		for i in range(NModels):
+			Normalized_part_distances.append(Part_distances[i]/self.Thresholds[i])
+		Normalized_part_distances = np.asarray(Normalized_part_distances)
+		Common_bin_thickness = OF.Get_common_bin_logX(self.Thresholds, binnum=binnum)
+		Common_bin_distances = OF.Get_common_bin(Part_distances, binnum=binnum)
+		Common_bin_distances_normalized = OF.Get_common_bin(Normalized_part_distances, binnum=binnum)
+
+		Mean_speed_normalized = []
+		Mean_speed_normalized_std = []
+		for i in range(NModels):
+			bin_value, bin_std = OF.Bin_mean_common(Part_distances[i]/self.Thresholds[i], All_speeds[i], Common_bin_distances_normalized)
+			Mean_speed_normalized.append(bin_value)
+			Mean_speed_normalized_std.append(bin_std)
+		Mean_speed_normalized = np.asarray(Mean_speed_normalized)
+		Mean_speed_std_normalized = np.asarray(Mean_speed_std_normalized)
+		#### Compute the average of the average speed of each filament. That is, average profile for --all-- filaments
+		Mean_speed_allFils = []
+		Mean_speed_allFils_std = []
+		for i in range(NModels):
+			Mean, std = OF.Mean_per_bin(Common_bin_distances_normalized, Mean_speed_normalized[i])
+			Mean_speed_allFils.append(Mean)
+			Mean_speed_allFils_std.append(std)
+
+		### Compute the average of particle speeds for filament with similar masses
+		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
+		Mean_speed_same_mass = []
+		Mean_speed_same_mass_std = []
+		for i in range(len(Mass_ranges)-1):
+			Temp_arr = []
+			Temp_arr_std = []
+			for i in range(NModels):
+				Similar_masses = self.Filament_masses[i] > Mass_ranges[i] & self.Filament_masses[i] < Mass_ranges[i+1]
+				Speeds_included = All_speeds[i][Similar_masses]
+				Parts_included = Part_distances[i][Similar_masses]/self.Thresholds[i][Similar_masses]
+				bin_value, bin_std = OF.Bin_mean_common(Parts_included, Speeds_included, Common_bin_distances_normalized)
+				Temp_arr.append(bin_value)
+				Temp_arr_std.append(bin_std)
+			Mean_speed_same_mass.append(np.array(Temp_arr))
+			Mean_speed_same_mass_std.append(np.array(Temp_arr_std))
+
+		######## Plotting data ########
+		#### Average particle speed for all filaments
+		Mass_titles = ['$M \in [10^{12}M_\sun, 10^{13}M_\sun]$', '$M \in [10^{13}M_\sun, 10^{14}M_\sun]$', '$M \in [10^{14}M_\sun, 10^{15}M_\sun]$']
+		AverageSpeed_AllFils = plt.figure(figsize=(8,4))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		plt.subplot(1,2,1)
+		for i in SymmLCDM:
+			plt.plot(Common_bin_distances_normalized, Mean_speed_allFils[i])
+		plt.legend(Symm_legends)
+		plt.subplot(1,2,2)
+		for i in FofrLCDM:
+			plt.plot(Common_bin_distances_normalized, Mean_speed_allFils[i])
+		plt.legend(fofr_legends)
+		AverageSpeed_AllFils.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
+		AverageSpeed_AllFils.text(0.04, 0.6, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		
+		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
+		AverageSpeed_SimilarMass = plt.figure(figsize=(12,4))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		for j in range(len(Mass_ranges)-1):
+			ax = plt.subplot(1,3,j)
+			for i in SymmLCDM:
+				plt.plot(Common_bin_distances_normalized, Mean_speed_same_mass[j][i], label=self.Symm_legends[i])
+				plt.fill_between(Common_bin_distances_normalized, Mean_speed_same_mass[j][i]-Mean_speed_same_mass_std[j][i],
+								 Mean_speed_same_mass[j][i]+Mean_speed_same_mass_std[j][i])
+			plt.title(Mass_titles[j])
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+		AverageSpeed_SimilarMass.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
+		AverageSpeed_SimilarMass.text(0.04, 0.6, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+
+		####### Save figures #######
+		print '--- SAVING IN: ', velocity_results_dir, ' ---'
+		self.savefigure(AverageSpeed_AllFils, 'Average_speed_all_filaments', velocity_results_dir)
+		self.savefigure(AverageSpeed_SimilarMass, 'Average_speed_similar_mass', velocity_results_dir)
+		plt.close('all')	# Clear all current windows to free memory
+		
 	#def Similar_profiles(self, All_speeds, ):
 
 
@@ -1121,5 +1226,5 @@ if __name__ == '__main__':
 			Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
 			Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
 			Append_data_speeds(Speeds, Ospeed, Pspeed)
-	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
+	Plot_instance = Plot_results(Models_includedvelocity_savefile_dir = 'ModelComparisons/VelocityAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
