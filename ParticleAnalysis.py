@@ -753,11 +753,11 @@ class Plot_results():
 			elif modnames == 'fofr6':
 				append_legends('fofr6', mod=2)
 
-	def savefigure(self, figure, name):
+	def savefigure(self, figure, name, savedir=self.results_dir):
 		""" Function that calls savefig based on figure instance and filename. """
 		if type(name) != str:
 			raise ValueError('filename not a string!')
-		figure.savefig(self.results_dir + name + self.filetype, bbox_inches='tight')
+		figure.savefig(savedir + name + self.filetype, bbox_inches='tight')
 
 	def Particle_profiles(self, Thresholds, Accepted_parts, FilLengths):
 		""" Plots data related to the particles """
@@ -797,7 +797,7 @@ class Plot_results():
 		# Mean thickness as a function of length + relative difference
 		Mean_thickness = []
 		Mean_thickness_std = []
-		for i in range(Nmodels):
+		for i in range(NModels):
 			binval, bin_std = OF.Get_mean_common(FilLengths[i], Thresholds[i], Common_bin_length)
 			Mean_thickness.append(binval)
 			Mean_thickness_std.append(bin_std)
@@ -805,7 +805,7 @@ class Plot_results():
 		# Mean mass as a function of length
 		Mean_mass = []
 		Mean_mass_std = []
-		for i in range(Nmodels):
+		for i in range(NModels):
 			binval, bin_std = OF.Get_mean_common(FilLengths[i], self.Filament_masses[i], Common_bin_length)
 			Mean_mass.append(binval)
 			Mean_mass_std.append(bin_std)
@@ -813,17 +813,17 @@ class Plot_results():
 		# Mean mass as a function of thickness
 		Mean_mass_vT = []
 		Mean_mass_vT_std = []
-		for i in range(Nmodels):
+		for i in range(NModels):
 			binval, bin_std = OF.Get_mean_common(Thresholds[i], self.Filament_masses[i], Common_bin_thickness)
 			Mean_mass_vT.append(binval)
 			Mean_mass_vT_std.append(bin_std)
 		RelDiff_mean_mass_vT = [OF.relative_deviation(Mean_mass_vT, i) for i in range(1, NModels)]
 
 		Prop_err_mean_thickness = [OF.Propagate_error_reldiff(Mean_thickness[0], Mean_thickness[i], Mean_thickness_std[0], Mean_thickness_std[i]) 
-									for i in range(len(1,Nmodels))]
-		Prop_err_mean_mass = [OF.Propagate_error_reldiff(Mean_mass[0], Mean_mass[i], Mean_mass_std[0], Mean_mass_std[i]) for i in range(len(1,Nmodels))]
+									for i in range(len(1,NModels))]
+		Prop_err_mean_mass = [OF.Propagate_error_reldiff(Mean_mass[0], Mean_mass[i], Mean_mass_std[0], Mean_mass_std[i]) for i in range(len(1,NModels))]
 		Prop_err_mean_mass_vT = [OF.Propagate_error_reldiff(Mean_mass_vT[0], Mean_mass_vT[i], Mean_mass_vT_std[0], Mean_mass_vT_std[i]) 
-									for i in range(len(1,Nmodels))]
+									for i in range(len(1,NModels))]
 		
 		""" 
 		!!!!!!!!!
@@ -923,24 +923,53 @@ class Plot_results():
 		### Thickness as a function of length, LCDM + Symmetron and LCDM + f(R)
 		ThickVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_thickness[SymmLCDM], Length_label, Thickness_label, self.Symm_legends, logscale='loglog')
 		ThickVsLen_fofr = pf.Call_plot_sameX(Common_bin_length, Mean_thickness[FofrLCDM], Length_label, Thickness_label, self.fofr_legends, logscale='loglog')
-		### Relative error with errobar, Symmetron and f(R) seperate, base model = LCDM
+		### Relative difference with errobar, Symmetron and f(R) seperate, base model = LCDM
 		ThickVsLen_RelErr_Symm = plt.figure()
 		for i in Symm_only:
 			plt.plot(Common_bin_length, Mean_thickness[i], aplha=0.7)
-			plt.fill_between(Common_bin_length, Mean_thickness[i]-Prop_err_mean_thickness[i], Mean_thickness[i]-Prop_err_mean_thickness[i], alpha=0.5)
+			plt.fill_between(Common_bin_length, Mean_thickness[i]-Prop_err_mean_thickness[i], Mean_thickness[i]-Prop_err_mean_thickness[i], alpha=0.4)
 		plt.legend(Symm_legends)
 		plt.xlabel(Length_label)
 		plt.ylabel(Thickness_label)
 		ThickVsLen_RelErr_fofr = plt.figure()
 		for i in Fofr_only:
 			plt.plot(Common_bin_length, Mean_thickness[i], aplha=0.7)
-			plt.fill_between(Common_bin_length, Mean_thickness[i]-Prop_err_mean_thickness[i], Mean_thickness[i]-Prop_err_mean_thickness[i], alpha=0.5)
-		plt.legend(Symm_legends)
+			plt.fill_between(Common_bin_length, Mean_thickness[i]-Prop_err_mean_thickness[i], Mean_thickness[i]-Prop_err_mean_thickness[i], alpha=0.4)
+		plt.legend(fofr_legends)
 		plt.xlabel(Length_label)
 		plt.ylabel(Thickness_label)
+		#plt.close('all')	# Clear all current windows to free memory
 
-		plt.close('all')	# Clear all current windows to free memory
+		### Mass as a function of length, LCDM + Symmetron and LCDM + f(R)
+		MassVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_mass[SymmLCDM], Length_label, Mass_label, self.Symm_legends, logscale='loglog')
+		MassVSLen_fofr = pf.Call_plot_sameX(Common_bin_length, Mean_mass[FofrLCDM], Length_label, Mass_label, self.fofr_legends, logscale='loglog')
+		### Relative difference with errorbar, Symmetron and f(R) seperate, base model = LCDM
+		MassVsLen_RelErr_Symm = plt.figure()
+		for i in Symm_only:
+			plt.plot(Common_bin_length, Mean_mass[i], aplha=0.7)
+			plt.fill_between(Common_bin_length, Mean_mass_std[i]-Prop_err_mean_mass[i], Mean_mass_std[i]-Prop_err_mean_mass[i], alpha=0.4)
+		plt.legend(Symm_legends)
+		plt.xlabel(Length_label)
+		plt.ylabel(Mass_label)
+		MassVsLen_RelErr_fofr = plt.figure()
+		for i in Fofr_only:
+			plt.plot(Common_bin_length, Mean_mass[i], aplha=0.7)
+			plt.fill_between(Common_bin_length, Mean_mass[i]-Prop_err_mean_mass[i], Mean_mass[i]-Prop_err_mean_mass[i], alpha=0.4)
+		plt.legend(fofr_legends)
+		plt.xlabel(Length_label)
+		plt.ylabel(Mass_label)
 
+		### Mass as a function of thickness, LCDM + Symmetron and LCDM + f(R)
+		MassVsThick = plt.figure(figsize=(8,4))
+		plt.subplot(1,2,1)
+		for i in SymmLCDM:
+			plt.loglog(Common_bin_thickness, Mean_mass_vT[i])
+		plt.subplot(1,2,2)
+		for i in FofrLCDM:
+			plt.loglog(Common_bin_thickness, Mean_mass_vT[i])
+		MassVsThick.text(0.5, 0.04, Thickness_label, ha='center', fontsize=8)
+		MassVsThick.text(0.04, 0.5, Mass_label, ha='center', rotation='vertical', fontsize=8)
+						
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		######## Mass histograms 
 		self.savefigure(NumMass_all, 'Filament_mass_distribution')
@@ -960,11 +989,16 @@ class Plot_results():
 		self.savefigure(NumThickness_fofr, 'Filament_Thickness_distribution_cFofr')
 		self.savefigure(NumThickness_Symm_logX, 'Filament_Thickness_distribution_logX_cSymmetron')
 		self.savefigure(NumThickness_fofr_logX, 'Filament_Thickness_distribution_logX_cFofr')
-		######## Thickness histograms
+		######## Compare different properties
 		self.savefigure(ThickVsLen_Symm, 'ThicknessVsLength_cSymmetron')
 		self.savefigure(ThickVsLen_fofr, 'ThicknessVsLength_cFofr')
 		self.savefigure(ThickVsLen_RelErr_Symm, 'ThicknessVsLength_Reldiff_cSymmetron')
 		self.savefigure(ThickVsLen_RelErr_fofr, 'ThicknessVsLength_Reldiff_cFofr')
+		self.savefigure(MassVsLen_Symm, 'MassVsLength_cSymmetron')
+		self.savefigure(MassVsLen_Symm, 'MassVsLength_cFofr')
+		self.savefigure(MassVsLen_RelErr_Symm, 'MassVsLength_Reldiff_cSymmetron')
+		self.savefigure(MassVsLen_RelErr_fofr, 'MassVsLength_Reldiff_cFofr')		
+		self.savefigure(MassVsThick, 'MassVsThickness')
 
 	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds):
 		""" Plots data related to the velocity profiles """
@@ -1052,58 +1086,5 @@ if __name__ == '__main__':
 			Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
 			Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
 			Append_data_speeds(Speeds, Ospeed, Pspeed)
-	"""
-	if p_model == 'lcdm' or p_model == 'all':
-		LCDM_instance = FilterParticlesAndFilaments('lcdm', N_parts, N_sigma)
-		OK_fils_LCDM, LCDM_thresholds, OK_pbox_LDCM, OK_particles_LCDM, OK_distances_LCDM = LCDM_instance.Get_threshold_and_noise()
-		Filament_lengths.append(LCDM_instance.Get_filament_length())
-		Append_data(OK_fils_LCDM, LCDM_thresholds, OK_pbox_LDCM, OK_particles_LCDM, OK_distances_LCDM, 'lcdm')
-		Speeds_LCDM, Ospeed_LCDM, Pspeed_LCDM = Get_speed_components(OK_particles_SA)
-		Append_data_speeds(Speeds_SA, Ospeed_SA, Pspeed_SA)
-		
-	if p_model == 'symmA' or p_model == 'all':
-		SA_instance = FilterParticlesAndFilaments('symm_A', N_parts, N_sigma)
-		OK_fils_SA, SA_thresholds, OK_pbox_SA, OK_particles_SA, OK_distances_SA = SA_instance.Get_threshold_and_noise()
-		Filament_lengths.append(SA_instance.Get_filament_length())
-		Append_data(OK_fils_SA, SA_thresholds, OK_pbox_SA, OK_particles_SA, OK_distances_SA, 'symmA')
-		Speeds_SA, Ospeed_SA, Pspeed_SA = Get_speed_components(OK_particles_SA)
-		Append_data_speeds(Speeds_SA, Ospeed_SA, Pspeed_SA)
-
-	if p_model == 'symmB' or p_model == 'all':
-		SB_instance = FilterParticlesAndFilaments('symm_B', N_parts, N_sigma)
-		OK_fils_SB, SB_thresholds, OK_pbox_SB, OK_particles_SB, OK_distances_SB = SB_instance.Get_threshold_and_noise()
-		Filament_lengths.append(SB_instance.Get_filament_length())
-		Append_data(OK_fils_SB, SB_thresholds, OK_pbox_SB, OK_particles_SB, OK_distances_SB, 'symmB')
-
-	#if p_model == 'symmC' or p_model == 'all':
-	#	SC_instance = FilterParticlesAndFilaments('symm_C', N_parts, N_sigma)
-	#	OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC = SC_instance.Get_threshold_and_noise()
-	#	Filament_lengths.append(SC_instance.Get_filament_length())	
-	#	Append_data(OK_fils_SC, SC_thresholds, OK_pbox_SC, OK_particles_SC, OK_distances_SC, 'symmC')
-
-	if p_model == 'symmD' or p_model == 'all':
-		SD_instance = FilterParticlesAndFilaments('symm_D', N_parts, N_sigma)
-		OK_fils_SD, SD_thresholds, OK_pbox_SD, OK_particles_SD, OK_distances_SD = SD_instance.Get_threshold_and_noise()
-		Filament_lengths.append(SD_instance.Get_filament_length())
-		Append_data(OK_fils_SD, SD_thresholds, OK_pbox_SD, OK_particles_SD, OK_distances_SD, 'symmD')
-
-	if p_model == 'fofr4' or p_model == 'all':
-		F4_instance = FilterParticlesAndFilaments('fofr4', N_parts, N_sigma)
-		OK_fils_F4, F4_thresholds, OK_pbox_F4, OK_particles_F4, OK_distances_F4 = F4_instance.Get_threshold_and_noise()
-		Filament_lengths.append(F4_instance.Get_filament_length())
-		Append_data(OK_fils_F4, F4_thresholds, OK_pbox_F4, OK_particles_F4, OK_distances_F4, 'fofr4')
-
-	if p_model == 'fofr5' or p_model == 'all':
-		F5_instance = FilterParticlesAndFilaments('fofr5', N_parts, N_sigma)
-		OK_fils_F5, F5_thresholds, OK_pbox_F5, OK_particles_F5, OK_distances_F5 = F5_instance.Get_threshold_and_noise()
-		Filament_lengths.append(F5_instance.Get_filament_length())
-		Append_data(OK_fils_F5, F5_thresholds, OK_pbox_F5, OK_particles_F5, OK_distances_F5, 'fofr5')
-
-	if p_model == 'fofr6' or p_model == 'all':
-		F6_instance = FilterParticlesAndFilaments('fofr6', N_parts, N_sigma)
-		OK_fils_F6, F6_thresholds, OK_pbox_F6, OK_particles_F6, OK_distances_F6 = F6_instance.Get_threshold_and_noise()
-		Filament_lengths.append(F6_instance.Get_filament_length())
-		Append_data(OK_fils_F6, F6_thresholds, OK_pbox_F6, OK_particles_F6, OK_distances_F6, 'fofr6')
-	"""
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
