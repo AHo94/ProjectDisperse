@@ -28,22 +28,26 @@ pre_rho = DM_mass*Solmass/(Mpc**3)
 
 class FilterParticlesAndFilaments():
 	def __init__(self, model, npart, sigma):
-		if model == 'lcdm':
-			self.Dispersemodel = 'LCDM'
-		elif model == 'symm_A':
-			self.Dispersemodel = 'SymmA'
-		elif model == 'symm_B':
-			self.Dispersemodel = 'SymmB'
-		elif model == 'symm_C':
-			self.Dispersemodel = 'SymmC'
-		elif model == 'symm_D':
-			self.Dispersemodel = 'SymmD'
-		else:
-			self.Dispersemodel = model
 
 		self.model = model
 		self.npart = npart
 		self.sigma = sigma
+		if model == 'lcdm':
+			self.Dispersemodel = 'LCDM'
+		elif model == 'symmA':
+			self.model = 'symm_A'
+			self.Dispersemodel = 'SymmA'
+		elif model == 'symmB':
+			self.model = 'symm_B'
+			self.Dispersemodel = 'SymmB'
+		elif model == 'symmC':
+			self.model = 'symm_C'
+			self.Dispersemodel = 'SymmC'
+		elif model == 'symmD':
+			self.model = 'symm_D'
+			self.Dispersemodel = 'SymmD'
+		else:
+			self.Dispersemodel = model
 
 		self.do_read_data = 0
 		"""
@@ -534,7 +538,7 @@ class FilterParticlesAndFilaments():
 		Tsols = self.Filtered_tsols[self.Small_filaments]
 		SegIDs = self.Filtered_segids[self.Small_filaments]
 		Masks = self.Filtered_masks[self.Small_filaments]
-
+        
 		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(FilamentPos, Distances, FilLengths)
 		# Recomputes filaments where densities are always larger than threshold
 		multiplier = 1
@@ -550,7 +554,6 @@ class FilterParticlesAndFilaments():
 			if multiplier > 3:
 				print 'Multiplier threshold over 3, stopping the box expand computation'
 				break
-
 		Distance_thresholds = []
 		for index in Included_fils:
 			OK_distance = self.Accepted_distance_density(Distances[index], FilLengths[index])
@@ -559,14 +562,17 @@ class FilterParticlesAndFilaments():
 		# ADD PART TO RECOMPUTE THICKNESS IF 2*THICKNESS < THRESHOLD 
 		Particles_accepted = []
 		Distances_accepted = []
+		SegIDs_accepted = []
 		for i in range(len(Distance_thresholds)):
 			index = Included_fils[i]
 			Filament_thickness = np.where(Distances[index] <= Distance_thresholds[i])[0]
 			Particles_accepted.append(Masks[index][Filament_thickness])
 			Distances_accepted.append(Distances[index][Filament_thickness])
+			SegIDs_accepted.append(SegIDs[index][Filament_thickness])
 		Particles_accepted = np.asarray(Particles_accepted)
 		Distances_accepted = np.asarray(Distances_accepted)
-
+		SegIDs_accepted = np.asarray(SegIDs_accepted)
+        
 		# Filter filaments with less than 100 particles
 		Number_particles = np.array([len(Particles_accepted[i]) for i in range(len(Particles_accepted))])
 		Few_particles = np.where(Number_particles > 100)[0]
@@ -574,8 +580,8 @@ class FilterParticlesAndFilaments():
 		Distance_thresholds = Distance_thresholds[Few_particles]
 		Particles_accepted = Particles_accepted[Few_particles]
 		Distances_accepted = Distances_accepted[Few_particles]
-		SegIDs = SegIDs[Few_particles]
-		return Included_fils, Distance_thresholds, Particles_accepted, Distances_accepted, SegIDs
+		SegIDs_accepted = SegIDs_accepted[Few_particles]
+		return Included_fils, Distance_thresholds, Particles_accepted, Distances_accepted, SegIDs_accepted
 		
 	def Get_threshold_and_noise(self):
 		"""
@@ -628,7 +634,6 @@ class FilterParticlesAndFilaments():
 			np.save(cachefile_okparts, Particles_accepted)
 			np.save(cachefile_okdists, Distances_accepted)
 			np.save(cachefile_segIDs, SegIDs)
-
 		
 		return Included_fils, Distance_thresholds, Particles_accepted, Distances_accepted, SegIDs
 
@@ -658,11 +663,11 @@ class FilterParticlesAndFilaments():
 		All_speeds = []
 		for i in range(len(Part_accept)):
 			Pvel3D = self.ParticleVel[Part_accept[i]]
-			Para_speed, Orth_speed, Speed = self.Velocity_components(filpos[i], segids[Part_accept[i]], PVel3D)
+			Para_speed, Orth_speed, Speed = self.Velocity_components(filpos[i], segids[i], Pvel3D)
 			Parallel_speeds.append(Para_speed), Orthogonal_speeds.append(Orth_speed), All_speeds.append(Speed)
 		return np.array(Parallel_speeds), np.array(Orthogonal_speeds), np.array(All_speeds)
 
-	def Get_speed_components(self, Part_accept, segids):
+	def Get_speed_components(self, Part_accept, segids, Fils_accept):
 		cachedir_speed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/Speed/'
 		cachedir_Ospeed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/OrthogonalComp/'
 		cachedir_Pspeed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/ParallelComp/'
@@ -686,13 +691,13 @@ class FilterParticlesAndFilaments():
 			if not self.do_read_data:
 				print 'Reading filament and particle data for model: ', self.model
 				self.Read_basic_data(self.model, self.npart, self.sigma)
-				print 'Filtering particles'
-				filter_time = time.time()
-				self.Do_filter_particles()
+				#print 'Filtering particles'
+				#filter_time = time.time()
+				#self.Do_filter_particles()
 				self.do_read_data = 1
 			print 'Computing speed components'
 			Speed_timer = time.time()
-			Parallel_speeds, Orthogonal_speeds, All_speeds = self.Compute_speed_components(self.Filament_3DPos[self.Small_filaments], Part_accept, segids)
+			Parallel_speeds, Orthogonal_speeds, All_speeds = self.Compute_speed_components(self.Filament_3DPos[self.Small_filaments][Fils_accept], Part_accept, segids)
 			print 'Speed computing time: ', time.time() - Speed_timer, 's'
 			np.save(cachefile_speed, All_speeds)
 			np.save(cachefile_Ospeed, Orthogonal_speeds)
@@ -991,7 +996,7 @@ def Argument_parser():
 			if args.Model == models:
 				Model_ok = True
 				if args.Model == 'all':
-					Models_to_be_run = [Model_check[i] for i in range(len(Model_check-1))]
+					Models_to_be_run = [Model_check[i] for i in range(len(Model_check)-1)]
 				else:
 					Models_to_be_run.append(args.Model)
 		if not Model_ok:
@@ -1045,8 +1050,8 @@ if __name__ == '__main__':
 			OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
 			Filament_lengths.append(Instance.Get_filament_length())
 			Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
-			Speeds, Ospeed, Pspeed = Get_speed_components(OK_particles, SegIDs)
-			Append_data_speeds(Speeds, Ospeed, Pspeed)	
+			Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
+			Append_data_speeds(Speeds, Ospeed, Pspeed)
 	"""
 	if p_model == 'lcdm' or p_model == 'all':
 		LCDM_instance = FilterParticlesAndFilaments('lcdm', N_parts, N_sigma)
