@@ -124,7 +124,9 @@ class FilterParticlesAndFilaments():
 		for i in range(len(Filament_3DPos)):
 			fillen = OF.Get_filament_length(Filament_3DPos[i])
 			self.FilamentLength.append(fillen)
-		return np.asarray(self.FilamentLength)
+		self.FilamentLength = np.asarray(self.FilamentLength)
+		self.Small_filaments = self.FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
+		return self.FilamentLength[self.Small_filaments]
 		
 
 	def Unpack_filament_data(self, Box_info, Fil_coord):
@@ -711,7 +713,7 @@ class Plot_results():
 			foldername += 'PNG/'
 		elif filetype == 'pdf':
 			foldername += 'PDF/'
-		self.filetype = filetype
+		self.filetype = '.' + filetype
 		sigma_name_folder = 'Sigma'+str(Nsigma) + '/'
 		foldername += sigma_name_folder
 
@@ -753,11 +755,15 @@ class Plot_results():
 			elif modnames == 'fofr6':
 				append_legends('fofr6', mod=2)
 
-	def savefigure(self, figure, name, savedir=self.results_dir):
+	def savefigure(self, figure, name, savedir=False):
 		""" Function that calls savefig based on figure instance and filename. """
+		if not savedir:
+			savedir_ = self.results_dir
+		else:
+			savedir_ = savedir
 		if type(name) != str:
 			raise ValueError('filename not a string!')
-		figure.savefig(savedir + name + self.filetype, bbox_inches='tight')
+		figure.savefig(savedir_ + name + self.filetype, bbox_inches='tight')
 
 	def Particle_profiles(self, Thresholds, Accepted_parts, FilLengths):
 		""" Plots data related to the particles """
@@ -767,6 +773,7 @@ class Plot_results():
 		# Computes masses of the filament. Done for all models
 		#num, bins = np.histogram(Thresholds[0], bins='fd')
 		#binnum = len(bins)
+		s_variable = 0.7
 		binnum = 50
 		NModels = len(Thresholds)
 		self.Filament_masses = []
@@ -780,17 +787,18 @@ class Plot_results():
 			bin_value, bin_err = OF.Bin_numbers_common(self.Filament_masses[i], self.Filament_masses[i], Common_bin_mass, std='poisson')
 			Number_mass.append(bin_value)
 			Error_mass.append(bin_err)
+		Number_mass = np.asarray(Number_mass)
+		Error_mass = np.asarray(Error_mass)
 		# Relative difference of the masses. Basemodel lcdm
 		RelativeDiff_mass = [OF.relative_deviation(Number_mass, i) for i in range(1, NModels)]
 		Prop_error_mass = [OF.Propagate_error_reldiff(Number_mass[0], Number_mass[i], Error_mass[0], Error_mass[i]) for i in range(1, NModels)]
-
 		# Thickness of filaments as a binned histogram, using np.digitize
 		Common_bin_thickness = OF.Get_common_bin_logX(Thresholds, binnum=binnum)
 		Number_thickness = []
 		for i in range(NModels):
 			bin_value, bin_std = OF.Bin_numbers_common(Thresholds[i], Thresholds[i], Common_bin_thickness)
 			Number_thickness.append(bin_value)
-
+		Number_thickness = np.asarray(Number_thickness)
 		# Comparing different properties. E.g. length vs mass or length vs thickness etc.
 		Common_bin_length = OF.Get_common_bin_logX(FilLengths, binnum=binnum)
 
@@ -798,32 +806,34 @@ class Plot_results():
 		Mean_thickness = []
 		Mean_thickness_std = []
 		for i in range(NModels):
-			binval, bin_std = OF.Get_mean_common(FilLengths[i], Thresholds[i], Common_bin_length)
+			binval, bin_std = OF.Bin_mean_common(FilLengths[i], Thresholds[i], Common_bin_length)
 			Mean_thickness.append(binval)
 			Mean_thickness_std.append(bin_std)
-		RelDiff_mean_thickness = [OF.relative_deviation(Mean_thickness, i) for i in range(1, NModels)]
+		RelDiff_mean_thickness = np.array([OF.relative_deviation(Mean_thickness, i) for i in range(1, NModels)])
+		Mean_thickness = np.asarray(Mean_thickness)
 		# Mean mass as a function of length
 		Mean_mass = []
 		Mean_mass_std = []
 		for i in range(NModels):
-			binval, bin_std = OF.Get_mean_common(FilLengths[i], self.Filament_masses[i], Common_bin_length)
+			binval, bin_std = OF.Bin_mean_common(FilLengths[i], self.Filament_masses[i], Common_bin_length)
 			Mean_mass.append(binval)
 			Mean_mass_std.append(bin_std)
-		RelDiff_mean_mass = [OF.relative_deviation(Mean_mass, i) for i in range(1, NModels)]
+		RelDiff_mean_mass = np.array([OF.relative_deviation(Mean_mass, i) for i in range(1, NModels)])
+		Mean_mass = np.asarray(Mean_mass)
 		# Mean mass as a function of thickness
 		Mean_mass_vT = []
 		Mean_mass_vT_std = []
 		for i in range(NModels):
-			binval, bin_std = OF.Get_mean_common(Thresholds[i], self.Filament_masses[i], Common_bin_thickness)
+			binval, bin_std = OF.Bin_mean_common(Thresholds[i], self.Filament_masses[i], Common_bin_thickness)
 			Mean_mass_vT.append(binval)
 			Mean_mass_vT_std.append(bin_std)
-		RelDiff_mean_mass_vT = [OF.relative_deviation(Mean_mass_vT, i) for i in range(1, NModels)]
-
-		Prop_err_mean_thickness = [OF.Propagate_error_reldiff(Mean_thickness[0], Mean_thickness[i], Mean_thickness_std[0], Mean_thickness_std[i]) 
-									for i in range(len(1,NModels))]
-		Prop_err_mean_mass = [OF.Propagate_error_reldiff(Mean_mass[0], Mean_mass[i], Mean_mass_std[0], Mean_mass_std[i]) for i in range(len(1,NModels))]
-		Prop_err_mean_mass_vT = [OF.Propagate_error_reldiff(Mean_mass_vT[0], Mean_mass_vT[i], Mean_mass_vT_std[0], Mean_mass_vT_std[i]) 
-									for i in range(len(1,NModels))]
+		RelDiff_mean_mass_vT = np.array([OF.relative_deviation(Mean_mass_vT, i) for i in range(1, NModels)])
+		Mean_mass_vT = np.asarray(Mean_mass_vT)
+		Prop_err_mean_thickness = np.array([OF.Propagate_error_reldiff(Mean_thickness[0], Mean_thickness[i], Mean_thickness_std[0], Mean_thickness_std[i])
+									for i in range(1,NModels)])
+		Prop_err_mean_mass = np.array([OF.Propagate_error_reldiff(Mean_mass[0], Mean_mass[i], Mean_mass_std[0], Mean_mass_std[i]) for i in range(1,NModels)])
+		Prop_err_mean_mass_vT = np.array([OF.Propagate_error_reldiff(Mean_mass_vT[0], Mean_mass_vT[i], Mean_mass_vT_std[0], Mean_mass_vT_std[i]) 
+									for i in range(1,NModels)])
 		
 		""" 
 		!!!!!!!!!
@@ -837,6 +847,8 @@ class Plot_results():
 		Number_label = '$N$ filaments'
 		Thickness_label = 'Filament thickness - [Mpc/h]'
 		Length_label = 'Filament length - [Mpc/h]'
+		Mean_Mass_label = 'Mean filament mass - [$M_\odot / h$]'
+		Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
 		SymmLCDM = np.array([0,1,2,3])
 		FofrLCDM = np.array([0,4,5,6])
 		Symm_only = np.array([1,2,3])
@@ -900,10 +912,20 @@ class Plot_results():
 		RelDiff_mass_Symm_err = plt.figure()
 		#plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)))
 		#plt.fill_between(Common_bin_mass, np.zeros(len(Common_bin_mass)), np.zeros(len(Common_bin_mass)))
-		for i in range(0, 3):
+		for i in (Symm_only-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i], alpha=0.3)
 		plt.legend(self.Symm_legends[1:])
+		plt.xlabel('Filament mass - $M_\odot h^2$')
+		plt.ylabel('Relative difference of filament masses')
+		plt.xscale('log')
+		RelDiff_mass_fofr_err = plt.figure()
+		#plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)))
+		#plt.fill_between(Common_bin_mass, np.zeros(len(Common_bin_mass)), np.zeros(len(Common_bin_mass)))
+		for i in (Fofr_only-1):
+			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i])
+			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i], alpha=0.3)
+		plt.legend(self.fofr_legends[1:])
 		plt.xlabel('Filament mass - $M_\odot h^2$')
 		plt.ylabel('Relative difference of filament masses')
 		plt.xscale('log')
@@ -921,54 +943,67 @@ class Plot_results():
 		
 		######## Compare different properties
 		### Thickness as a function of length, LCDM + Symmetron and LCDM + f(R)
-		ThickVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_thickness[SymmLCDM], Length_label, Thickness_label, self.Symm_legends, logscale='loglog')
-		ThickVsLen_fofr = pf.Call_plot_sameX(Common_bin_length, Mean_thickness[FofrLCDM], Length_label, Thickness_label, self.fofr_legends, logscale='loglog')
+		ThickVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_thickness[SymmLCDM], Length_label, Mean_Thickness_label, self.Symm_legends, logscale='loglog')
+		ThickVsLen_fofr = pf.Call_plot_sameX(Common_bin_length, Mean_thickness[FofrLCDM], Length_label, Mean_Thickness_label, self.fofr_legends, logscale='loglog')
 		### Relative difference with errobar, Symmetron and f(R) seperate, base model = LCDM
 		ThickVsLen_RelErr_Symm = plt.figure()
-		for i in Symm_only:
-			plt.plot(Common_bin_length, Mean_thickness[i], aplha=0.7)
-			plt.fill_between(Common_bin_length, Mean_thickness[i]-Prop_err_mean_thickness[i], Mean_thickness[i]-Prop_err_mean_thickness[i], alpha=0.4)
-		plt.legend(Symm_legends)
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		for i in (Symm_only-1):
+			plt.plot(Common_bin_length, RelDiff_mean_thickness[i], alpha=0.7)
+			plt.fill_between(Common_bin_length, RelDiff_mean_thickness[i]-Prop_err_mean_thickness[i], RelDiff_mean_thickness[i]+Prop_err_mean_thickness[i], alpha=0.4)
+		plt.legend(self.Symm_legends[1:])
 		plt.xlabel(Length_label)
-		plt.ylabel(Thickness_label)
+		plt.ylabel('Relative difference of thickness')
+		plt.xscale('log')
+
 		ThickVsLen_RelErr_fofr = plt.figure()
-		for i in Fofr_only:
-			plt.plot(Common_bin_length, Mean_thickness[i], aplha=0.7)
-			plt.fill_between(Common_bin_length, Mean_thickness[i]-Prop_err_mean_thickness[i], Mean_thickness[i]-Prop_err_mean_thickness[i], alpha=0.4)
-		plt.legend(fofr_legends)
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		for i in (Fofr_only-1):
+			plt.plot(Common_bin_length, RelDiff_mean_thickness[i], alpha=0.7)
+			plt.fill_between(Common_bin_length, RelDiff_mean_thickness[i]-Prop_err_mean_thickness[i], RelDiff_mean_thickness[i]+Prop_err_mean_thickness[i], alpha=0.4)
+		plt.legend(self.fofr_legends[1:])
 		plt.xlabel(Length_label)
-		plt.ylabel(Thickness_label)
+		plt.ylabel('Relative difference of thickness')
+		plt.xscale('log')
 		#plt.close('all')	# Clear all current windows to free memory
 
 		### Mass as a function of length, LCDM + Symmetron and LCDM + f(R)
-		MassVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_mass[SymmLCDM], Length_label, Mass_label, self.Symm_legends, logscale='loglog')
-		MassVSLen_fofr = pf.Call_plot_sameX(Common_bin_length, Mean_mass[FofrLCDM], Length_label, Mass_label, self.fofr_legends, logscale='loglog')
+		MassVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_mass[SymmLCDM], Length_label, Mean_Mass_label, self.Symm_legends, logscale='loglog')
+		MassVsLen_fofr = pf.Call_plot_sameX(Common_bin_length, Mean_mass[FofrLCDM], Length_label, Mean_Mass_label, self.fofr_legends, logscale='loglog')
 		### Relative difference with errorbar, Symmetron and f(R) seperate, base model = LCDM
 		MassVsLen_RelErr_Symm = plt.figure()
-		for i in Symm_only:
-			plt.plot(Common_bin_length, Mean_mass[i], aplha=0.7)
-			plt.fill_between(Common_bin_length, Mean_mass_std[i]-Prop_err_mean_mass[i], Mean_mass_std[i]-Prop_err_mean_mass[i], alpha=0.4)
-		plt.legend(Symm_legends)
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		for i in (Symm_only-1):
+			plt.plot(Common_bin_length, RelDiff_mean_mass[i], alpha=0.7)
+			plt.fill_between(Common_bin_length, RelDiff_mean_mass[i]-Prop_err_mean_mass[i], RelDiff_mean_mass[i]+Prop_err_mean_mass[i], alpha=0.4)
+		plt.legend(self.Symm_legends[1:])
 		plt.xlabel(Length_label)
-		plt.ylabel(Mass_label)
+		plt.ylabel('Relative difference of mass')
+		plt.xscale('log')
 		MassVsLen_RelErr_fofr = plt.figure()
-		for i in Fofr_only:
-			plt.plot(Common_bin_length, Mean_mass[i], aplha=0.7)
-			plt.fill_between(Common_bin_length, Mean_mass[i]-Prop_err_mean_mass[i], Mean_mass[i]-Prop_err_mean_mass[i], alpha=0.4)
-		plt.legend(fofr_legends)
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		for i in (Fofr_only-1):
+			plt.plot(Common_bin_length, RelDiff_mean_mass[i], alpha=0.7)
+			plt.fill_between(Common_bin_length, RelDiff_mean_mass[i]-Prop_err_mean_mass[i], RelDiff_mean_mass[i]+Prop_err_mean_mass[i], alpha=0.4)
+		plt.legend(self.fofr_legends[1:])
 		plt.xlabel(Length_label)
-		plt.ylabel(Mass_label)
+		plt.ylabel('Relative difference of mass')
+		plt.xscale('log')
 
 		### Mass as a function of thickness, LCDM + Symmetron and LCDM + f(R)
 		MassVsThick = plt.figure(figsize=(8,4))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		plt.subplot(1,2,1)
 		for i in SymmLCDM:
 			plt.loglog(Common_bin_thickness, Mean_mass_vT[i])
+		plt.legend(self.Symm_legends)
 		plt.subplot(1,2,2)
 		for i in FofrLCDM:
 			plt.loglog(Common_bin_thickness, Mean_mass_vT[i])
-		MassVsThick.text(0.5, 0.04, Thickness_label, ha='center', fontsize=8)
-		MassVsThick.text(0.04, 0.5, Mass_label, ha='center', rotation='vertical', fontsize=8)
+		plt.legend(self.fofr_legends)
+		MassVsThick.text(0.5, 0.01, Thickness_label, ha='center', fontsize=10)
+		MassVsThick.text(0.04, 0.6, Mass_label, ha='center', rotation='vertical', fontsize=10)
+		#plt.tight_layout()
 						
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		######## Mass histograms 
@@ -995,7 +1030,7 @@ class Plot_results():
 		self.savefigure(ThickVsLen_RelErr_Symm, 'ThicknessVsLength_Reldiff_cSymmetron')
 		self.savefigure(ThickVsLen_RelErr_fofr, 'ThicknessVsLength_Reldiff_cFofr')
 		self.savefigure(MassVsLen_Symm, 'MassVsLength_cSymmetron')
-		self.savefigure(MassVsLen_Symm, 'MassVsLength_cFofr')
+		self.savefigure(MassVsLen_fofr, 'MassVsLength_cFofr')
 		self.savefigure(MassVsLen_RelErr_Symm, 'MassVsLength_Reldiff_cSymmetron')
 		self.savefigure(MassVsLen_RelErr_fofr, 'MassVsLength_Reldiff_cFofr')		
 		self.savefigure(MassVsThick, 'MassVsThickness')
@@ -1082,7 +1117,7 @@ if __name__ == '__main__':
 		else:	
 			Instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
 			OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
-			Filament_lengths.append(Instance.Get_filament_length())
+			Filament_lengths.append(Instance.Get_filament_length()[OK_fils])
 			Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
 			Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
 			Append_data_speeds(Speeds, Ospeed, Pspeed)
