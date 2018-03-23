@@ -93,8 +93,12 @@ def Get_segaxis(FilamentPos, SegPoints):
 	Segment_axis = np.asarray(Segment_axis)
 	return Segment_axis
 
-def Average_hist(Bins, Bin_values):
-	""" Alternative average histogram computer """
+def Histogram_average(Bins, Bin_values):
+	""" 
+	Computes the average of a set number of histogram, for the same bin range.
+	This computes the average for a given set of data at a given bin
+	Use this to get average of multiple filament velocities etc.
+	"""
 	Average_binned_values = []
 	for i in range(len(Bins)):
 		Numbers = Bin_values[:,i]
@@ -178,7 +182,15 @@ def Bin_mean_common(X_value, Y_value, bins):
 	binval = np.array([ np.mean(Y_value[i == index_bin]) for i in range(len(bins))])
 	binstd = np.array([ np.std(Y_value[i == index_bin]) for i in range(len(bins)) ])
 	Number_points = np.array([len(Y_value[i == index_bin]) for i in range(len(bins))]).astype(np.float32)
-	return binval, binstd/Number_points
+	return binval, binstd/np.sqrt(Number_points) 		# FIXME? Divide by N or sqrt(N)?
+
+def Mean_per_bin(bins, bin_values):
+	Npts = len(bins)
+	std = np.array([np.std(bin_values[:,i]) for i in range(Npts)])
+	Mean = np.array([np.mean(bin_values[:,i]) for i in range(Npts)])
+	Number_points = np.array([len(bin_values[:,i]) for i in range(Npts)])
+	return Mean, std/Number_points
+
 
 def filament_box(filament):
 	""" Gives filament box, plotting purposes """
