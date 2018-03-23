@@ -1143,7 +1143,7 @@ class Plot_results():
 		self.savefigure(AverageSpeed_AllFils, 'Average_speed_all_filaments', velocity_results_dir)
 		self.savefigure(AverageSpeed_SimilarMass, 'Average_speed_similar_mass', velocity_results_dir)
 		plt.close('all')	# Clear all current windows to free memory
-		
+
 	#def Similar_profiles(self, All_speeds, ):
 
 
@@ -1228,3 +1228,4 @@ if __name__ == '__main__':
 			Append_data_speeds(Speeds, Ospeed, Pspeed)
 	Plot_instance = Plot_results(Models_includedvelocity_savefile_dir = 'ModelComparisons/VelocityAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
+	Plot_instance.Velocity_profiles(All_speeds, Orth_speed_list, Par_speed_list, Dist_accepted)
