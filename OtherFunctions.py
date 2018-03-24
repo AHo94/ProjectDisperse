@@ -113,7 +113,8 @@ def Histogram_average(Bins, Bin_values):
 			Average_binned_values.append(Total/float(samples))
 		else:
 			Average_binned_values.append(np.nan)
-	return np.array(Average_binned_values)
+	std = np.array([np.std(Bin_values[:,i]) for i in range(len(Bins))])
+	return np.array(Average_binned_values), std/np.sqrt(len(Bin_values[0]))
 
 def Bin_mean(X_value, Y_value, binnum=30):
 	""" Computes the mean bin value of a given Y-value vs the X-value, e.g distance from filament vs particle speed """
