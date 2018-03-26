@@ -1061,7 +1061,22 @@ class Plot_results():
 		MassVsThick.text(0.5, 0.01, Thickness_label, ha='center', fontsize=10)
 		MassVsThick.text(0.04, 0.6, Mass_label, ha='center', rotation='vertical', fontsize=10)
 		#plt.tight_layout()
-						
+		
+		### Mass vs length, different binning method. Length as x-label
+		MassVsLength_Symm_V2 = plt.figure(figsize=(8,4))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		for i in SymmLCDM:
+			Average_mass = []
+			for j in range(len(Common_bin_length)-1):
+				Similar_length = (self.FilLengths[i] >= Common_bin_length[j]) & (self.FilLengths[i] <= Common_bin_length[j+1])
+				Masses_included = self.Filament_masses[i][Similar_length]
+#				print Masses_included, np.average(Masses_included), Common_bin_length[j], Common_bin_length[j+1]
+				Average_mass.append(np.average(Masses_included))
+#				print rofl
+			plt.plot(Common_bin_length[1:], Average_mass)
+		plt.xlabel('L - [Mpc/h]')
+		plt.ylabel(r'$\langle M \rangle$ - $[M_\odot /h]$')
+		plt.legend(self.Symm_legends)
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		######## Mass histograms 
 		self.savefigure(NumMass_all, 'Filament_mass_distribution')
@@ -1089,8 +1104,9 @@ class Plot_results():
 		self.savefigure(MassVsLen_Symm, 'MassVsLength_cSymmetron')
 		self.savefigure(MassVsLen_fofr, 'MassVsLength_cFofr')
 		self.savefigure(MassVsLen_RelErr_Symm, 'MassVsLength_Reldiff_cSymmetron')
-		self.savefigure(MassVsLen_RelErr_fofr, 'MassVsLength_Reldiff_cFofr')		
+		self.savefigure(MassVsLen_RelErr_fofr, 'MassVsLength_Reldiff_cFofr')
 		self.savefigure(MassVsThick, 'MassVsThickness')
+		self.savefigure(MassVsLength_Symm_V2, 'MassVsLength_Symm_V2')
 		plt.close('all')	# Clear all current windows to free memory
 
 	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds, Part_distances):
@@ -1145,6 +1161,8 @@ class Plot_results():
 		Common_bin_distances = OF.Get_common_bin(Distance_limits, binnum=binnum)
 		Common_bin_distances_normalized = OF.Get_common_bin(Distance_limits_normalized, binnum=binnum)        
 		Common_bin_mass = OF.Get_common_bin_logX(self.Filament_masses, binnum=binnum)
+		Common_bin_length = OF.Get_common_bin_logX(self.FilLengths, binnum=binnum)
+
 		print 'Got common bins'
 		Mean_speed_normalized, Mean_speed_normalized_std = self.Compute_means(Common_bin_distances_normalized, Part_distances, All_speeds)
 		#### Compute the average of the average speed of each filament. That is, average profile for --all-- filaments
@@ -1241,7 +1259,7 @@ class Plot_results():
 		AverageSpeed_SimilarLength_fofr.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
 		AverageSpeed_SimilarLength_fofr.text(0.04, 0.7, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 		#### Average speed for different mass bins, with LCDM and Symmetron models
-		AverageSpeed_MassBins = plt.figure()
+		AverageSpeed_MassBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		plt.subplot(1,2,1)
 		for k in SymmLCDM:
@@ -1251,11 +1269,14 @@ class Plot_results():
 				Similar_masses = (self.Filament_masses[k] >= Common_bin_mass[i]) & (self.Filament_masses[k] <= Common_bin_mass[i+1])
 				Speeds_included = All_speeds[k][Similar_masses]
 				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
-				Standard_deviation = np.array([np.std(Average_per_fil)])/np.sqrt(len(Speeds_included))
+				Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
 				Error_speed.append(Standard_deviation)
 				Average_speed.append(np.average(Average_per_fil))
-			#plt.plot(Common_bin_mass[1:], Average_speed, 'x-')
-			plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
+			#plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
+			plt.plot(Common_bin_mass[1:], Average_speed, '-')
+			plt.fill_between(Common_bin_mass[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed), alpha=0.3)
+			plt.xscale('log')
+			plt.ylim((400,2250))
 		plt.legend(self.Symm_legends)
 		plt.subplot(1,2,2)
 		for k in FofrLCDM:
@@ -1265,14 +1286,54 @@ class Plot_results():
 				Similar_masses = (self.Filament_masses[k] >= Common_bin_mass[i]) & (self.Filament_masses[k] <= Common_bin_mass[i+1])
 				Speeds_included = All_speeds[k][Similar_masses]
 				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
-				Standard_deviation = np.array([np.std(Average_per_fil)])/np.sqrt(len(Speeds_included))
+				Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
 				Error_speed.append(Standard_deviation)
 				Average_speed.append(np.average(Average_per_fil))
-			plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
-			#plt.plot(Common_bin_mass[1:], Average_speed, 'x-')
+			#plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
+			plt.plot(Common_bin_mass[1:], Average_speed, '-')
+			plt.fill_between(Common_bin_mass[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed), alpha=0.4)
+			plt.xscale('log')
+			plt.ylim((400,2250))
 		plt.legend(self.fofr_legends)
 		AverageSpeed_MassBins.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
-		AverageSpeed_MassBins.text(0.04, 0.7, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_MassBins.text(0.04, 0.5, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		#### Average speed for different length bins, with LCDM and Symmetron models
+		AverageSpeed_LengthBins = plt.figure(figsize=(8,6))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		plt.subplot(1,2,1)
+		for k in SymmLCDM:
+			Average_speed = []
+			Error_speed = []
+			for i in range(len(Common_bin_length)-1):
+				Similar_length = (self.FilLengths[k] >= Common_bin_length[i]) & (self.FilLengths[k] <= Common_bin_length[i+1])
+				Speeds_included = All_speeds[k][Similar_length]
+				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
+				Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
+				Error_speed.append(Standard_deviation)
+				Average_speed.append(np.average(Average_per_fil))
+			plt.plot(Common_bin_length[1:], Average_speed, '-')
+			plt.fill_between(Common_bin_length[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed), alpha=0.3)
+			plt.xscale('log')
+			#plt.ylim((400,2250))
+		plt.legend(self.Symm_legends)
+		plt.subplot(1,2,2)
+		for k in FofrLCDM:
+			Average_speed = []
+			Error_speed = []
+			for i in range(len(Common_bin_length)-1):
+				Similar_length = (self.FilLengths[k] >= Common_bin_length[i]) & (self.FilLengths[k] <= Common_bin_length[i+1])
+				Speeds_included = All_speeds[k][Similar_length]
+				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
+				Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
+				Error_speed.append(Standard_deviation)
+				Average_speed.append(np.average(Average_per_fil))
+			plt.plot(Common_bin_length[1:], Average_speed, '-')
+			plt.fill_between(Common_bin_length[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed), alpha=0.4)
+			plt.xscale('log')
+			#plt.ylim((400,2250))
+		plt.legend(self.fofr_legends)
+		AverageSpeed_LengthBins.text(0.5, 0.01, Length_label, ha='center', fontsize=10)
+		AverageSpeed_LengthBins.text(0.04, 0.5, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 		
 		####### Save figures #######
 		print '--- SAVING IN: ', velocity_results_dir, ' ---'
@@ -1282,6 +1343,7 @@ class Plot_results():
 		self.savefigure(AverageSpeed_SimilarLength_Symm, 'Average_speed_similar_length_cSymmetron', velocity_results_dir)
 		self.savefigure(AverageSpeed_SimilarLength_fofr, 'Average_speed_similar_length_cFofr', velocity_results_dir)
 		self.savefigure(AverageSpeed_MassBins, 'Average_speed_massbins', velocity_results_dir)
+		self.savefigure(AverageSpeed_LengthBins, 'Average_speed_lengthbins', velocity_results_dir)
 		plt.close('all')	# Clear all current windows to free memory
 
 	#def Similar_profiles(self, All_speeds, ):
