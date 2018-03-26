@@ -796,13 +796,40 @@ class Plot_results():
 			np.save(cachefile_std, Mean_speed_normalized_std)
 		return Mean_speed_normalized, Mean_speed_normalized_std
 
+	def Compute_similar_profiles(self, prop, speeds, distances, thickness, bins, botrange, uprange, prop_name):
+		Folder = '/mn/stornext/u3/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/SimilarProperties/'
+		Filename = 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + '_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + '.npy'
+		Filename_std = 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + 'STD_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + '.npy'
+		SavedFile = Folder + Filename
+		SavedFile_std = Folder + Filename_std
+		if not os.path.isdir(Folder):
+			os.makedirs(Folder):
+
+		if os.path.isfile(SavedFile):
+			Mean_profile = np.load(SavedFile)
+			Mean_profile_std = np.load(SavedFile_std)
+		else:
+			Similar_prop = (prop >= botrange) & (prop <= uprange)
+			Speeds_included = speeds[Similar_prop]
+			Parts_included = distances[Similar_prop]/thickness[Similar_prop]
+			Temp_arr = []
+			Temp_arr_std = []
+			for k in range(len(Speeds_included)):
+				bin_value, bin_std = OF.Bin_mean_common(Parts_included[k], Speeds_included[k], bins)
+				Temp_arr.append(bin_value)
+				Temp_arr_std.append(bin_std)
+			Mean_profile, Mean_profile_std = OF.Histogram_average(bins, np.array(Temp_arr))
+			np.save(SavedFile, Mean_profile)
+			np.save(SavedFile_std, Mean_profile_std)
+		return Mean_profile, Mean_profile_std
+
 	def Particle_profiles(self, Thresholds, Accepted_parts, FilLengths):
 		""" Plots data related to the particles """
 		if len(Thresholds) != len(Accepted_parts):
 			raise ValueError("Threshold data not same length as Accepted particles!")
 		######## Computing relevant data ########
 		s_variable = 0.7
-		binnum = 50
+		binnum = 40
 		NModels = len(Thresholds)
 		Mass_label = 'Filament mass - [$M_\odot / h$]'
 		Number_label = '$N$ filaments'
@@ -1082,7 +1109,7 @@ class Plot_results():
 			os.makedirs(velocity_results_dir)
 
 		######## Compute relevant stuff ########
-		binnum = 50
+		binnum = 40
 		NModels = len(All_speeds)
 		s_variable = 0.7
 		Mass_label = 'Filament mass - [$M_\odot / h$]'
@@ -1096,6 +1123,9 @@ class Plot_results():
 		FofrLCDM = np.array([0,4,5,6])
 		Symm_only = np.array([1,2,3])
 		Fofr_only = np.array([4,5,6])
+		All_speeds = np.asarray(All_speeds)
+		Orthogonal_speeds = np.asarray(Orthogonal_speeds)
+		Parallel_speeds = np.asarray(Parallel_speeds)
 		
 		#### Average speed of all filaments as a function of 
 		Normalized_part_distances = []
@@ -1115,23 +1145,6 @@ class Plot_results():
 		Common_bin_distances_normalized = OF.Get_common_bin(Distance_limits_normalized, binnum=binnum)
 		print 'Got common bins'
 		Mean_speed_normalized, Mean_speed_normalized_std = self.Compute_means(Common_bin_distances_normalized, Part_distances, All_speeds)
-		"""
-		Mean_speed_normalized = []
-		Mean_speed_normalized_std = []
-		timer = time.time()
-		for i in range(NModels):
-			Temp_arr = []
-			Temp_arr_std = []
-			for j in range(len(Part_distances[i])):
-				bin_value, bin_std = OF.Bin_mean_common(Part_distances[i][j]/self.Thresholds[i][j], All_speeds[i][j], Common_bin_distances_normalized)
-				Temp_arr.append(bin_value)
-				Temp_arr_std.append(bin_std)
-			Mean_speed_normalized.append(np.array(Temp_arr))
-			Mean_speed_normalized_std.append(np.array(Temp_arr_std))
-		Mean_speed_normalized = np.asarray(Mean_speed_normalized)
-		Mean_speed_normalized_std = np.asarray(Mean_speed_normalized_std)
-		print 'Got averages 1 ', time.time() - timer, 's'
-		"""
 		#### Compute the average of the average speed of each filament. That is, average profile for --all-- filaments
 		Mean_speed_allFils = []
 		Mean_speed_allFils_std = []
@@ -1160,33 +1173,21 @@ class Plot_results():
 		AverageSpeed_AllFils.text(0.04, 0.6, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 
 		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
-		AverageSpeed_SimilarMass_Symm = plt.figure(figsize=(20,5))
+		AverageSpeed_SimilarMass_Symm = plt.figure(figsize=(8,16))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
 		for j in range(len(Mass_ranges)-1):
-			ax = plt.subplot(1,3,j+1)
+			ax = plt.subplot(3,1,j+1)
 			print 'iteration ',j 
 			for i in SymmLCDM:
-				Similar_masses = (self.Filament_masses[i] >= Mass_ranges[j]) & (self.Filament_masses[i] <= Mass_ranges[j+1])
-				Speeds_included = np.array(All_speeds[i][Similar_masses])
-				Norm_factor = self.Thresholds[i][Similar_masses]#.reshape(len(self.Thresholds[i][Similar_masses]),1)
-				Parts_included = Part_distances[i][Similar_masses]/Norm_factor
-				Temp_arr = []
-				Temp_arr_std = []
-				for k in range(len(Speeds_included)):
-					bin_value, bin_std = OF.Bin_mean_common(Parts_included[k], Speeds_included[k], Common_bin_distances_normalized)
-					Temp_arr.append(bin_value)
-					Temp_arr_std.append(bin_std)
-				#Mean_profile, Mean_profile_std = OF.Mean_per_bin(Common_bin_distances_normalized, np.array(Temp_arr)) 
-				Mean_profile, Mean_profile_std = OF.Histogram_average(Common_bin_distances_normalized, np.array(Temp_arr))
-				#print Mean_profile_std
+				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
+																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass')
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.Symm_legends[i])
 				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Mass_titles[j], fontsize=10)
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarMass_Symm.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
 		AverageSpeed_SimilarMass_Symm.text(0.04, 0.7, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
-#		plt.tight_layout()
 		### Average speed of filaments with similar masses, comparing LCDM + f(R)
 		AverageSpeed_SimilarMass_fofr = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
@@ -1195,19 +1196,8 @@ class Plot_results():
 			print 'iteration ',j 
 			for ij in range(len(FofrLCDM)):
 				i = FofrLCDM[ij]
-				Similar_masses = (self.Filament_masses[i] >= Mass_ranges[j]) & (self.Filament_masses[i] <= Mass_ranges[j+1])
-				Speeds_included = np.array(All_speeds[i][Similar_masses])
-				Norm_factor = self.Thresholds[i][Similar_masses]#.reshape(len(self.Thresholds[i][Similar_masses]),1)
-				Parts_included = Part_distances[i][Similar_masses]/Norm_factor
-				Temp_arr = []
-				Temp_arr_std = []
-				for k in range(len(Speeds_included)):
-					bin_value, bin_std = OF.Bin_mean_common(Parts_included[k], Speeds_included[k], Common_bin_distances_normalized)
-					Temp_arr.append(bin_value)
-					Temp_arr_std.append(bin_std)
-				#Mean_profile, Mean_profile_std = OF.Mean_per_bin(Common_bin_distances_normalized, np.array(Temp_arr)) 
-				Mean_profile, Mean_profile_std = OF.Histogram_average(Common_bin_distances_normalized, np.array(Temp_arr))
-				#print Mean_profile_std
+				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
+																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass')
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.fofr_legends[ij])
 				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Mass_titles[j], fontsize=10)
@@ -1223,19 +1213,8 @@ class Plot_results():
 			ax = plt.subplot(1,3,j+1)
 			print 'iteration ',j 
 			for i in SymmLCDM:
-				Similar_lengths = (self.FilLengths[i] >= Length_ranges[j]) & (self.FilLengths[i] <= Length_ranges[j+1])
-				Speeds_included = np.array(All_speeds[i][Similar_lengths])
-				Norm_factor = self.Thresholds[i][Similar_lengths]#.reshape(len(self.Thresholds[i][Similar_lengths]),1)
-				Parts_included = Part_distances[i][Similar_lengths]/Norm_factor
-				Temp_arr = []
-				Temp_arr_std = []
-				for k in range(len(Speeds_included)):
-					bin_value, bin_std = OF.Bin_mean_common(Parts_included[k], Speeds_included[k], Common_bin_distances_normalized)
-					Temp_arr.append(bin_value)
-					Temp_arr_std.append(bin_std)
-				#Mean_profile, Mean_profile_std = OF.Mean_per_bin(Common_bin_distances_normalized, np.array(Temp_arr)) 
-				Mean_profile, Mean_profile_std = OF.Histogram_average(Common_bin_distances_normalized, np.array(Temp_arr))
-				#print Mean_profile_std
+				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.FilLengths[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
+																			Common_bin_distances_normalized, Length_ranges[j], Length_ranges[j+1], 'Length')
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.Symm_legends[i])
 				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Length_titles[j], fontsize=10)
@@ -1251,19 +1230,8 @@ class Plot_results():
 			print 'iteration ',j 
 			for ij in range(len(FofrLCDM)):
 				i = FofrLCDM[ij]
-				Similar_lengths = (self.FilLengths[i] >= Length_ranges[j]) & (self.FilLengths[i] <= Length_ranges[j+1])
-				Speeds_included = np.array(All_speeds[i][Similar_lengths])
-				Norm_factor = self.Thresholds[i][Similar_lengths]#.reshape(len(self.Thresholds[i][Similar_lengths]),1)
-				Parts_included = Part_distances[i][Similar_lengths]/Norm_factor
-				Temp_arr = []
-				Temp_arr_std = []
-				for k in range(len(Speeds_included)):
-					bin_value, bin_std = OF.Bin_mean_common(Parts_included[k], Speeds_included[k], Common_bin_distances_normalized)
-					Temp_arr.append(bin_value)
-					Temp_arr_std.append(bin_std)
-				#Mean_profile, Mean_profile_std = OF.Mean_per_bin(Common_bin_distances_normalized, np.array(Temp_arr)) 
-				Mean_profile, Mean_profile_std = OF.Histogram_average(Common_bin_distances_normalized, np.array(Temp_arr))
-				#print Mean_profile_std
+				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.FilLengths[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
+																			Common_bin_distances_normalized, Length_ranges[j], Length_ranges[j+1], 'Length')
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.fofr_legends[ij])
 				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Length_titles[j], fontsize=10)
