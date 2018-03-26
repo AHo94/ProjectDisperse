@@ -796,14 +796,14 @@ class Plot_results():
 			np.save(cachefile_std, Mean_speed_normalized_std)
 		return Mean_speed_normalized, Mean_speed_normalized_std
 
-	def Compute_similar_profiles(self, prop, speeds, distances, thickness, bins, botrange, uprange, prop_name):
+	def Compute_similar_profiles(self, prop, speeds, distances, thickness, bins, botrange, uprange, prop_name, models):
 		Folder = '/mn/stornext/u3/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/SimilarProperties/'
-		Filename = 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + '_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + '.npy'
-		Filename_std = 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + 'STD_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + '.npy'
+		Filename = 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + '_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + models + '.npy'
+		Filename_std = 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + 'STD_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + models + '.npy'
 		SavedFile = Folder + Filename
 		SavedFile_std = Folder + Filename_std
 		if not os.path.isdir(Folder):
-			os.makedirs(Folder):
+			os.makedirs(Folder)
 
 		if os.path.isfile(SavedFile):
 			Mean_profile = np.load(SavedFile)
@@ -902,7 +902,7 @@ class Plot_results():
 		Prop_err_mean_mass = np.array([OF.Propagate_error_reldiff(Mean_mass[0], Mean_mass[i], Mean_mass_std[0], Mean_mass_std[i]) for i in range(1,NModels)])
 		Prop_err_mean_mass_vT = np.array([OF.Propagate_error_reldiff(Mean_mass_vT[0], Mean_mass_vT[i], Mean_mass_vT_std[0], Mean_mass_vT_std[i]) 
 									for i in range(1,NModels)])
-		
+		return
 		""" 
 		!!!!!!!!!
 		AS OF 21.03.2018, RANGES DOES NOT INCLUDE SYMMETRON C MODEL. FIX RANGES WHEN SYMMETRON C MODEL IS FIXED
@@ -1126,7 +1126,8 @@ class Plot_results():
 		All_speeds = np.asarray(All_speeds)
 		Orthogonal_speeds = np.asarray(Orthogonal_speeds)
 		Parallel_speeds = np.asarray(Parallel_speeds)
-		
+		Symm_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_D']
+		Fofr_filenames = ['LCDM', 'fofr4', 'fofr5', 'fofr6']
 		#### Average speed of all filaments as a function of 
 		Normalized_part_distances = []
 		Distance_limits = []
@@ -1142,7 +1143,8 @@ class Plot_results():
 		Normalized_part_distances = np.asarray(Normalized_part_distances)
 		Common_bin_thickness = OF.Get_common_bin_logX(self.Thresholds, binnum=binnum)
 		Common_bin_distances = OF.Get_common_bin(Distance_limits, binnum=binnum)
-		Common_bin_distances_normalized = OF.Get_common_bin(Distance_limits_normalized, binnum=binnum)
+		Common_bin_distances_normalized = OF.Get_common_bin(Distance_limits_normalized, binnum=binnum)        
+		Common_bin_mass = OF.Get_common_bin_logX(self.Filament_masses, binnum=binnum)
 		print 'Got common bins'
 		Mean_speed_normalized, Mean_speed_normalized_std = self.Compute_means(Common_bin_distances_normalized, Part_distances, All_speeds)
 		#### Compute the average of the average speed of each filament. That is, average profile for --all-- filaments
@@ -1173,15 +1175,15 @@ class Plot_results():
 		AverageSpeed_AllFils.text(0.04, 0.6, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 
 		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
-		AverageSpeed_SimilarMass_Symm = plt.figure(figsize=(8,16))
+		AverageSpeed_SimilarMass_Symm = plt.figure(figsize=(30,8))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
 		for j in range(len(Mass_ranges)-1):
-			ax = plt.subplot(3,1,j+1)
+			ax = plt.subplot(1,3,j+1)
 			print 'iteration ',j 
 			for i in SymmLCDM:
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
-																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass')
+																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Symm_filenames[i])
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.Symm_legends[i])
 				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Mass_titles[j], fontsize=10)
@@ -1197,7 +1199,7 @@ class Plot_results():
 			for ij in range(len(FofrLCDM)):
 				i = FofrLCDM[ij]
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
-																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass')
+																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Fofr_filenames[ij])
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.fofr_legends[ij])
 				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Mass_titles[j], fontsize=10)
@@ -1211,10 +1213,10 @@ class Plot_results():
 		Length_ranges = [1, 5, 10, 20]   # Units of Mpc/h, maybe use min and max of mass bin?
 		for j in range(len(Length_ranges)-1):
 			ax = plt.subplot(1,3,j+1)
-			print 'iteration ',j 
+			print 'iteration ',j
 			for i in SymmLCDM:
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.FilLengths[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
-																			Common_bin_distances_normalized, Length_ranges[j], Length_ranges[j+1], 'Length')
+																			Common_bin_distances_normalized, Length_ranges[j], Length_ranges[j+1], 'Length', Symm_filenames[i])
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.Symm_legends[i])
 				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Length_titles[j], fontsize=10)
@@ -1227,11 +1229,11 @@ class Plot_results():
 		Length_ranges = [1, 5, 10, 20]   # Units of Mpc/h, maybe use min and max of mass bin?
 		for j in range(len(Length_ranges)-1):
 			ax = plt.subplot(1,3,j+1)
-			print 'iteration ',j 
+			print 'iteration ',j
 			for ij in range(len(FofrLCDM)):
 				i = FofrLCDM[ij]
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.FilLengths[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
-																			Common_bin_distances_normalized, Length_ranges[j], Length_ranges[j+1], 'Length')
+																			Common_bin_distances_normalized, Length_ranges[j], Length_ranges[j+1], 'Length', Fofr_filenames[ij])
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.fofr_legends[ij])
 				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Length_titles[j], fontsize=10)
