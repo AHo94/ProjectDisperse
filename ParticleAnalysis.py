@@ -827,7 +827,7 @@ class Plot_results():
 		Average_speed = []
 		Error_speed = []
 		for i in range(len(bins)-1):
-			Similar_prop = (prop >= bins[i]) & (prop[k] <= bins[i+1])
+			Similar_prop = (prop >= bins[i]) & (prop <= bins[i+1])
 			Speeds_included = speeds[Similar_prop]
 			Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
 			Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
@@ -1281,11 +1281,11 @@ class Plot_results():
 		for j in range(len(Compare_both)):
 			plt.subplot(1,2,j+1)
 			for k in Compare_both[j]:
-				Average_speed, Error_speed self.Compute_average_speeds_Propertybinned(All_speeds[k], self.Filament_masses[k], Common_bin_mass)
+				Average_speed, Error_speed = self.Compute_average_speeds_Propertybinned(All_speeds[k], self.Filament_masses[k], Common_bin_mass)
 				if not ((j == 1) and (k == 0)):
 					Average_speed_massbin.append(Average_speed)
 					Average_speed_massbin_std.append(Error_speed)
-				plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
+				#plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
 				plt.plot(Common_bin_mass[1:], Average_speed, '-')
 				plt.fill_between(Common_bin_mass[1:], Average_speed - Error_speed, Average_speed + Error_speed, alpha=0.3)
 				plt.xscale('log')
@@ -1301,16 +1301,18 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		plt.subplot(1,2,1)
 		for i in Symm_only:
-			plt.plot(Common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1])
-			plt.fill_between(Common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1])
+			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
 							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4)
 		plt.legend(self.Symm_legends[1:])
+		plt.xscale('log')
 		plt.subplot(1,2,2)
 		for i in Fofr_only:
-			plt.plot(Common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1])
-			plt.fill_between(Common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1])
+			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
 							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4)
 		plt.legend(self.fofr_legends[1:])
+		plt.xscale('log')
 		AverageSpeed_RelativeDifference_MassBins.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_RelativeDifference_MassBins.text(0.04, 0.5, r'Relative difference of $\langle r \rangle$', ha='center', rotation='vertical', fontsize=10)
 		
