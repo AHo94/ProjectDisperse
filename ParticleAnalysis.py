@@ -823,6 +823,18 @@ class Plot_results():
 			np.save(SavedFile_std, Mean_profile_std)
 		return Mean_profile, Mean_profile_std
 
+	def Compute_average_speeds_Propertybinned(self, speeds, prop, bins):
+		Average_speed = []
+		Error_speed = []
+		for i in range(len(bins)-1):
+			Similar_prop = (prop >= bins[i]) & (prop[k] <= bins[i+1])
+			Speeds_included = speeds[Similar_prop]
+			Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
+			Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
+			Average_speed.append(np.average(Average_per_fil))
+			Error_speed.append(Standard_deviation)
+		return np.array(Average_speed), np.array(Error_speed)
+
 	def Particle_profiles(self, Thresholds, Accepted_parts, FilLengths):
 		""" Plots data related to the particles """
 		if len(Thresholds) != len(Accepted_parts):
@@ -1070,9 +1082,7 @@ class Plot_results():
 			for j in range(len(Common_bin_length)-1):
 				Similar_length = (self.FilLengths[i] >= Common_bin_length[j]) & (self.FilLengths[i] <= Common_bin_length[j+1])
 				Masses_included = self.Filament_masses[i][Similar_length]
-#				print Masses_included, np.average(Masses_included), Common_bin_length[j], Common_bin_length[j+1]
 				Average_mass.append(np.average(Masses_included))
-#				print rofl
 			plt.plot(Common_bin_length[1:], Average_mass)
 		plt.xlabel('L - [Mpc/h]')
 		plt.ylabel(r'$\langle M \rangle$ - $[M_\odot /h]$')
@@ -1258,45 +1268,52 @@ class Plot_results():
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarLength_fofr.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
 		AverageSpeed_SimilarLength_fofr.text(0.04, 0.7, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
-		#### Average speed for different mass bins, with LCDM and Symmetron models
+		#### Average speed for different mass bins
+		Compare_both = [SymmLCDM, FofrLCDM]
+		Compare_both_legends = [self.Symm_legends, self.fofr_legends]
+		Average_speed_massbin = []
+		Average_speed_massbin_std = []
+		#Average_speed_fofr_massbin = []
+		#Average_speed_fofr_massbin_std = []
+
 		AverageSpeed_MassBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-		plt.subplot(1,2,1)
-		for k in SymmLCDM:
-			Average_speed = []
-			Error_speed = []
-			for i in range(len(Common_bin_mass)-1):
-				Similar_masses = (self.Filament_masses[k] >= Common_bin_mass[i]) & (self.Filament_masses[k] <= Common_bin_mass[i+1])
-				Speeds_included = All_speeds[k][Similar_masses]
-				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
-				Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
-				Error_speed.append(Standard_deviation)
-				Average_speed.append(np.average(Average_per_fil))
-			#plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
-			plt.plot(Common_bin_mass[1:], Average_speed, '-')
-			plt.fill_between(Common_bin_mass[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed), alpha=0.3)
-			plt.xscale('log')
-			plt.ylim((400,2250))
-		plt.legend(self.Symm_legends)
-		plt.subplot(1,2,2)
-		for k in FofrLCDM:
-			Average_speed = []
-			Error_speed = []
-			for i in range(len(Common_bin_mass)-1):
-				Similar_masses = (self.Filament_masses[k] >= Common_bin_mass[i]) & (self.Filament_masses[k] <= Common_bin_mass[i+1])
-				Speeds_included = All_speeds[k][Similar_masses]
-				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
-				Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
-				Error_speed.append(Standard_deviation)
-				Average_speed.append(np.average(Average_per_fil))
-			#plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
-			plt.plot(Common_bin_mass[1:], Average_speed, '-')
-			plt.fill_between(Common_bin_mass[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed), alpha=0.4)
-			plt.xscale('log')
-			plt.ylim((400,2250))
-		plt.legend(self.fofr_legends)
+		for j in range(len(Compare_both)):
+			plt.subplot(1,2,j+1)
+			for k in Compare_both[j]:
+				Average_speed, Error_speed self.Compute_average_speeds_Propertybinned(All_speeds[k], self.Filament_masses[k], Common_bin_mass)
+				if not ((j == 1) and (k == 0)):
+					Average_speed_massbin.append(Average_speed)
+					Average_speed_massbin_std.append(Error_speed)
+				plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
+				plt.plot(Common_bin_mass[1:], Average_speed, '-')
+				plt.fill_between(Common_bin_mass[1:], Average_speed - Error_speed, Average_speed + Error_speed, alpha=0.3)
+				plt.xscale('log')
+				plt.ylim((400,2250))
+			plt.legend(Compare_both_legends[j])
 		AverageSpeed_MassBins.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_MassBins.text(0.04, 0.5, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		#### Relative difference of the average speeds, using mass bins
+		RelDiffs_AvgSpeed_massbins = [OF.relative_deviation(Average_speed_massbin, i) for i in range(1, NModels)]
+		PropErr_AvgSpeed_massbins = [OF.Propagate_error_reldiff(Average_speed_massbin[0], Average_speed_massbin[i],
+															Average_speed_massbin_std[0], Average_speed_massbin_std[i]) for i in range(1, NModels)]
+		AverageSpeed_RelativeDifference_MassBins = plt.figure(figsize=(8,6))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		plt.subplot(1,2,1)
+		for i in Symm_only:
+			plt.plot(Common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1])
+			plt.fill_between(Common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
+							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4)
+		plt.legend(self.Symm_legends[1:])
+		plt.subplot(1,2,2)
+		for i in Fofr_only:
+			plt.plot(Common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1])
+			plt.fill_between(Common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
+							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4)
+		plt.legend(self.fofr_legends[1:])
+		AverageSpeed_RelativeDifference_MassBins.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
+		AverageSpeed_RelativeDifference_MassBins.text(0.04, 0.5, r'Relative difference of $\langle r \rangle$', ha='center', rotation='vertical', fontsize=10)
+		
 		#### Average speed for different length bins, with LCDM and Symmetron models
 		AverageSpeed_LengthBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
@@ -1343,6 +1360,7 @@ class Plot_results():
 		self.savefigure(AverageSpeed_SimilarLength_Symm, 'Average_speed_similar_length_cSymmetron', velocity_results_dir)
 		self.savefigure(AverageSpeed_SimilarLength_fofr, 'Average_speed_similar_length_cFofr', velocity_results_dir)
 		self.savefigure(AverageSpeed_MassBins, 'Average_speed_massbins', velocity_results_dir)
+		self.savefigure(AverageSpeed_RelativeDifference_MassBins, 'Reldiff_AverageSpeed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_LengthBins, 'Average_speed_lengthbins', velocity_results_dir)
 		plt.close('all')	# Clear all current windows to free memory
 
