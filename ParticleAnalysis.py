@@ -830,7 +830,7 @@ class Plot_results():
 			Similar_prop = (prop >= bins[i]) & (prop <= bins[i+1])
 			Speeds_included = speeds[Similar_prop]
 			Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
-			Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
+			Standard_deviation = np.nanstd(Average_per_fil)/np.sqrt(len(Speeds_included))
 			Average_speed.append(np.average(Average_per_fil))
 			Error_speed.append(Standard_deviation)
 		return np.array(Average_speed), np.array(Error_speed)
@@ -1254,8 +1254,7 @@ class Plot_results():
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
 																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Fofr_filenames[ij])
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.fofr_legends[ij])
-				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
-			#if j > 0:
+				plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Mass_titles[j], fontsize=10)
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarMass_fofr.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
@@ -1275,7 +1274,7 @@ class Plot_results():
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.FilLengths[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
 																			Common_bin_distances_normalized, Length_ranges[j], Length_ranges[j+1], 'Length', Symm_filenames[i])
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.Symm_legends[i])
-				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
+				plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Length_titles[j], fontsize=10)
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarLength_Symm.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
@@ -1295,7 +1294,7 @@ class Plot_results():
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.FilLengths[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
 																			Common_bin_distances_normalized, Length_ranges[j], Length_ranges[j+1], 'Length', Fofr_filenames[ij])
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.fofr_legends[ij])
-				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
+				plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Length_titles[j], fontsize=10)
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarLength_fofr.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
@@ -1358,7 +1357,7 @@ class Plot_results():
 				Similar_length = (self.FilLengths[k] >= Common_bin_length[i]) & (self.FilLengths[k] <= Common_bin_length[i+1])
 				Speeds_included = All_speeds[k][Similar_length]
 				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
-				Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
+				Standard_deviation = np.nanstd(Average_per_fil)/np.sqrt(len(Speeds_included))
 				Error_speed.append(Standard_deviation)
 				Average_speed.append(np.average(Average_per_fil))
 			plt.plot(Common_bin_length[1:], Average_speed, '-')
@@ -1373,7 +1372,7 @@ class Plot_results():
 				Similar_length = (self.FilLengths[k] >= Common_bin_length[i]) & (self.FilLengths[k] <= Common_bin_length[i+1])
 				Speeds_included = All_speeds[k][Similar_length]
 				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
-				Standard_deviation = np.std(Average_per_fil)/np.sqrt(len(Speeds_included))
+				Standard_deviation = np.nanstd(Average_per_fil)/np.sqrt(len(Speeds_included))
 				Error_speed.append(Standard_deviation)
 				Average_speed.append(np.average(Average_per_fil))
 			plt.plot(Common_bin_length[1:], Average_speed, '-')
@@ -1480,6 +1479,6 @@ if __name__ == '__main__':
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
 	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
-	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
-	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
+	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
 	
