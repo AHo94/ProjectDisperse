@@ -1161,10 +1161,13 @@ class Plot_results():
 		Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
 		if speedtype == 'Speed':
 			Average_speed_label =  r'$\langle v \rangle$ - [km/s]'
+			Average_speed_label_nounit = r'$\langle v \rangle$'
 		elif speedtype == 'Orthogonal':
 			Average_speed_label =  r'$\langle v_\perp \rangle$ - [km/s]'
+			Average_speed_label_nounit = r'$\langle v_\perb \rangle$'
 		elif speedtype == 'Parallel':
 			Average_speed_label =  r'$\langle v_\parallel \rangle$ - [km/s]'
+			Average_speed_label_nounit = r'$\langle v_\parallel \rangle$'
 		
 		SymmLCDM = np.array([0,1,2,3])
 		FofrLCDM = np.array([0,4,5,6])
@@ -1173,6 +1176,7 @@ class Plot_results():
 		All_speeds = np.asarray(All_speeds)
 		Symm_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_D']
 		Fofr_filenames = ['LCDM', 'fofr4', 'fofr5', 'fofr6']
+		All_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_D', 'fofr4', 'fofr5', 'fofr6']
 		#### Average speed of all filaments as a function of 
 		Normalized_part_distances = []
 		Distance_limits = []
@@ -1259,6 +1263,61 @@ class Plot_results():
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarMass_fofr.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
 		AverageSpeed_SimilarMass_fofr.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		
+		### Relative difference of the average speed, for similar masses.
+		RelDiff_AvgSpeed_SimilarMass = []
+		PropErr_AvgSpeed_SimilarMass = []
+		for j in range(len(Mass_ranges)-1):
+			Reldif_simMass_ranges = []
+			Properr_simMass_ranges = []
+			Mean_profile_LCDM, Mean_profile_std_LCDM = self.Compute_similar_profiles(self.Filament_masses[0], All_speeds[0], Part_distances[0], self.Thresholds[0],
+																	Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Symm_filenames[0])
+			for i in range(1, NModels):
+				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
+																	Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', All_filenames[i])
+				RelDiff = OF.relative_deviation_singular(Mean_profile_LCDM, Mean_profile)
+				PropErr = OF.Propagate_error_reldiff(Mean_profile_LCDM, Mean_profile, Mean_profile_std_LCDM, Mean_profile_std)
+				Reldif_simMass_ranges.append(RelDiff)
+				Properr_simMass_ranges.append(PropErr)
+			RelDiff_AvgSpeed_SimilarMass.append(np.array(Reldif_simMass_ranges))
+			PropErr_AvgSpeed_SimilarMass.append(np.array(Properr_simMass_ranges))
+		### Plotting relative differences with error
+		### Symmetron differences to LCDM
+		RelDiff_SimilarMass_plot_Symm = plt.figure(figsize=(20,5))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		ax = plt.subplot(1,3,1)
+		for j in range(len(Mass_ranges)-1):
+			if j > 0:
+				ax = plt.subplot(1,3, j+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False)
+			for i in Symm_only:
+				Yplot = RelDiff_AvgSpeed_SimilarMass[j][i]
+				Yerror = PropErr_AvgSpeed_SimilarMass[j][i]
+				plt.plot(Common_bin_distances_normalized, Yplot, label=self.Symm_legends[i])
+				plt.fill_between(Common_bin_distances_normalized, Yplot-Yerror, Yplot+Yerror, alpha=0.3)
+			plt.title(Mass_titles[j], fontsize=10)
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+		RelDiff_SimilarMass_plot_Symm.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
+		RelDiff_SimilarMass_plot_Symm.text(0.04, 0.55, r'Relative difference of ' + Average_speed_label_nounit , ha='center', rotation='vertical', fontsize=10)
+		### f(R) difference to LCDM
+		RelDiff_SimilarMass_plot_fofr = plt.figure(figsize=(20,5))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		ax = plt.subplot(1,3,1)
+		for j in range(len(Mass_ranges)-1):
+			if j > 0:
+				ax = plt.subplot(1,3, j+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False)
+			for i in range(len(Fofr_only)):
+				ij = Fofr_only[i]
+				Yplot = RelDiff_AvgSpeed_SimilarMass[j][ij]
+				Yerror = PropErr_AvgSpeed_SimilarMass[j][ij]
+				plt.plot(Common_bin_distances_normalized, Yplot, label=self.fofr_legends[i+1])
+				plt.fill_between(Common_bin_distances_normalized, Yplot-Yerror, Yplot+Yerror, alpha=0.3)
+			plt.title(Mass_titles[j], fontsize=10)
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+		RelDiff_SimilarMass_plot_fofr.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
+		RelDiff_SimilarMass_plot_fofr.text(0.04, 0.55, r'Relative difference of ' + Average_speed_label_nounit , ha='center', rotation='vertical', fontsize=10)
+		
 		### Average speed of filament of similar length. Symmetron + LCDM comparison
 		Length_titles = ['$L \in [1,5]$ Mpc/h', '$L \in [5,10]$ Mpc/h', '$L \in [10,20]$ Mpc/h']
 		AverageSpeed_SimilarLength_Symm = plt.figure(figsize=(20,5))
@@ -1389,6 +1448,8 @@ class Plot_results():
 		self.savefigure(AverageSpeed_SimilarMass_fofr, 'Average_speed_similar_mass_cFofr', velocity_results_dir)
 		self.savefigure(AverageSpeed_SimilarLength_Symm, 'Average_speed_similar_length_cSymmetron', velocity_results_dir)
 		self.savefigure(AverageSpeed_SimilarLength_fofr, 'Average_speed_similar_length_cFofr', velocity_results_dir)
+		self.savefigure(RelDiff_SimilarMass_plot_Symm, 'RelDiff_speed_similar_mass_cSymmetron', velocity_results_dir)
+		self.savefigure(RelDiff_SimilarMass_plot_fofr, 'RelDiff_speed_similar_mass_cFofr', velocity_results_dir)
 		self.savefigure(AverageSpeed_MassBins, 'Average_speed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_MassBins, 'Reldiff_AverageSpeed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_LengthBins, 'Average_speed_lengthbins', velocity_results_dir)
