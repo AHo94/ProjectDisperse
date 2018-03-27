@@ -764,12 +764,12 @@ class Plot_results():
 			savedir_ = savedir
 		if type(name) != str:
 			raise ValueError('filename not a string!')
-		figure.savefig(savedir_ + name + self.filetype, bbox_inches='tight')
+		figure.savefig(savedir_ + name + self.filetype, bbox_inches='tight', dpi=100)
         
         
 	def Compute_means(self, bins_common, Part_distances, speed):
-		Common_filename = 'SpeedBins_' + str(N_parts) + 'part_nsig' + str(self.Nsigma)+ '_BoxExpand' + str(6) + 'SpeedBins.npy'
-		Common_filename_std = 'SpeedBins_std_' + str(N_parts) + 'part_nsig' + str(self.Nsigma)+ '_BoxExpand' + str(6) + 'SpeedBins_std.npy'
+		Common_filename = self.Speed_filename + 'SpeedBins_' + str(N_parts) + 'part_nsig' + str(self.Nsigma)+ '_BoxExpand' + str(6) + 'SpeedBins.npy'
+		Common_filename_std =self.Speed_filename + 'SpeedBins_std_' + str(N_parts) + 'part_nsig' + str(self.Nsigma)+ '_BoxExpand' + str(6) + 'SpeedBins_std.npy'
 		cachedir = '/mn/stornext/u3/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/SpeedBins/'
 		if not os.path.isdir(cachedir):
 			os.makedirs(cachedir)
@@ -798,8 +798,8 @@ class Plot_results():
 
 	def Compute_similar_profiles(self, prop, speeds, distances, thickness, bins, botrange, uprange, prop_name, models):
 		Folder = '/mn/stornext/u3/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/SimilarProperties/'
-		Filename = 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + '_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + models + '.npy'
-		Filename_std = 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + 'STD_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + models + '.npy'
+		Filename = self.Speed_filename + 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + '_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + models + '.npy'
+		Filename_std = self.Speed_filename + 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + 'STD_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + models + '.npy'
 		SavedFile = Folder + Filename
 		SavedFile_std = Folder + Filename_std
 		if not os.path.isdir(Folder):
@@ -1119,8 +1119,12 @@ class Plot_results():
 		self.savefigure(MassVsLength_Symm_V2, 'MassVsLength_Symm_V2')
 		plt.close('all')	# Clear all current windows to free memory
 
-	def Velocity_profiles(self, All_speeds, Orthogonal_speeds, Parallel_speeds, Part_distances):
-		""" Plots data related to the velocity profiles """
+	def Velocity_profiles(self, All_speeds, Part_distances, speedtype='Speed'):
+		""" 
+		Plots data related to the velocity profiles 
+		Can either be the total speed, orthogonal speed or parallel speed. 
+		The speedtype name must be the same as the input speed array, else shit happens.
+		"""
 		velocity_savefile_dir = 'ModelComparisons/VelocityAnalysis/'
 		if self.raw_filetype == 'png':
 			velocity_savefile_dir += 'PNG/'
@@ -1130,10 +1134,21 @@ class Plot_results():
 		sigma_name_folder = 'Sigma'+str(self.Nsigma) + '/'
 		velocity_savefile_dir += sigma_name_folder
 
+		OK_speedtypes = ['Speed', 'Orthogonal', 'Parallel']
+		Check = 0
+		for spt in OK_speedtypes:
+			if speedtype == spt:
+				Check += 1
+		if not Check:
+			raise ValueError("Argument speedtype not set properly! Currently speedtype = ", speedtype, ". Try speedtype=Speed, Orthogonal or Parallel")
+		self.Speed_filename = speedtype
+		velocity_savefile_dir += speedtype + '/'
+
 		velocity_results_dir = os.path.join(savefile_directory, velocity_savefile_dir)
 		if not os.path.isdir(velocity_results_dir):
 			os.makedirs(velocity_results_dir)
 
+		print 'Computing for ', speedtype 
 		######## Compute relevant stuff ########
 		binnum = 40
 		NModels = len(All_speeds)
@@ -1144,14 +1159,18 @@ class Plot_results():
 		Length_label = 'Filament length - [Mpc/h]'
 		Mean_Mass_label = 'Mean filament mass - [$M_\odot / h$]'
 		Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
-		Average_speed_label =  r'$\langle v \rangle$ - [km/s]'
+		if speedtype == 'Speed':
+			Average_speed_label =  r'$\langle v \rangle$ - [km/s]'
+		elif speedtype == 'Orthogonal':
+			Average_speed_label =  r'$\langle v_\perp \rangle$ - [km/s]'
+		elif speedtype == 'Parallel':
+			Average_speed_label =  r'$\langle v_\parallel \rangle$ - [km/s]'
+		
 		SymmLCDM = np.array([0,1,2,3])
 		FofrLCDM = np.array([0,4,5,6])
 		Symm_only = np.array([1,2,3])
 		Fofr_only = np.array([4,5,6])
 		All_speeds = np.asarray(All_speeds)
-		Orthogonal_speeds = np.asarray(Orthogonal_speeds)
-		Parallel_speeds = np.asarray(Parallel_speeds)
 		Symm_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_D']
 		Fofr_filenames = ['LCDM', 'fofr4', 'fofr5', 'fofr6']
 		#### Average speed of all filaments as a function of 
@@ -1191,38 +1210,44 @@ class Plot_results():
 		Mass_titles = ['$M \in [10^{12}, 10^{13}]M_\odot$', '$M \in [10^{13}, 10^{14}]M_\odot$', '$M \in [10^{14}, 10^{15}]M_\odot$']
 		AverageSpeed_AllFils = plt.figure(figsize=(12,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-		plt.subplot(1,2,1)
+		ax1 = plt.subplot(1,2,1)
 		for i in SymmLCDM:
 			plt.plot(Common_bin_distances_normalized, Mean_speed_allFils[i])
 		plt.legend(self.Symm_legends)
-		plt.subplot(1,2,2)
+		ax2 = plt.subplot(1,2,2, sharey=ax1)
 		for i in FofrLCDM:
 			plt.plot(Common_bin_distances_normalized, Mean_speed_allFils[i])
 		plt.legend(self.fofr_legends)
 		AverageSpeed_AllFils.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
-		AverageSpeed_AllFils.text(0.04, 0.6, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_AllFils.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 
 		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
 		AverageSpeed_SimilarMass_Symm = plt.figure(figsize=(30,8))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
+		ax = plt.subplot(1,3,1)
 		for j in range(len(Mass_ranges)-1):
-			ax = plt.subplot(1,3,j+1)
+			if j > 0:
+				ax = plt.subplot(1,3, j+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False)
 			print 'iteration ',j 
 			for i in SymmLCDM:
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
 																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Symm_filenames[i])
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.Symm_legends[i])
-				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
+				plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
 			plt.title(Mass_titles[j], fontsize=10)
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarMass_Symm.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
-		AverageSpeed_SimilarMass_Symm.text(0.04, 0.7, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_SimilarMass_Symm.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 		### Average speed of filaments with similar masses, comparing LCDM + f(R)
 		AverageSpeed_SimilarMass_fofr = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		ax = plt.subplot(1,3,1)
 		for j in range(len(Mass_ranges)-1):
-			ax = plt.subplot(1,3,j+1)
+			if j > 0:
+				ax = plt.subplot(1,3, j+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False)
 			print 'iteration ',j 
 			for ij in range(len(FofrLCDM)):
 				i = FofrLCDM[ij]
@@ -1230,17 +1255,21 @@ class Plot_results():
 																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Fofr_filenames[ij])
 				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.fofr_legends[ij])
 				#plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std, alpha=0.3)
+			#if j > 0:
 			plt.title(Mass_titles[j], fontsize=10)
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarMass_fofr.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
-		AverageSpeed_SimilarMass_fofr.text(0.04, 0.7, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_SimilarMass_fofr.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 		### Average speed of filament of similar length. Symmetron + LCDM comparison
 		Length_titles = ['$L \in [1,5]$ Mpc/h', '$L \in [5,10]$ Mpc/h', '$L \in [10,20]$ Mpc/h']
 		AverageSpeed_SimilarLength_Symm = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		Length_ranges = [1, 5, 10, 20]   # Units of Mpc/h, maybe use min and max of mass bin?
+		ax = plt.subplot(1,3,1)
 		for j in range(len(Length_ranges)-1):
-			ax = plt.subplot(1,3,j+1)
+			if j > 0:
+				ax = plt.subplot(1,3,j+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False)
 			print 'iteration ',j
 			for i in SymmLCDM:
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.FilLengths[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
@@ -1250,13 +1279,16 @@ class Plot_results():
 			plt.title(Length_titles[j], fontsize=10)
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarLength_Symm.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
-		AverageSpeed_SimilarLength_Symm.text(0.04, 0.7, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_SimilarLength_Symm.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 		#### Average speed of filament of similar length. f(R) + LCDM comparison
 		AverageSpeed_SimilarLength_fofr = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		Length_ranges = [1, 5, 10, 20]   # Units of Mpc/h, maybe use min and max of mass bin?
+		ax = plt.subplot(1,3,1)
 		for j in range(len(Length_ranges)-1):
-			ax = plt.subplot(1,3,j+1)
+			if j > 0:
+				ax = plt.subplot(1,3,j+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False)	
 			print 'iteration ',j
 			for ij in range(len(FofrLCDM)):
 				i = FofrLCDM[ij]
@@ -1267,19 +1299,19 @@ class Plot_results():
 			plt.title(Length_titles[j], fontsize=10)
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarLength_fofr.text(0.5, 0.01, 'Particle distance to filament center (normalized)', ha='center', fontsize=10)
-		AverageSpeed_SimilarLength_fofr.text(0.04, 0.7, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_SimilarLength_fofr.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 		#### Average speed for different mass bins
 		Compare_both = [SymmLCDM, FofrLCDM]
 		Compare_both_legends = [self.Symm_legends, self.fofr_legends]
 		Average_speed_massbin = []
 		Average_speed_massbin_std = []
-		#Average_speed_fofr_massbin = []
-		#Average_speed_fofr_massbin_std = []
-
 		AverageSpeed_MassBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		ax = plt.subplot(1,2,1)
 		for j in range(len(Compare_both)):
-			plt.subplot(1,2,j+1)
+			if j > 0:
+				ax = plt.subplot(1,2,j+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False)
 			for k in Compare_both[j]:
 				Average_speed, Error_speed = self.Compute_average_speeds_Propertybinned(All_speeds[k], self.Filament_masses[k], Common_bin_mass)
 				if not ((j == 1) and (k == 0)):
@@ -1289,24 +1321,23 @@ class Plot_results():
 				plt.plot(Common_bin_mass[1:], Average_speed, '-')
 				plt.fill_between(Common_bin_mass[1:], Average_speed - Error_speed, Average_speed + Error_speed, alpha=0.3)
 				plt.xscale('log')
-				plt.ylim((400,2250))
 			plt.legend(Compare_both_legends[j])
 		AverageSpeed_MassBins.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
-		AverageSpeed_MassBins.text(0.04, 0.5, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_MassBins.text(0.02, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 		#### Relative difference of the average speeds, using mass bins
 		RelDiffs_AvgSpeed_massbins = [OF.relative_deviation(Average_speed_massbin, i) for i in range(1, NModels)]
 		PropErr_AvgSpeed_massbins = [OF.Propagate_error_reldiff(Average_speed_massbin[0], Average_speed_massbin[i],
 															Average_speed_massbin_std[0], Average_speed_massbin_std[i]) for i in range(1, NModels)]
-		AverageSpeed_RelativeDifference_MassBins = plt.figure(figsize=(8,6))
+		AverageSpeed_RelativeDifference_MassBins = plt.figure(figsize=(12,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-		plt.subplot(1,2,1)
+		ax = plt.subplot(1,2,1)
 		for i in Symm_only:
 			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
 							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4)
 		plt.legend(self.Symm_legends[1:])
 		plt.xscale('log')
-		plt.subplot(1,2,2)
+		ax2 = plt.subplot(1,2,2, sharey=ax)
 		for i in Fofr_only:
 			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
@@ -1314,12 +1345,12 @@ class Plot_results():
 		plt.legend(self.fofr_legends[1:])
 		plt.xscale('log')
 		AverageSpeed_RelativeDifference_MassBins.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
-		AverageSpeed_RelativeDifference_MassBins.text(0.04, 0.5, r'Relative difference of $\langle r \rangle$', ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_RelativeDifference_MassBins.text(0.03, 0.6, r'Relative difference of $\langle r \rangle$', ha='center', rotation='vertical', fontsize=10)
 		
 		#### Average speed for different length bins, with LCDM and Symmetron models
 		AverageSpeed_LengthBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-		plt.subplot(1,2,1)
+		ax = plt.subplot(1,2,1)
 		for k in SymmLCDM:
 			Average_speed = []
 			Error_speed = []
@@ -1333,9 +1364,8 @@ class Plot_results():
 			plt.plot(Common_bin_length[1:], Average_speed, '-')
 			plt.fill_between(Common_bin_length[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed), alpha=0.3)
 			plt.xscale('log')
-			#plt.ylim((400,2250))
 		plt.legend(self.Symm_legends)
-		plt.subplot(1,2,2)
+		ax2 = plt.subplot(1,2,2, sharey=ax)
 		for k in FofrLCDM:
 			Average_speed = []
 			Error_speed = []
@@ -1349,10 +1379,9 @@ class Plot_results():
 			plt.plot(Common_bin_length[1:], Average_speed, '-')
 			plt.fill_between(Common_bin_length[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed), alpha=0.4)
 			plt.xscale('log')
-			#plt.ylim((400,2250))
 		plt.legend(self.fofr_legends)
 		AverageSpeed_LengthBins.text(0.5, 0.01, Length_label, ha='center', fontsize=10)
-		AverageSpeed_LengthBins.text(0.04, 0.5, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_LengthBins.text(0.02, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
 		
 		####### Save figures #######
 		print '--- SAVING IN: ', velocity_results_dir, ' ---'
@@ -1450,4 +1479,7 @@ if __name__ == '__main__':
 			Append_data_speeds(Speeds, Ospeed, Pspeed)
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
-	Plot_instance.Velocity_profiles(All_speed_list, Orth_speed_list, Par_speed_list, Dist_accepted)
+	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
+	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
+	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	
