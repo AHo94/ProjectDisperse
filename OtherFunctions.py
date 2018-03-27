@@ -446,6 +446,14 @@ def relative_deviation(data, index):
 	delta = (data[index] - data[0])/data[0]
 	return delta
 
+def relative_deviation_singular(data0, data1):
+	""" 
+	Computes relative deviation of a given physical quantity.
+	This function compares data 1 and data 0. Data 0 assumed to be the base model
+	"""
+	delta = (data1 - data0)/data0
+	return delta
+
 def Propagate_error_reldiff(data_0, data, error_0, error):
 	""" 
 	Propagated error of the relative difference F = (B - A)/A, A = base model
