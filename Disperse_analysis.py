@@ -895,8 +895,12 @@ class Disperse_Plotter():
 				self.Plot_Figures(filename, ndim)
 		
 		self.SolveRun = True
-		return self.NumFilamentConnections, self.FilLengths, self.NFilamentPoints
-
+		if parsed_arguments.Filter_Length:
+			Filter_small_fils = self.FilLengths > 1.0
+			return self.NumFilamentConnections[Filter_small_fils], self.FilLengths[Filter_small_fils], self.NFilamentPoints[Filter_small_fils]
+		else:
+			return self.NumFilamentConnections, self.FilLengths, self.NFilamentPoints
+		
 	def get_3D_pos(self):
 		""" 
 		Create 3D filament position. Must have called solve() function first. 
@@ -942,6 +946,7 @@ def Argument_parser():
 	 				+ "Do not run seperate models and 'all' at once!", type=str, default='lcdm')
 	parser.add_argument("-Nparts", "--NumberParticles", help="Run with a set number of particles. Default 64.", type=int, default=64)
 	parser.add_argument("-Nsigma", "--Nsigma_disperse", help="Sigma value used for DisPerSE. Default at 3.", type=int, default=3)
+	parser.add_argument("-FilterLength", "--Filter_Length", help="If True, filters out filaments with lengths less than 1.", default=False)
 	# Parse arguments
 	args = parser.parse_args()
 
