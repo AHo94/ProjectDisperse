@@ -411,7 +411,7 @@ class FilterParticlesAndFilaments():
 			np.save(cachefile_masks, self.Filtered_masks)
 			np.save(cachefile_tsols, self.Filtered_tsols)
 			np.save(cachefile_segIDs, self.Filtered_segids)
-			np.save(cachedir_nanvalues, self.RemoveNanFils)
+			np.save(cachefile_nanvalues, self.RemoveNanFils)
 	
 	def Filter_filament_density_threshold(self, Fpos, particle_distances, fillen):
 		""" 
@@ -548,6 +548,8 @@ class FilterParticlesAndFilaments():
 		"""
 		# Filter filaments of lengths less or equal to 1 Mpc/h
 		if self.RemoveNanFils.any():
+			print self.RemoveNanFils
+			print len(self.Filament_3DPos), len(self.FilamentLength)
 			self.Filament_3DPos = np.delete(self.Filament_3DPos, self.RemoveNanFils)
 			self.Filtered_distances = np.delete(self.Filtered_distances, self.RemoveNanFils)
 			self.FilamentLength = np.delete(self.FilamentLength, self.RemoveNanFils)
@@ -555,12 +557,15 @@ class FilterParticlesAndFilaments():
 			self.Filtered_segids = np.delete(self.Filtered_segids, self.RemoveNanFils)
 			self.Filtered_masks = np.delete(self.Filtered_masks, self.RemoveNanFils)
 			self.Small_filaments = self.FilamentLength > 1
+			print len(self.Small_filaments), len(self.FilamentLength)
 			FilamentPos = self.Filament_3DPos[self.Small_filaments]
 			Distances = self.Filtered_distances[self.Small_filaments]
 			FilLengths = self.FilamentLength[self.Small_filaments]
 			Tsols = self.Filtered_tsols[self.Small_filaments]
 			SegIDs = self.Filtered_segids[self.Small_filaments]
 			Masks = self.Filtered_masks[self.Small_filaments]
+			print len(FilamentPos)
+			print len(self.FilamentLength)
 		else:
 			FilamentPos = self.Filament_3DPos[self.Small_filaments]
 			Distances = self.Filtered_distances[self.Small_filaments]
@@ -703,7 +708,6 @@ class FilterParticlesAndFilaments():
 		cachedir_Ospeed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/OrthogonalComp/'
 		cachedir_Pspeed = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/ParallelComp/'
 		cachedir_nanvalues = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/FilteredParts/NanValues/'
-		cachefile_nanvalues = cachedir_nanvalues + Common_filename
 		if not os.path.isdir(cachedir_speed):
 			os.makedirs(cachedir_speed)
 		if not os.path.isdir(cachedir_Ospeed):
@@ -715,6 +719,7 @@ class FilterParticlesAndFilaments():
 		cachefile_speed = cachedir_speed + Common_filename
 		cachefile_Ospeed = cachedir_Ospeed + Common_filename
 		cachefile_Pspeed = cachedir_Pspeed + Common_filename
+		cachefile_nanvalues = cachedir_nanvalues + Common_filename
 		read_secondtime = 0
 		if os.path.isfile(cachefile_speed):
 			print 'Reading from speed component numpy files...'
