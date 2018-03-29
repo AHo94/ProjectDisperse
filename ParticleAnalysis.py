@@ -119,14 +119,14 @@ class FilterParticlesAndFilaments():
 		Filament_3DPos = []
 		for j in range(len(self.xdimPos)):
 			Filament_3DPos.append(np.column_stack((self.xdimPos[j], self.ydimPos[j], self.zdimPos[j])))
-		self.Filament_3DPos = np.array(Filament_3DPos)
-		self.FilamentLength = []
+		Filament_3DPos = np.array(Filament_3DPos)
+		FilamentLength = []
 		for i in range(len(Filament_3DPos)):
 			fillen = OF.Get_filament_length(Filament_3DPos[i])
-			self.FilamentLength.append(fillen)
-		self.FilamentLength = np.asarray(self.FilamentLength)
-		self.Small_filaments = self.FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
-		return self.FilamentLength[self.Small_filaments]
+			FilamentLength.append(fillen)
+		FilamentLength = np.asarray(FilamentLength)
+		Small_filaments = FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
+		return FilamentLength[Small_filaments]
 		
 
 	def Unpack_filament_data(self, Box_info, Fil_coord):
@@ -372,7 +372,10 @@ class FilterParticlesAndFilaments():
 			self.Filtered_masks = np.load(cachefile_masks)
 			self.Filtered_tsols = np.load(cachefile_tsols)
 			self.Filtered_segids = np.load(cachefile_segIDs)
-			self.RemoveNanFils = np.load(cachedir_nanvalues)
+			if os.path.isfile(cachefile_nanvalues):
+				self.RemoveNanFils = np.load(cachefile_nanvalues)
+			else:
+				self.RemoveNanFils = np.array([])
 		else:
 			Distances, Segment_index, Tsolutions, Masked_IDs = self.Read_particle_data_numpy(self.model, self.npart, self.sigma, boxexpand)
 			self.Filtered_distances = []
@@ -469,7 +472,6 @@ class FilterParticlesAndFilaments():
 		Nf_ParticleBoxes = []
 		Nf_Masked_IDs = []
 		for number in Over_IDs:
-			#print self.Filament_3DPos[number]
 			Dist_new, SegID_new, Tsols_new, Pbox_new, MaskIDs_new = self.Mask_and_compute_distances_again(self.Filament_3DPos[self.Small_filaments][number],
 																									box_exp_multiplier*6, SlicedParts, SlicedIDs, SliceRanges)
 			Nf_Distances.append(Dist_new)
@@ -548,24 +550,15 @@ class FilterParticlesAndFilaments():
 		"""
 		# Filter filaments of lengths less or equal to 1 Mpc/h
 		if self.RemoveNanFils.any():
-			print self.RemoveNanFils
-			print len(self.Filament_3DPos), len(self.FilamentLength)
 			self.Filament_3DPos = np.delete(self.Filament_3DPos, self.RemoveNanFils)
-			self.Filtered_distances = np.delete(self.Filtered_distances, self.RemoveNanFils)
 			self.FilamentLength = np.delete(self.FilamentLength, self.RemoveNanFils)
-			self.Filtered_tsols = np.delete(self.Filtered_tsols, self.RemoveNanFils)
-			self.Filtered_segids = np.delete(self.Filtered_segids, self.RemoveNanFils)
-			self.Filtered_masks = np.delete(self.Filtered_masks, self.RemoveNanFils)
-			self.Small_filaments = self.FilamentLength > 1
-			print len(self.Small_filaments), len(self.FilamentLength)
+			self.Small_filaments = self.FilamentLength > 1.0
 			FilamentPos = self.Filament_3DPos[self.Small_filaments]
 			Distances = self.Filtered_distances[self.Small_filaments]
 			FilLengths = self.FilamentLength[self.Small_filaments]
 			Tsols = self.Filtered_tsols[self.Small_filaments]
 			SegIDs = self.Filtered_segids[self.Small_filaments]
-			Masks = self.Filtered_masks[self.Small_filaments]
-			print len(FilamentPos)
-			print len(self.FilamentLength)
+			Masks = self.Filtered_masks[self.Small_filaments]	
 		else:
 			FilamentPos = self.Filament_3DPos[self.Small_filaments]
 			Distances = self.Filtered_distances[self.Small_filaments]
@@ -573,7 +566,6 @@ class FilterParticlesAndFilaments():
 			Tsols = self.Filtered_tsols[self.Small_filaments]
 			SegIDs = self.Filtered_segids[self.Small_filaments]
 			Masks = self.Filtered_masks[self.Small_filaments]
-			
 		Included_fils, Filtered_fils, OverThreshold = self.Filter_filament_density_threshold(FilamentPos, Distances, FilLengths)
 		# Recomputes filaments where densities are always larger than threshold
 		multiplier = 1
@@ -584,12 +576,15 @@ class FilterParticlesAndFilaments():
 			Included_fils = np.concatenate((Included_fils, New_incFils)) if New_incFils.any() else Included_fils
 			Filtered_fils = np.concatenate((Filtered_fils, New_filtFils)) if New_filtFils.any() else Filtered_fils
 			if New_incFils.any():
-				Distances[New_incFils] = Nf_distances
-				Masks[New_incFils] = Nf_masks
-				SegIDs[New_incFils] = Nf_Segids
+				for j in range(len(New_incFils)):
+					index = New_incFils[j]
+					Distances[index] = Nf_distances[j]
+					Masks[index] = Nf_masks[j]
+					SegIDs[index] = Nf_Segids[j]
 			if multiplier > 3:
 				print 'Multiplier threshold over 3, stopping the box expand computation'
 				break
+		
 		Distance_thresholds = []
 		for index in Included_fils:
 			OK_distance = self.Accepted_distance_density(Distances[index], FilLengths[index])
@@ -730,7 +725,10 @@ class FilterParticlesAndFilaments():
 			if not self.do_read_data:
 				print 'Reading filament and particle data for model: ', self.model
 				self.Read_basic_data(self.model, self.npart, self.sigma)
-				self.RemoveNanFils = np.load(cachedir_nanvalues)
+				if os.path.isfile(cachefile_nanvalues):
+					self.RemoveNanFils = np.load(cachefile_nanvalues)
+				else:
+					print 'Warning: Remove nan file does not exist for this model!'
 				#print 'Filtering particles'
 				#filter_time = time.time()
 				#self.Do_filter_particles()
@@ -738,6 +736,8 @@ class FilterParticlesAndFilaments():
 				self.do_read_data = 1
 			if self.RemoveNanFils.any() and read_secondtime:
 				self.Filament_3DPos = np.delete(self.Filament_3DPos, self.RemoveNanFils)
+				self.FilamentLength = np.delete(self.FilamentLength, self.RemoveNanFils)
+				self.Small_filaments = self.FilamentLength > 1.0
 			print 'Computing speed components'
 			Speed_timer = time.time()
 			Parallel_speeds, Orthogonal_speeds, All_speeds = self.Compute_speed_components(self.Filament_3DPos[self.Small_filaments][Fils_accept], Part_accept, segids)
@@ -1850,7 +1850,8 @@ if __name__ == '__main__':
 		else:
 			Instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
 			OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
-			Filament_lengths.append(Instance.Get_filament_length()[OK_fils])
+			#Filament_lengths.append(Instance.Get_filament_length()[OK_fils])
+			Filament_lengths.append(Instance.FilamentLength[OK_fils])
 			Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
 			Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
 			Append_data_speeds(Speeds, Ospeed, Pspeed)
