@@ -13,8 +13,15 @@ def Call_plot(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
 		raise ValueError("xdata and ydata not of same length!")
 	figure = plt.figure()
 	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-	for i in range(len(xdata)):
-		plt.plot(xdata[i], ydata[i], style)
+	for kw in kwargs:
+		if kw == 'color':
+			colors = kwargs[kw]
+			for i in range(len(xdata)):
+				plt.plot(xdata[i], ydata[i], style, color=colors[i])
+		else:
+			for i in range(len(xdata)):
+				plt.plot(xdata[i], ydata[i], style)
+			
 	plt.xlabel(xlabel)
 	plt.ylabel(ylabel)
 	plt.legend(legend)
@@ -43,8 +50,14 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
 	#	raise ValueError("xdata and ydata not of same length!")
 	figure = plt.figure()
 	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-	for i in range(len(ydata)):
-		plt.plot(xdata, ydata[i], style)
+	for kw in kwargs:
+		if kw == 'color':
+			colors = kwargs[kw]
+			for i in range(len(xdata)):
+				plt.plot(xdata, ydata[i], style, color=colors[i])
+		else:
+			for i in range(len(xdata)):
+				plt.plot(xdata, ydata[i], style)
 	plt.xlabel(xlabel)
 	plt.ylabel(ylabel)
 	plt.legend(legend)
