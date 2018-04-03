@@ -53,10 +53,10 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
 	for kw in kwargs:
 		if kw == 'color':
 			colors = kwargs[kw]
-			for i in range(len(xdata)):
+			for i in range(len(ydata)):
 				plt.plot(xdata, ydata[i], style, color=colors[i])
 		else:
-			for i in range(len(xdata)):
+			for i in range(len(ydata)):
 				plt.plot(xdata, ydata[i], style)
 	plt.xlabel(xlabel)
 	plt.ylabel(ylabel)
