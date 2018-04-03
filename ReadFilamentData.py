@@ -172,22 +172,16 @@ class read_disperse_output():
 				ytemp.append(yPos)
 				ztemp.append(zPos)
 				if j > 1:
-					xcheck = np.abs(xtemp[-1]-xtemp[-2]) > 1e-8
-					ycheck = np.abs(ytemp[-1]-ztemp[-2]) > 1e-8
-					zcheck = np.abs(ytemp[-1]-ztemp[-2]) > 1e-8
-					if xcheck or ycheck or zcheck:
-						print 'DUPLICATE'
-						print xtemp
-						print ytemp
-						print ztemp
+					# Removing duplicate coordinates
+					xcheck = np.abs(xtemp[-1]-xtemp[-2]) < 1e-8
+					ycheck = np.abs(ytemp[-1]-ytemp[-2]) < 1e-8
+					zcheck = np.abs(ztemp[-1]-ztemp[-2]) < 1e-8
+					if xcheck and ycheck and zcheck:
 						del xtemp[-1]
 						del ytemp[-1]
 						del ztemp[-1]
 						del TempPositions[-1]
 						print 'Duplicate filament coordinate for filament', k
-						print xtemp
-						print ytemp
-						print ztemp
 			NFilamentPoints.append(np.int16(Filstuff[-1]))
 			FilamentPos.append(np.array(TempPositions, dtype=np.float32))
 			xdimPos.append(np.array(xtemp, dtype=np.float32))
@@ -294,8 +288,14 @@ class read_disperse_output():
 
 if __name__ == '__main__':
 	# Testing program
-	Instance = read_disperse_output('C:/Users/Alex/Documents/Masters_project/Disperse', 1)
-	a,b,c,d, e = Instance.get_data('lcdm_z0_testing/LCDM_z0_64PeriodicTesting/SkelconvOutput_LCDMz064.a.NDskl')
+	#Instance = read_disperse_output('C:/Users/Alex/Documents/Masters_project/Disperse', 1)
+	#a,b,c,d, e = Instance.get_data('lcdm_z0_testing/LCDM_z0_64PeriodicTesting/SkelconvOutput_LCDMz064.a.NDskl')
 	# At UiO 
-	#Instance = read_disperse_output('/mn/stornext/d5/aleh', 1)
-	#a,b,c,d,e = Instance.get_data('lcdm_testing/LCDM_z0_64PeriodicTesting/SkelconvOutput_LCDMz064.a.NDskl')
+	Instance = read_disperse_output('/mn/stornext/d5/aleh', 256.0)
+	#a,b,c,d,e = Instance.get_data('SymmB_data/SymmB_z0_188Particles/Sigma4/SkelconvOutput_SymmBz0188_nsig4.a.NDskl')
+	#a,b,c,d,e = Instance.get_data('SymmA_data/SymmA_z0_188Particles/Sigma4/SkelconvOutput_SymmAz0188_nsig4.a.NDskl')
+	#a,b,c,d,e = Instance.get_data('SymmC_data/SymmC_z0_188Particles/Sigma4/SkelconvOutput_SymmCz0188_nsig4.a.NDskl')
+	#a,b,c,d,e = Instance.get_data('SymmD_data/SymmD_z0_188Particles/Sigma4/SkelconvOutput_SymmDz0188_nsig4.a.NDskl')
+	#a,b,c,d,e = Instance.get_data('fofr4_data/fofr4_z0_188Particles/Sigma4/SkelconvOutput_fofr4z0188_nsig4.a.NDskl')
+	#a,b,c,d,e = Instance.get_data('fofr5_data/fofr5_z0_188Particles/Sigma4/SkelconvOutput_fofr5z0188_nsig4.a.NDskl')
+	#a,b,c,d,e = Instance.get_data('fofr6_data/fofr6_z0_188Particles/Sigma4/SkelconvOutput_fofr6z0188_nsig4.a.NDskl')
