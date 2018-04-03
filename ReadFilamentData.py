@@ -176,11 +176,18 @@ class read_disperse_output():
 					ycheck = np.abs(ytemp[-1]-ztemp[-2]) > 1e-8
 					zcheck = np.abs(ytemp[-1]-ztemp[-2]) > 1e-8
 					if xcheck or ycheck or zcheck:
+						print 'DUPLICATE'
+						print xtemp
+						print ytemp
+						print ztemp
 						del xtemp[-1]
 						del ytemp[-1]
 						del ztemp[-1]
 						del TempPositions[-1]
 						print 'Duplicate filament coordinate for filament', k
+						print xtemp
+						print ytemp
+						print ztemp
 			NFilamentPoints.append(np.int16(Filstuff[-1]))
 			FilamentPos.append(np.array(TempPositions, dtype=np.float32))
 			xdimPos.append(np.array(xtemp, dtype=np.float32))
