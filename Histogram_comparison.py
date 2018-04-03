@@ -315,7 +315,7 @@ class CompareModels():
 
 		self.nParticles = nPart
 
-		self.s = 0.8 	# For figure rescaling etc. Change as you wish.
+		self.s = 0.7 	# For figure rescaling etc. Change as you wish.
 
 	def relative_deviation(self, data, index):
 		""" 
@@ -330,7 +330,7 @@ class CompareModels():
 		""" Function that calls savefig based on figure instance and filename. """
 		if type(name) != str:
 			raise ValueError('filename not a string!')
-		figure.savefig(self.results_dir + name + self.filetype)
+		figure.savefig(self.results_dir + name + self.filetype, bbox_inches='tight', dpi=100)
 
 	def Compute_errors(self, databins):
 		""" Computes the errorbars of the length data. Assumes Poisson distribution. """
@@ -396,7 +396,7 @@ class CompareModels():
 		plt.title('') if title == 'None' else plt.title(title)
 		return figure
 
-	def Call_plot_sameX(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None'):
+	def Call_plot_sameX(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None', Lengths=True):
 		""" 
 		Calls plotting, xdata to be common lengths/bins for all ydata
 		Extra parameter logscal determines the plotting method
@@ -406,21 +406,23 @@ class CompareModels():
 
 		figure = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		ax = plt.axes()
 		if logscale == 'normal':
 			for i in range(len(ydata)):
-				plt.plot(xdata, ydata[i], style)
+				plt.plot(xdata, ydata[i], style, label=legend[i])
 		elif logscale == 'logx':
 			for i in range(len(ydata)):
-				plt.semilogx(xdata, ydata[i], style)
+				plt.semilogx(xdata, ydata[i], style, label=legend[i])
 		elif logscale == 'logy':
 			for i in range(len(ydata)):
-				plt.semilogy(xdata, ydata[i], style)
+				plt.semilogy(xdata, ydata[i], style, label=legend[i])
 		elif logscale == 'loglog':
 			for i in range(len(ydata)):
-				plt.loglog(xdata, ydata[i], style)
+				plt.loglog(xdata, ydata[i], style, label=legend[i])
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
-		plt.legend(legend)
+		#plt.legend(legend)
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		plt.title('') if title == 'None' else plt.title(title)
 		max_yvalues = np.max(ydata)
 		min_yvalues = np.min(ydata)
@@ -430,6 +432,8 @@ class CompareModels():
 			xfmt = plt.ScalarFormatter()
 			xfmt.set_powerlimits((0,0))
 			plt.gca().yaxis.set_major_formatter(xfmt)
+		if Lengths:
+			plt.xlim((1,np.max(xdata)))
 		return figure
 
 	def Plot_differences(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None', diff='rel'):
@@ -472,7 +476,7 @@ class CompareModels():
 		plt.title('') if title == 'None' else plt.title(title)
 		return figure
 
-	def Plot_differences_sameX(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None', diff='rel'):
+	def Plot_differences_sameX(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None', diff='rel', Lengths=True):
 		""" 
 		Plots relative or absolute differences. Base data assumed to be the first element of xdata and ydata 
 		Xdata assumed to be common for all ydata.
@@ -491,29 +495,34 @@ class CompareModels():
 
 		figure = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		ax = plt.axes()
 		if logscale == 'normal':
-			plt.plot(xdata, np.zeros(len(xdata)), style)
+			plt.plot(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
-				plt.plot(xdata, deltas[i-1], style)
+				plt.plot(xdata, deltas[i-1], style, label=legend[i])
 		elif logscale == 'logx':
-			plt.semilogx(xdata, np.zeros(len(xdata)), style)
+			plt.semilogx(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
-				plt.semilogx(xdata, deltas[i-1], style)
+				plt.semilogx(xdata, deltas[i-1], style, label=legend[i])
 		elif logscale == 'logy':
-			plt.semilogy(xdata, np.zeros(len(xdata)), style)
+			plt.semilogy(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
-				plt.semilogy(xdata, deltas[i-1], style)
+				plt.semilogy(xdata, deltas[i-1], style, label=legend[i])
 		elif logscale == 'loglog':
-			plt.loglog(xdata, np.zeros(len(xdata)), style)
+			plt.loglog(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
-				plt.loglog(xdata, deltas[i-1], style)
+				plt.loglog(xdata, deltas[i-1], style, label=legend[i])
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
-		plt.legend(legend)
+		#plt.legend(legend)
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		plt.title('') if title == 'None' else plt.title(title)
+		if Lengths:
+			plt.xlim((1, np.max(xdata)))
+
 		return figure
 
-	def Plot_errobar_sameX(self, xdata, ydata, error, xlabel, ylabel, legend, logscale='normal', fill_between=False, diff=False, limit_yaxis=True):
+	def Plot_errobar_sameX(self, xdata, ydata, error, xlabel, ylabel, legend, logscale='normal', fill_between=False, diff=False, limit_yaxis=True, Lengths=True):
 		if len(ydata) != len(error):
 			raise ValueError("ydata and error data not of same length!")
 		self.Check_ok_parameters(logscale)
@@ -522,22 +531,27 @@ class CompareModels():
 		Min_yval = np.array([np.min(ydata[i]) for i in range(len(ydata))])
 		figure = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		ax = plt.axes()
 		if diff:
-			plt.plot(xdata, np.zeros(len(xdata)))
+			plt.plot(xdata, np.zeros(len(xdata)), label='$\Lambda$CDM')
 			if fill_between:
 				plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0)
 		if fill_between:
 			for i in range(len(ydata)):
-				plt.plot(xdata, ydata[i])
+				plt.plot(xdata, ydata[i], label=legend[i])
 				plt.fill_between(xdata, ydata[i]-error[i], ydata[i]+error[i], alpha=0.3)
 			if limit_yaxis:
 				plt.ylim((-1.0, 1))
 		else:
 			for i in range(len(ydata)):
-				plt.errorbar(xdata, ydata[i], error[i])
+				plt.errorbar(xdata, ydata[i], error[i], label=legend[i])
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
+
+		if Lengths:
+			plt.xlim((1, np.max(xdata)))
 		
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		if logscale == 'logx':
 			plt.xscale('log')
 		elif logscale == 'logy':
@@ -545,7 +559,7 @@ class CompareModels():
 		elif logscale == 'loglog':
 			plt.xscale('log')
 			plt.yscale('log')
-		plt.legend(legend)
+		#plt.legend(legend)
 		return figure
 
 	def Compare_disperse_data(self, Nconnections, FilLengths, FilPts):
@@ -864,8 +878,11 @@ class CompareModels():
 
 		RelDiff_length = self.Plot_differences_sameX(lengths, distribution, xlabel_len, 'Relative difference of $N(>L)$', self.Legends, logscale='logx')
 
+		#num, bins = np.histogram(FilLengths[0], bins='fd')
+		#binnum = len(bins)
+		binnum = 50
 		# Histogram lengths in bin-line form
-		length_bins = OF.Get_common_bin(FilLengths, binnum=40)
+		length_bins = OF.Get_common_bin(FilLengths, binnum=binnum)
 		length_bin_values = []
 		length_bin_error = []
 		for fillens in FilLengths:
@@ -879,7 +896,7 @@ class CompareModels():
 		LengthHistComparison_digitized_nodot = self.Call_plot_sameX(length_bins, length_bin_values, xlabel_len, '$N$ filaments', self.Legends, style='-')
 
 		# Histogram lengths in bin-line form - Logarithmic x-scale
-		length_bins_logX = OF.Get_common_bin_logX(FilLengths, binnum=40)
+		length_bins_logX = OF.Get_common_bin_logX(FilLengths, binnum=binnum)
 		length_bin_values_logX = []
 		length_bin_error_logX = []
 		for fillens in FilLengths:
@@ -888,6 +905,18 @@ class CompareModels():
 			length_bin_error_logX.append(binstd_)
 		# Plotting, with dots
 		LengthHistComparison_digitized_logX = self.Call_plot_sameX(length_bins_logX, length_bin_values_logX, xlabel_len, '$N$ filaments', self.Legends, style='o-')
+
+
+		Bin_comparison = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		plt.subplot(1,2,1)
+		plt.plot(length_bins, length_bin_values, '-')
+		plt.legend(['Linear scale'])
+		plt.subplot(1,2,2)
+		plt.plot(length_bins_logX, length_bin_values_logX)
+		plt.legend(['Logarithmic scale'])
+		plt.tight_layout()
+
 
 		# Without dots indicating bin location
 		LengthHistComparison_digitized_nodot_logX = self.Call_plot_sameX(length_bins_logX, length_bin_values_logX, xlabel_len, '$N$ filaments', self.Legends, style='-')
@@ -983,9 +1012,29 @@ class CompareModels():
 																Symm_legends, logscale='logx', fill_between=True, diff=True, limit_yaxis=False)
 		Sep_AbsDiff_Number_error_F_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_fofr, Propp_err_lens_fofr, xlabel_len, '$\Delta N$ filaments',
 																fofr_legends, logscale='logx', fill_between=True, diff=True, limit_yaxis=False)
+
+		ConnectedHistComparison_subplot = plt.figure()
+		plt.gcf().set_size_inches((8*self.s, 6*self.s))
+		ax = plt.subplot(1,2,1)
+		connection_bins = OF.Get_common_bin(Nconnections, binnum=40)
+		for i in range(0,5):
+			binval, binsstd = OF.Bin_numbers_common(Nconnections[i], Nconnections[i], connection_bins, std='poisson')
+			plt.plot(connection_bins, binval)
+			plt.fill_between(connection_bins, binval-binstd, binval+binstd, alpha=0.4)
+		plt.legend(Symm_legends)
+		ax2 = plt.subplot(1,2,2, sharey=ax)
+		for i in [0,5,6,7]:
+			binval, binsstd = OF.Bin_numbers_common(Nconnections[i], Nconnections[i], connection_bins, std='poisson')
+			plt.plot(connection_bins, binval)
+			plt.fill_between(connection_bins, binval-binstd, binval+binstd, alpha=0.4)
+		plt.legend(fofr_legends)
+		ConnectedHistComparison_subplot.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
+		ConnectedHistComparison_subplot.text(0.04, 0.55, '$N$ filaments', ha='center', rotation='vertical', fontsize=10)
+
         
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
+			self.savefigure(Bin_comparison, 'Binning_comparison')
 			self.savefigure(ConnectedHistComparison, 'Number_Connected_Filaments')
 			self.savefigure(LengthHistComparison, 'Filament_lengths')
 			self.savefigure(FilLen_massfunc, 'Length_distribution')
@@ -1026,6 +1075,7 @@ class CompareModels():
 			self.savefigure(Sep_AbsDiff_Number_error_F, 'Filament_lengths_absolute_difference_PropErr_cFofr')
 			self.savefigure(Sep_AbsDiff_Number_error_S_logx, 'Filament_lengths_absolute_difference_PropErr_logX_cSymmetron')
 			self.savefigure(Sep_AbsDiff_Number_error_F_logx, 'Filament_lengths_absolute_difference_PropErr_logX_cFofr')
+			self.savefigure(ConnectedHistComparison_subplot, 'Number_Connected_Filaments_subplot')
 		else:
 			print 'Done! No figures saved.'
 
