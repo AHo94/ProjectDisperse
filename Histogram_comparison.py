@@ -1017,8 +1017,12 @@ class CompareModels():
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		ax = plt.subplot(1,2,1)
 		connection_bins = OF.Get_common_bin(Nconnections, binnum=21)
+		bin_val_connhist = []
+		bin_std_connhist = []
 		for i in range(0,5):
 			binval, binstd = OF.Bin_numbers_common(Nconnections[i], Nconnections[i], connection_bins, std='poisson')
+			bin_val_connhist.append(binval)
+			bin_std_connhist.append(binstd)
 			plt.plot(connection_bins, binval)
 			plt.fill_between(connection_bins, binval-binstd, binval+binstd, alpha=0.4)
 		plt.legend(Symm_legends)
@@ -1028,6 +1032,8 @@ class CompareModels():
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for i in [0,5,6,7]:
 			binval, binstd = OF.Bin_numbers_common(Nconnections[i], Nconnections[i], connection_bins, std='poisson')
+			bin_val_connhist.append(binval)
+			bin_std_connhist.append(binstd)
 			plt.plot(connection_bins, binval)
 			plt.fill_between(connection_bins, binval-binstd, binval+binstd, alpha=0.4)
 		plt.legend(fofr_legends)
@@ -1036,7 +1042,11 @@ class CompareModels():
 		ConnectedHistComparison_subplot.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
 		ConnectedHistComparison_subplot.text(0.04, 0.55, '$N$ filaments', ha='center', rotation='vertical', fontsize=10)
 
-        
+		#ConnectedHistComparison_subplot_reldiff = plt.figue()
+		#for i in range(1,5):
+		#	reldiff = OF.relative_deviation_singular(bin_val_connhist[i], bin_val_connhist[0])
+		#	reldiff_err = OF.
+
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			self.savefigure(Bin_comparison, 'Binning_comparison')
