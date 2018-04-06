@@ -16,14 +16,16 @@ import ParticlesPerFilament as PPF
 import PlotFunctions as pf
 
 # Global variables as constants
+Omega_m0 = 0.267
 Mpc = 3.08568025e22
 G_grav = 6.67258e-11
-H_0 = 100*1e3/Mpc   # h/s, h = some constant usually h = 0.7
+h_param = 0.72
+H_0 = h_param*100*1e3/Mpc   # h/s, h = some constant usually h = 0.7
 Solmass = 1.98191*1e30 # kg
 rho_crit = 3.0*H_0**2/(8*np.pi*G_grav)  # kg*h^2/m^3
 Npart_box_total = 512.0**3
 Box_volume = (256.0*Mpc)**3.0/Npart_box_total   # m^3/h^3
-DM_mass = 0.23*rho_crit*Box_volume/Solmass  # Units of M_sun/h
+DM_mass = Omega_m0*rho_crit*Box_volume/Solmass  # Units of M_sun/h
 pre_rho = DM_mass*Solmass/(Mpc**3)
 
 class FilterParticlesAndFilaments():
@@ -894,7 +896,7 @@ class Plot_results():
 			raise ValueError("Threshold data not same length as Accepted particles!")
 		######## Computing relevant data ########
 		s_variable = 0.7
-		binnum = 40
+		binnum = 30
 		NModels = len(Thresholds)
 		#Mass_label = 'Filament mass - [$M_\odot / h$]'
 		#Number_label = '$N$ filaments'
