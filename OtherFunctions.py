@@ -180,7 +180,7 @@ def Bin_numbers_common(X_value, Y_value, bins, std='std'):
 
 def Bin_mean_common(X_value, Y_value, bins):
 	index_bin = np.digitize(X_value, bins)
-	binval = np.array([ np.mean(Y_value[i == index_bin]) for i in range(len(bins))])
+	binval = np.array([ np.nanmean(Y_value[i == index_bin]) for i in range(len(bins))])
 	binstd = np.array([ np.nanstd(Y_value[i == index_bin]) for i in range(len(bins)) ])
 	Number_points = np.array([len(Y_value[i == index_bin]) for i in range(len(bins))]).astype(np.float32)
 	return binval, binstd/np.sqrt(Number_points) 		# FIXME? Divide by N or sqrt(N)?
@@ -188,7 +188,7 @@ def Bin_mean_common(X_value, Y_value, bins):
 def Mean_per_bin(bins, bin_values):
 	Npts = len(bins)
 	std = np.array([np.nanstd(bin_values[:,i]) for i in range(Npts)])
-	Mean = np.array([np.mean(bin_values[:,i]) for i in range(Npts)])
+	Mean = np.array([np.nanmean(bin_values[:,i]) for i in range(Npts)])
 	Number_points = np.array([len(bin_values[:,i]) for i in range(Npts)])
 	return Mean, std/Number_points
 
