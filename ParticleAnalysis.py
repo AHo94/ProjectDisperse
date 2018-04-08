@@ -93,16 +93,18 @@ class FilterParticlesAndFilaments():
 			fillen = OF.Get_filament_length(Filament_3DPos[i])
 			self.FilamentLength.append(fillen)
 		self.FilamentLength = np.asarray(self.FilamentLength)
-
-		# Reads particle data from Gadget
-		MaskDM = np.array([0,0,0,0,0,0])*256.0
-		GadgetInstance = RGF.Read_Gadget_file([0,0,0],MaskDM)
-		PartPosX, PartPosY, PartPosZ, PartID, HistDM, BinXEDM, BinYEDM, KDTREE = GadgetInstance.Get_particles(model, includeKDTree=False)
-		Part_velx, Part_vely, Part_velz = GadgetInstance.Get_velocities()
 		
 		self.Small_filaments = self.FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
 		
-		self.ParticlePos, self.ParticleVel = OF.Get_3D(PartPosX, PartPosY, PartPosZ, Part_velx, Part_vely, Part_velz)
+		# Reads particle data from Gadget
+		if model == 'symm_C':
+			self.ParticlePos, self.ParticleVel = RGF.read_file_ascii_inclVel('/mn/stornext/d5/aleh/SymmC_data/SymmC_particles.solve')
+		else:
+			MaskDM = np.array([0,0,0,0,0,0])*256.0
+			GadgetInstance = RGF.Read_Gadget_file([0,0,0],MaskDM)
+			PartPosX, PartPosY, PartPosZ, PartID, HistDM, BinXEDM, BinYEDM, KDTREE = GadgetInstance.Get_particles(model, includeKDTree=False)
+			Part_velx, Part_vely, Part_velz = GadgetInstance.Get_velocities()
+			self.ParticlePos, self.ParticleVel = OF.Get_3D(PartPosX, PartPosY, PartPosZ, Part_velx, Part_vely, Part_velz)
 
 	def Get_filament_length(self):
 		""" Only reads and returns filament lengths of a given model """
@@ -441,8 +443,8 @@ class FilterParticlesAndFilaments():
 		3) If min(density/rho_crit) > threshold, the filament must be recomputed with a larger box expand
 		Current threshold = 10
 		"""
-		smallest_dist = np.array([np.min(particle_distances[j]) for j in range(len(particle_distances))])
-		largest_dist = np.array([np.max(particle_distances[j]) for j in range(len(particle_distances))])
+		#smallest_dist = np.array([np.min(particle_distances[j]) for j in range(len(particle_distances))])
+		#largest_dist = np.array([np.max(particle_distances[j]) for j in range(len(particle_distances))])
 		
 		larger_threshold = []
 		Filtered_filaments = []
@@ -450,7 +452,6 @@ class FilterParticlesAndFilaments():
 		
 		for i in range(len(particle_distances)):
 			distances_sorted = np.sort(particle_distances[i])
-			average_densities = []
 			pre_volume = np.pi*fillen[i]
 			Noise_filament = 0
 			NumParts = len(distances_sorted)
@@ -758,6 +759,30 @@ class FilterParticlesAndFilaments():
 			np.save(cachefile_Ospeed, Orthogonal_speeds)
 			np.save(cachefile_Pspeed, Parallel_speeds)
 		return All_speeds, Orthogonal_speeds, Parallel_speeds
+
+	def Compute_density_profile(self, distances, fillen):
+		""" Computes density of the filament based on the distance input """
+		cachedir_density = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/DensityProfiles/'
+		if not os.path.isdir(cachedir_density):
+			os.makedirs(cachedir_density)
+		
+		Common_filename =  self.model + '_' + str(self.npart) + 'part_nsig' + str(self.sigma)+ '_BoxExpand' + str(6) + '.npy'
+		cachefile_density = cachedir_density + Common_filename
+		if os.path.isfile(cachefile_density):
+			Density_profiles = np.load(cachefile_density)
+		else:		
+			Density_profiles = []
+			for i in range(len(distances)):
+				distances_sorted = np.sort(distances[i])
+				pre_volume = np.pi*fillen[i]
+				NumParts = len(distances_sorted)
+				N_smallR = np.linspace(1, NumParts, NumParts)
+				Volumes = pre_volume*distances_sorted**2
+				average_densities = pre_rho*N_smallR/Volumes
+				Density_profiles.append(average_densities)
+			Density_profiles = np.asarray(Density_profiles)
+			np.save(cachefile_density, Density_profiles)
+		return Density_profiles
 
 
 class Plot_results():
@@ -1935,6 +1960,7 @@ if __name__ == '__main__':
 	All_speed_list = []
 	Par_speed_list = []
 	Orth_speed_list = []
+	Density_prof = []
 
 	def Append_data(Fid, D_thres,  OK_part, OK_dist, modelname):
 		""" Appends common data to a common list """
@@ -1952,19 +1978,25 @@ if __name__ == '__main__':
 	for p_model in Models_to_be_run:
 		#if p_model == 'symmB':
 		#		break
-		if p_model == 'symmC':
-			continue
-		else:
-			Instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
-			OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
-			#Filament_lengths.append(Instance.Get_filament_length()[OK_fils])
-			Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
-			Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
-			Append_data_speeds(Speeds, Ospeed, Pspeed)
-			Filament_lengths.append(Instance.Get_filament_length()[OK_fils])
+		#if p_model == 'symmC':
+		#	continue
+		#else:
+		Instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
+		OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
+		#Filament_lengths.append(Instance.Get_filament_length()[OK_fils])
+		Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
+		Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
+		Append_data_speeds(Speeds, Ospeed, Pspeed)
+		Fillens = Instance.Get_filament_length()[OK_fils]
+		Filament_lengths.append(Fillens)
+		#dentime = time.time()
+		Density_prof.append(Instance.Compute_density_profile(OK_distances, Fillens))
+		#print time.time() - dentime, 's'
+		#print Density_prof[0]
+		#print len(Density_prof[0])
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
 	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
 	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
-	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
 	Plot_instance.Other_profiles()
