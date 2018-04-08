@@ -1075,7 +1075,7 @@ class Plot_results():
 		RelDiff_mass_fofr = plt.figure()
 		#plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
 		for i in range(4, NModels-1):
-			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-2])
+			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-3])
 		plt.legend(self.fofr_legends[1:])
 		plt.xlabel(Mass_label)
 		plt.ylabel('$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$')
@@ -1095,9 +1095,9 @@ class Plot_results():
 		#plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)))
 		#plt.fill_between(Common_bin_mass, np.zeros(len(Common_bin_mass)), np.zeros(len(Common_bin_mass)))
 		for i in (Fofr_only-1):
-			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-2])
+			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-3])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i],
-							 alpha=0.3, facecolor=self.Plot_colors_fofr[i-2])
+							 alpha=0.3, facecolor=self.Plot_colors_fofr[i-3])
 		plt.legend(self.fofr_legends[1:])
 		plt.xlabel(Mass_label)
 		plt.ylabel('$(M_i - M_{\Lambda CDM})/M_{\Lambda CDM}$')
@@ -1139,9 +1139,9 @@ class Plot_results():
 		ThickVsLen_RelErr_fofr = plt.figure()
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		for i in (Fofr_only-1):
-			plt.plot(Common_bin_length, RelDiff_mean_thickness[i], alpha=0.7, color=self.Plot_colors_fofr[i-2])
+			plt.plot(Common_bin_length, RelDiff_mean_thickness[i], alpha=0.7, color=self.Plot_colors_fofr[i-3])
 			plt.fill_between(Common_bin_length, RelDiff_mean_thickness[i]-Prop_err_mean_thickness[i], RelDiff_mean_thickness[i]+Prop_err_mean_thickness[i],
-							 alpha=0.4, facecolor=self.Plot_colors_fofr[i-2])
+							 alpha=0.4, facecolor=self.Plot_colors_fofr[i-3])
 		plt.legend(self.fofr_legends[1:])
 		plt.xlabel(Length_label)
 		plt.ylabel('$(T_i - T_{\Lambda CDM})/T_{\Lambda CDM}$')
@@ -1166,9 +1166,9 @@ class Plot_results():
 		MassVsLen_RelErr_fofr = plt.figure()
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		for i in (Fofr_only-1):
-			plt.plot(Common_bin_length, RelDiff_mean_mass[i], alpha=0.7, color=self.Plot_colors_fofr[i-2])
+			plt.plot(Common_bin_length, RelDiff_mean_mass[i], alpha=0.7, color=self.Plot_colors_fofr[i-3])
 			plt.fill_between(Common_bin_length, RelDiff_mean_mass[i]-Prop_err_mean_mass[i], RelDiff_mean_mass[i]+Prop_err_mean_mass[i],
-							 alpha=0.4, facecolor=self.Plot_colors_fofr[i-2])
+							 alpha=0.4, facecolor=self.Plot_colors_fofr[i-3])
 		plt.legend(self.fofr_legends[1:])
 		plt.xlabel(Length_label)
 		plt.ylabel('$(M_i - M_{\Lambda CDM})/M_{\Lambda CDM}$')
