@@ -184,3 +184,24 @@ class Read_Gadget_file():
 			vel_Y = self.PartVel[:,1]
 			vel_Z = self.PartVel[:,2]
 			return vel_X, vel_Y, vel_Z
+
+
+def read_file_ascii_inclVel(filedir):
+	print("Reading .solve file...")
+	PartPos = []
+	PartVel = []
+	timer = time.time()
+	datafiles = open(filedir, 'r')
+	skipfirst = 0
+	for line in datafiles:
+		data_sets = line.split()
+		if skipfirst:
+			data_sets = line.split()
+			PartPos.append(data_sets[0:3])
+			PartVel.append(data_sets[3:6])
+		else:
+			skipfirst = 1
+	print("Time took reading ascii file:", time.time() - timer, "s")
+	PartPos = np.asarray(PartPos).astype(np.float32)
+	PartVel = np.asarray(PartVel).astype(np.float32)
+	return PartPos*256.0, PartVel
