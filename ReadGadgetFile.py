@@ -2,6 +2,7 @@ import numpy as np
 from scipy import spatial
 import os
 import cPickle as pickle
+import time
 class Read_Gadget_file():
 	def __init__(self, mask_check, boundary_list):
 		self.Mask_check_list = mask_check
