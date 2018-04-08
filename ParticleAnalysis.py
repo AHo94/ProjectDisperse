@@ -803,7 +803,7 @@ class Plot_results():
 		self.All_legends = []
 		self.Symm_legends = []
 		self.fofr_legends = []
-		self.Plot_colors_symm = ['b', 'orange', 'g', 'r']
+		self.Plot_colors_symm = ['b', 'orange', 'g', 'r', 'olive']
 		self.Plot_colors_fofr = ['b', 'purple', 'y', 'k']
 		self.Get_legends(models)
 
@@ -942,10 +942,10 @@ class Plot_results():
 		Length_label = '$L$ - [Mpc/h]'
 		Mean_Mass_label = r'$\bar{M}$ - [Mpc/h]'
 		Mean_Thickness_label = r'$\bar{T}$ - [Mpc/h]'
-		SymmLCDM = np.array([0,1,2,3])
-		FofrLCDM = np.array([0,4,5,6])
-		Symm_only = np.array([1,2,3])
-		Fofr_only = np.array([4,5,6])
+		SymmLCDM = np.array([0,1,2,3,4])
+		FofrLCDM = np.array([0,5,6,7])
+		Symm_only = np.array([1,2,3,4])
+		Fofr_only = np.array([5,6,7])
 		self.Thresholds = np.array(Thresholds)
 		self.FilLengths = np.array(FilLengths)
 		#### Computes masses of the filament. Done for all models
@@ -1016,6 +1016,7 @@ class Plot_results():
 		When symm C is included, ranges should be (not including LCDM):
 		Symmetron: range(1, 5)  --- Currently range(0,4)
 		Fofr: range(5,NModels) --- Currently range(4, NModels) 
+		AS OF 08.04.2018 --- Above problem should be fixed
 		!!!!!!!!!
 		"""
 		######## Plotting ########
@@ -1065,7 +1066,7 @@ class Plot_results():
 		### Relative difference of lcdm + symmetron
 		RelDiff_mass_Symm = plt.figure()
 		#plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
-		for i in range(3):
+		for i in range(4):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_symm[i+1])
 		plt.legend(self.Symm_legends[1:])
 		plt.xlabel(Mass_label)
@@ -1073,7 +1074,7 @@ class Plot_results():
 		### Relative difference of lcdm + f(R)
 		RelDiff_mass_fofr = plt.figure()
 		#plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
-		for i in range(3, NModels-1):
+		for i in range(4, NModels-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-2])
 		plt.legend(self.fofr_legends[1:])
 		plt.xlabel(Mass_label)
@@ -1295,14 +1296,14 @@ class Plot_results():
 			Reldiff_label_avgspeed = r'$(\langle v_{\parallel,i} \rangle - \langle v_{\parallel,\Lambda CDM} \rangle)/\langle v_{\parallel,\Lambda CDM} \rangle$'
 
 		
-		SymmLCDM = np.array([0,1,2,3])
-		FofrLCDM = np.array([0,4,5,6])
-		Symm_only = np.array([1,2,3])
-		Fofr_only = np.array([4,5,6])
+		SymmLCDM = np.array([0,1,2,3,4])
+		FofrLCDM = np.array([0,5,6,7])
+		Symm_only = np.array([1,2,3,4])
+		Fofr_only = np.array([5,6,7])
 		All_speeds = np.asarray(All_speeds)
-		Symm_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_D']
+		Symm_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_C', 'Symm_D']
 		Fofr_filenames = ['LCDM', 'fofr4', 'fofr5', 'fofr6']
-		All_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_D', 'fofr4', 'fofr5', 'fofr6']
+		All_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_C', 'Symm_D', 'fofr4', 'fofr5', 'fofr6']
 		#### Average speed of all filaments as a function of 
 		Normalized_part_distances = []
 		Distance_limits = []
@@ -1810,13 +1811,13 @@ class Plot_results():
 
 		Mass_N_label = '$N(>M)$'
 		Thickness_N_label = '$N(>T)$'
-		SymmLCDM = np.array([0,1,2,3])
-		FofrLCDM = np.array([0,4,5,6])
-		Symm_only = np.array([1,2,3])
-		Fofr_only = np.array([4,5,6])
-		Symm_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_D']
+		SymmLCDM = np.array([0,1,2,3,4])
+		FofrLCDM = np.array([0,5,6,7])
+		Symm_only = np.array([1,2,3,4])
+		Fofr_only = np.array([5,6,7])
+		Symm_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_C', 'Symm_D']
 		Fofr_filenames = ['LCDM', 'fofr4', 'fofr5', 'fofr6']
-		All_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_D', 'fofr4', 'fofr5', 'fofr6']
+		All_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_C', 'Symm_D', 'fofr4', 'fofr5', 'fofr6']
 		
 		#### Number of filaments larger than a given mass N(>M). Also includes relative differences with LCDM as base model
 		Mass_values = OF.Get_common_bin_logX(self.Filament_masses, binnum=Number_distribution_points)
