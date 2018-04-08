@@ -317,6 +317,10 @@ class CompareModels():
 
 		self.s = 0.7 	# For figure rescaling etc. Change as you wish.
 
+		self.Plot_colors_symm = ['b', 'orange', 'g', 'r', 'olive']
+		self.Plot_colors_fofr = ['b', 'purple', 'y', 'k']
+		self.Plot_colors_all = ['b', 'orange', 'g', 'r', 'olive', 'purple', 'y', 'k']
+
 	def relative_deviation(self, data, index):
 		""" 
 		Computes relative deviation of a given physical quantity.
@@ -396,7 +400,7 @@ class CompareModels():
 		plt.title('') if title == 'None' else plt.title(title)
 		return figure
 
-	def Call_plot_sameX(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None', Lengths=True):
+	def Call_plot_sameX(self, xdata, ydata, xlabel, ylabel, legend, colors, logscale='normal', style='-', title='None', Lengths=True):
 		""" 
 		Calls plotting, xdata to be common lengths/bins for all ydata
 		Extra parameter logscal determines the plotting method
@@ -409,16 +413,16 @@ class CompareModels():
 		ax = plt.axes()
 		if logscale == 'normal':
 			for i in range(len(ydata)):
-				plt.plot(xdata, ydata[i], style, label=legend[i])
+				plt.plot(xdata, ydata[i], style, label=legend[i], color=colors[i])
 		elif logscale == 'logx':
 			for i in range(len(ydata)):
-				plt.semilogx(xdata, ydata[i], style, label=legend[i])
+				plt.semilogx(xdata, ydata[i], style, label=legend[i], color=colors[i])
 		elif logscale == 'logy':
 			for i in range(len(ydata)):
-				plt.semilogy(xdata, ydata[i], style, label=legend[i])
+				plt.semilogy(xdata, ydata[i], style, label=legend[i], color=colors[i])
 		elif logscale == 'loglog':
 			for i in range(len(ydata)):
-				plt.loglog(xdata, ydata[i], style, label=legend[i])
+				plt.loglog(xdata, ydata[i], style, label=legend[i], color=colors[i])
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
 		#plt.legend(legend)
@@ -476,7 +480,7 @@ class CompareModels():
 		plt.title('') if title == 'None' else plt.title(title)
 		return figure
 
-	def Plot_differences_sameX(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None', diff='rel', Lengths=True):
+	def Plot_differences_sameX(self, xdata, ydata, xlabel, ylabel, legend, colors, logscale='normal', style='-', title='None', diff='rel', Lengths=True):
 		""" 
 		Plots relative or absolute differences. Base data assumed to be the first element of xdata and ydata 
 		Xdata assumed to be common for all ydata.
@@ -497,21 +501,21 @@ class CompareModels():
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		ax = plt.axes()
 		if logscale == 'normal':
-			plt.plot(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
+			#plt.plot(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
-				plt.plot(xdata, deltas[i-1], style, label=legend[i])
+				plt.plot(xdata, deltas[i-1], style, label=legend[i-1], color=colors[i-1])
 		elif logscale == 'logx':
-			plt.semilogx(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
+			#plt.semilogx(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
-				plt.semilogx(xdata, deltas[i-1], style, label=legend[i])
+				plt.semilogx(xdata, deltas[i-1], style, label=legend[i-1], color=colors[i-1])
 		elif logscale == 'logy':
-			plt.semilogy(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
+			#plt.semilogy(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
-				plt.semilogy(xdata, deltas[i-1], style, label=legend[i])
+				plt.semilogy(xdata, deltas[i-1], style, label=legend[i-1], color=colors[i-1])
 		elif logscale == 'loglog':
-			plt.loglog(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
+			#plt.loglog(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
-				plt.loglog(xdata, deltas[i-1], style, label=legend[i])
+				plt.loglog(xdata, deltas[i-1], style, label=legend[i-1], color=colors[i-1])
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
 		#plt.legend(legend)
@@ -522,7 +526,7 @@ class CompareModels():
 
 		return figure
 
-	def Plot_errobar_sameX(self, xdata, ydata, error, xlabel, ylabel, legend, logscale='normal', fill_between=False, diff=False, limit_yaxis=True, Lengths=True):
+	def Plot_errobar_sameX(self, xdata, ydata, error, xlabel, ylabel, legend, colors, logscale='normal', fill_between=False, diff=False, limit_yaxis=True, Lengths=True):
 		if len(ydata) != len(error):
 			raise ValueError("ydata and error data not of same length!")
 		self.Check_ok_parameters(logscale)
@@ -532,19 +536,19 @@ class CompareModels():
 		figure = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		ax = plt.axes()
-		if diff:
-			plt.plot(xdata, np.zeros(len(xdata)), label='$\Lambda$CDM')
-			if fill_between:
-				plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0)
+		#if diff:
+			#plt.plot(xdata, np.zeros(len(xdata)), label='$\Lambda$CDM')
+		#	if fill_between:
+		#		plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0)
 		if fill_between:
 			for i in range(len(ydata)):
-				plt.plot(xdata, ydata[i], label=legend[i])
-				plt.fill_between(xdata, ydata[i]-error[i], ydata[i]+error[i], alpha=0.3)
+				plt.plot(xdata, ydata[i], label=legend[i], color=colors[i])
+				plt.fill_between(xdata, ydata[i]-error[i], ydata[i]+error[i], alpha=0.3, facecolor=colors[i])
 			if limit_yaxis:
 				plt.ylim((-1.0, 1))
 		else:
 			for i in range(len(ydata)):
-				plt.errorbar(xdata, ydata[i], error[i], label=legend[i])
+				plt.errorbar(xdata, ydata[i], error[i], label=legend[i], color=colors[i])
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
 
@@ -857,18 +861,18 @@ class CompareModels():
 			err_distribution = np.array([np.sqrt(number) for number in distribution_list])
 			distribution_error.append(err_distribution)
 
-		FilLen_massfunc = self.Call_plot_sameX(lengths, distribution, xlabel_len, '$\mathregular{N(>L)}$', self.Legends, logscale='logx', style='-')
+		FilLen_massfunc = self.Call_plot_sameX(lengths, distribution, xlabel_len, '$\mathregular{N(>L)}$', self.Legends, self.Plot_colors_all, logscale='logx', style='-')
 
 		# Loglog scale of the number filaments larger than a given length
-		FilLen_massfunc_loglog = self.Call_plot_sameX(lengths, distribution, xlabel_len, '$\mathregular{N(>L)}$', self.Legends, logscale='loglog')
+		FilLen_massfunc_loglog = self.Call_plot_sameX(lengths, distribution, xlabel_len, '$\mathregular{N(>L)}$', self.Legends, self.Plot_colors_all, logscale='loglog')
 		
 		# Density of the number of filaments larger than a given length. 
 		# Divided by box volume of particles (256^3), can use box size of disperse?
-		FilLen_massfunc_density = self.Call_plot_sameX(lengths, np.array(distribution)/(256.0**3), xlabel_len, '$\mathregular{N(>L)}/V$', self.Legends, logscale='logx')
+		FilLen_massfunc_density = self.Call_plot_sameX(lengths, np.array(distribution)/(256.0**3), xlabel_len, '$\mathregular{N(>L)}/V$', self.Legends, self.Plot_colors_all, logscale='logx')
 	
 		# Density of the number of filaments larger than a given length. Loglogscale
 		# Divided by box volume of particles (256^3), can use box size of disperse?
-		FilLen_massfunc_density_loglog = self.Call_plot_sameX(lengths, np.array(distribution)/(256.0**3), xlabel_len, '$\mathregular{N(>L)}/V$', self.Legends, logscale='loglog')
+		FilLen_massfunc_density_loglog = self.Call_plot_sameX(lengths, np.array(distribution)/(256.0**3), xlabel_len, '$\mathregular{N(>L)}/V$', self.Legends, self.Plot_colors_all, logscale='loglog')
 
 		# Relative difference of the lengths. Base model is LCDM.
 		Deltas = []
@@ -876,11 +880,11 @@ class CompareModels():
 			Deltas.append(self.relative_deviation(np.array(distribution), i))
 		Deltas = np.array(Deltas)
 
-		RelDiff_length = self.Plot_differences_sameX(lengths, distribution, xlabel_len, 'Relative difference of $N(>L)$', self.Legends, logscale='logx')
+		RelDiff_length = self.Plot_differences_sameX(lengths, distribution, xlabel_len, 'Relative difference of $N(>L)$', self.Legends[1:], self.Plot_colors_all[1:], logscale='logx')
 
 		#num, bins = np.histogram(FilLengths[0], bins='fd')
 		#binnum = len(bins)
-		binnum = 50
+		binnum = 30
 		# Histogram lengths in bin-line form
 		length_bins = OF.Get_common_bin(FilLengths, binnum=binnum)
 		length_bin_values = []
@@ -890,10 +894,10 @@ class CompareModels():
 			length_bin_values.append(binval_)
 			length_bin_error.append(binstd_)
 		# With dots indicating bin location
-		LengthHistComparison_digitized = self.Call_plot_sameX(length_bins, length_bin_values, xlabel_len, '$N$ filaments', self.Legends, style='o-')
+		LengthHistComparison_digitized = self.Call_plot_sameX(length_bins, length_bin_values, xlabel_len, '$N$ filaments', self.Legends, self.Plot_colors_all, style='o-')
 
 		# Without dots indicating bin location
-		LengthHistComparison_digitized_nodot = self.Call_plot_sameX(length_bins, length_bin_values, xlabel_len, '$N$ filaments', self.Legends, style='-')
+		LengthHistComparison_digitized_nodot = self.Call_plot_sameX(length_bins, length_bin_values, xlabel_len, '$N$ filaments', self.Legends, self.Plot_colors_all, style='-')
 
 		# Histogram lengths in bin-line form - Logarithmic x-scale
 		length_bins_logX = OF.Get_common_bin_logX(FilLengths, binnum=binnum)
@@ -904,7 +908,7 @@ class CompareModels():
 			length_bin_values_logX.append(binval_)
 			length_bin_error_logX.append(binstd_)
 		# Plotting, with dots
-		LengthHistComparison_digitized_logX = self.Call_plot_sameX(length_bins_logX, length_bin_values_logX, xlabel_len, '$N$ filaments', self.Legends, style='o-')
+		LengthHistComparison_digitized_logX = self.Call_plot_sameX(length_bins_logX, length_bin_values_logX, xlabel_len, '$N$ filaments', self.Legends, self.Plot_colors_all, style='o-')
 
 
 		Bin_comparison = plt.figure()
@@ -919,15 +923,15 @@ class CompareModels():
 
 
 		# Without dots indicating bin location
-		LengthHistComparison_digitized_nodot_logX = self.Call_plot_sameX(length_bins_logX, length_bin_values_logX, xlabel_len, '$N$ filaments', self.Legends, style='-')
+		LengthHistComparison_digitized_nodot_logX = self.Call_plot_sameX(length_bins_logX, length_bin_values_logX, xlabel_len, '$N$ filaments', self.Legends, self.Plot_colors_all, style='-')
 
 		# Errorbar of the lengths
 		LengthHistComparison_erorbar_logX = self.Plot_errobar_sameX(length_bins_logX, length_bin_values_logX, length_bin_error_logX,
-																	 xlabel_len, '$N$ filaments', self.Legends)
+																	 xlabel_len, '$N$ filaments', self.Legends, self.Plot_colors_all)
 		
 		# Without dots indicating bin location, LOGLOG scale
 		LengthHistComparison_digitized_nodot_logX_loglog = self.Call_plot_sameX(length_bins_logX, length_bin_values_logX, xlabel_len, '$N$ filaments',
-																		  self.Legends, logscale='loglog', style='-')
+																		  self.Legends, self.Plot_colors_all, logscale='loglog', style='-')
 
 		# Cumulative distribution of the lengths
 		cumulative_list = []
@@ -935,67 +939,112 @@ class CompareModels():
 			Cumulative = np.cumsum(length_bin_values[i], dtype=np.float32)
 			cumulative_list.append(Cumulative)
 
-		Cumulative_plot = self.Call_plot_sameX(length_bins, cumulative_list, xlabel_len, 'Number of filaments', self.Legends, title='Cumulative distribution')
+		Cumulative_plot = self.Call_plot_sameX(length_bins, cumulative_list, xlabel_len, 'Number of filaments', self.Legends, self.Plot_colors_all, title='Cumulative distribution')
 
 		# Relative difference of N(>L) using the cumulative data
 		Cumulative_distribution = np.array([len(FilLengths[i]) - cumulative_list[i] for i in range(len(FilLengths))])
-		RelDiff_cumulative_reverse = self.Plot_differences_sameX(length_bins, Cumulative_distribution, xlabel_len, '$\mathregular{N(>L)}$', self.Legends)
+		RelDiff_cumulative_reverse = self.Plot_differences_sameX(length_bins, Cumulative_distribution, xlabel_len, '$\mathregular{N(>L)}$', self.Legends[1:], self.Plot_colors_all[1:])
 
 		# Computes propagated error on the relative difference of N(>L)
 		Propagated_errors = np.array([self.Propagate_error_relNum(distribution[0], distribution[i], distribution_error[0], distribution_error[i]) for i in range(1,len(FilLengths))])
-		Prop_error_reldiff_N = self.Plot_errobar_sameX(lengths, Deltas, Propagated_errors, xlabel_len, 'Relative difference of $\mathregular{N(>L)}$', self.Legends, fill_between=True, diff=True)
+		Prop_error_reldiff_N = self.Plot_errobar_sameX(lengths, Deltas, Propagated_errors, xlabel_len, 'Relative difference of $\mathregular{N(>L)}$',
+													 self.Legends[1:], self.Plot_colors_all[1:], fill_between=True, diff=True)
 
+		RelDiff_num = [OF.relative_deviation_singular(length_bin_values_logX[0], length_bin_values_logX[i]) for i in range(1, len(FilLengths))]
+		Prop_err_numLength = [OF.Propagate_error_reldiff(length_bin_values_logX[0], length_bin_values_logX[i], length_bin_error_logX[0], 
+														length_bin_error_logX[i]) for i in range(1, len(FilLengths))]
 		#### SEPARATING SYMMMETRON AND f(R) MODELS. Data includes LCDM as default
-		# Length binned histogram, nodot
 		Symm_legends = ['$\mathregular{\Lambda}$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD']
 		fofr_legends = ['$\mathregular{\Lambda}$CDM', 'fofr4', 'fofr5', 'fofr6']
+		Symm_legends_only = ['SymmA', 'SymmB', 'SymmC', 'SymmD']
+		fofr_legends_only = ['fofr4', 'fofr5', 'fofr6']
+		
 		Symm_length_values = length_bin_values_logX[0:5]
 		fofr_length_values = np.array([length_bin_values_logX[i] for i in [0,5,6,7]])
-		Sep_FilLengths_S = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments', Symm_legends, style='-')
-		Sep_FilLengths_F = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments', fofr_legends, style='-')
 
+		Symm_colors_only = self.Plot_colors_symm[1:]
+		fofr_colors_only = self.Plot_colors_fofr[1:]
+		# Length binned histogram, nodot
+		Sep_FilLengths_S = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
+												Symm_legends, self.Plot_colors_symm, style='-')
+		Sep_FilLengths_F = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
+												fofr_legends, self.Plot_colors_fofr, style='-')
+
+		Sep_FilLengths_S_logx = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
+													 Symm_legends, self.Plot_colors_symm, style='-', logscale='logx')
+		Sep_FilLengths_F_logx = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
+													 fofr_legends, self.Plot_colors_fofr, style='-', logscale='logx')
+		
+		Sep_FilLengths_S_loglog = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
+													 Symm_legends, self.Plot_colors_symm, style='-', logscale='loglog')
+		Sep_FilLengths_F_loglog = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
+													 fofr_legends, self.Plot_colors_fofr, style='-', logscale='loglog')
+		# Relative difference of N filaments, with propagated errors
+		Set_FilLengths_properr_S_logx = self.Plot_errobar_sameX(length_bins_logX, RelDiff_num[0:4], Prop_err_numLength[0:4], xlabel_len, 
+															'$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$', Symm_legends_only, Symm_colors_only, fill_between=True)
+		Set_FilLengths_properr_F_logx = self.Plot_errobar_sameX(length_bins_logX, RelDiff_num[4:], Prop_err_numLength[4:], xlabel_len, 
+															'$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$', fofr_legends_only, fofr_colors_only, fill_between=True)
+		
 		# 'massfunction' of lengths
 		Distribution_symm = distribution[0:5]
 		Distribution_fofr = np.array([distribution[i] for i in [0,5,6,7]])
 		Lengths_symm = lengths[0:5]
 		Lengths_fofr = np.array([lengths[i] for i in [0,5,6,7]])
 
-		Distribution_lengths_S = self.Call_plot_sameX(lengths, Distribution_symm, xlabel_len, '$\mathregular{N(>L)}$', Symm_legends, logscale='logx')
-		Distribution_lengths_F = self.Call_plot_sameX(lengths, Distribution_fofr, xlabel_len, '$\mathregular{N(>L)}$', fofr_legends, logscale='logx')
-		Distribution_lengths_S_loglog = self.Call_plot_sameX(lengths, Distribution_symm, xlabel_len, '$\mathregular{N(>L)}$', Symm_legends, logscale='loglog')
-		Distribution_lengths_F_loglog = self.Call_plot_sameX(lengths, Distribution_fofr, xlabel_len, '$\mathregular{N(>L)}$', fofr_legends, logscale='loglog')
+		Distribution_lengths_S = self.Call_plot_sameX(lengths, Distribution_symm, xlabel_len, '$\mathregular{N(>L)}$', Symm_legends,
+													 self.Plot_colors_symm, logscale='logx')
+		Distribution_lengths_F = self.Call_plot_sameX(lengths, Distribution_fofr, xlabel_len, '$\mathregular{N(>L)}$', fofr_legends,
+													 self.Plot_colors_fofr, logscale='logx')
+		Distribution_lengths_S_loglog = self.Call_plot_sameX(lengths, Distribution_symm, xlabel_len, '$\mathregular{N(>L)}$', Symm_legends,
+															 self.Plot_colors_symm, logscale='loglog')
+		Distribution_lengths_F_loglog = self.Call_plot_sameX(lengths, Distribution_fofr, xlabel_len, '$\mathregular{N(>L)}$', fofr_legends,
+															 self.Plot_colors_fofr, logscale='loglog')
 
 		# Relative differences
-		Sep_RelDiff_length_S = self.Plot_differences_sameX(lengths, Distribution_symm, xlabel_len, 'Relative difference of $N(>L)$', Symm_legends, logscale='logx')
-		Sep_RelDiff_length_F = self.Plot_differences_sameX(lengths, Distribution_fofr, xlabel_len, 'Relative difference of $N(>L)$', fofr_legends, logscale='logx')
+		Sep_RelDiff_length_S = self.Plot_differences_sameX(lengths, Distribution_symm, xlabel_len, 'Relative difference of $N(>L)$', Symm_legends_only,
+														 Symm_colors_only, logscale='logx')
+		Sep_RelDiff_length_F = self.Plot_differences_sameX(lengths, Distribution_fofr, xlabel_len, 'Relative difference of $N(>L)$', fofr_legends_only,
+														 fofr_colors_only, logscale='logx')
 
 		# Absolute Differences in Number of filaments and not N(>L)
-		Sep_AbsDiff_Number_S = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, '$\Delta N$ filaments', Symm_legends, diff='abs')
-		Sep_AbsDiff_Number_F = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, '$\Delta N$ filaments', fofr_legends, diff='abs')
+		Sep_AbsDiff_Number_S = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, '$\Delta N$ filaments', Symm_legends_only,
+															Symm_colors_only, diff='abs')
+		Sep_AbsDiff_Number_F = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, '$\Delta N$ filaments', fofr_legends_only,
+															fofr_colors_only, diff='abs')
 		
 		# Relative differences in Number of filaments and not N(>L) 
-		Sep_RelDiff_Number_S = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', Symm_legends)
-		Sep_RelDiff_Number_F = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', fofr_legends)
+		Sep_RelDiff_Number_S = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
+														 Symm_legends_only, Symm_colors_only)
+		Sep_RelDiff_Number_F = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
+														 fofr_legends_only, fofr_colors_only)
 
 		# Absolute differences in Number of filaments and not N(>L). Logscale x
-		Sep_AbsDiff_Number_S_logx = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, '$\Delta N$ filaments', Symm_legends, logscale='logx', diff='abs')
-		Sep_AbsDiff_Number_F_logx = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, '$\Delta N$ filaments', fofr_legends, logscale='logx', diff='abs')
+		Sep_AbsDiff_Number_S_logx = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, '$\Delta N$ filaments', Symm_legends_only,
+																Symm_colors_only, logscale='logx', diff='abs')
+		Sep_AbsDiff_Number_F_logx = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, '$\Delta N$ filaments', fofr_legends_only,
+																fofr_colors_only, logscale='logx', diff='abs')
 		
 		# Relative differences in Number of filaments and not N(>L). Logscale x
-		Sep_RelDiff_Number_S_logx = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', Symm_legends, logscale='logx')			
-		Sep_RelDiff_Number_F_logx = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', fofr_legends, logscale='logx')
+		Sep_RelDiff_Number_S_logx = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
+																Symm_legends_only, Symm_colors_only, logscale='logx')			
+		Sep_RelDiff_Number_F_logx = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
+																fofr_legends_only, Symm_colors_only, logscale='logx')
 
 		# Relative differences in Number of filaments and not N(>L). LogLog scale
-		Sep_RelDiff_Number_S_loglog = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', Symm_legends, logscale='loglog')			
-		Sep_RelDiff_Number_F_loglog = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)', fofr_legends, logscale='loglog')        
+		Sep_RelDiff_Number_S_loglog = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
+																 Symm_legends_only, Symm_colors_only, logscale='loglog')			
+		Sep_RelDiff_Number_F_loglog = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
+																 fofr_legends_only, fofr_colors_only, logscale='loglog')        
 
 		# Relative differences of N(>L) with propagated errors
 		Prop_err_symm = Propagated_errors[0:4]
 		Prop_err_fofr = Propagated_errors[4:]
 		Deltas_symm = Deltas[0:4]
 		Deltas_fofr = Deltas[4:]
-		Sep_RelDiff_length_PropErr_S = self.Plot_errobar_sameX(lengths, Deltas_symm, Prop_err_symm, xlabel_len, 'Relative difference of $N(>L)$', Symm_legends, fill_between=True, diff=True)
-		Sep_RelDiff_length_PropErr_F = self.Plot_errobar_sameX(lengths, Deltas_fofr, Prop_err_fofr, xlabel_len, 'Relative difference of $N(>L)$', fofr_legends, fill_between=True, diff=True)
+		Sep_RelDiff_length_PropErr_S = self.Plot_errobar_sameX(lengths, Deltas_symm, Prop_err_symm, xlabel_len, 'Relative difference of $N(>L)$',
+															 Symm_legends_only, Symm_colors_only, fill_between=True, diff=True)
+		Sep_RelDiff_length_PropErr_F = self.Plot_errobar_sameX(lengths, Deltas_fofr, Prop_err_fofr, xlabel_len, 'Relative difference of $N(>L)$',
+															 fofr_legends_only, fofr_colors_only, fill_between=True, diff=True)
 		
 		# Absolute difference of N, with propagated errors
 		Propagated_errors_lengths = np.array([self.Propagate_error_absNum(length_bin_error_logX[0], length_bin_error_logX[i]) for i in range(1, len(FilLengths))])
@@ -1004,14 +1053,14 @@ class CompareModels():
 		AbsDiff_symm = np.array([Symm_length_values[i] - Symm_length_values[0] for i in range(1, len(Symm_length_values))])
 		AbsDiff_fofr = np.array([fofr_length_values[i] - fofr_length_values[0] for i in range(1, len(fofr_length_values))])
 		Sep_AbsDiff_Number_error_S = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_symm, Propp_err_lens_symm, xlabel_len, '$\Delta N$ filaments',
-																Symm_legends, fill_between=True, diff=True, limit_yaxis=False)
+																Symm_legends_only, Symm_colors_only, fill_between=True, diff=True, limit_yaxis=False)
 		Sep_AbsDiff_Number_error_F = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_fofr, Propp_err_lens_fofr, xlabel_len, '$\Delta N$ filaments',
-																fofr_legends, fill_between=True, diff=True, limit_yaxis=False)
+																fofr_legends_only, fofr_colors_only, fill_between=True, diff=True, limit_yaxis=False)
 		# Absolute difference of N, with propagated errors. LogX scale
 		Sep_AbsDiff_Number_error_S_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_symm, Propp_err_lens_symm, xlabel_len, '$\Delta N$ filaments',
-																Symm_legends, logscale='logx', fill_between=True, diff=True, limit_yaxis=False)
+																Symm_legends_only, Symm_colors_only, logscale='logx', fill_between=True, diff=True, limit_yaxis=False)
 		Sep_AbsDiff_Number_error_F_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_fofr, Propp_err_lens_fofr, xlabel_len, '$\Delta N$ filaments',
-																fofr_legends, logscale='logx', fill_between=True, diff=True, limit_yaxis=False)
+																fofr_legends_only, fofr_colors_only, logscale='logx', fill_between=True, diff=True, limit_yaxis=False)
 
 		ConnectedHistComparison_subplot = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
@@ -1066,8 +1115,15 @@ class CompareModels():
 			self.savefigure(Cumulative_plot, 'Cumulative_plot_length')
 			self.savefigure(RelDiff_cumulative_reverse, 'Filament_lengths_relative_difference_CumulativeData')
 			self.savefigure(Prop_error_reldiff_N, 'Filament_lengths_relative_difference_propagatedError')
+			## Seperating stuffers
 			self.savefigure(Sep_FilLengths_S, 'Filament_lengths_cSymmetron')
 			self.savefigure(Sep_FilLengths_F, 'Filament_lengths_cFofr')
+			self.savefigure(Sep_FilLengths_S_logx, 'Filament_lengths_cSymmetron_logX')
+			self.savefigure(Sep_FilLengths_F_logx, 'Filament_lengths_cFofr_logX')
+			self.savefigure(Sep_FilLengths_S_loglog, 'Filament_lengths_cSymmetron_loglog')
+			self.savefigure(Sep_FilLengths_F_loglog, 'Filament_lengths_cFofr_loglog')
+			self.savefigure(Set_FilLengths_properr_S_logx, 'Filament_length_RelativeDiff_cSymmetron_logx')
+			self.savefigure(Set_FilLengths_properr_F_logx, 'Filament_length_RelativeDiff_cFofr_logx')
 			self.savefigure(Sep_RelDiff_length_S, 'Filament_lengths_relative_difference_cSymmetron')
 			self.savefigure(Sep_RelDiff_length_F, 'Filament_lengths_relative_difference_cFofr')
 			self.savefigure(Distribution_lengths_S, 'Length_distribution_cSymmetron')
