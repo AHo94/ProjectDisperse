@@ -1039,19 +1039,15 @@ class Plot_results():
 		### Mass histogram of all filaments
 		NumMass_all = pf.Call_plot_sameX(Common_bin_mass, Number_mass, Mass_label, Number_label, self.All_legends, logscale='loglog')
 		### Mass histogram of lcdm + symmetron filaments
-		print 'For symm'
 		NumMass_Symm = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends, 
 										 color=self.Plot_colors_symm, logscale='loglog')
 		### Mass histogram of lcdm + f(R) filaments
-		print 'For fofr'
 		NumMass_fofr = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends,
 										 color=self.Plot_colors_fofr, logscale='loglog')
 		### Mass histogram of lcdm + symmetron filaments - Semilog x scale
-		print 'For symm logx'
 		NumMass_Symm_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends,
 										 color=self.Plot_colors_symm, logscale='logx')
 		### Mass histogram of lcdm + f(R) filaments - Semilog x scale
-		print 'For fofr logx'
 		NumMass_fofr_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends,
 										 color=self.Plot_colors_fofr, logscale='logx')
 		### Mass histograms with errors, lcdm + symmetron
@@ -1260,13 +1256,6 @@ class Plot_results():
 		Can either be the total speed, orthogonal speed or parallel speed. 
 		The speedtype name must be the same as the input speed array, else shit happens.
 		"""
-		print 'QUICK CHECK'
-		print 'Num filmasses -- Num speeds'
-		for i in range(len(self.Filament_masses)):
-			print len(self.Filament_masses[i]), len(All_speeds[i])
-		print 'QUICK CHECK DONE'
-
-
 		velocity_savefile_dir = 'ModelComparisons/VelocityAnalysis/'
 		if self.raw_filetype == 'png':
 			velocity_savefile_dir += 'PNG/'
@@ -1276,7 +1265,7 @@ class Plot_results():
 		sigma_name_folder = 'Sigma'+str(self.Nsigma) + '/'
 		velocity_savefile_dir += sigma_name_folder
 
-		OK_speedtypes = ['Speed', 'Orthogonal', 'Parallel']
+		OK_speedtypes = ['Speed', 'Orthogonal', 'Parallel', 'Density']
 		Check = 0
 		for spt in OK_speedtypes:
 			if speedtype == spt:
