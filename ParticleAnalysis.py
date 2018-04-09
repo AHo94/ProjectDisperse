@@ -14,6 +14,7 @@ import OtherFunctions as OF
 import ParticleMasking as PMA
 import ParticlesPerFilament as PPF
 import PlotFunctions as pf
+import Histogram_comparison as HComp
 
 # Global variables as constants
 Omega_m0 = 0.267
@@ -160,6 +161,19 @@ class FilterParticlesAndFilaments():
 		self.NFilamentPoints = Fil_coord[5]
 		self.FilID = Fil_coord[6]
 		self.PairIDS = Fil_coord[7]
+
+	def Number_filament_connections(self):
+		""" Computes the number of filament connections one filament has"""
+		#print 'Computing number connections'
+		NumFilamentConnections = []
+		for Connected_CP in self.PairIDS:
+			counter = 0
+			for CP_ids in Connected_CP:
+				counter += self.Number_filaments_connecting_to_CP[CP_ids]
+			NumFilamentConnections.append(counter)
+
+		NumFilamentConnections = np.asarray(NumFilamentConnections)
+		return NumFilamentConnections
 
 	def Read_particle_data(self, model, npart, sigma, boxexpand):
 		""" Reads particle boxes, masked IDs and computed particle distances. Uses pickle files """
@@ -742,6 +756,7 @@ class FilterParticlesAndFilaments():
 					self.RemoveNanFils = np.load(cachefile_nanvalues)
 				else:
 					print 'Warning: Remove nan file does not exist for this model!'
+					self.RemoveNanFils = np.array([])
 				#print 'Filtering particles'
 				#filter_time = time.time()
 				#self.Do_filter_particles()
@@ -1981,6 +1996,8 @@ if __name__ == '__main__':
 	Orth_speed_list = []
 	Density_prof = []
 
+	N_filament_connections = []
+
 	def Append_data(Fid, D_thres,  OK_part, OK_dist, modelname):
 		""" Appends common data to a common list """
 		Filament_ids.append(Fid)
@@ -2008,6 +2025,7 @@ if __name__ == '__main__':
 		Fillens = Instance.Get_filament_length()[OK_fils]
 		Filament_lengths.append(Fillens)
 		Density_prof.append(Instance.Compute_density_profile(OK_distances, Fillens))
+		N_filament_connections.append(Instance.Number_filament_connections()[OK_fils])
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
@@ -2016,3 +2034,8 @@ if __name__ == '__main__':
 	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
 	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
+
+	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
+	CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
+								 savefile_directory=savefile_directory, filetype=Filetype, nPart=N_parts, Nsigma=N_sigma)
+	CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
