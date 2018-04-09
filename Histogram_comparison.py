@@ -292,7 +292,7 @@ class Histogram_Comparison():
 		plt.close('all')
 
 class CompareModels():
-	def __init__(self, savefile, foldername, savefile_directory, filetype, redshift, nPart, Nsigma=3):
+	def __init__(self, savefile, foldername, savefile_directory, filetype, nPart, Nsigma=3, redshift=0):
 		self.savefile = savefile
 		self.filetype = filetype
 
@@ -1062,7 +1062,7 @@ class CompareModels():
 		Sep_AbsDiff_Number_error_F_logx = self.Plot_errobar_sameX(length_bins_logX, AbsDiff_fofr, Propp_err_lens_fofr, xlabel_len, '$\Delta N$ filaments',
 																fofr_legends_only, fofr_colors_only, logscale='logx', fill_between=True, diff=True, limit_yaxis=False)
 
-		ConnectedHistComparison_subplot = plt.figure()
+		ConnectedHistComparison_subplot = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		ax = plt.subplot(1,2,1)
 		connection_bins = OF.Get_common_bin(Nconnections, binnum=21)
@@ -1091,10 +1091,28 @@ class CompareModels():
 		ConnectedHistComparison_subplot.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
 		ConnectedHistComparison_subplot.text(0.04, 0.55, '$N$ filaments', ha='center', rotation='vertical', fontsize=10)
 
-		#ConnectedHistComparison_subplot_reldiff = plt.figue()
-		#for i in range(1,5):
-		#	reldiff = OF.relative_deviation_singular(bin_val_connhist[i], bin_val_connhist[0])
-		#	reldiff_err = OF.
+		ConnectedHistComparison_subplot_reldiff = plt.figue(figsize=(8,6))
+		ax = plt.subplot(1,2,1)
+		for i in range(1,5):
+			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
+			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
+			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_symm[i])
+			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_symm[i])
+		plt.legend(Symm_legends_only)
+		plt.xscale('log')
+		#plt.yscale('log')
+		ax2 = plt.subplot(1,2,2, sharey=ax)
+		plt.setp(ax2.get_yticklabels(), visible=False)
+		for i in range(5,8):
+			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
+			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
+			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_fofr[i])
+			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_fofr[i])
+		plt.legend(fofr_legends_only)
+		plt.xscale('log')
+		ConnectedHistComparison_subplot_reldiff.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
+		ConnectedHistComparison_subplot_reldiff.text(0.04, 0.55, 'Relative difference of number connections', ha='center', rotation='vertical', fontsize=10)
+		
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -1147,6 +1165,7 @@ class CompareModels():
 			self.savefigure(Sep_AbsDiff_Number_error_S_logx, 'Filament_lengths_absolute_difference_PropErr_logX_cSymmetron')
 			self.savefigure(Sep_AbsDiff_Number_error_F_logx, 'Filament_lengths_absolute_difference_PropErr_logX_cFofr')
 			self.savefigure(ConnectedHistComparison_subplot, 'Number_Connected_Filaments_subplot')
+			self.savefigure(ConnectedHistComparison_subplot_reldiff, 'Number_Connected_Filaments_subplot_RelDiff')
 		else:
 			print 'Done! No figures saved.'
 
