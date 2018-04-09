@@ -17,16 +17,16 @@ import PlotFunctions as pf
 
 # Global variables as constants
 Omega_m0 = 0.267
-Mpc = 3.08568025e22
+Mpc = 3.08568025e22 		# m
 G_grav = 6.67258e-11
 h_param = 0.72
-H_0 = h_param*100*1e3/Mpc   # h/s, h = some constant usually h = 0.7
-Solmass = 1.98191*1e30 # kg
+H_0 = h_param*100*1e3/Mpc   # 1/s, h = some constant usually h = 0.7
+Solmass = 1.98191*1e30 		# kg
 rho_crit = 3.0*H_0**2/(8*np.pi*G_grav)  # kg*h^2/m^3
 Npart_box_total = 512.0**3
 Box_volume = (256.0*Mpc)**3.0/Npart_box_total   # m^3/h^3
 DM_mass = Omega_m0*rho_crit*Box_volume/Solmass  # Units of M_sun/h
-pre_rho = DM_mass*Solmass/(Mpc**3)
+pre_rho = DM_mass*Solmass/(Mpc**3) 		# kg h^2/m^3
 
 class FilterParticlesAndFilaments():
 	def __init__(self, model, npart, sigma):
@@ -777,8 +777,8 @@ class FilterParticlesAndFilaments():
 				pre_volume = np.pi*fillen[i]
 				NumParts = len(distances_sorted)
 				N_smallR = np.linspace(1, NumParts, NumParts)
-				Volumes = pre_volume*distances_sorted**2
-				average_densities = pre_rho*N_smallR/Volumes
+				Volumes = pre_volume*distances_sorted**2 		# Mpc^3/h^3
+				average_densities = pre_rho*N_smallR/Volumes    #(kg h^2 / m^3 )/ (Mpc^3 /h^3) = kg/(m^3 h)
 				Density_profiles.append(average_densities)
 			Density_profiles = np.asarray(Density_profiles)
 			np.save(cachefile_density, Density_profiles)
@@ -940,8 +940,8 @@ class Plot_results():
 		Number_label = '$N$'
 		Thickness_label = '$T$ - [Mpc/h]'
 		Length_label = '$L$ - [Mpc/h]'
-		Mean_Mass_label = r'$\bar{M}$ - [Mpc/h]'
-		Mean_Thickness_label = r'$\bar{T}$ - [Mpc/h]'
+		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
+		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
 		SymmLCDM = np.array([0,1,2,3,4])
 		FofrLCDM = np.array([0,5,6,7])
 		Symm_only = np.array([1,2,3,4])
@@ -1024,15 +1024,19 @@ class Plot_results():
 		### Mass histogram of all filaments
 		NumMass_all = pf.Call_plot_sameX(Common_bin_mass, Number_mass, Mass_label, Number_label, self.All_legends, logscale='loglog')
 		### Mass histogram of lcdm + symmetron filaments
+		print 'For symm'
 		NumMass_Symm = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends, 
 										 color=self.Plot_colors_symm, logscale='loglog')
 		### Mass histogram of lcdm + f(R) filaments
+		print 'For fofr'
 		NumMass_fofr = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends,
 										 color=self.Plot_colors_fofr, logscale='loglog')
 		### Mass histogram of lcdm + symmetron filaments - Semilog x scale
+		print 'For symm logx'
 		NumMass_Symm_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends,
 										 color=self.Plot_colors_symm, logscale='logx')
 		### Mass histogram of lcdm + f(R) filaments - Semilog x scale
+		print 'For fofr logx'
 		NumMass_fofr_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends,
 										 color=self.Plot_colors_fofr, logscale='logx')
 		### Mass histograms with errors, lcdm + symmetron
@@ -1241,6 +1245,13 @@ class Plot_results():
 		Can either be the total speed, orthogonal speed or parallel speed. 
 		The speedtype name must be the same as the input speed array, else shit happens.
 		"""
+		print 'QUICK CHECK'
+		print 'Num filmasses -- Num speeds'
+		for i in range(len(self.Filament_masses)):
+			print len(self.Filament_masses[i]), len(All_speeds[i])
+		print 'QUICK CHECK DONE'
+
+
 		velocity_savefile_dir = 'ModelComparisons/VelocityAnalysis/'
 		if self.raw_filetype == 'png':
 			velocity_savefile_dir += 'PNG/'
@@ -1279,22 +1290,25 @@ class Plot_results():
 		Number_label = '$N$'
 		Thickness_label = '$T$ - [Mpc/h]'
 		Length_label = '$L$ - [Mpc/h]'
-		Mean_Mass_label = r'$\bar{M}$ - [Mpc/h]'
-		Mean_Thickness_label = r'$\bar{T}$ - [Mpc/h]'
+		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
+		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
 		Distance_normalized_label = '$r/T$'
 		if speedtype == 'Speed':
-			Average_speed_label =  r'$\langle v \rangle$ - [km/s]'
+			Average_speed_label =  r'$\langle v \rangle - [\mathrm{km}/\mathrm{s}]$'
 			Average_speed_label_nounit = r'$\langle v \rangle$'
-			Reldiff_label_avgspeed = r'$(\langle v_i \rangle - \langle v_{\Lambda CDM} \rangle)/\langle v_{\Lambda CDM} \rangle$'
+			Reldiff_label_avgspeed = r'$(\langle v_i \rangle - \langle v_{\Lambda \mathrm{CDM}} \rangle)/\langle v_{\Lambda \mathrm{CDM}} \rangle$'
 		elif speedtype == 'Orthogonal':
-			Average_speed_label =  r'$\langle v_\perp \rangle$ - [km/s]'
+			Average_speed_label =  r'$\langle v_\perp \rangle$ - [\mathrm{km}/\mathrm{s}]'
 			Average_speed_label_nounit = r'$\langle v_\perp \rangle$'
-			Reldiff_label_avgspeed = r'$(\langle v_{\perp,i} \rangle - \langle v_{\perp,\Lambda CDM} \rangle)/\langle v_{\perp, \Lambda CDM} \rangle$'
+			Reldiff_label_avgspeed = r'$(\langle v_{\perp,i} \rangle - \langle v_{\perp,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\perp, \Lambda \mathrm{CDM}} \rangle$'
 		elif speedtype == 'Parallel':
-			Average_speed_label =  r'$\langle v_\parallel \rangle$ - [km/s]'
+			Average_speed_label =  r'$\langle v_\parallel \rangle - [\mathrm{km}/s]$'
 			Average_speed_label_nounit = r'$\langle v_{\parallel} \rangle$'
-			Reldiff_label_avgspeed = r'$(\langle v_{\parallel,i} \rangle - \langle v_{\parallel,\Lambda CDM} \rangle)/\langle v_{\parallel,\Lambda CDM} \rangle$'
-
+			Reldiff_label_avgspeed = r'$(\langle v_{\parallel,i} \rangle - \langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle$'
+		elif speedtype == 'Density':
+			Average_speed_label = r'$\langle \rho \rangle - [\mathrm{kg}h^2/\mathrm{m^3}]$'
+			Average_speed_label_nounit = r'$\langle \rho \rangle$'
+			Reldiff_label_avgspeed = r'$(\langle \rho_i \rangle - \langle \rho_\{\Lambda \mathrm{CDM}})/(\langle \rho_{\Lambda \mathrm{CDM}} \rangle)$'
 		
 		SymmLCDM = np.array([0,1,2,3,4])
 		FofrLCDM = np.array([0,5,6,7])
@@ -1364,7 +1378,7 @@ class Plot_results():
 			if j > 0:
 				ax = plt.subplot(1,3, j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False)
-			print 'iteration ',j 
+			print 'iteration ',j, ' similar mass'
 			for i in SymmLCDM:
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
 																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Symm_filenames[i], newbinning=binnum)
@@ -1383,7 +1397,7 @@ class Plot_results():
 			if j > 0:
 				ax = plt.subplot(1,3, j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False)
-			print 'iteration ',j 
+			print 'iteration ', j, ' similar mass' 
 			for ij in range(len(FofrLCDM)):
 				i = FofrLCDM[ij]
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
@@ -1473,7 +1487,7 @@ class Plot_results():
 			if j > 0:
 				ax = plt.subplot(1,3,j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False)
-			print 'iteration ',j
+			print 'iteration ',j, ' similar length'
 			for i in SymmLCDM:
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.FilLengths[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
 															Common_bin_distances_normalized, Length_ranges[j], Length_ranges[j+1], 'Length', Symm_filenames[i], newbinning=binnum)
@@ -1492,7 +1506,7 @@ class Plot_results():
 			if j > 0:
 				ax = plt.subplot(1,3,j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False)	
-			print 'iteration ',j
+			print 'iteration ',j, 'similar length'
 			for ij in range(len(FofrLCDM)):
 				i = FofrLCDM[ij]
 				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.FilLengths[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
@@ -1805,8 +1819,8 @@ class Plot_results():
 		Number_label = '$N$'
 		Thickness_label = '$T$ - [Mpc/h]'
 		Length_label = '$L$ - [Mpc/h]'
-		Mean_Mass_label = r'$\bar{M}$ - [Mpc/h]'
-		Mean_Thickness_label = r'$\bar{T}$ - [Mpc/h]'
+		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
+		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
 		Distance_normalized_label = '$r/T$'
 
 		Mass_N_label = '$N(>M)$'
@@ -1863,15 +1877,18 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
 		for i in SymmLCDM:
-			plt.plot(Mass_values, Mass_distribution[i])
-			plt.fill_between(Mass_values, Mass_distribution[i]-Mass_distribution_error[i], Mass_distribution[i]+Mass_distribution_error[i], alpha=0.4)
+			plt.plot(Mass_values, Mass_distribution[i], color=self.Plot_colors_symm[i])
+			plt.fill_between(Mass_values, Mass_distribution[i]-Mass_distribution_error[i], Mass_distribution[i]+Mass_distribution_error[i],
+							 alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		for i in FofrLCDM:
-			plt.plot(Mass_values, Mass_distribution[i])
-			plt.fill_between(Mass_values, Mass_distribution[i]-Mass_distribution_error[i], Mass_distribution[i]+Mass_distribution_error[i], alpha=0.4)
+		for ij in range(len(FofrLCDM)):
+			i = FofrLCDM[ij]
+			plt.plot(Mass_values, Mass_distribution[i], color=self.Plot_colors_fofr[ij])
+			plt.fill_between(Mass_values, Mass_distribution[i]-Mass_distribution_error[i], Mass_distribution[i]+Mass_distribution_error[i],
+							 alpha=0.4, facecolor=self.Plot_colors_fofr[ij])
 		plt.legend(self.fofr_legends)
 		plt.xscale('log')
 		plt.yscale('log')
@@ -1882,22 +1899,22 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
 		for i in Symm_only:
-			plt.plot(Mass_values, RelDiff_mass_distribution[i-1])
+			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
-							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4)
+							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends[1:])
 		plt.xscale('log')
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
 		for i in Fofr_only:
-			plt.plot(Mass_values, RelDiff_mass_distribution[i-1])
+			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
-							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4)
+							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[i-4])
 		plt.legend(self.fofr_legends[1:])
 		plt.xscale('log')
 		#plt.yscale('log')
 		Number_filaments_larger_mass_reldiff.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
-		Number_filaments_larger_mass_reldiff.text(0.02, 0.7, r'$(N(>M)_i - N(>M)_{\Lambda CDM})/N(>M)_{\Lambda CDM}$', 
+		Number_filaments_larger_mass_reldiff.text(0.02, 0.7, r'$(N(>M)_i - N(>M)_{\Lambda \mathrm{CDM}})/N(>M)_{\Lambda \mathrm{CDM}}$', 
 									ha='center', rotation='vertical', fontsize=10)
 		#plt.ylim((-2,2))
 		print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -1956,6 +1973,7 @@ if __name__ == '__main__':
 	Part_accepted = []
 	Dist_accepted = []
 	Models_included = []
+	Dist_accepted_sorted = []
 
 	Filament_lengths = []
 	All_speed_list = []
@@ -1970,6 +1988,10 @@ if __name__ == '__main__':
 		Part_accepted.append(OK_part)
 		Dist_accepted.append(OK_dist)
 		Models_included.append(modelname)
+		Dist_accepted_sorted_temp = []
+		for i in range(len(OK_dist)):
+			Dist_accepted_sorted_temp.append(np.sort(OK_dist[i]))
+		Dist_accepted_sorted.append(Dist_accepted_sorted_temp)
 
 	def Append_data_speeds(AllS, OrthS, ParaS):
 		All_speed_list.append(AllS)
@@ -1977,11 +1999,6 @@ if __name__ == '__main__':
 		Orth_speed_list.append(OrthS)
 
 	for p_model in Models_to_be_run:
-		#if p_model == 'symmB':
-		#		break
-		#if p_model == 'symmC':
-		#	continue
-		#else:
 		Instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
 		OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
 		#Filament_lengths.append(Instance.Get_filament_length()[OK_fils])
@@ -1990,14 +2007,12 @@ if __name__ == '__main__':
 		Append_data_speeds(Speeds, Ospeed, Pspeed)
 		Fillens = Instance.Get_filament_length()[OK_fils]
 		Filament_lengths.append(Fillens)
-		#dentime = time.time()
 		Density_prof.append(Instance.Compute_density_profile(OK_distances, Fillens))
-		#print time.time() - dentime, 's'
-		#print Density_prof[0]
-		#print len(Density_prof[0])
+
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
 	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
 	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
 	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
