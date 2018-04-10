@@ -1091,7 +1091,7 @@ class CompareModels():
 		ConnectedHistComparison_subplot.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
 		ConnectedHistComparison_subplot.text(0.04, 0.55, '$N$ filaments', ha='center', rotation='vertical', fontsize=10)
 
-		ConnectedHistComparison_subplot_reldiff = plt.figue(figsize=(8,6))
+		ConnectedHistComparison_subplot_reldiff = plt.figure(figsize=(8,6))
 		ax = plt.subplot(1,2,1)
 		for i in range(1,5):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])

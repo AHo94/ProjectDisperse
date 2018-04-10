@@ -84,7 +84,7 @@ class FilterParticlesAndFilaments():
 		Disperse_data_check_fn = cachedir + 'Disperse_data.p'
 		# Read filament from pickle and creates 3D coordinates of filament positions
 		Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data = pickle.load(open(Disperse_data_check_fn, 'rb'))
-		self.Unpack_filament_data(Box_boundaries, Filament_coordinate_data)
+		self.Unpack_filament_data(Box_boundaries, Filament_coordinate_data, CP_coordinate_data)
 		Filament_3DPos = []
 		for j in range(len(self.xdimPos)):
 			Filament_3DPos.append(np.column_stack((self.xdimPos[j], self.ydimPos[j], self.zdimPos[j])))
@@ -128,7 +128,7 @@ class FilterParticlesAndFilaments():
 				
 		# Read filament from pickle and creates 3D coordinates of filament positions
 		Box_boundaries, CP_coordinate_data, Filament_coordinate_data, CP_data, Filament_data = pickle.load(open(Disperse_data_check_fn, 'rb'))
-		self.Unpack_filament_data(Box_boundaries, Filament_coordinate_data)
+		self.Unpack_filament_data(Box_boundaries, Filament_coordinate_data, CP_coordinate_data)
 		Filament_3DPos = []
 		for j in range(len(self.xdimPos)):
 			Filament_3DPos.append(np.column_stack((self.xdimPos[j], self.ydimPos[j], self.zdimPos[j])))
@@ -144,7 +144,7 @@ class FilterParticlesAndFilaments():
 		return FilamentLength[Small_filaments]
 		
 
-	def Unpack_filament_data(self, Box_info, Fil_coord):
+	def Unpack_filament_data(self, Box_info, Fil_coord, CP_coord):
 		""" Unpacks filament data from the read filament data module. """
 		self.xmin = Box_info[0]
 		self.xmax = Box_info[1]
@@ -161,6 +161,15 @@ class FilterParticlesAndFilaments():
 		self.NFilamentPoints = Fil_coord[5]
 		self.FilID = Fil_coord[6]
 		self.PairIDS = Fil_coord[7]
+
+		self.CritPointXpos = CP_coord[0]
+		self.CritPointYpos = CP_coord[1]
+		self.CritPointZpos = CP_coord[2]
+		self.CP_type = CP_coord[3]
+		self.CP_persistent_pair = CP_coord[4] 
+		self.Critpts_filamentID = CP_coord[5] 
+		self.CP_id_of_connecting_filament = CP_coord[6] 
+		self.Number_filaments_connecting_to_CP = CP_coord[7]
 
 	def Number_filament_connections(self):
 		""" Computes the number of filament connections one filament has"""
@@ -1997,7 +2006,7 @@ if __name__ == '__main__':
 		Dist_accepted_sorted_temp = []
 		for i in range(len(OK_dist)):
 			Dist_accepted_sorted_temp.append(np.sort(OK_dist[i]))
-		Dist_accepted_sorted.append(Dist_accepted_sorted_temp)
+		Dist_accepted_sorted.append(np.array(Dist_accepted_sorted_temp))
 
 	def Append_data_speeds(AllS, OrthS, ParaS):
 		All_speed_list.append(AllS)
@@ -2018,9 +2027,9 @@ if __name__ == '__main__':
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
-	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
-	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
-	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	#Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
+	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
+	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
 	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
 
