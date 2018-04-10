@@ -2035,5 +2035,5 @@ if __name__ == '__main__':
 
 	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
 	CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
-								 savefile_directory=savefile_directory, filetype=Filetype, nPart=N_parts, Nsigma=N_sigma)
+								 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
 	CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])

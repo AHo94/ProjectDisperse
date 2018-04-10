@@ -1091,13 +1091,13 @@ class CompareModels():
 		ConnectedHistComparison_subplot.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
 		ConnectedHistComparison_subplot.text(0.04, 0.55, '$N$ filaments', ha='center', rotation='vertical', fontsize=10)
 
-		ConnectedHistComparison_subplot_reldiff = plt.figure(figsize=(8,6))
+		ConnectedHistComparison_subplot_reldiff = plt.figure(figsize=(5,4))
 		ax = plt.subplot(1,2,1)
 		for i in range(1,5):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
 			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
-			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_symm[i])
-			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_symm[i])
+			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i])
+			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(Symm_legends_only)
 		plt.xscale('log')
 		#plt.yscale('log')
@@ -1106,12 +1106,12 @@ class CompareModels():
 		for i in range(5,8):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
 			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
-			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_fofr[i])
-			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_fofr[i])
+			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i])
+			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(fofr_legends_only)
 		plt.xscale('log')
 		ConnectedHistComparison_subplot_reldiff.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
-		ConnectedHistComparison_subplot_reldiff.text(0.04, 0.55, 'Relative difference of number connections', ha='center', rotation='vertical', fontsize=10)
+		ConnectedHistComparison_subplot_reldiff.text(0.04, 0.65, 'Relative difference of number connections', ha='center', rotation='vertical', fontsize=10)
 		
 
 		if self.savefile == 1:
