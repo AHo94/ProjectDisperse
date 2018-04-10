@@ -1028,7 +1028,7 @@ class CompareModels():
 		Sep_RelDiff_Number_S_logx = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
 																Symm_legends_only, Symm_colors_only, logscale='logx')			
 		Sep_RelDiff_Number_F_logx = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
-																fofr_legends_only, Symm_colors_only, logscale='logx')
+																fofr_legends_only, fofr_colors_only, logscale='logx')
 
 		# Relative differences in Number of filaments and not N(>L). LogLog scale
 		Sep_RelDiff_Number_S_loglog = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
