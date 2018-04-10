@@ -992,10 +992,16 @@ class Plot_results():
 		# Thickness of filaments as a binned histogram, using np.digitize
 		Common_bin_thickness = OF.Get_common_bin_logX(Thresholds, binnum=binnum)
 		Number_thickness = []
+		Error_thickness = []
 		for i in range(NModels):
 			bin_value, bin_std = OF.Bin_numbers_common(Thresholds[i], Thresholds[i], Common_bin_thickness, std='poisson')
 			Number_thickness.append(bin_value)
+			Error_thickness.append(bin_std)
 		Number_thickness = np.asarray(Number_thickness)
+		# Relative difference of the thickness. Basemodel lcdm
+		RelativeDiff_thickness = [OF.relative_deviation(Number_thickness, i) for i in range(1, NModels)]
+		Prop_error_thickness = [OF.Propagate_error_reldiff(Number_thickness[0], Number_thickness[i], Error_thickness[0], Error_thickness[i]) for i in range(1, NModels)]
+		
 		# Comparing different properties. E.g. length vs mass or length vs thickness etc.
 		Common_bin_length = OF.Get_common_bin_logX(FilLengths, binnum=binnum)
 
@@ -1089,7 +1095,6 @@ class Plot_results():
 		plt.ylabel('$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$')
 		### Relative difference of lcdm + symmetron
 		RelDiff_mass_Symm = plt.figure()
-		#plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
 		for i in range(4):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_symm[i+1])
 		plt.legend(self.Symm_legends[1:])
@@ -1097,7 +1102,6 @@ class Plot_results():
 		plt.ylabel('$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$')
 		### Relative difference of lcdm + f(R)
 		RelDiff_mass_fofr = plt.figure()
-		#plt.semilogx(Common_bin_mass, np.zeros(len(Common_bin_mass)))
 		for i in range(4, NModels-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-3])
 		plt.legend(self.fofr_legends[1:])
@@ -1105,8 +1109,6 @@ class Plot_results():
 		plt.ylabel('$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$')
 		### Relative difference of lcdm + symmetron, with error
 		RelDiff_mass_Symm_err = plt.figure()
-		#plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)))
-		#plt.fill_between(Common_bin_mass, np.zeros(len(Common_bin_mass)), np.zeros(len(Common_bin_mass)))
 		for i in (Symm_only-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_symm[i+1])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i],
@@ -1115,9 +1117,8 @@ class Plot_results():
 		plt.xlabel(Mass_label)
 		plt.ylabel('$(M_i - M_{\Lambda CDM})/M_{\Lambda CDM}$')
 		plt.xscale('log')
+		### Relative difference of lcdm + symmetron, with error
 		RelDiff_mass_fofr_err = plt.figure()
-		#plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)))
-		#plt.fill_between(Common_bin_mass, np.zeros(len(Common_bin_mass)), np.zeros(len(Common_bin_mass)))
 		for i in (Fofr_only-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-3])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i],
@@ -1141,6 +1142,17 @@ class Plot_results():
 												color=self.Plot_colors_fofr, logscale='loglog')
 		NumThickness_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[FofrLCDM], Thickness_label, Number_label, self.fofr_legends,
 												color=self.Plot_colors_fofr, logscale='logx')
+		
+		### Relative differences
+		Reldiff_num_thick_Symm = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label,
+											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], logscale='loglog', error=Prop_error_thickness[Symm_only-1])
+		Reldiff_num_thick_Symm_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label,
+											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], logscale='logx', error=Prop_error_thickness[Symm_only-1])
+		
+		Reldiff_num_thick_fofr = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label,
+											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], logscale='loglog', error=Prop_error_thickness[Fofr_only-1])
+		Reldiff_num_thick_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label,
+											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], logscale='logx', error=Prop_error_thickness[Fofr_only-1])
 		
 		######## Compare different properties
 		### Thickness as a function of length, LCDM + Symmetron and LCDM + f(R)
@@ -1240,12 +1252,17 @@ class Plot_results():
 		self.savefigure(RelDiff_mass_Symm, 'Relative_difference_mass_cSymmetron')
 		self.savefigure(RelDiff_mass_fofr, 'Relative_difference_mass_cFofr')
 		self.savefigure(RelDiff_mass_Symm_err, 'Relative_difference_mass_error_cSymmetron')
+		self.savefigure(RelDiff_mass_fofr_err, 'Relative_difference_mass_error_cFofr')
 		######## Thickness histograms
 		self.savefigure(NumThickness_all, 'Filament_Thickness_distribution')
 		self.savefigure(NumThickness_Symm, 'Filament_Thickness_distribution_cSymmetron')
 		self.savefigure(NumThickness_fofr, 'Filament_Thickness_distribution_cFofr')
 		self.savefigure(NumThickness_Symm_logX, 'Filament_Thickness_distribution_logX_cSymmetron')
 		self.savefigure(NumThickness_fofr_logX, 'Filament_Thickness_distribution_logX_cFofr')
+		self.savefigure(Reldiff_num_thick_Symm, 'Relative_difference_thickness_cSymmetron')
+		self.savefigure(Reldiff_num_thick_Symm_logX, 'Relative_difference_thickness_logX_cSymmetron')
+		self.savefigure(Reldiff_num_thick_fofr, 'Relative_difference_thickness_cFofr')
+		self.savefigure(Reldiff_num_thick_fofr_logX, 'Relative_difference_thickness_logX_cFofr')
 		######## Compare different properties
 		self.savefigure(ThickVsLen_Symm, 'ThicknessVsLength_cSymmetron')
 		self.savefigure(ThickVsLen_fofr, 'ThicknessVsLength_cFofr')
