@@ -962,10 +962,14 @@ class Plot_results():
 		#Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
 		Mass_label = '$M$ - [$M_\odot / h$]'
 		Number_label = '$N$'
+		Number_label_reldiff = '$(N_i - N_{\Lambda \mathrm{CDM}})/N_{\Lambda \mathrm{CDM}}$'
 		Thickness_label = '$T$ - [Mpc/h]'
+		Thickness_label_reldiff = '$(T_i - T_{\Lambda\mathrm{CDM}})/T_{\Lambda \mathrm{CDM}}$'
 		Length_label = '$L$ - [Mpc/h]'
 		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
 		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
+		Density_label = r'$\langle \rho \rangle - [M_\odot h^2/\mathrm{Mpc}^3]$'
+		Density_label_reldiff = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/\langle \rho_{\Lambda \mathrm{CDM}} \rangle$'
 		SymmLCDM = np.array([0,1,2,3,4])
 		FofrLCDM = np.array([0,5,6,7])
 		Symm_only = np.array([1,2,3,4])
@@ -989,7 +993,8 @@ class Plot_results():
 		# Relative difference of the masses. Basemodel lcdm
 		RelativeDiff_mass = [OF.relative_deviation(Number_mass, i) for i in range(1, NModels)]
 		Prop_error_mass = [OF.Propagate_error_reldiff(Number_mass[0], Number_mass[i], Error_mass[0], Error_mass[i]) for i in range(1, NModels)]
-		# Thickness of filaments as a binned histogram, using np.digitize
+
+		### Thickness of filaments as a binned histogram, using np.digitize
 		Common_bin_thickness = OF.Get_common_bin_logX(Thresholds, binnum=binnum)
 		Number_thickness = []
 		Error_thickness = []
@@ -999,12 +1004,34 @@ class Plot_results():
 			Error_thickness.append(bin_std)
 		Number_thickness = np.asarray(Number_thickness)
 		# Relative difference of the thickness. Basemodel lcdm
-		RelativeDiff_thickness = [OF.relative_deviation(Number_thickness, i) for i in range(1, NModels)]
-		Prop_error_thickness = [OF.Propagate_error_reldiff(Number_thickness[0], Number_thickness[i], Error_thickness[0], Error_thickness[i]) for i in range(1, NModels)]
-		
-		# Comparing different properties. E.g. length vs mass or length vs thickness etc.
-		Common_bin_length = OF.Get_common_bin_logX(FilLengths, binnum=binnum)
+		RelativeDiff_thickness = np.array([OF.relative_deviation(Number_thickness, i) for i in range(1, NModels)])
+		Prop_error_thickness = np.array([OF.Propagate_error_reldiff(Number_thickness[0], Number_thickness[i], Error_thickness[0], Error_thickness[i]) 
+										for i in range(1, NModels)])
 
+		### The average density of the filaments at radius = filament thickness
+		self.Filament_density = []
+		for i in range(NModels):
+			Volumes = np.pi*FilLengths[i]*Thresholds[i]**2
+			rho = self.Filament_masses[i]/Volumes
+			self.Filament_density.append(rho)
+		self.Filament_density = np.asarray(Filament_density)
+		Common_bin_density = OF.Get_common_bin_logX(self.Filament_density, binnum=binnum)
+		# Compute number of filament within a density bins
+		Number_density = []
+		Error_density = []
+		for i in range(NModels):
+			bin_value, bin_std = OF.Bin_numbers_common(self.Filament_density[i], self.Filament_density[i], std='poisson')
+			Number_density.append(bin_value)
+			Error_density.append(bin_std)
+		Number_density = np.asarray(Number_density)
+		Error_density = np.asarray(Error_density)
+		# Relative difference of the densities. Bademodel lcdm
+		RelativeDiff_density = np.array([OF.relative_deviation(Number_density, i) for i in range(1, NModels)])
+		Prop_error_density = np.array([OF.Propagate_error_reldiff(Number_density[0], Number_density[i], Error_density[0], Error_density[i])
+									for i in range(1, NModels)])
+
+		### Comparing different properties. E.g. length vs mass or length vs thickness etc.
+		Common_bin_length = OF.Get_common_bin_logX(FilLengths, binnum=binnum)
 		# Mean thickness as a function of length + relative difference
 		Mean_thickness = []
 		Mean_thickness_std = []
@@ -1026,7 +1053,6 @@ class Plot_results():
 		# Mean mass as a function of thickness
 		Mean_mass_vT = []
 		Mean_mass_vT_std = []
-		print '===== Checking for masses here ====='
 		for i in range(NModels):
 			binval, bin_std = OF.Bin_mean_common(Thresholds[i], self.Filament_masses[i], Common_bin_thickness)
 			Mean_mass_vT.append(binval)
@@ -1143,17 +1169,38 @@ class Plot_results():
 		NumThickness_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[FofrLCDM], Thickness_label, Number_label, self.fofr_legends,
 												color=self.Plot_colors_fofr, logscale='logx')
 		
-		### Relative differences
-		Reldiff_num_thick_Symm = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label,
+		### Relative differences of thickness
+		Reldiff_num_thick_Symm = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label_reldiff,
 											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], logscale='loglog', error=Prop_error_thickness[Symm_only-1])
-		Reldiff_num_thick_Symm_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label,
+		Reldiff_num_thick_Symm_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label_reldiff,
 											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], logscale='logx', error=Prop_error_thickness[Symm_only-1])
 		
-		Reldiff_num_thick_fofr = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label,
+		Reldiff_num_thick_fofr = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label_reldiff,
 											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], logscale='loglog', error=Prop_error_thickness[Fofr_only-1])
-		Reldiff_num_thick_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label,
+		Reldiff_num_thick_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label_reldiff,
 											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], logscale='logx', error=Prop_error_thickness[Fofr_only-1])
 		
+		######## Density histograms
+		### Density histograms with number of filaments at a given density bin
+		NumDensity_Symm = pf.Call_plot_sameX(Common_bin_density, Number_density[SymmLCDM], Density_label, Number_label, self.Symm_legends,
+											color=self.Plot_colors_symm, logscale='loglog')
+		NumDensity_Symm_logX = pf.Call_plot_sameX(Common_bin_density, Number_density[SymmLCDM], Density_label, Number_label, self.Symm_legends,
+											color=self.Plot_colors_symm, logscale='logx')
+		NumDensity_fofr = pf.Call_plot_sameX(Common_bin_density, Number_density[FofrLCDM], Density_label, Number_label, self.fofr_legends,
+											color=self.Plot_colors_fofr, logscale='loglog')
+		NumDensity_fofr_logX = pf.Call_plot_sameX(Common_bin_density, Number_density[FofrLCDM], Density_label, Number_label, self.fofr_legends,
+											color=self.Plot_colors_fofr, logscale='logx')
+		### Relative difference of the above
+		RelDiff_num_density_Symm = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
+											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], logscale='loglog', error=Prop_error_density[Symm_only-1])
+		RelDiff_num_density_Symm_logX = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
+											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], logscale='logx', error=Prop_error_density[Symm_only-1])
+		RelDiff_num_density_fofr = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
+											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], logscale='loglog', error=Prop_error_density[Fofr_only-1])
+		RelDiff_num_density_fofr_logX = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
+											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], logscale='logx', error=Prop_error_density[Fofr_only-1])
+
+
 		######## Compare different properties
 		### Thickness as a function of length, LCDM + Symmetron and LCDM + f(R)
 		ThickVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_thickness[SymmLCDM], Length_label, Mean_Thickness_label, self.Symm_legends,
@@ -1263,6 +1310,15 @@ class Plot_results():
 		self.savefigure(Reldiff_num_thick_Symm_logX, 'Relative_difference_thickness_logX_cSymmetron')
 		self.savefigure(Reldiff_num_thick_fofr, 'Relative_difference_thickness_cFofr')
 		self.savefigure(Reldiff_num_thick_fofr_logX, 'Relative_difference_thickness_logX_cFofr')
+		######## Density histograms
+		self.savefigure(NumDensity_Symm, 'Filament_density_distribution_cSymmetron')
+		self.savefigure(NumDensity_fofr, 'Filament_density_distribution_cFofr')
+		self.savefigure(NumDensity_Symm, 'Filament_density_distribution_logX_cSymmetron')
+		self.savefigure(NumDensity_fofr, 'Filament_density_distribution_logX_cFofr')
+		self.savefigure(RelDiff_num_density_Symm, 'Relative_difference_density_cSymmetron')
+		self.savefigure(RelDiff_num_density_fofr, 'Relative_difference_density_cFofr')
+		self.savefigure(RelDiff_num_density_Symm_logX, 'Relative_difference_density_logX_cSymmetron')
+		self.savefigure(RelDiff_num_density_fofr_logX, 'Relative_difference_density_logX_cSymmetron')
 		######## Compare different properties
 		self.savefigure(ThickVsLen_Symm, 'ThicknessVsLength_cSymmetron')
 		self.savefigure(ThickVsLen_fofr, 'ThicknessVsLength_cFofr')
@@ -2047,10 +2103,10 @@ if __name__ == '__main__':
 	#Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
 	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
 	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
-	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
-	Plot_instance.Other_profiles()
+	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
+	#Plot_instance.Other_profiles()
 
-	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-	CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
-								 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
-	CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
+	#savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
+	#CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
+	#							 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
+	#CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
