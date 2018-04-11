@@ -1000,6 +1000,7 @@ class Plot_results():
 		Error_thickness = []
 		for i in range(NModels):
 			bin_value, bin_std = OF.Bin_numbers_common(Thresholds[i], Thresholds[i], Common_bin_thickness, std='poisson')
+			bin_value = np.nan_to_num(bin_value[1:])
 			Number_thickness.append(bin_value)
 			Error_thickness.append(bin_std)
 		Number_thickness = np.asarray(Number_thickness)
@@ -1014,13 +1015,13 @@ class Plot_results():
 			Volumes = np.pi*FilLengths[i]*Thresholds[i]**2
 			rho = self.Filament_masses[i]/Volumes
 			self.Filament_density.append(rho)
-		self.Filament_density = np.asarray(Filament_density)
+		self.Filament_density = np.asarray(self.Filament_density)
 		Common_bin_density = OF.Get_common_bin_logX(self.Filament_density, binnum=binnum)
 		# Compute number of filament within a density bins
 		Number_density = []
 		Error_density = []
 		for i in range(NModels):
-			bin_value, bin_std = OF.Bin_numbers_common(self.Filament_density[i], self.Filament_density[i], std='poisson')
+			bin_value, bin_std = OF.Bin_numbers_common(self.Filament_density[i], self.Filament_density[i], Common_bin_density, std='poisson')
 			Number_density.append(bin_value)
 			Error_density.append(bin_std)
 		Number_density = np.asarray(Number_density)
@@ -1195,9 +1196,9 @@ class Plot_results():
 											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], logscale='loglog', error=Prop_error_density[Symm_only-1])
 		RelDiff_num_density_Symm_logX = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
 											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], logscale='logx', error=Prop_error_density[Symm_only-1])
-		RelDiff_num_density_fofr = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
+		RelDiff_num_density_fofr = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Fofr_only-1], Density_label, Number_label_reldiff,
 											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], logscale='loglog', error=Prop_error_density[Fofr_only-1])
-		RelDiff_num_density_fofr_logX = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
+		RelDiff_num_density_fofr_logX = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Fofr_only-1], Density_label, Number_label_reldiff,
 											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], logscale='logx', error=Prop_error_density[Fofr_only-1])
 
 
@@ -1313,8 +1314,8 @@ class Plot_results():
 		######## Density histograms
 		self.savefigure(NumDensity_Symm, 'Filament_density_distribution_cSymmetron')
 		self.savefigure(NumDensity_fofr, 'Filament_density_distribution_cFofr')
-		self.savefigure(NumDensity_Symm, 'Filament_density_distribution_logX_cSymmetron')
-		self.savefigure(NumDensity_fofr, 'Filament_density_distribution_logX_cFofr')
+		self.savefigure(NumDensity_Symm_logX, 'Filament_density_distribution_logX_cSymmetron')
+		self.savefigure(NumDensity_fofr_logX, 'Filament_density_distribution_logX_cFofr')
 		self.savefigure(RelDiff_num_density_Symm, 'Relative_difference_density_cSymmetron')
 		self.savefigure(RelDiff_num_density_fofr, 'Relative_difference_density_cFofr')
 		self.savefigure(RelDiff_num_density_Symm_logX, 'Relative_difference_density_logX_cSymmetron')
