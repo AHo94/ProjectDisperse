@@ -988,6 +988,9 @@ class CompareModels():
 		# 'massfunction' of lengths
 		Distribution_symm = distribution[0:5]
 		Distribution_fofr = np.array([distribution[i] for i in [0,5,6,7]])
+		RelDiff_distribution_symm = np.array([OF.relative_deviation_singular(distribution[0], Distribution_symm[i]) for i in range(1, len(Distribution_symm))])
+		RelDiff_distribution_fofr = np.array([OF.relative_deviation_singular(distribution[0], Distribution_fofr[i]) for i in range(1, len(Distribution_fofr))])
+
 		Lengths_symm = lengths[0:5]
 		Lengths_fofr = np.array([lengths[i] for i in [0,5,6,7]])
 
@@ -1006,9 +1009,9 @@ class CompareModels():
 		Sep_RelDiff_length_F = self.Plot_differences_sameX(lengths, Distribution_fofr, xlabel_len, 'Relative difference of $N(>L)$', fofr_legends_only,
 														 fofr_colors_only, logscale='logx')
 		# Relative difference of N(>R) with errorbar
-		Sep_RelDiff_length_error_S = self.Plot_errobar_sameX(lengths, Distribution_symm[1:], Propagated_errors[1:5], xlabel_len, 'Relative difference of $N(>L)$',
+		Sep_RelDiff_length_error_S = self.Plot_errobar_sameX(lengths, RelDiff_distribution_symm, Propagated_errors[0:4], xlabel_len, 'Relative difference of $N(>L)$',
 							 							Symm_legends_only, Symm_colors_only, fill_between=True, diff=True, logscale='logx')
-		Sep_RelDiff_length_error_F = self.Plot_errobar_sameX(lengths, Distribution_fofr[1:], Propagated_errors[5:], xlabel_len, 'Relative difference of $N(>L)$',
+		Sep_RelDiff_length_error_F = self.Plot_errobar_sameX(lengths, RelDiff_distribution_fofr, Propagated_errors[4:], xlabel_len, 'Relative difference of $N(>L)$',
 														 fofr_legends_only, fofr_colors_only, fill_between=True, diff=True, logscale='logx')
 
 		# Absolute Differences in Number of filaments and not N(>L)
