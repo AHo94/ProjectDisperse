@@ -1007,7 +1007,7 @@ class Plot_results():
 		# Relative difference of the thickness. Basemodel lcdm
 		RelativeDiff_thickness = np.array([OF.relative_deviation(Number_thickness, i) for i in range(1, NModels)])
 		for i in range(len(RelativeDiff_thickness)):
-			RelativeDiff_thickness[i][1:] = np.nan_to_num(RelativeDiff_thickness[1:])
+			RelativeDiff_thickness[i][1:] = np.nan_to_num(RelativeDiff_thickness[i][1:])
 		Prop_error_thickness = np.array([OF.Propagate_error_reldiff(Number_thickness[0], Number_thickness[i], Error_thickness[0], Error_thickness[i]) 
 										for i in range(1, NModels)])
 
