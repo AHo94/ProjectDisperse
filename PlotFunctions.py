@@ -74,6 +74,11 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
 	plt.xlabel(xlabel)
 	plt.ylabel(ylabel)
 	plt.legend(legend)
+	if np.min(xdata) > 1e12:
+		xfmt = plt.ScalarFormatter()
+		xfmt.set_powerlimits((0,0))
+		plt.gca().xaxis.set_major_formatter(xfmt)
+
 	for kw in kwargs:
 		if kw == 'title':
 			plt.title(title)
