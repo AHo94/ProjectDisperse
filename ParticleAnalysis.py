@@ -1000,7 +1000,7 @@ class Plot_results():
 		Error_thickness = []
 		for i in range(NModels):
 			bin_value, bin_std = OF.Bin_numbers_common(Thresholds[i], Thresholds[i], Common_bin_thickness, std='poisson')
-			bin_value = np.nan_to_num(bin_value[1:])
+			bin_value[1:] = np.nan_to_num(bin_value[1:])
 			Number_thickness.append(bin_value)
 			Error_thickness.append(bin_std)
 		Number_thickness = np.asarray(Number_thickness)
@@ -2107,7 +2107,7 @@ if __name__ == '__main__':
 	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	#Plot_instance.Other_profiles()
 
-	#savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-	#CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
-	#							 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
-	#CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
+	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
+	CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
+								 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
+	CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
