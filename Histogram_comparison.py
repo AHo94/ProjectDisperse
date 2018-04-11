@@ -1000,11 +1000,16 @@ class CompareModels():
 		Distribution_lengths_F_loglog = self.Call_plot_sameX(lengths, Distribution_fofr, xlabel_len, '$\mathregular{N(>L)}$', fofr_legends,
 															 self.Plot_colors_fofr, logscale='loglog')
 
-		# Relative differences
+		# Relative differences of N(>R)
 		Sep_RelDiff_length_S = self.Plot_differences_sameX(lengths, Distribution_symm, xlabel_len, 'Relative difference of $N(>L)$', Symm_legends_only,
 														 Symm_colors_only, logscale='logx')
 		Sep_RelDiff_length_F = self.Plot_differences_sameX(lengths, Distribution_fofr, xlabel_len, 'Relative difference of $N(>L)$', fofr_legends_only,
 														 fofr_colors_only, logscale='logx')
+		# Relative difference of N(>R) with errorbar
+		Sep_RelDiff_length_error_S = self.Plot_errobar_sameX(lengths, Distribution_symm[1:], Propagated_errors[1:5], xlabel_len, 'Relative difference of $N(>L)$',
+							 							Symm_legends_only, Symm_colors_only, fill_between=True, diff=True, logscale='logx')
+		Sep_RelDiff_length_error_F = self.Plot_errobar_sameX(lengths, Distribution_fofr[1:], Propagated_errors[5:], xlabel_len, 'Relative difference of $N(>L)$',
+														 fofr_legends_only, fofr_colors_only, fill_between=True, diff=True, logscale='logx')
 
 		# Absolute Differences in Number of filaments and not N(>L)
 		Sep_AbsDiff_Number_S = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, '$\Delta N$ filaments', Symm_legends_only,
@@ -1144,6 +1149,8 @@ class CompareModels():
 			self.savefigure(Set_FilLengths_properr_F_logx, 'Filament_length_RelativeDiff_cFofr_logx')
 			self.savefigure(Sep_RelDiff_length_S, 'Filament_lengths_relative_difference_cSymmetron')
 			self.savefigure(Sep_RelDiff_length_F, 'Filament_lengths_relative_difference_cFofr')
+			self.savefigure(Sep_RelDiff_length_error_S, 'Filament_lengths_cumulativeRev_reldiff_cSymmetron')
+			self.savefigure(Sep_RelDiff_length_error_F, 'Filament_lengths_cumulativeRev_reldiff_cFofr')
 			self.savefigure(Distribution_lengths_S, 'Length_distribution_cSymmetron')
 			self.savefigure(Distribution_lengths_F, 'Length_distribution_cFofr')
 			self.savefigure(Distribution_lengths_S_loglog, 'Length_distribution_cSymmetron_loglog')
