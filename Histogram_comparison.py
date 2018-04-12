@@ -1108,7 +1108,7 @@ class CompareModels():
 			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(Symm_legends_only)
 		plt.xscale('log')
-		plt.ylim(-2,2)
+		ax.set_ylim(-2,2)
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
 		plt.setp(ax2.get_yticklabels(), visible=False)
@@ -1119,8 +1119,9 @@ class CompareModels():
 			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(fofr_legends_only)
 		plt.xscale('log')
+		ax2.set_ylim(-2,2)
 		ConnectedHistComparison_subplot_reldiff.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
-		ConnectedHistComparison_subplot_reldiff.text(0.04, 0.75, 'Relative difference of number connections', ha='center', rotation='vertical', fontsize=10)
+		ConnectedHistComparison_subplot_reldiff.text(0.04, 0.45, 'Relative difference of number connections', ha='center', rotation='vertical', fontsize=10)
 		
 
 		if self.savefile == 1:
