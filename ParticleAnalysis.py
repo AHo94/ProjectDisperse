@@ -1475,7 +1475,7 @@ class Plot_results():
 			Mean_profiles.append(Temp_prof)
 			Mean_stds.append(Temp_std)
 		AverageSpeed_SimilarMass_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
-														self.Symm_legends, Plot_colors_symm, error=Mean_prof_std, fillbetween=True)
+														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=True)
 		"""
 		AverageSpeed_SimilarMass_Symm = plt.figure(figsize=(30,8))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
