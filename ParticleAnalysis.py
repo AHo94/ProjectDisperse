@@ -1461,13 +1461,19 @@ class Plot_results():
 		####################
 		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
 		print 'Testing new subplot module for similarmass symmetron'
+		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
 		Mean_profiles = []
 		Mean_stds = []
-		for i in SymmLCDM:
-			Mean_prof, Mean_prof_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
+		for j in range(len(Mass_ranges)-1):
+			Temp_prof = []
+			Temp_std = []
+			for i in SymmLCDM:
+				Mean_prof, Mean_prof_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
 												Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Symm_filenames[i], newbinning=binnum)
-			Mean_profiles.append(Mean_prof)
-			Mean_prof_std.append(Mean_prof_std)
+				Temp_prof.append(Mean_prof)
+				Temp_std.append(Mean_prof_std)
+			Mean_profiles.append(Temp_prof)
+			Mean_stds.append(Temp_std)
 		AverageSpeed_SimilarMass_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, Plot_colors_symm, error=Mean_prof_std, fillbetween=True)
 		"""
