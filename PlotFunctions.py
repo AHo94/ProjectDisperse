@@ -267,7 +267,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 			if j > 0:
 				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
-			for i in range(len(ydata)):
+			for i in range(len(ydata[j])):
 				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i])
 			if titles:
 				plt.title(titles[j], fontsize=10)

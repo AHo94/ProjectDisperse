@@ -1581,7 +1581,7 @@ class Plot_results():
 
 		#### Average speed of filament of similar length. f(R) + LCDM comparison
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Thickness_ranges, 'Thickness', binnum)
-		AverageSpeed_SimilarLength_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
+		AverageSpeed_SimilarThickness_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Thickness_titles)
 		### Relative differences of filaments of similar length
 
