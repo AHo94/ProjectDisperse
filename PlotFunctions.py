@@ -172,3 +172,108 @@ def Plot_errobar_sameX(self, xdata, ydata, error, xlabel, ylabel, legend, logsca
 		plt.yscale('log')
 	#plt.legend(legend)
 	return figure
+
+def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=np.array([]), **kwargs):
+	""" Plots subplots for multiple ydata sets but all using the same xdata """
+	# Default arguments
+	do_fill_between = False
+	set_ylimits = False
+	set_xlimits = False
+	New_figure_size = False
+	Remove_y_ticks = True
+	Nrows = 1
+	Ncols = len(ydata)
+	fb_alpha = 0.4
+	anchor_legend = True
+	titles = []
+	Change_xscales = False
+	Change_yscales = False
+	# Iterate through keyword arguments to check if anything special will happen. Changes some default arguments
+	for kw in kwargs:
+		if kw == 'fillbetween':
+			do_fill_between = kwargs[kw]
+		if kw == 'xlim':		# Sets xlimit if called
+			set_xlimits = True
+			xlims = kwargs[kw]
+			if type(xlims) != tuple:
+				raise ValueError("Keyword argument xlims must be a tuple!")
+		if kw == 'ylim':		# Sets ylimit if called
+			set_ylimits = True
+			ylims = kwargs[kw]
+			if type(ylims) != tuple:
+				raise ValueError("Keyword argument ylims must be a tuple!")
+		if kw == 'figsize':   	# Figure size of plot
+			figure_size = kwargs[kw]
+			New_figure_size = True
+		if kw == 'rowcol':   	# Number of rows and columns for subplots.
+			row_and_col = kwargs[kw]
+			if type(row_and_col) != list:
+				raise ValueError("Keyword argument rowcol must be a list!")
+			Nrows = row_and_col[0]
+			Ncols = row_and_col[1]
+		if kw == 'NoYticks':   # Removes Y-ticks of the latter plots, removes clutted.
+			Remove_y_ticks = kwargs[kw]
+		if kw == 'fb_alpha':   # Alpha used for fill_between
+			fb_alpha = kwargs[kw]
+			if type(fb_alpha) != float:
+				raise ValueError("Keyword argument fb_alpha must be a float number!")
+		if kw == 'legend_anchor':   # Anchors the legend outside the figure if True
+			anchor_legend = kwargs[kw]
+		if kw == 'title':    	# Titles above subplots
+			titles = kwargs[kw]
+			if type(titles) != list:
+				raise ValueError("Keyword argument titles must be a list!")
+		if kw == 'xscale':	# Changes x plot scales based on input
+			logXscale_name = kwargs[kw]
+			Change_xscales = True
+		if kw == 'yscale':	# Changes y plot scales based on input
+			logYscale_name = kwargs[kw]
+			Change_yscales = True
+	# Quick checks of error data vs ydata and titles
+	if not error.any() and do_fill_between:
+		print 'Warning: fillbetween is True but no error data found'
+		do_fill_between = False
+	elif error.any() and do_fill_between:
+		if len(error) != len(ydata):
+			raise ValueError("Error data not the same size as ydata!")
+	if titles:
+		if len(titles) != len(ydata):
+			raise ValueError("title list not the same length as ydata!")
+	if len(legend) != len(ydata):
+		raise ValueError("Number of legends not the same as number of ydata!")
+
+	if New_figure_size:
+		figure = plt.figure(figsize=figure_size)
+	else:
+		figure = plt.figure()
+	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+	ax = plt.subplots(Nrows, Ncols, 1)
+	if do_fill_between:
+		for i in range(len(ydata)):
+			if i > 0:
+				ax = plt.subplot(Nrows,Ncols, i+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
+			plt.plot(xdata, ydata[i], label=legend[i], color=colors[i])
+			plt.fill_between(xdata, ydata[i]-error[i], ydata[i]+error[i], alpha=fb_alpha, facecolor=colors[i])
+			if titles:
+				plt.title(titles[i], fontsize=10)
+	else:
+		for i in range(len(ydata)):
+			if i > 0:
+				ax = plt.subplot(Nrows,Ncols, i+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
+			plt.plot(xdata, ydata[i], label=legend[i], color=colors[i])
+			if titles:
+				plt.title(titles[i], fontsize=10)
+	if set_xlimits:
+		plt.xlim(xlims)
+	if set_ylimits:
+		plt.ylim(ylims)
+	ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+	figure.text(0.5, 0.01, xlabel, ha='center', fontsize=10)
+	figure.text(0.04, 0.55, ylabel, ha='center', rotation='vertical', fontsize=10)
+	if Change_xscales:
+		plt.xscale(logXscale_name)
+	if Change_yscales:
+		plt.yscale(logYscale_name)
+	return figure
