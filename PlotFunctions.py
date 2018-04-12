@@ -197,11 +197,15 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 			xlims = kwargs[kw]
 			if type(xlims) != tuple:
 				raise ValueError("Keyword argument xlims must be a tuple!")
+			if not xlims[0] and not xlims[1]:
+				set_xlimits = False
 		if kw == 'ylim':		# Sets ylimit if called
 			set_ylimits = True
 			ylims = kwargs[kw]
 			if type(ylims) != tuple:
 				raise ValueError("Keyword argument ylims must be a tuple!")
+			if not ylims[0] and not ylims[1]:
+				set_ylimits = False
 		if kw == 'figsize':   	# Figure size of plot
 			figure_size = kwargs[kw]
 			New_figure_size = True
