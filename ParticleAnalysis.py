@@ -1421,6 +1421,7 @@ class Plot_results():
 		binnum = 20
 		NModels = len(All_speeds)
 		s_variable = 0.7
+		ylimits = (0,0)
 		#Mass_label = 'Filament mass - [$M_\odot / h$]'
 		#Number_label = '$N$ filaments'
 		#Thickness_label = 'Filament thickness - [Mpc/h]'
@@ -1446,11 +1447,13 @@ class Plot_results():
 			Average_speed_label =  r'$\langle v_\parallel \rangle - [\mathrm{km}/s]$'
 			Average_speed_label_nounit = r'$\langle v_{\parallel} \rangle$'
 			Reldiff_label_avgspeed = r'$(\langle v_{\parallel,i} \rangle - \langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle$'
+			ylimits = (-1,1)
 		elif speedtype == 'Density':
 			Average_speed_label = r'$\langle \rho \rangle - [\mathrm{kg}h^2/\mathrm{m^3}]$'
 			Average_speed_label_nounit = r'$\langle \rho \rangle$'
 			Reldiff_label_avgspeed = r'$(\langle \rho_i \rangle - \langle \rho_\{\Lambda \mathrm{CDM}})/(\langle \rho_{\Lambda \mathrm{CDM}} \rangle)$'
 			do_fb = False
+			#ylimits = (-1,1)
 		
 		SymmLCDM = np.array([0,1,2,3,4])
 		FofrLCDM = np.array([0,5,6,7])
@@ -1530,13 +1533,12 @@ class Plot_results():
 		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
 		RelDiff_SimilarMass_plot_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 														self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb,
-														ylim=(-1,1), title=Mass_titles)
+														ylim=ylimits, title=Mass_titles)
 		### f(R) difference to LCDM
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
 		RelDiff_SimilarMass_plot_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 														self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, 
-														ylim=(-1,1), title=Mass_titles)
-
+														ylim=ylimits, title=Mass_titles)
 		####################
 		#################### SIMILAR LENGTHS
 		####################
@@ -1561,12 +1563,12 @@ class Plot_results():
 		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Length_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
 		RelDiff_SimilarLen_plot_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, 
-													ylim=(-1,1), title=Length_titles)
+													ylim=ylimits, title=Length_titles)
 		### f(R) difference to LCDM
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
 		RelDiff_SimilarLen_plot_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, 
-													ylim=(-1,1), title=Length_titles)
+													ylim=ylimits, title=Length_titles)
 		####################
 		#################### SIMILAR THICKNESS
 		####################
@@ -1932,9 +1934,9 @@ if __name__ == '__main__':
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
 	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
-	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
-	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
-	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
+	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
+	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
 
 	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
