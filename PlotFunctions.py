@@ -239,7 +239,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=np.arr
 	if titles:
 		if len(titles) != len(ydata):
 			raise ValueError("title list not the same length as ydata!")
-	if len(legend) != len(ydata):
+	if len(legend) != len(ydata[0]):
 		raise ValueError("Number of legends not the same as number of ydata!")
 
 	if New_figure_size:
@@ -249,22 +249,24 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=np.arr
 	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 	ax = plt.subplots(Nrows, Ncols, 1)
 	if do_fill_between:
-		for i in range(len(ydata)):
-			if i > 0:
-				ax = plt.subplot(Nrows,Ncols, i+1, sharey=ax)
+		for j in range(len(ydata)):
+			if j > 0:
+				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
-			plt.plot(xdata, ydata[i], label=legend[i], color=colors[i])
-			plt.fill_between(xdata, ydata[i]-error[i], ydata[i]+error[i], alpha=fb_alpha, facecolor=colors[i])
+			for i in range(len(ydata[j])):
+				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i])
+				plt.fill_between(xdata, ydata[j][i]-error[j][i], ydata[j][i]+error[j][i], alpha=fb_alpha, facecolor=colors[i])
 			if titles:
-				plt.title(titles[i], fontsize=10)
+				plt.title(titles[j], fontsize=10)
 	else:
-		for i in range(len(ydata)):
-			if i > 0:
-				ax = plt.subplot(Nrows,Ncols, i+1, sharey=ax)
+		for j in range(len(ydata)):
+			if j > 0:
+				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
-			plt.plot(xdata, ydata[i], label=legend[i], color=colors[i])
+			for i in range(len(ydata)):
+				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i])
 			if titles:
-				plt.title(titles[i], fontsize=10)
+				plt.title(titles[j], fontsize=10)
 	if set_xlimits:
 		plt.xlim(xlims)
 	if set_ylimits:
