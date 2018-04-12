@@ -1097,7 +1097,7 @@ class CompareModels():
 		plt.xscale('log')
 		plt.yscale('log')
 		ConnectedHistComparison_subplot.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
-		ConnectedHistComparison_subplot.text(0.04, 0.55, '$N$ filaments', ha='center', va='center', rotation='vertical', fontsize=10)
+		ConnectedHistComparison_subplot.text(0.04, 0.5, '$N$ filaments', ha='center', va='center', rotation='vertical', fontsize=10)
 
 		ConnectedHistComparison_subplot_reldiff = plt.figure(figsize=(5,4))
 		ax = plt.subplot(1,2,1)
@@ -1120,9 +1120,9 @@ class CompareModels():
 		plt.legend(fofr_legends_only)
 		plt.xscale('log')
 		ax2.set_ylim(-2,2)
-		ConnectedHistComparison_subplot_reldiff.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
-		ConnectedHistComparison_subplot_reldiff.text(0.04, 0.45, 'Relative difference of number connections', ha='center', va='center', rotation='vertical', fontsize=10)
-		
+		ConnectedHistComparison_subplot_reldiff.text(0.5, 0, 'Number connections', ha='center', fontsize=10)
+		ConnectedHistComparison_subplot_reldiff.text(0, 0.5, 'Relative difference of number connections', ha='center', va='center', rotation='vertical', fontsize=10)
+		plt.tight_layout()	
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
