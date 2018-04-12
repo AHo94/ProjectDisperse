@@ -1342,6 +1342,22 @@ class Plot_results():
 		Can either be the total speed, orthogonal speed or parallel speed. 
 		The speedtype name must be the same as the input speed array, else shit happens.
 		"""
+		def get_data(Models_run, filenames, xbins, p_ranges, prop, binnums):
+			Mean_profiles = []
+			Mean_stds = []
+			for j in range(len(p_ranges)-1):
+				Temp_prof = []
+				Temp_std = []
+				for ij in Models_run:
+					i = Models_run[ij]
+					Mean_prof, Mean_prof_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
+													xbins, p_ranges[j], p_ranges[j+1], prop, filenames[ij], newbinning=binnums)
+					Temp_prof.append(Mean_prof)
+					Temp_std.append(Mean_prof_std)
+				Mean_profiles.append(Temp_prof)
+				Mean_stds.append(Temp_std)
+			return Mean_profiles, Mean_stds
+
 		velocity_savefile_dir = 'ModelComparisons/VelocityAnalysis/'
 		if self.raw_filetype == 'png':
 			velocity_savefile_dir += 'PNG/'
@@ -1367,6 +1383,7 @@ class Plot_results():
 
 		print 'Computing for ', speedtype 
 		######## Compute relevant stuff ########
+		do_fb = True
 		binnum = 20
 		NModels = len(All_speeds)
 		s_variable = 0.7
@@ -1399,6 +1416,7 @@ class Plot_results():
 			Average_speed_label = r'$\langle \rho \rangle - [\mathrm{kg}h^2/\mathrm{m^3}]$'
 			Average_speed_label_nounit = r'$\langle \rho \rangle$'
 			Reldiff_label_avgspeed = r'$(\langle \rho_i \rangle - \langle \rho_\{\Lambda \mathrm{CDM}})/(\langle \rho_{\Lambda \mathrm{CDM}} \rangle)$'
+			do_fb = False
 		
 		SymmLCDM = np.array([0,1,2,3,4])
 		FofrLCDM = np.array([0,5,6,7])
@@ -1462,42 +1480,15 @@ class Plot_results():
 		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
 		print 'Testing new subplot module for similarmass symmetron'
 		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
-		Mean_profiles = []
-		Mean_stds = []
-		for j in range(len(Mass_ranges)-1):
-			Temp_prof = []
-			Temp_std = []
-			for i in SymmLCDM:
-				Mean_prof, Mean_prof_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
-												Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Symm_filenames[i], newbinning=binnum)
-				Temp_prof.append(Mean_prof)
-				Temp_std.append(Mean_prof_std)
-			Mean_profiles.append(Temp_prof)
-			Mean_stds.append(Temp_std)
+		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Mass_ranges, 'mass', binnums)
 		AverageSpeed_SimilarMass_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
-														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=True)
-		"""
-		AverageSpeed_SimilarMass_Symm = plt.figure(figsize=(30,8))
-		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
-		ax = plt.subplot(1,3,1)
-		for j in range(len(Mass_ranges)-1):
-			if j > 0:
-				ax = plt.subplot(1,3, j+1, sharey=ax)
-				plt.setp(ax.get_yticklabels(), visible=False)
-			print 'iteration ',j, ' similar mass'
-			for i in SymmLCDM:
-				Mean_profile, Mean_profile_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
-																			Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Symm_filenames[i], newbinning=binnum)
-				plt.plot(Common_bin_distances_normalized, Mean_profile, label=self.Symm_legends[i], color=self.Plot_colors_symm[i])
-				plt.fill_between(Common_bin_distances_normalized, Mean_profile-Mean_profile_std, Mean_profile+Mean_profile_std,
-								 alpha=0.3, facecolor=self.Plot_colors_symm[i])
-			plt.title(Mass_titles[j], fontsize=10)
-		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
-		AverageSpeed_SimilarMass_Symm.text(0.5, 0.01, Distance_normalized_label, ha='center', fontsize=10)
-		AverageSpeed_SimilarMass_Symm.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
-		"""
+														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb)
+
 		### Average speed of filaments with similar masses, comparing LCDM + f(R)
+		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Mass_ranges, 'mass', binnums)
+		AverageSpeed_SimilarMass_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
+														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb)
+		"""
 		AverageSpeed_SimilarMass_fofr = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,3,1)
@@ -1517,7 +1508,7 @@ class Plot_results():
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarMass_fofr.text(0.5, 0.01, Distance_normalized_label, ha='center', fontsize=10)
 		AverageSpeed_SimilarMass_fofr.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
-		
+		"""
 		### Relative difference of the average speed, for similar masses.
 		RelDiff_AvgSpeed_SimilarMass = []
 		PropErr_AvgSpeed_SimilarMass = []
