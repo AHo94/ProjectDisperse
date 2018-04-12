@@ -1007,6 +1007,7 @@ class Plot_results():
 		# Relative difference of the thickness. Basemodel lcdm
 		RelativeDiff_thickness = np.array([OF.relative_deviation(Number_thickness, i) for i in range(1, NModels)])
 		for i in range(len(RelativeDiff_thickness)):
+			RelativeDiff_thickness[i][RelativeDiff_thickness[i] == np.inf] = 0.0
 			RelativeDiff_thickness[i][1:] = np.nan_to_num(RelativeDiff_thickness[i][1:])
 		Prop_error_thickness = np.array([OF.Propagate_error_reldiff(Number_thickness[0], Number_thickness[i], Error_thickness[0], Error_thickness[i]) 
 										for i in range(1, NModels)])
@@ -1459,6 +1460,17 @@ class Plot_results():
 		#################### SIMILAR MASSES
 		####################
 		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
+		print 'Testing new subplot module for similarmass symmetron'
+		Mean_profiles = []
+		Mean_stds = []
+		for i in SymmLCDM:
+			Mean_prof, Mean_prof_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
+												Common_bin_distances_normalized, Mass_ranges[j], Mass_ranges[j+1], 'Mass', Symm_filenames[i], newbinning=binnum)
+			Mean_profiles.append(Mean_prof)
+			Mean_prof_std.append(Mean_prof_std)
+		AverageSpeed_SimilarMass_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
+														self.Symm_legends, Plot_colors_symm, error=Mean_prof_std, fillbetween=True)
+		"""
 		AverageSpeed_SimilarMass_Symm = plt.figure(figsize=(30,8))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
@@ -1478,6 +1490,7 @@ class Plot_results():
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		AverageSpeed_SimilarMass_Symm.text(0.5, 0.01, Distance_normalized_label, ha='center', fontsize=10)
 		AverageSpeed_SimilarMass_Symm.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		"""
 		### Average speed of filaments with similar masses, comparing LCDM + f(R)
 		AverageSpeed_SimilarMass_fofr = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
@@ -2103,11 +2116,11 @@ if __name__ == '__main__':
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
-	#Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
+	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
 	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
 	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
 	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
-	#Plot_instance.Other_profiles()
+	Plot_instance.Other_profiles()
 
 	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
 	CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
