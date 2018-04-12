@@ -273,7 +273,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 		plt.ylim(ylims)
 	ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 	figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
-	figure.text(0, 0.5, ylabel, ha='center', rotation='vertical', fontsize=10)
+	figure.text(0, 0.5, ylabel, ha='center', va='center', rotation='vertical', fontsize=10)
 	if Change_xscales:
 		plt.xscale(logXscale_name)
 	if Change_yscales:
