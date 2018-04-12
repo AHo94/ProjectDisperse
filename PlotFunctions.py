@@ -173,7 +173,7 @@ def Plot_errobar_sameX(self, xdata, ydata, error, xlabel, ylabel, legend, logsca
 	#plt.legend(legend)
 	return figure
 
-def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=np.array([]), **kwargs):
+def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **kwargs):
 	""" Plots subplots for multiple ydata sets but all using the same xdata """
 	# Default arguments
 	do_fill_between = False
@@ -230,10 +230,10 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=np.arr
 			logYscale_name = kwargs[kw]
 			Change_yscales = True
 	# Quick checks of error data vs ydata and titles
-	if not error.any() and do_fill_between:
+	if not error and do_fill_between:
 		print 'Warning: fillbetween is True but no error data found'
 		do_fill_between = False
-	elif error.any() and do_fill_between:
+	elif error and do_fill_between:
 		if len(error) != len(ydata):
 			raise ValueError("Error data not the same size as ydata!")
 	if titles:
@@ -247,7 +247,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=np.arr
 	else:
 		figure = plt.figure()
 	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-	ax = plt.subplots(Nrows, Ncols, 1)
+	ax = plt.subplot(Nrows, Ncols, 1)
 	if do_fill_between:
 		for j in range(len(ydata)):
 			if j > 0:
@@ -272,10 +272,11 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=np.arr
 	if set_ylimits:
 		plt.ylim(ylims)
 	ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
-	figure.text(0.5, 0.01, xlabel, ha='center', fontsize=10)
-	figure.text(0.04, 0.55, ylabel, ha='center', rotation='vertical', fontsize=10)
+	figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
+	figure.text(0, 0.5, ylabel, ha='center', rotation='vertical', fontsize=10)
 	if Change_xscales:
 		plt.xscale(logXscale_name)
 	if Change_yscales:
 		plt.yscale(logYscale_name)
+	plt.tight_layout()
 	return figure
