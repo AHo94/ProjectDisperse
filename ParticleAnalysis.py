@@ -1592,12 +1592,12 @@ class Plot_results():
 
 		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Thickness_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
 		RelDiff_SimilarThickness_plot_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
-													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, title=Thickness_ranges)
+													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, title=Thickness_titles)
 		### f(R) difference to LCDM
 
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
 		RelDiff_SimilarThickness_plot_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
-													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, title=Thickness_ranges)
+													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, title=Thickness_titles)
 		####################
 		#################### OVER DIFFERENT MASS BINS
 		####################
