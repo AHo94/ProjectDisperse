@@ -1113,6 +1113,8 @@ class CompareModels():
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
 		plt.setp(ax2.get_yticklabels(), visible=False)
+		print bin_val_connhist[0]
+		print 'LCDM ABOVE'
 		for i in range(5,8):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
 			print bin_val_connhist[i]
