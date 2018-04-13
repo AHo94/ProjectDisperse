@@ -1089,8 +1089,9 @@ class CompareModels():
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for i in [0,5,6,7]:
 			binval, binstd = OF.Bin_numbers_common(Nconnections[i], Nconnections[i], connection_bins, std='poisson')
-			bin_val_connhist.append(binval)
-			bin_std_connhist.append(binstd)
+			if i != 0:
+				bin_val_connhist.append(binval)
+				bin_std_connhist.append(binstd)
 			plt.plot(connection_bins, binval, color=self.Plot_colors_all[i])
 			plt.fill_between(connection_bins, binval-binstd, binval+binstd, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(fofr_legends)
@@ -1113,13 +1114,8 @@ class CompareModels():
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
 		plt.setp(ax2.get_yticklabels(), visible=False)
-		print bin_val_connhist[0]
-		print 'LCDM ABOVE'
 		for i in range(5,8):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
-			print bin_val_connhist[i]
-			print reldiff_chist
-			print '==='
 			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
 			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i])
 			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])

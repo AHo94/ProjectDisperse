@@ -1987,10 +1987,10 @@ if __name__ == '__main__':
 		Fillens = Instance.Get_filament_length()[OK_fils]
 		Filament_lengths.append(Fillens)
 		Density_prof.append(Instance.Compute_density_profile(OK_distances, Fillens))
-		N_filament_connections.append(Instance.Number_filament_connections()[OK_fils])	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
+		N_filament_connections.append(Instance.Number_filament_connections()[OK_fils]*Mpc**3/Solmass)	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
-	#Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
+	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
 	#Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
 	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
 	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
