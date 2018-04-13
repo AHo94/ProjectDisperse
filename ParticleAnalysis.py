@@ -1343,7 +1343,7 @@ class Plot_results():
 		Can either be the total speed, orthogonal speed or parallel speed. 
 		The speedtype name must be the same as the input speed array, else shit happens.
 		"""
-		def get_data(Models_run, filenames, xbins, p_ranges, prop, binnums):
+		def get_data(Models_run, filenames, xbins, p_ranges, prop, prop_name, binnums):
 			Mean_profiles = []
 			Mean_stds = []
 			for j in range(len(p_ranges)-1):
@@ -1351,8 +1351,8 @@ class Plot_results():
 				Temp_std = []
 				for ij in range(len(Models_run)):
 					i = Models_run[ij]
-					Mean_prof, Mean_prof_std = self.Compute_similar_profiles(self.Filament_masses[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
-													xbins, p_ranges[j], p_ranges[j+1], prop, filenames[ij], newbinning=binnums)
+					Mean_prof, Mean_prof_std = self.Compute_similar_profiles(prop[i], All_speeds[i], Part_distances[i], self.Thresholds[i],
+													xbins, p_ranges[j], p_ranges[j+1], prop_name, filenames[ij], newbinning=binnums)
 					Temp_prof.append(Mean_prof)
 					Temp_std.append(Mean_prof_std)
 				Mean_profiles.append(Temp_prof)
@@ -1516,12 +1516,12 @@ class Plot_results():
 		####################
 		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
 		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
-		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Mass_ranges, 'Mass', binnum)
+		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Mass_ranges, self.Filament_masses, 'Mass', binnum)
 		AverageSpeed_SimilarMass_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, title=Mass_titles)
 
 		### Average speed of filaments with similar masses, comparing LCDM + f(R)
-		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Mass_ranges, 'Mass', binnum)
+		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Mass_ranges, self.Filament_masses, 'Mass', binnum)
 		AverageSpeed_SimilarMass_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Mass_titles)
 		### Relative difference of the average speed, for similar masses.
@@ -1545,12 +1545,12 @@ class Plot_results():
 		Length_titles = ['$L \in [1,5]$ Mpc/h', '$L \in [5,10]$ Mpc/h', '$L \in [10,20]$ Mpc/h']
 		Length_ranges = [1, 5, 10, 20]   # Units of Mpc/h, maybe use min and max of mass bin?
 
-		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Length_ranges, 'Length', binnum)
+		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Length_ranges, self.FilLengths, 'Length', binnum)
 		AverageSpeed_SimilarLength_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, title=Length_titles)
 
 		#### Average speed of filament of similar length. f(R) + LCDM comparison
-		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Length_ranges, 'Length', binnum)
+		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Length_ranges, self.FilLengths, 'Length', binnum)
 		AverageSpeed_SimilarLength_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Length_titles)
 		### Relative differences of filaments of similar length
@@ -1574,12 +1574,12 @@ class Plot_results():
 		### Average speed of filament of similar length. Symmetron + LCDM comparison
 		Thickness_titles = ['$T \in [0.1,1]$ Mpc/h', '$T \in [1,5]$ Mpc/h', '$T \in [5,10]$ Mpc/h']
 		Thickness_ranges = [0.1, 1, 5, 10]   # Units of Mpc/h, maybe use min and max of mass bin?
-		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Thickness_ranges, 'Thickness', binnum)
+		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Thickness_ranges, self.Thresholds, 'Thickness', binnum)
 		AverageSpeed_SimilarThickness_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, title=Thickness_titles)
 
 		#### Average speed of filament of similar length. f(R) + LCDM comparison
-		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Thickness_ranges, 'Thickness', binnum)
+		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Thickness_ranges, self.Thresholds, 'Thickness', binnum)
 		AverageSpeed_SimilarThickness_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Thickness_titles)
 		### Relative differences of filaments of similar length
@@ -1986,18 +1986,20 @@ if __name__ == '__main__':
 		Append_data_speeds(Speeds, Ospeed, Pspeed)
 		Fillens = Instance.Get_filament_length()[OK_fils]
 		Filament_lengths.append(Fillens)
-		Density_prof.append(Instance.Compute_density_profile(OK_distances, Fillens))
-		N_filament_connections.append(Instance.Number_filament_connections()[OK_fils]*Mpc**3/Solmass)	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
+		Densities = Instance.Compute_density_profile(OK_distances, Fillens)
+		Density_prof.append(Densities*Mpc**3/Solmass)	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
+		#Density_prof.append(Instance.Compute_density_profile(OK_distances, Fillens)*Mpc**3/Solmass)
+		N_filament_connections.append(Instance.Number_filament_connections()[OK_fils])	
 
-	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
-	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
+	#Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
+	#Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
 	#Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
 	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
 	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
-	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
-	Plot_instance.Other_profiles()
+	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
+	#Plot_instance.Other_profiles()
 
-	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-	CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
-								 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
-	CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
+	#savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
+	#CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
+	#							 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
+	#CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
