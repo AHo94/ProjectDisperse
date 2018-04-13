@@ -1080,8 +1080,8 @@ class CompareModels():
 			binval, binstd = OF.Bin_numbers_common(Nconnections[i], Nconnections[i], connection_bins, std='poisson')
 			bin_val_connhist.append(binval)
 			bin_std_connhist.append(binstd)
-			plt.plot(connection_bins, binval)
-			plt.fill_between(connection_bins, binval-binstd, binval+binstd, alpha=0.4)
+			plt.plot(connection_bins, binval, color=self.Plot_colors_all[i])
+			plt.fill_between(connection_bins, binval-binstd, binval+binstd, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(Symm_legends)
 		plt.xscale('log')
 		plt.yscale('log')
@@ -1091,13 +1091,14 @@ class CompareModels():
 			binval, binstd = OF.Bin_numbers_common(Nconnections[i], Nconnections[i], connection_bins, std='poisson')
 			bin_val_connhist.append(binval)
 			bin_std_connhist.append(binstd)
-			plt.plot(connection_bins, binval)
-			plt.fill_between(connection_bins, binval-binstd, binval+binstd, alpha=0.4)
+			plt.plot(connection_bins, binval, color=self.Plot_colors_all[i])
+			plt.fill_between(connection_bins, binval-binstd, binval+binstd, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(fofr_legends)
 		plt.xscale('log')
 		plt.yscale('log')
-		ConnectedHistComparison_subplot.text(0.5, 0.01, 'Number connections', ha='center', fontsize=10)
-		ConnectedHistComparison_subplot.text(0.04, 0.5, '$N$ filaments', ha='center', va='center', rotation='vertical', fontsize=10)
+		ConnectedHistComparison_subplot.text(0.5, 0, 'Number connections', ha='center', fontsize=10)
+		ConnectedHistComparison_subplot.text(0, 0.5, '$N$ filaments', ha='center', va='center', rotation='vertical', fontsize=10)
+		plt.tight_layout()
 
 		ConnectedHistComparison_subplot_reldiff = plt.figure(figsize=(5,4))
 		ax = plt.subplot(1,2,1)
@@ -1114,6 +1115,9 @@ class CompareModels():
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for i in range(5,8):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
+			print bin_val_connhist[i]
+			print reldiff_chist
+			print '==='
 			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
 			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i])
 			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
