@@ -183,11 +183,12 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 	Remove_y_ticks = True
 	Nrows = 1
 	Ncols = len(ydata)
-	fb_alpha = 0.4
+	fb_alpha = 0.3
 	anchor_legend = True
 	titles = []
 	Change_xscales = False
 	Change_yscales = False
+	linestyles = ['-']*len(ydata[0])
 	# Iterate through keyword arguments to check if anything special will happen. Changes some default arguments
 	for kw in kwargs:
 		if kw == 'fillbetween':
@@ -233,6 +234,9 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 		if kw == 'yscale':	# Changes y plot scales based on input
 			logYscale_name = kwargs[kw]
 			Change_yscales = True
+		if kw =='linestyle': 	# Choose linestyle of plotting
+			linestyles = kwargs[kw]
+
 	# Quick checks of error data vs ydata and titles
 	if not error and do_fill_between:
 		print 'Warning: fillbetween is True but no error data found'
@@ -258,7 +262,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
 			for i in range(len(ydata[j])):
-				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i])
+				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i], linestyle=linestyles)
 				plt.fill_between(xdata, ydata[j][i]-error[j][i], ydata[j][i]+error[j][i], alpha=fb_alpha, facecolor=colors[i])
 			if titles:
 				plt.title(titles[j], fontsize=10)
@@ -268,7 +272,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
 			for i in range(len(ydata[j])):
-				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i])
+				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i], linestyle=linestyles)
 			if titles:
 				plt.title(titles[j], fontsize=10)
 	if set_xlimits:
