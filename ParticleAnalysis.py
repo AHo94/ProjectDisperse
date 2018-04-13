@@ -1515,7 +1515,6 @@ class Plot_results():
 		#################### SIMILAR MASSES
 		####################
 		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
-		print 'Testing new subplot module for similarmass symmetron'
 		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
 		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Mass_ranges, 'Mass', binnum)
 		AverageSpeed_SimilarMass_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
@@ -1626,8 +1625,9 @@ class Plot_results():
 				plt.xscale('log')
 				ij += 1
 			plt.legend(Compare_both_legends[j])
-		AverageSpeed_MassBins.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
-		AverageSpeed_MassBins.text(0.02, 0.55, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
+		AverageSpeed_MassBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
+		AverageSpeed_MassBins.text(0, 0.5, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
+		plt.tight_layout()
 		#### Relative difference of the average speeds, using mass bins
 		RelDiffs_AvgSpeed_massbins = [OF.relative_deviation(Average_speed_massbin, i) for i in range(1, NModels)]
 		PropErr_AvgSpeed_massbins = [OF.Propagate_error_reldiff(Average_speed_massbin[0], Average_speed_massbin[i],
@@ -1655,9 +1655,9 @@ class Plot_results():
 		plt.xscale('log')
 		if set_y_limit:
 			plt.ylim(-2,2)
-		AverageSpeed_RelativeDifference_MassBins.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
-		AverageSpeed_RelativeDifference_MassBins.text(0.03, 0.6, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
-		
+		AverageSpeed_RelativeDifference_MassBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
+		AverageSpeed_RelativeDifference_MassBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
+		plt.tight_layout()
 		#### Average speed for different length bins, with LCDM and Symmetron models
 		AverageSpeed_LengthBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
@@ -1694,9 +1694,65 @@ class Plot_results():
 							 alpha=0.4, facecolor=self.Plot_colors_fofr[kj])
 			plt.xscale('log')
 		plt.legend(self.fofr_legends)
-		AverageSpeed_LengthBins.text(0.5, 0.01, Length_label, ha='center', fontsize=10)
-		AverageSpeed_LengthBins.text(0.02, 0.55, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
+		AverageSpeed_LengthBins.text(0.5, 0, Length_label, ha='center', fontsize=10)
+		AverageSpeed_LengthBins.text(0, 0.5, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
+		plt.tight_layout()
+		### Average speeds over different thickness bins
+		Average_speed_thicknessbin = []
+		Average_speed_thicknessbin_std = []
+		AverageSpeed_ThicknessBins = plt.figure(figsize=(8,6))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		ax = plt.subplot(1,2,1)
+		for j in range(len(Compare_both)):
+			ij = 0
+			if j > 0:
+				ax = plt.subplot(1,2,j+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False)
+			for k in Compare_both[j]:
+				Average_speed, Error_speed = self.Compute_average_speeds_Propertybinned(All_speeds[k], self.Thresholds[k], Common_bin_thickness)
+				if not ((j == 1) and (k == 0)):
+					Average_speed_thicknessbin.append(Average_speed)
+					Average_speed_thicknessbin_std.append(Error_speed)
+				plt.plot(Common_bin_thickness[1:], Average_speed, '-', color=Compare_both_colors[j][ij])
+				plt.fill_between(Common_bin_thickness[1:], Average_speed-Error_speed, Average_speed+Error_speed, alpha=0.3, facecolor=Compare_both_colors[j][ij])
+				plt.xscale('log')
+				ij += 1
+			plt.legend(Compare_both_legends[j])
+		AverageSpeed_ThicknessBins.text(0.5, 0, Thickness_label, ha='center', fontsize=10)
+		AverageSpeed_ThicknessBins.text(0, 0.5, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
+		plt.tight_layout()
+		#### Relative difference of the average speeds, using mass bins
+		RelDiffs_AvgSpeed_thicknessbins = [OF.relative_deviation(Average_speed_thicknessbin, i) for i in range(1, NModels)]
+		PropErr_AvgSpeed_thicknessbins = [OF.Propagate_error_reldiff(Average_speed_thicknessbin[0], Average_speed_thicknessbin[i],
+															Average_speed_thicknessbin_std[0], Average_speed_thicknessbin_std[i]) for i in range(1, NModels)]
+		AverageSpeed_RelativeDifference_ThicknessBins = plt.figure(figsize=(12,6))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		set_y_limit = 0
+		ax = plt.subplot(1,2,1)
+		for i in Symm_only:
+			if np.nanmax(RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1]) > 1:
+				set_y_limit = 1
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_symm[i])
+			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
+							 RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
+		plt.legend(self.Symm_legends[1:])
+		plt.xscale('log')
+		ax2 = plt.subplot(1,2,2, sharey=ax)
+		plt.setp(ax2.get_yticklabels(), visible=False)
+		for ij in range(len(Fofr_only)):
+			i = Fofr_only[ij]
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_fofr[ij+1])
+			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
+							 RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij])
+		plt.legend(self.fofr_legends[1:])
+		plt.xscale('log')
+		if set_y_limit:
+			plt.ylim(-2,2)
+		AverageSpeed_RelativeDifference_ThicknessBins.text(0.5, 0, Thickness_label, ha='center', fontsize=10)
+		AverageSpeed_RelativeDifference_ThicknessBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
+		plt.tight_layout()
 		
+
 		####### Save figures #######
 		print '--- SAVING IN: ', velocity_results_dir, ' ---'
 		self.savefigure(AverageSpeed_AllFils, 'Average_speed_all_filaments', velocity_results_dir)
@@ -1719,6 +1775,8 @@ class Plot_results():
 		self.savefigure(AverageSpeed_MassBins, 'Average_speed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_MassBins, 'Reldiff_AverageSpeed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_LengthBins, 'Average_speed_lengthbins', velocity_results_dir)
+		self.savefigure(AverageSpeed_ThicknessBins, 'Average_speed_thicknessbins', velocity_results_dir)
+		self.savefigure(AverageSpeed_RelativeDifference_ThicknessBins, 'Reldiff_AverageSpeed_thicknessbins', velocity_results_dir)
 		plt.close('all')	# Clear all current windows to free memory
 
 	def Other_profiles(self):
@@ -1929,7 +1987,7 @@ if __name__ == '__main__':
 		Fillens = Instance.Get_filament_length()[OK_fils]
 		Filament_lengths.append(Fillens)
 		Density_prof.append(Instance.Compute_density_profile(OK_distances, Fillens))
-		N_filament_connections.append(Instance.Number_filament_connections()[OK_fils])
+		N_filament_connections.append(Instance.Number_filament_connections()[OK_fils]*Mpc**3/M_sun)	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
