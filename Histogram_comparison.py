@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import os
 import OtherFunctions as OF
+import PlotFunctions as pf
 plt.rcParams.update({'font.size': 11})	# Change fontsize of figures. Default = 10
 
 class Histogram_Comparison():
@@ -320,6 +321,7 @@ class CompareModels():
 		self.Plot_colors_symm = ['b', 'orange', 'g', 'r', 'olive']
 		self.Plot_colors_fofr = ['b', 'purple', 'y', 'k']
 		self.Plot_colors_all = ['b', 'orange', 'g', 'r', 'olive', 'purple', 'y', 'k']
+		self.Linestyles = ['-', '--', '-.', ':', (0, (3, 10, 1, 10, 1, 10))]
 
 	def relative_deviation(self, data, index):
 		""" 
@@ -501,19 +503,19 @@ class CompareModels():
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		ax = plt.axes()
 		if logscale == 'normal':
-			#plt.plot(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
+			plt.plot(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
 				plt.plot(xdata, deltas[i-1], style, label=legend[i-1], color=colors[i-1])
 		elif logscale == 'logx':
-			#plt.semilogx(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
+			plt.semilogx(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
 				plt.semilogx(xdata, deltas[i-1], style, label=legend[i-1], color=colors[i-1])
 		elif logscale == 'logy':
-			#plt.semilogy(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
+			plt.semilogy(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
 				plt.semilogy(xdata, deltas[i-1], style, label=legend[i-1], color=colors[i-1])
 		elif logscale == 'loglog':
-			#plt.loglog(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
+			plt.loglog(xdata, np.zeros(len(xdata)), style, label='$\Lambda$CDM')
 			for i in range(1, len(ydata)):
 				plt.loglog(xdata, deltas[i-1], style, label=legend[i-1], color=colors[i-1])
 		plt.xlabel(xlabel)
@@ -536,10 +538,10 @@ class CompareModels():
 		figure = plt.figure()
 		plt.gcf().set_size_inches((8*self.s, 6*self.s))
 		ax = plt.axes()
-		#if diff:
-			#plt.plot(xdata, np.zeros(len(xdata)), label='$\Lambda$CDM')
-		#	if fill_between:
-		#		plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0)
+		if diff:
+			plt.plot(xdata, np.zeros(len(xdata)), label='$\Lambda$CDM')
+			if fill_between:
+				plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0.3)
 		if fill_between:
 			for i in range(len(ydata)):
 				plt.plot(xdata, ydata[i], label=legend[i], color=colors[i])
@@ -553,7 +555,7 @@ class CompareModels():
 		plt.ylabel(ylabel)
 
 		if Lengths:
-			plt.xlim((1, np.max(xdata)))
+			plt.xlim(1, np.max(xdata))
 		
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		if logscale == 'logx':
@@ -970,20 +972,22 @@ class CompareModels():
 		Sep_FilLengths_F = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
 												fofr_legends, self.Plot_colors_fofr, style='-')
 
-		Sep_FilLengths_S_logx = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
-													 Symm_legends, self.Plot_colors_symm, style='-', logscale='logx')
-		Sep_FilLengths_F_logx = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
-													 fofr_legends, self.Plot_colors_fofr, style='-', logscale='logx')
+		Sep_FilLengths_S_logx = pf.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
+													 Symm_legends, self.Plot_colors_symm, logscale='logx', Linestyle=self.Linestyles)
+		Sep_FilLengths_F_logx = pf.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
+													 fofr_legends, self.Plot_colors_fofr, logscale='logx', Linestyle=self.Linestyles)
 		
 		Sep_FilLengths_S_loglog = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
 													 Symm_legends, self.Plot_colors_symm, style='-', logscale='loglog')
 		Sep_FilLengths_F_loglog = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
 													 fofr_legends, self.Plot_colors_fofr, style='-', logscale='loglog')
 		# Relative difference of N filaments, with propagated errors
-		Set_FilLengths_properr_S_logx = self.Plot_errobar_sameX(length_bins_logX, RelDiff_num[0:4], Prop_err_numLength[0:4], xlabel_len, 
-															'$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$', Symm_legends_only, Symm_colors_only, fill_between=True)
-		Set_FilLengths_properr_F_logx = self.Plot_errobar_sameX(length_bins_logX, RelDiff_num[4:], Prop_err_numLength[4:], xlabel_len, 
-															'$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$', fofr_legends_only, fofr_colors_only, fill_between=True)
+		Set_FilLengths_properr_S_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[0:4], xlabel_len, '$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$', 
+															 Symm_legends_only, Symm_colors_only, error=Prop_err_numLength[0:4],
+															 fillbetween=True, logscale='logx', Linestyle=self.Linestyles, reldiff=Truey)
+		Set_FilLengths_properr_F_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[4:], xlabel_len, '$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$',
+															 fofr_legends_only, fofr_colors_only, error=Prop_err_numLength[4:],
+															 fillbetween=True, logscale='logx', linestyle=self.Linestyles, reldiff=True)
 		
 		# 'massfunction' of lengths
 		Distribution_symm = distribution[0:5]
