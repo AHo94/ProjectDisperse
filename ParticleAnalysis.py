@@ -829,9 +829,14 @@ class Plot_results():
 		self.fofr_legends = []
 		self.Plot_colors_symm = ['b', 'orange', 'g', 'r', 'olive']
 		self.Plot_colors_fofr = ['b', 'purple', 'y', 'k']
-		self.Linestyles = ['-', '--', '-.', ':', (0, (3, 10, 1, 10, 1, 10))]
+		self.ID_counter = 0
+		self.Linestyles = ['-', '--', '-.', ':', (0, (5, 10))]
+		self.SymmLCDM_ids = np.array([])
+		self.FofrLCDM_ids = np.array([])
 		self.Get_legends(models)
-
+		self.SymmLCDM_ids = self.SymmLCDM_ids.astype(np.int32)
+		self.FofrLCDM_ids = self.FofrLCDM_ids.astype(np.int32)
+        
 	def Get_legends(self, models):
 		def append_legends(name, mod=0):
 			if mod == 1:
@@ -840,26 +845,43 @@ class Plot_results():
 				self.fofr_legends.append(name)
 			else:
 				self.Symm_legends.append(name)
-				self.fofr_legends.append(name)	
+				self.fofr_legends.append(name)
 			self.All_legends.append(name)
 		
 		for modnames in models:
 			if modnames == 'lcdm':
 				append_legends('$\Lambda$CDM')
+				self.SymmLCDM_ids = np.append(self.SymmLCDM_ids, self.ID_counter)
+				self.FofrLCDM_ids = np.append(self.FofrLCDM_ids, self.ID_counter)
+				self.ID_counter += 1
 			elif modnames == 'symmA':
 				append_legends('Symm_A', mod=1)
+				self.SymmLCDM_ids = np.append(self.SymmLCDM_ids, self.ID_counter)
+				self.ID_counter += 1
 			elif modnames == 'symmB':
 				append_legends('Symm_B', mod=1)
+				self.SymmLCDM_ids = np.append(self.SymmLCDM_ids, self.ID_counter)
+				self.ID_counter += 1
 			elif modnames == 'symmC':
 				append_legends('Symm_C', mod=1)
+				self.SymmLCDM_ids = np.append(self.SymmLCDM_ids, self.ID_counter)
+				self.ID_counter += 1
 			elif modnames == 'symmD':
 				append_legends('Symm_D', mod=1)
+				self.SymmLCDM_ids = np.append(self.SymmLCDM_ids, self.ID_counter)
+				self.ID_counter += 1
 			elif modnames == 'fofr4':
 				append_legends('fofr4', mod=2)
+				self.FofrLCDM_ids = np.append(self.FofrLCDM_ids, self.ID_counter)
+				self.ID_counter += 1
 			elif modnames == 'fofr5':
 				append_legends('fofr5', mod=2)
+				self.FofrLCDM_ids = np.append(self.FofrLCDM_ids, self.ID_counter)
+				self.ID_counter += 1
 			elif modnames == 'fofr6':
 				append_legends('fofr6', mod=2)
+				self.FofrLCDM_ids = np.append(self.FofrLCDM_ids, self.ID_counter)
+				self.ID_counter += 1
 
 	def savefigure(self, figure, name, savedir=False):
 		""" Function that calls savefig based on figure instance and filename. """
@@ -956,6 +978,7 @@ class Plot_results():
 		s_variable = 0.7
 		binnum = 20
 		NModels = len(Thresholds)
+		do_fb = True
 		#Mass_label = 'Filament mass - [$M_\odot / h$]'
 		#Number_label = '$N$ filaments'
 		#Thickness_label = 'Filament thickness - [Mpc/h]'
@@ -972,10 +995,14 @@ class Plot_results():
 		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
 		Density_label = r'$\langle \rho \rangle - [M_\odot h^2/\mathrm{Mpc}^3]$'
 		Density_label_reldiff = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/\langle \rho_{\Lambda \mathrm{CDM}} \rangle$'
-		SymmLCDM = np.array([0,1,2,3,4])
-		FofrLCDM = np.array([0,5,6,7])
-		Symm_only = np.array([1,2,3,4])
-		Fofr_only = np.array([5,6,7])
+		#SymmLCDM = np.array([0,1,2,3,4])
+		#FofrLCDM = np.array([0,5,6,7])
+		#Symm_only = np.array([1,2,3,4])
+		#Fofr_only = np.array([5,6,7])
+		SymmLCDM = self.SymmLCDM_ids
+		FofrLCDM = self.FofrLCDM_ids
+		Symm_only = self.SymmLCDM_ids[1:]
+		Fofr_only = self.FofrLCDM_ids[1:]
 		self.Thresholds = np.array(Thresholds)
 		self.FilLengths = np.array(FilLengths)
 		#### Computes masses of the filament. Done for all models
@@ -1084,19 +1111,19 @@ class Plot_results():
 		######## Plotting ########
 		######## Mass histograms 
 		### Mass histogram of all filaments
-		NumMass_all = pf.Call_plot_sameX(Common_bin_mass, Number_mass, Mass_label, Number_label, self.All_legends, logscale='loglog')
+		NumMass_all = pf.Call_plot_sameX_OLD(Common_bin_mass, Number_mass, Mass_label, Number_label, self.All_legends, logscale='loglog')
 		### Mass histogram of lcdm + symmetron filaments
 		NumMass_Symm = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends, 
-										 color=self.Plot_colors_symm, logscale='loglog', linestyles=self.Linestyles)
+										 self.Plot_colors_symm, xscale='log', yscale='log', linestyles=self.Linestyles)
 		### Mass histogram of lcdm + f(R) filaments
 		NumMass_fofr = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends,
-										 color=self.Plot_colors_fofr, logscale='loglog', linestyles=self.Linestyles[:4])
+										 self.Plot_colors_fofr, xscale='log', yscale='log', linestyles=self.Linestyles)
 		### Mass histogram of lcdm + symmetron filaments - Semilog x scale
 		NumMass_Symm_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends,
-										 color=self.Plot_colors_symm, logscale='logx', linestyles=self.Linestyles)
+										 self.Plot_colors_symm, xscale='log', linestyles=self.Linestyles)
 		### Mass histogram of lcdm + f(R) filaments - Semilog x scale
 		NumMass_fofr_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends,
-										 color=self.Plot_colors_fofr, logscale='logx', linestyles=self.Linestyles[:4])
+										 self.Plot_colors_fofr, xscale='log', linestyles=self.Linestyles)
 		### Mass histograms with errors, lcdm + symmetron
 		NumMass_error_symm = plt.figure()
 		for i in SymmLCDM:
@@ -1141,24 +1168,24 @@ class Plot_results():
 		plt.ylabel('$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$')
 		### Relative difference of lcdm + symmetron, with error
 		RelDiff_mass_Symm_err = plt.figure()
-		plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)), color='b', label='$\Lambda$CDM')
+		plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)), color='b', linestyle='-')
 		for i in (Symm_only-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_symm[i+1], linestyle=self.Linestyles[i+1])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i],
 							 alpha=0.3, facecolor=self.Plot_colors_symm[i+1])
-		plt.legend(self.Symm_legends[1:])
+		plt.legend(self.Symm_legends)
 		plt.xlabel(Mass_label)
 		plt.ylabel('$(M_i - M_{\Lambda CDM})/M_{\Lambda CDM}$')
 		plt.xscale('log')
 		plt.ylim(-1,1)
 		### Relative difference of lcdm + symmetron, with error
 		RelDiff_mass_fofr_err = plt.figure()
-		plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)), color='b', label='$\Lambda$CDM')
+		plt.plot(Common_bin_mass, np.zeros(len(Common_bin_mass)), color='b', linestyle='-')
 		for i in (Fofr_only-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-3], linestyle=self.Linestyles[i-3])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i],
 							 alpha=0.3, facecolor=self.Plot_colors_fofr[i-3])
-		plt.legend(self.fofr_legends[1:])
+		plt.legend(self.fofr_legends)
 		plt.xlabel(Mass_label)
 		plt.ylabel('$(M_i - M_{\Lambda CDM})/M_{\Lambda CDM}$')
 		plt.xscale('log')
@@ -1167,63 +1194,63 @@ class Plot_results():
 
 		######## Thickness histograms
 		### Thickness histogram of all filaments
-		NumThickness_all = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness, Thickness_label, Number_label, self.All_legends, logscale='loglog')
+		NumThickness_all = pf.Call_plot_sameX_OLD(Common_bin_thickness, Number_thickness, Thickness_label, Number_label, self.All_legends, logscale='loglog')
 		### Thickness hisotgram of lcdm + symmetron filaments, including logX scale
 		NumThickness_Symm = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[SymmLCDM], Thickness_label, Number_label, self.Symm_legends,
-												color=self.Plot_colors_symm, logscale='loglog', linestyles=self.Linestyles)
+												self.Plot_colors_symm, xscale='log', yscale='log', linestyles=self.Linestyles)
 		NumThickness_Symm_logX = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[SymmLCDM], Thickness_label, Number_label, self.Symm_legends,
-												color=self.Plot_colors_symm, logscale='logx', linestyles=self.Linestyles)
+												self.Plot_colors_symm, xscale='log', linestyles=self.Linestyles)
 		### Thickness histogram of lcdm + f(R) filaments, including LogX scale
 		NumThickness_fofr = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[FofrLCDM], Thickness_label, Number_label, self.fofr_legends,
-												color=self.Plot_colors_fofr, logscale='loglog', linestyles=self.Linestyles[:4])
+												self.Plot_colors_fofr, xscale='log', yscale='log', linestyles=self.Linestyles)
 		NumThickness_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[FofrLCDM], Thickness_label, Number_label, self.fofr_legends,
-												color=self.Plot_colors_fofr, logscale='logx', linestyles=self.Linestyles[:4])
+												self.Plot_colors_fofr, xscale='log', linestyles=self.Linestyles)
 		
 		### Relative differences of thickness
 		Reldiff_num_thick_Symm = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label_reldiff,
-											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], error=Prop_error_thickness[Symm_only-1], logscale='loglog',
+											self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Prop_error_thickness[Symm_only-1], xscale='log', yscale='log',
 											linestyles=self.Linestyles, reldiff=True)
 		Reldiff_num_thick_Symm_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label_reldiff,
-											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], error=Prop_error_thickness[Symm_only-1], logscale='logx',
-											linestyles=self.Linestyles, fillbetween=do_db, reldiff=True)
+											self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Prop_error_thickness[Symm_only-1], xscale='log',
+											linestyles=self.Linestyles, fillbetween=do_fb, reldiff=True)
 		
 		Reldiff_num_thick_fofr = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label_reldiff,
-											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], error=Prop_error_thickness[Fofr_only-1], logscale='loglog',
-											linestyles=self.Linestyles[:4], reldiff=True)
+											self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Prop_error_thickness[Fofr_only-1], xscale='log', yscale='log',
+											linestyles=self.Linestyles, reldiff=True)
 		Reldiff_num_thick_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label_reldiff,
-											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], error=Prop_error_thickness[Fofr_only-1],  logscale='logx',,
-											linestyles=self.Linestyles[:4], fillbetween=do_fb, reldiff=True)
+											self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Prop_error_thickness[Fofr_only-1],  xscale='log',
+											linestyles=self.Linestyles, fillbetween=do_fb, reldiff=True)
 		
 		######## Density histograms
 		### Density histograms with number of filaments at a given density bin
 		NumDensity_Symm = pf.Call_plot_sameX(Common_bin_density, Number_density[SymmLCDM], Density_label, Number_label, self.Symm_legends,
-											color=self.Plot_colors_symm, logscale='loglog', linestyles=self.Linestyles)
+											self.Plot_colors_symm, xscale='log', yscale='log', linestyles=self.Linestyles)
 		NumDensity_Symm_logX = pf.Call_plot_sameX(Common_bin_density, Number_density[SymmLCDM], Density_label, Number_label, self.Symm_legends,
-											color=self.Plot_colors_symm, logscale='logx', linestyles=self.Linestyles)
+											self.Plot_colors_symm, xscale='log', linestyles=self.Linestyles)
 		NumDensity_fofr = pf.Call_plot_sameX(Common_bin_density, Number_density[FofrLCDM], Density_label, Number_label, self.fofr_legends,
-											color=self.Plot_colors_fofr, logscale='loglog', linestyles=self.Linestyles)
+											self.Plot_colors_fofr, xscale='log', yscale='log', linestyles=self.Linestyles)
 		NumDensity_fofr_logX = pf.Call_plot_sameX(Common_bin_density, Number_density[FofrLCDM], Density_label, Number_label, self.fofr_legends,
-											color=self.Plot_colors_fofr, logscale='logx', linestyles=self.Linestyles)
+											self.Plot_colors_fofr, xscale='log', linestyles=self.Linestyles)
 		### Relative difference of the above
 		RelDiff_num_density_Symm = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
-											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], error=Prop_error_density[Symm_only-1], logscale='loglog',
+											self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Prop_error_density[Symm_only-1], xscale='log', yscale='log',
 											linestyles=self.Linestyles, reldiff=True)
 		RelDiff_num_density_Symm_logX = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
-											self.Symm_legends[1:], color=self.Plot_colors_symm[1:], error=Prop_error_density[Symm_only-1], logscale='logx',
+											self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Prop_error_density[Symm_only-1], xscale='log',
 											linestyles=self.Linestyles, reldiff=True)
 		RelDiff_num_density_fofr = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Fofr_only-1], Density_label, Number_label_reldiff,
-											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], error=Prop_error_density[Fofr_only-1], logscale='loglog',
+											self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Prop_error_density[Fofr_only-1], xscale='log', yscale='log',
 											linestyles=self.Linestyles, reldiff=True)
 		RelDiff_num_density_fofr_logX = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Fofr_only-1], Density_label, Number_label_reldiff,
-											self.fofr_legends[1:], color=self.Plot_colors_fofr[1:], error=Prop_error_density[Fofr_only-1], logscale='logx',
+											self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Prop_error_density[Fofr_only-1], xscale='log',
 											linestyles=self.Linestyles, reldiff=True)
 
 
 		######## Compare different properties
 		### Thickness as a function of length, LCDM + Symmetron and LCDM + f(R)
-		ThickVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_thickness[SymmLCDM], Length_label, Mean_Thickness_label, self.Symm_legends,
+		ThickVsLen_Symm = pf.Call_plot_sameX_OLD(Common_bin_length, Mean_thickness[SymmLCDM], Length_label, Mean_Thickness_label, self.Symm_legends,
 											color=self.Plot_colors_symm, logscale='loglog', linestyles=self.Linestyles)
-		ThickVsLen_fofr = pf.Call_plot_sameX(Common_bin_length, Mean_thickness[FofrLCDM], Length_label, Mean_Thickness_label, self.fofr_legends,
+		ThickVsLen_fofr = pf.Call_plot_sameX_OLD(Common_bin_length, Mean_thickness[FofrLCDM], Length_label, Mean_Thickness_label, self.fofr_legends,
 											color=self.Plot_colors_fofr, logscale='loglog', linestyles=self.Linestyles)
 		### Relative difference with errobar, Symmetron and f(R) seperate, base model = LCDM
 		ThickVsLen_RelErr_Symm = plt.figure()
@@ -1249,9 +1276,9 @@ class Plot_results():
 		plt.xscale('log')
 
 		### Mass as a function of length, LCDM + Symmetron and LCDM + f(R)
-		MassVsLen_Symm = pf.Call_plot_sameX(Common_bin_length, Mean_mass[SymmLCDM], Length_label, Mean_Mass_label, self.Symm_legends,
+		MassVsLen_Symm = pf.Call_plot_sameX_OLD(Common_bin_length, Mean_mass[SymmLCDM], Length_label, Mean_Mass_label, self.Symm_legends,
 											color=self.Plot_colors_symm, logscale='loglog')
-		MassVsLen_fofr = pf.Call_plot_sameX(Common_bin_length, Mean_mass[FofrLCDM], Length_label, Mean_Mass_label, self.fofr_legends,
+		MassVsLen_fofr = pf.Call_plot_sameX_OLD(Common_bin_length, Mean_mass[FofrLCDM], Length_label, Mean_Mass_label, self.fofr_legends,
 											color=self.Plot_colors_fofr, logscale='loglog')
 		### Relative difference with errorbar, Symmetron and f(R) seperate, base model = LCDM
 		MassVsLen_RelErr_Symm = plt.figure()
@@ -1468,10 +1495,14 @@ class Plot_results():
 			do_fb = False
 			#ylimits = (-1,1)
 		
-		SymmLCDM = np.array([0,1,2,3,4])
-		FofrLCDM = np.array([0,5,6,7])
-		Symm_only = np.array([1,2,3,4])
-		Fofr_only = np.array([5,6,7])
+		#SymmLCDM = np.array([0,1,2,3,4])
+		#FofrLCDM = np.array([0,5,6,7])
+		#Symm_only = np.array([1,2,3,4])
+		#Fofr_only = np.array([5,6,7])
+		SymmLCDM = self.SymmLCDM_ids
+		FofrLCDM = self.FofrLCDM_ids
+		Symm_only = self.SymmLCDM_ids[1:]
+		Fofr_only = self.FofrLCDM_ids[1:]
 		All_speeds = np.asarray(All_speeds)
 		Symm_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_C', 'Symm_D']
 		Fofr_filenames = ['LCDM', 'fofr4', 'fofr5', 'fofr6']
@@ -1641,7 +1672,7 @@ class Plot_results():
 					Average_speed_massbin.append(Average_speed)
 					Average_speed_massbin_std.append(Error_speed)
 				#plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
-				plt.plot(Common_bin_mass[1:], Average_speed, color=Compare_both_colors[j][ij], linestyles=self.Linestyles[ij])
+				plt.plot(Common_bin_mass[1:], Average_speed, color=Compare_both_colors[j][ij], linestyle=self.Linestyles[ij])
 				plt.fill_between(Common_bin_mass[1:], Average_speed - Error_speed, Average_speed + Error_speed, alpha=0.3, facecolor=Compare_both_colors[j][ij])
 				plt.xscale('log')
 				ij += 1
@@ -1660,7 +1691,7 @@ class Plot_results():
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1]) > 1:
 				set_y_limit = 1
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_symm[i], linestyles=self.Linestyles[i-1])
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
 							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends[1:])
@@ -1669,7 +1700,7 @@ class Plot_results():
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyles=self.Linestyles[ij])
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
 							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij])
 		plt.legend(self.fofr_legends[1:])
@@ -1693,7 +1724,7 @@ class Plot_results():
 				Standard_deviation = np.nanstd(Average_per_fil)/np.sqrt(len(Speeds_included))
 				Error_speed.append(Standard_deviation)
 				Average_speed.append(np.average(Average_per_fil))
-			plt.plot(Common_bin_length[1:], Average_speed, '-', color=self.Plot_colors_symm[k], linestyles=self.Linestyles[k])
+			plt.plot(Common_bin_length[1:], Average_speed, '-', color=self.Plot_colors_symm[k], linestyle=self.Linestyles[k])
 			plt.fill_between(Common_bin_length[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed),
 							 alpha=0.3, facecolor=self.Plot_colors_symm[k])
 			plt.xscale('log')
@@ -1710,7 +1741,7 @@ class Plot_results():
 				Standard_deviation = np.nanstd(Average_per_fil)/np.sqrt(len(Speeds_included))
 				Error_speed.append(Standard_deviation)
 				Average_speed.append(np.average(Average_per_fil))
-			plt.plot(Common_bin_length[1:], Average_speed, '-', color=self.Plot_colors_fofr[kj], linestyles=self.Linestyles[kj])
+			plt.plot(Common_bin_length[1:], Average_speed, '-', color=self.Plot_colors_fofr[kj], linestyle=self.Linestyles[kj])
 			plt.fill_between(Common_bin_length[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed),
 							 alpha=0.4, facecolor=self.Plot_colors_fofr[kj])
 			plt.xscale('log')
@@ -1754,7 +1785,7 @@ class Plot_results():
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1]) > 1:
 				set_y_limit = 1
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_symm[i], linestyles=self.Linestyles[i])
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
 							 RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
@@ -1764,7 +1795,7 @@ class Plot_results():
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyles=self.Linestyles[ij+1])
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij+1])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
 							 RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij])
 		plt.legend(self.fofr_legends)
@@ -1825,10 +1856,14 @@ class Plot_results():
 
 		Mass_N_label = '$N(>M)$'
 		Thickness_N_label = '$N(>T)$'
-		SymmLCDM = np.array([0,1,2,3,4])
-		FofrLCDM = np.array([0,5,6,7])
-		Symm_only = np.array([1,2,3,4])
-		Fofr_only = np.array([5,6,7])
+		#SymmLCDM = np.array([0,1,2,3,4])
+		#FofrLCDM = np.array([0,5,6,7])
+		#Symm_only = np.array([1,2,3,4])
+		#Fofr_only = np.array([5,6,7])
+		SymmLCDM = self.SymmLCDM_ids
+		FofrLCDM = self.FofrLCDM_ids
+		Symm_only = self.SymmLCDM_ids[1:]
+		Fofr_only = self.FofrLCDM_ids[1:]
 		Symm_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_C', 'Symm_D']
 		Fofr_filenames = ['LCDM', 'fofr4', 'fofr5', 'fofr6']
 		All_filenames = ['LCDM', 'Symm_A', 'Symm_B', 'Symm_C', 'Symm_D', 'fofr4', 'fofr5', 'fofr6']
@@ -1877,7 +1912,7 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
 		for i in SymmLCDM:
-			plt.plot(Mass_values, Mass_distribution[i], color=self.Plot_colors_symm[i], linestyles=self.Linestyles[i])
+			plt.plot(Mass_values, Mass_distribution[i], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i])
 			plt.fill_between(Mass_values, Mass_distribution[i]-Mass_distribution_error[i], Mass_distribution[i]+Mass_distribution_error[i],
 							 alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
@@ -1886,7 +1921,7 @@ class Plot_results():
 		ax2 = plt.subplot(1,2,2, sharey=ax)
 		for ij in range(len(FofrLCDM)):
 			i = FofrLCDM[ij]
-			plt.plot(Mass_values, Mass_distribution[i], color=self.Plot_colors_fofr[ij], linestyles=self.Linestyles[ij])
+			plt.plot(Mass_values, Mass_distribution[i], color=self.Plot_colors_fofr[ij], linestyle=self.Linestyles[ij])
 			plt.fill_between(Mass_values, Mass_distribution[i]-Mass_distribution_error[i], Mass_distribution[i]+Mass_distribution_error[i],
 							 alpha=0.4, facecolor=self.Plot_colors_fofr[ij])
 		plt.legend(self.fofr_legends)
@@ -1897,19 +1932,19 @@ class Plot_results():
 		### Relative differences of the data above
 		Number_filaments_larger_mass_reldiff = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-		plt.plot(Mass_values[1:], np.zeros(len(Mass_values)), 'b-')
+		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'b-')
 		ax = plt.subplot(1,2,1)
 		for i in Symm_only:
-			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyles=self.Linestyles[i-1])
+			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
 							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Mass_values[1:], np.zeros(len(Mass_values)), 'b-')
+		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'b-')
 		for i in Fofr_only:
-			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyles=self.Linestyles[i-5])
+			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyle=self.Linestyles[i-5])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
 							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[i-4])
 		plt.legend(self.fofr_legends)
@@ -2003,6 +2038,7 @@ if __name__ == '__main__':
 		Orth_speed_list.append(OrthS)
 
 	for p_model in Models_to_be_run:
+		#if p_model == 'lcdm' or p_model == 'symmA' or p_model == 'fofr4':
 		Instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
 		OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
 		#Filament_lengths.append(Instance.Get_filament_length()[OK_fils])
