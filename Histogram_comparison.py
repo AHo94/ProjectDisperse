@@ -321,7 +321,7 @@ class CompareModels():
 		self.Plot_colors_symm = ['b', 'orange', 'g', 'r', 'olive']
 		self.Plot_colors_fofr = ['b', 'purple', 'y', 'k']
 		self.Plot_colors_all = ['b', 'orange', 'g', 'r', 'olive', 'purple', 'y', 'k']
-		self.Linestyles = ['-', '--', '-.', ':', (0, (3, 10, 1, 10, 1, 10))]
+		self.Linestyles = ['-', '--', '-.', ':', (0, (5, 10))]
 
 	def relative_deviation(self, data, index):
 		""" 
@@ -984,7 +984,7 @@ class CompareModels():
 		# Relative difference of N filaments, with propagated errors
 		Set_FilLengths_properr_S_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[0:4], xlabel_len, '$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$', 
 															 Symm_legends_only, Symm_colors_only, error=Prop_err_numLength[0:4],
-															 fillbetween=True, logscale='logx', Linestyle=self.Linestyles, reldiff=Truey)
+															 fillbetween=True, logscale='logx', Linestyle=self.Linestyles, reldiff=True)
 		Set_FilLengths_properr_F_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[4:], xlabel_len, '$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$',
 															 fofr_legends_only, fofr_colors_only, error=Prop_err_numLength[4:],
 															 fillbetween=True, logscale='logx', linestyle=self.Linestyles, reldiff=True)
