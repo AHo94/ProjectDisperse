@@ -40,7 +40,7 @@ def Call_plot(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
 				raise ValueError("Log scale parameter inserted wrong!")
 	return figure
 
-def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
+def Call_plot_sameX_OLD(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
 	""" 
 	Calls plotting, xdata to be common lengths/bins for all ydata
 	Extra parameter logscal determines the plotting method
@@ -92,6 +92,107 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
 				plt.yscale('log')
 			else:
 				raise ValueError("Log scale parameter inserted wrong!")
+	return figure
+
+def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, colors, **kwargs):
+	""" 
+	Calls plotting, xdata to be common lengths/bins for all ydata
+	Extra parameter logscal determines the plotting method
+	normal = plot(), logx = semilogx(), etc.
+	"""
+	do_fill_between = False
+	set_ylimits = False
+	set_xlimits = False
+	New_figure_size = False
+	Remove_y_ticks = True
+	Nrows = 1
+	Ncols = len(ydata)
+	fb_alpha = 0.3
+	anchor_legend = True
+	titles = []
+	Change_xscales = False
+	Change_yscales = False
+	Plot_LCDMDiff = False
+	linestyles = ['-']*len(ydata[0])
+	
+	for kw in kwargs:
+		if kw == 'fillbetween':
+			do_fill_between = kwargs[kw]
+		if kw == 'xlim':		# Sets xlimit if called
+			set_xlimits = True
+			xlims = kwargs[kw]
+			if type(xlims) != tuple:
+				raise ValueError("Keyword argument xlims must be a tuple!")
+			if not xlims[0] and not xlims[1]:
+				set_xlimits = False
+		if kw == 'ylim':		# Sets ylimit if called
+			set_ylimits = True
+			ylims = kwargs[kw]
+			if type(ylims) != tuple:
+				raise ValueError("Keyword argument ylims must be a tuple!")
+			if not ylims[0] and not ylims[1]:
+				set_ylimits = False
+		if kw == 'figsize':   	# Figure size of plot
+			figure_size = kwargs[kw]
+			New_figure_size = True
+		if kw == 'NoYticks':   # Removes Y-ticks of the latter plots, removes clutted.
+			Remove_y_ticks = kwargs[kw]
+		if kw == 'fb_alpha':   # Alpha used for fill_between
+			fb_alpha = kwargs[kw]
+			if type(fb_alpha) != float:
+				raise ValueError("Keyword argument fb_alpha must be a float number!")
+		if kw == 'legend_anchor':   # Anchors the legend outside the figure if True
+			anchor_legend = kwargs[kw]
+		if kw == 'title':    	# Titles above subplots
+			titles = kwargs[kw]
+			if type(titles) != list:
+				raise ValueError("Keyword argument titles must be a list!")
+		if kw == 'xscale':	# Changes x plot scales based on input
+			logXscale_name = kwargs[kw]
+			Change_xscales = True
+		if kw == 'yscale':	# Changes y plot scales based on input
+			logYscale_name = kwargs[kw]
+			Change_yscales = True
+		if kw == 'linestyle': 	# Choose linestyle of plotting
+			linestyles = kwargs[kw]
+		if kw == 'reldiff':	# Plots a line that distinguishes the LCDM model as a zero line
+			Plot_LCDMDiff = kwargs[kw] 
+
+	if New_figure_size:
+		figure = plt.figure(figsize=figure_size)
+	else:
+		figure = plt.figure()
+	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+	if do_fill_between:
+		if Plot_LCDMDiff:
+			plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM')
+		for i in range(len(ydata)):
+			plt.plot(xdata, ydata[i], label=legend[i], color=colors[i], linestyle=linestyles[i])
+			plt.fill_between(xdata, ydata[i]-error[i], ydata[i]+error[i], alpha=fb_alpha, facecolor=colors[i])
+	else:
+		if Plot_LCDMDiff:
+			plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM')
+		for i in range(len(ydata)):
+			plt.plot(xdata, ydata[i], label=legend[i], color=colors[i], linestyle=linestyles[i])
+	if titles:
+		plt.title(titles, fontsize=10)
+	if set_xlimits:
+		plt.xlim(xlims)
+	if set_ylimits:
+		plt.ylim(ylims)
+	plt.xlabel(xlabel)
+	plt.ylabel(ylabel)
+	if np.min(xdata) > 1e12:
+		xfmt = plt.ScalarFormatter()
+		xfmt.set_powerlimits((0,0))
+		plt.gca().xaxis.set_major_formatter(xfmt)
+	if anchor_legend:
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+	if Change_xscales:
+		plt.xscale(logXscale_name)
+	if Change_yscales:
+		plt.yscale(logYscale_name)
+	plt.tight_layout()
 	return figure
 
 def Plot_differences(self, xdata, ydata, xlabel, ylabel, legend, logscale='normal', style='-', title='None', diff='rel'):
@@ -188,6 +289,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 	titles = []
 	Change_xscales = False
 	Change_yscales = False
+	Plot_LCDMDiff = False
 	linestyles = ['-']*len(ydata[0])
 	# Iterate through keyword arguments to check if anything special will happen. Changes some default arguments
 	for kw in kwargs:
@@ -234,8 +336,10 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 		if kw == 'yscale':	# Changes y plot scales based on input
 			logYscale_name = kwargs[kw]
 			Change_yscales = True
-		if kw =='linestyle': 	# Choose linestyle of plotting
+		if kw == 'linestyle': 	# Choose linestyle of plotting
 			linestyles = kwargs[kw]
+		if kw == 'reldiff':	# Plots a line that distinguishes the LCDM model as a zero line
+			Plot_LCDMDiff = kwargs[kw] 
 
 	# Quick checks of error data vs ydata and titles
 	if not error and do_fill_between:
@@ -257,6 +361,8 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 	ax = plt.subplot(Nrows, Ncols, 1)
 	if do_fill_between:
+		if Plot_LCDMDiff:
+			plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM')
 		for j in range(len(ydata)):
 			if j > 0:
 				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
@@ -267,6 +373,8 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 			if titles:
 				plt.title(titles[j], fontsize=10)
 	else:
+		if Plot_LCDMDiff:
+			plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM')
 		for j in range(len(ydata)):
 			if j > 0:
 				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
@@ -279,7 +387,8 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 		plt.xlim(xlims)
 	if set_ylimits:
 		plt.ylim(ylims)
-	ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+	if anchor_legend:
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 	figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
 	figure.text(0, 0.5, ylabel, ha='center', va='center', rotation='vertical', fontsize=10)
 	if Change_xscales:
