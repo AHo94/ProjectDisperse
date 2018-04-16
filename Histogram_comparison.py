@@ -1044,7 +1044,7 @@ class CompareModels():
 
 		# Relative differences in Number of filaments and not N(>L). Logscale x, including errorbars
 		Sep_RelDiff_Number_error_S_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[:4], xlabel_len, 
-															'$(N_i - N_{\Lambda\mathrm{CDM}})/N_{\Lambda\mathrm{CDM}}$'
+															'$(N_i - N_{\Lambda\mathrm{CDM}})/N_{\Lambda\mathrm{CDM}}$',
 															Symm_legends_only, Symm_colors_only, xscale='logx', error=Prop_err_numLength[:4], 
 															fillbetween=True, xlim=(1, np.max(length_bins_logX)), legend_anchor=False)
 		Sep_RelDiff_Number_error_F_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[4:], xlabel_len, 
