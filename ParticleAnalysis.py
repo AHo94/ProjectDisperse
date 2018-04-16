@@ -1524,8 +1524,7 @@ class Plot_results():
 		Normalized_part_distances = np.asarray(Normalized_part_distances)
 		Common_bin_thickness = OF.Get_common_bin_logX(self.Thresholds, binnum=binnum)
 		Common_bin_distances = OF.Get_common_bin(Distance_limits, binnum=binnum)
-		Common_bin_distances_normalized = OF.Get_common_bin(Distance_limits_normalized, binnum=binnum) 
-		Common_bin_distances_normalized_logx = OF.Get_common_bin_logX(Distance_limits_normalized, binnum=binnum)        
+		Common_bin_distances_normalized = OF.Get_common_bin(Distance_limits_normalized, binnum=binnum)      
 		Common_bin_mass = OF.Get_common_bin_logX(self.Filament_masses, binnum=binnum)
 		Common_bin_length = OF.Get_common_bin_logX(self.FilLengths, binnum=binnum)
 
@@ -1568,12 +1567,17 @@ class Plot_results():
 		AverageSpeed_SimilarMass_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, title=Mass_titles,
 														linestyles=self.Linestyles)
-
+		AverageSpeed_SimilarMass_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances, Mean_profiles, Distance_normalized_label,
+														Average_speed_label, self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, 
+														title=Mass_titles, linestyles=self.Linestyles, xscale='log')
 		### Average speed of filaments with similar masses, comparing LCDM + f(R)
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Mass_ranges, self.Filament_masses, 'Mass', binnum)
 		AverageSpeed_SimilarMass_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Mass_titles,
 														linestyles=self.Linestyles)
+		AverageSpeed_SimilarMass_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances, Mean_profiles, Distance_normalized_label, 
+														Average_speed_label, self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb,
+														title=Mass_titles, linestyles=self.Linestyles, xscale='log')
 		### Relative difference of the average speed, for similar masses.
 		RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass = store_reldiff_data(self.Filament_masses, 'Mass', Mass_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -1581,15 +1585,19 @@ class Plot_results():
 		### Symmetron differences to LCDM
 		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
 		RelDiff_SimilarMass_plot_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
-														self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb,
-														ylim=ylimits, title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True,
-														xlim=Reldiff_speed_xlimits)
+														self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
+														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xlim=Reldiff_speed_xlimits)
+		RelDiff_SimilarMass_plot_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
+														self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
+														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', xlim=Reldiff_speed_xlimits)
 		### f(R) difference to LCDM
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
 		RelDiff_SimilarMass_plot_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
-														self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, 
-														ylim=ylimits, title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True,
-														xlim=Reldiff_speed_xlimits)
+														self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
+														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xlim=Reldiff_speed_xlimits)
+		RelDiff_SimilarMass_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
+														self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
+														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', xlim=Reldiff_speed_xlimits)
 		####################
 		#################### SIMILAR LENGTHS
 		####################
@@ -1601,12 +1609,17 @@ class Plot_results():
 		AverageSpeed_SimilarLength_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, title=Length_titles,
 														linestyles=self.Linestyles)
-
+		AverageSpeed_SimilarLength_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances, Mean_profiles, Distance_normalized_label, 
+														Average_speed_label, self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, 
+														title=Length_titles, linestyles=self.Linestyles, xscale='log')
 		#### Average speed of filament of similar length. f(R) + LCDM comparison
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Length_ranges, self.FilLengths, 'Length', binnum)
 		AverageSpeed_SimilarLength_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Length_titles,
 														linestyles=self.Linestyles)
+		AverageSpeed_SimilarLength_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances, Mean_profiles, Distance_normalized_label, 
+														Average_speed_label, self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, 
+														title=Length_titles, linestyles=self.Linestyles, xscale='log')
 		### Relative differences of filaments of similar length
 		RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength = store_reldiff_data(self.FilLengths, 'Length', Length_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -1617,11 +1630,17 @@ class Plot_results():
 		RelDiff_SimilarLen_plot_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, 
 													ylim=ylimits, title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xlim=Reldiff_speed_xlimits)
+		RelDiff_SimilarLen_plot_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
+													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb,  ylim=ylimits, 
+													title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', xlim=Reldiff_speed_xlimits)
 		### f(R) difference to LCDM
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
 		RelDiff_SimilarLen_plot_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, 
 													ylim=ylimits, title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xlim=Reldiff_speed_xlimits)
+		RelDiff_SimilarLen_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
+													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
+													title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', xlim=Reldiff_speed_xlimits)
 		####################
 		#################### SIMILAR THICKNESS
 		####################
@@ -1632,28 +1651,43 @@ class Plot_results():
 		AverageSpeed_SimilarThickness_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, title=Thickness_titles,
 														linestyles=self.Linestyles)
+		AverageSpeed_SimilarThickness_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances, Mean_profiles, Distance_normalized_label, 
+														Average_speed_label, self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, 
+														title=Thickness_titles, linestyles=self.Linestyles, xscale='log')
 
 		#### Average speed of filament of similar length. f(R) + LCDM comparison
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Thickness_ranges, self.Thresholds, 'Thickness', binnum)
 		AverageSpeed_SimilarThickness_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Thickness_titles,
 														linestyles=self.Linestyles)
+		AverageSpeed_SimilarThickness_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances, Mean_profiles, Distance_normalized_label, 
+														Average_speed_label, self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, 
+														title=Thickness_titles, linestyles=self.Linestyles, xscale='log')
 		### Relative differences of filaments of similar length
 
 		RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness = store_reldiff_data(self.Thresholds, 'Thickness', Thickness_ranges, 
 																						Common_bin_distances_normalized, binnum)
 		### Plotting relative differences with error
 		### Symmetron differences to LCDM
-
 		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Thickness_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
 		RelDiff_SimilarThickness_plot_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, title=Thickness_titles,
 													linestyles=self.Linestyles[1:], reldiff=True, xlim=Reldiff_speed_xlimits)
+		RelDiff_SimilarThickness_plot_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances, Yplot, Distance_normalized_label, 
+													Reldiff_label_avgspeed, self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb,
+													title=Thickness_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', 
+													xlim=Reldiff_speed_xlimits)
 		### f(R) difference to LCDM
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
 		RelDiff_SimilarThickness_plot_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, title=Thickness_titles,
 													linestyles=self.Linestyles[1:], reldiff=True, xlim=Reldiff_speed_xlimits)
+
+		RelDiff_SimilarThickness_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances, Yplot, Distance_normalized_label, 
+													Reldiff_label_avgspeed, self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, 
+													title=Thickness_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log',
+													xlim=Reldiff_speed_xlimits)
+
 		####################
 		#################### OVER DIFFERENT MASS BINS
 		####################
@@ -1810,95 +1844,6 @@ class Plot_results():
 		AverageSpeed_RelativeDifference_ThicknessBins.text(0.5, 0, Thickness_label, ha='center', fontsize=10)
 		AverageSpeed_RelativeDifference_ThicknessBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
-		
-		print "Checking logx regime"
-		####################
-		####################  LOGX REGIME FOR SIMILAR PROPERTIES
-		####################
-		####### SIMILAR MASS
-		Reldiff_speed_xlimits = (Common_bin_distances_normalized_logx[1], Common_bin_distances_normalized_logx[-1])
-		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized_logx, Mass_ranges, self.Filament_masses, 'Mass_logx', binnum)
-		AverageSpeed_SimilarMass_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Mean_profiles, Distance_normalized_label,
-														Average_speed_label, self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, 
-														title=Mass_titles, linestyles=self.Linestyles, xscale='log')
-
-		### Average speed of filaments with similar masses, comparing LCDM + f(R)
-		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized_logx, Mass_ranges, self.Filament_masses, 'Mass_logx', binnum)
-		AverageSpeed_SimilarMass_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Mean_profiles, Distance_normalized_label, 
-														Average_speed_label, self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb,
-														title=Mass_titles, linestyles=self.Linestyles, xscale='log')
-		### Relative difference of the average speed, for similar masses.
-		RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass = store_reldiff_data(self.Filament_masses, 'Mass_logx', Mass_ranges, 
-																						Common_bin_distances_normalized_logx, binnum)
-		### Plotting relative differences with error
-		### Symmetron differences to LCDM
-		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
-		RelDiff_SimilarMass_plot_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
-														self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
-														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log',xlim=Reldiff_speed_xlimits)
-		### f(R) difference to LCDM
-		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
-		RelDiff_SimilarMass_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
-														self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
-														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', xlim=Reldiff_speed_xlimits)
-		####### SIMILAR LENGTHS
-		### Average speed of filament of similar length. Symmetron + LCDM comparison
-		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized_logx, Length_ranges, self.FilLengths, 'Length_logx', binnum)
-		AverageSpeed_SimilarLength_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Mean_profiles, Distance_normalized_label, 
-														Average_speed_label, self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, 
-														title=Length_titles, linestyles=self.Linestyles, xscale='log')
-
-		#### Average speed of filament of similar length. f(R) + LCDM comparison
-		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized_logx, Length_ranges, self.FilLengths, 'Length_logx', binnum)
-		AverageSpeed_SimilarLength_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Mean_profiles, Distance_normalized_label, 
-														Average_speed_label, self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, 
-														title=Length_titles, linestyles=self.Linestyles, xscale='log')
-		### Relative differences of filaments of similar length
-		RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength = store_reldiff_data(self.FilLengths, 'Length_logx', Length_ranges, 
-																						Common_bin_distances_normalized_logx, binnum)
-
-		### Plotting relative differences with error
-		### Symmetron differences to LCDM
-		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Length_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
-		RelDiff_SimilarLen_plot_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
-													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb,  ylim=ylimits, 
-													title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', xlim=Reldiff_speed_xlimits)
-		### f(R) difference to LCDM
-		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
-		RelDiff_SimilarLen_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
-													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
-													title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', xlim=Reldiff_speed_xlimits)
-		####### SIMILAR THICKNESS
-		### Average speed of filament of similar length. Symmetron + LCDM comparison
-		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized_logx, Thickness_ranges, self.Thresholds, 
-											'Thickness_logx', binnum)
-		AverageSpeed_SimilarThickness_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Mean_profiles, Distance_normalized_label, 
-														Average_speed_label, self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, 
-														title=Thickness_titles, linestyles=self.Linestyles, xscale='log')
-
-		#### Average speed of filament of similar length. f(R) + LCDM comparison
-		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized_logx, Thickness_ranges, self.Thresholds, 
-											'Thickness_logx', binnum)
-		AverageSpeed_SimilarThickness_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Mean_profiles, Distance_normalized_label, 
-														Average_speed_label, self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, 
-														title=Thickness_titles, linestyles=self.Linestyles, xscale='log')
-		### Relative differences of filaments of similar length
-		RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness = store_reldiff_data(self.Thresholds, 'Thickness_logx', Thickness_ranges, 
-																						Common_bin_distances_normalized_logx, binnum)
-		### Plotting relative differences with error
-		### Symmetron differences to LCDM
-		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Thickness_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
-		RelDiff_SimilarThickness_plot_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Yplot, Distance_normalized_label, 
-													Reldiff_label_avgspeed, self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb,
-													title=Thickness_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', 
-													xlim=Reldiff_speed_xlimits)
-		### f(R) difference to LCDM
-		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
-		RelDiff_SimilarThickness_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized_logx, Yplot, Distance_normalized_label, 
-													Reldiff_label_avgspeed, self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, 
-													title=Thickness_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log',
-													xlim=Reldiff_speed_xlimits)
-
 
 		####### Save figures #######
 		print '--- SAVING IN: ', velocity_results_dir, ' ---'
@@ -1908,39 +1853,34 @@ class Plot_results():
 		self.savefigure(AverageSpeed_SimilarMass_fofr, 'Average_speed_similar_mass_cFofr', velocity_results_dir)
 		self.savefigure(RelDiff_SimilarMass_plot_Symm, 'RelDiff_speed_similar_mass_cSymmetron', velocity_results_dir)
 		self.savefigure(RelDiff_SimilarMass_plot_fofr, 'RelDiff_speed_similar_mass_cFofr', velocity_results_dir)
+		self.savefigure(AverageSpeed_SimilarMass_Symm_logx, 'Average_speed_similar_mass_logx_cSymmetron', velocity_results_dir)
+		self.savefigure(AverageSpeed_SimilarMass_fofr_logx, 'Average_speed_similar_mass_logx_cFofr', velocity_results_dir)
+		self.savefigure(RelDiff_SimilarMass_plot_Symm_logx, 'RelDiff_speed_similar_mass_logx_cSymmetron', velocity_results_dir)
+		self.savefigure(RelDiff_SimilarMass_plot_fofr_logx, 'RelDiff_speed_similar_mass_logx_cFofr', velocity_results_dir)
 		### SIMILAR LENGTH
 		self.savefigure(AverageSpeed_SimilarLength_Symm, 'Average_speed_similar_length_cSymmetron', velocity_results_dir)
 		self.savefigure(AverageSpeed_SimilarLength_fofr, 'Average_speed_similar_length_cFofr', velocity_results_dir)
 		self.savefigure(RelDiff_SimilarLen_plot_Symm, 'RelDiff_speed_similar_length_cSymmetron', velocity_results_dir)
 		self.savefigure(RelDiff_SimilarLen_plot_fofr, 'RelDiff_speed_similar_length_cFofr', velocity_results_dir)
+		self.savefigure(AverageSpeed_SimilarLength_Symm_logx, 'Average_speed_similar_length_logx_cSymmetron', velocity_results_dir)
+		self.savefigure(AverageSpeed_SimilarLength_fofr_logx, 'Average_speed_similar_length_logx_cFofr', velocity_results_dir)
+		self.savefigure(RelDiff_SimilarLen_plot_Symm_logx, 'RelDiff_speed_similar_length_logx_cSymmetron', velocity_results_dir)
+		self.savefigure(RelDiff_SimilarLen_plot_fofr_logx, 'RelDiff_speed_similar_length_logx_cFofr', velocity_results_dir)
 		### SIMILAR THICKNESS
 		self.savefigure(AverageSpeed_SimilarThickness_Symm, 'Average_speed_similar_thickness_cSymmetron', velocity_results_dir)
 		self.savefigure(AverageSpeed_SimilarThickness_fofr, 'Average_speed_similar_thickness_cFofr', velocity_results_dir)
 		self.savefigure(RelDiff_SimilarThickness_plot_Symm, 'RelDiff_speed_similar_thickness_cSymmetron', velocity_results_dir)
 		self.savefigure(RelDiff_SimilarThickness_plot_fofr, 'RelDiff_speed_similar_thickness_cFofr', velocity_results_dir)
+		self.savefigure(AverageSpeed_SimilarThickness_Symm_logx, 'Average_speed_similar_thickness_logx_cSymmetron', velocity_results_dir)
+		self.savefigure(AverageSpeed_SimilarThickness_fofr_logx, 'Average_speed_similar_thickness_logx_cFofr', velocity_results_dir)
+		self.savefigure(RelDiff_SimilarThickness_plot_Symm_logx, 'RelDiff_speed_similar_thickness_logx_cSymmetron', velocity_results_dir)
+		self.savefigure(RelDiff_SimilarThickness_plot_fofr_logx, 'RelDiff_speed_similar_thickness_logx_cFofr', velocity_results_dir)
 		### DIFFERENT MASS BINS
 		self.savefigure(AverageSpeed_MassBins, 'Average_speed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_MassBins, 'Reldiff_AverageSpeed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_LengthBins, 'Average_speed_lengthbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_ThicknessBins, 'Average_speed_thicknessbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_ThicknessBins, 'Reldiff_AverageSpeed_thicknessbins', velocity_results_dir)
-		### LogX regime
-		# Similar mass
-		self.savefigure(AverageSpeed_SimilarMass_Symm_logx, 'Average_speed_similar_mass_logx_cSymmetron', velocity_results_dir)
-		self.savefigure(AverageSpeed_SimilarMass_fofr_logx, 'Average_speed_similar_mass_logx_cFofr', velocity_results_dir)
-		self.savefigure(RelDiff_SimilarMass_plot_Symm_logx, 'RelDiff_speed_similar_mass_logx_cSymmetron', velocity_results_dir)
-		self.savefigure(RelDiff_SimilarMass_plot_fofr_logx, 'RelDiff_speed_similar_mass_logx_cFofr', velocity_results_dir)
-		# Similar length
-		self.savefigure(AverageSpeed_SimilarLength_Symm_logx, 'Average_speed_similar_length_logx_cSymmetron', velocity_results_dir)
-		self.savefigure(AverageSpeed_SimilarLength_fofr_logx, 'Average_speed_similar_length_logx_cFofr', velocity_results_dir)
-		self.savefigure(RelDiff_SimilarLen_plot_Symm_logx, 'RelDiff_speed_similar_length_logx_cSymmetron', velocity_results_dir)
-		self.savefigure(RelDiff_SimilarLen_plot_fofr_logx, 'RelDiff_speed_similar_length_logx_cFofr', velocity_results_dir)
-		# Similar thickness
-		self.savefigure(AverageSpeed_SimilarThickness_Symm_logx, 'Average_speed_similar_thickness_logx_cSymmetron', velocity_results_dir)
-		self.savefigure(AverageSpeed_SimilarThickness_fofr_logx, 'Average_speed_similar_thickness_logx_cFofr', velocity_results_dir)
-		self.savefigure(RelDiff_SimilarThickness_plot_Symm_logx, 'RelDiff_speed_similar_thickness_logx_cSymmetron', velocity_results_dir)
-		self.savefigure(RelDiff_SimilarThickness_plot_fofr_logx, 'RelDiff_speed_similar_thickness_logx_cFofr', velocity_results_dir)
-		
 		plt.close('all')	# Clear all current windows to free memory
 
 	def Other_profiles(self):
