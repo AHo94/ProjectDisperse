@@ -165,7 +165,7 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, colors, **kwargs):
 	else:        
 		if do_fill_between and not error.any():
 			do_fill_between = False
-		print "Warning: fill_between enabled, but no error!"
+		#print "Warning: fill_between enabled, but no error!"
 	if New_figure_size:
 		figure = plt.figure(figsize=figure_size)
 		ax = plt.axes()
@@ -198,6 +198,8 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, colors, **kwargs):
 		plt.gca().xaxis.set_major_formatter(xfmt)
 	if anchor_legend:
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+	else:
+		plt.legend(legend)
 	if Change_xscales:
 		plt.xscale(logXscale_name)
 	if Change_yscales:
@@ -376,7 +378,8 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
 			if Plot_LCDMDiff:
-				plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM', linestyle=(0, (3, 10, 1, 10, 1, 10)))
+				#plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM', linestyle=(0, (3, 10, 1, 10, 1, 10)))
+				plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM', linestyle='-')
 			for i in range(len(ydata[j])):
 				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 				plt.fill_between(xdata, ydata[j][i]-error[j][i], ydata[j][i]+error[j][i], alpha=fb_alpha, facecolor=colors[i])
@@ -397,6 +400,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 		plt.xlim(xlims)
 	if set_ylimits:
 		plt.ylim(ylims)
+
 	if anchor_legend:
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 	figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
