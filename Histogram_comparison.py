@@ -1042,6 +1042,14 @@ class CompareModels():
 		Sep_RelDiff_Number_F_logx = self.Plot_differences_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
 																fofr_legends_only, fofr_colors_only, logscale='logx')
 
+		# Relative differences in Number of filaments and not N(>L). Logscale x, including errorbars
+		Sep_RelDiff_Number_error_S_logx = pf.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
+																Symm_legends_only, Symm_colors_only, xscale='logx', error=Prop_err_numLength[:4], 
+																fillbetween=True, xlim=(1, np.max(length_bins_logX)), legend_anchor=False)
+		Sep_RelDiff_Number_error_F_logx = pf.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
+																fofr_legends_only, fofr_colors_only, xscale='logx', error=Prop_err_numLength[4:],
+																fillbetween=True, xlim=(1, np.max(length_bins_logX)), legend_anchor=False)
+
 		# Relative differences in Number of filaments and not N(>L). LogLog scale
 		Sep_RelDiff_Number_S_loglog = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
 																 Symm_legends_only, Symm_colors_only, logscale='loglog')			
@@ -1174,6 +1182,8 @@ class CompareModels():
 			self.savefigure(Sep_AbsDiff_Number_F_logx, 'Number_filaments_absDiff_LOGX_cFofr')
 			self.savefigure(Sep_RelDiff_Number_S_logx, 'Number_filaments_relDiff_LOGX_cSymmetron')
 			self.savefigure(Sep_RelDiff_Number_F_logx, 'Number_filaments_relDiff_LOGX_cFofr')
+			self.savefigure(Sep_RelDiff_Number_error_S_logx, 'Number_filaments_relDiff_ERRORBAR_LOGX_cSymmetron')
+			self.savefigure(Sep_RelDiff_Number_error_F_logx, 'Number_filaments_relDiff_ERRORBAR_LOGX_cFofr')
 			self.savefigure(Sep_RelDiff_Number_S_loglog, 'Number_filaments_relDiff_LOGLOG_cSymmetron')
 			self.savefigure(Sep_RelDiff_Number_F_loglog, 'Number_filaments_relDiff_LOGLOG_cFofr')
 			self.savefigure(Sep_RelDiff_length_PropErr_S, 'Filament_lengths_relative_difference_PropErr_cSymmetron')
