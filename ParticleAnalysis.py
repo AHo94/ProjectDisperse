@@ -7,6 +7,7 @@ plt.switch_backend('agg')
 import argparse
 import time
 import sys
+import subprocess
 
 # ZeroMQ
 import zmq
@@ -812,6 +813,13 @@ class FilterParticlesAndFilaments():
 			np.save(cachefile_density, Density_profiles)
 		return Density_profiles
 
+	def Secondary_filter(self, Accepted_ids):
+		""" 
+		Does a secondary filter on the filtered filaments.
+		Can be used to, for instance, filter out long filaments.
+		"""		
+		#self.Small_filaments = self.FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
+		Accepted_lengths = self.FilamentLength[self.Small_filaments][Accepted_ids]
 
 class Plot_results():
 	def __init__(self, models, Nsigma, foldername, filetype='png'):
@@ -951,7 +959,6 @@ class Plot_results():
 			Similar_prop = (prop >= botrange) & (prop <= uprange)
 			Speeds_included = speeds[Similar_prop]
 			Parts_included = distances[Similar_prop]/thickness[Similar_prop]
-			"""
 			Temp_arr = []
 			Temp_arr_std = []
 			for k in range(len(Speeds_included)):
@@ -959,8 +966,7 @@ class Plot_results():
 				Temp_arr.append(bin_value)
 				Temp_arr_std.append(bin_std)
 			Mean_profile, Mean_profile_std = OF.Histogram_average(bins, np.array(Temp_arr))
-			"""
-			Mean_profile, Mean_profile_std = self.Compute_similar_profiles_ZMQ(bins, Parts_included, Speeds_included)
+			#Mean_profile, Mean_profile_std = self.Compute_similar_profiles_ZMQ(bins, Parts_included, Speeds_included)
 			np.save(SavedFile, Mean_profile)
 			np.save(SavedFile_std, Mean_profile_std)
 		return Mean_profile, Mean_profile_std
