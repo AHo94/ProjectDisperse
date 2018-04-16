@@ -820,6 +820,8 @@ class FilterParticlesAndFilaments():
 		"""		
 		#self.Small_filaments = self.FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
 		Accepted_lengths = self.FilamentLength[self.Small_filaments][Accepted_ids]
+		Large_filaments = Accepted_lengths > 20 	# Units of Mpc/h. Change accordingly here
+		return Large_filaments
 
 class Plot_results():
 	def __init__(self, models, Nsigma, foldername, filetype='png'):
@@ -2161,7 +2163,16 @@ if __name__ == '__main__':
 		#if p_model == 'lcdm' or p_model == 'symmA' or p_model == 'fofr4':
 		Instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
 		OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
-		#Filament_lengths.append(Instance.Get_filament_length()[OK_fils])
+		
+		# Do a secondary filter
+		"""
+		Large_filament_filt = Instance.Secondary_filter(OK_fils)
+		OK_fils = OK_fils[Large_filament_filt]
+		thresholds = thresholds[Large_filament_filt]
+		OK_particles = thresholds[Large_filament_filt]
+		OK_distances = OK_distances[Large_filament_filt]
+		SegIDs = SegIDs[Large_filament_filt]
+		"""
 		Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
 		Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
 		Append_data_speeds(Speeds, Ospeed, Pspeed)
@@ -2169,7 +2180,6 @@ if __name__ == '__main__':
 		Filament_lengths.append(Fillens)
 		Densities = Instance.Compute_density_profile(OK_distances, Fillens)
 		Density_prof.append(Densities*Mpc**3/Solmass)	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
-		#Density_prof.append(Instance.Compute_density_profile(OK_distances, Fillens)*Mpc**3/Solmass)
 		N_filament_connections.append(Instance.Number_filament_connections()[OK_fils])	
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
