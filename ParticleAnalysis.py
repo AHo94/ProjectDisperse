@@ -8,6 +8,10 @@ import argparse
 import time
 import sys
 
+# ZeroMQ
+import zmq
+import ZMQArraySending as ZMQAS
+
 # Own modules
 import ReadGadgetFile as RGF
 import OtherFunctions as OF
@@ -947,6 +951,7 @@ class Plot_results():
 			Similar_prop = (prop >= botrange) & (prop <= uprange)
 			Speeds_included = speeds[Similar_prop]
 			Parts_included = distances[Similar_prop]/thickness[Similar_prop]
+			"""
 			Temp_arr = []
 			Temp_arr_std = []
 			for k in range(len(Speeds_included)):
@@ -954,8 +959,67 @@ class Plot_results():
 				Temp_arr.append(bin_value)
 				Temp_arr_std.append(bin_std)
 			Mean_profile, Mean_profile_std = OF.Histogram_average(bins, np.array(Temp_arr))
+			"""
+			Mean_profile, Mean_profile_std = self.Compute_similar_profiles_ZMQ(bins, Parts_included, Speeds_included)
 			np.save(SavedFile, Mean_profile)
 			np.save(SavedFile_std, Mean_profile_std)
+		return Mean_profile, Mean_profile_std
+
+	def Compute_similar_profiles_ZMQ(self, bins, Parts_included, Speeds_included):
+		context = zmq.Context()
+		context.linger = 0
+		# Socket to send messages on
+		sender = context.socket(zmq.PUSH)
+		#sender.bind("tcp://127.0.0.1:5050")
+		sender.bind("tcp://*:4070")
+
+		# Socket where the data is received from
+		data_receive = context.socket(zmq.PULL)
+		#data_receive.bind("tcp://127.0.0.1:5052")
+		data_receive.bind("tcp://*:4072")
+
+		# Socket where end message is sent to. Used to tell workers the jobs are finished
+		control_sender = context.socket(zmq.PUSH)
+		#control_sender.bind("tcp://127.0.0.1:5054")
+		control_sender.bind("tcp://*:4074")
+
+		# Poller, used to check whether stuff is done or not
+		poller = zmq.Poller()
+		poller.register(data_receive, zmq.POLLIN)
+
+		# Calls the script that starts up a set amount of workers.
+		# Stops program a little bit to let the workers start up
+		print "Starting processes"
+		subprocess.call("./SpawnWorkers_speedprofile.sh 40", shell=True)
+		
+		time.sleep(5)
+		time_dist = time.time()
+		# Sends data
+		print "Done, sending data"
+		NumFils = len(Speeds_included)
+		for i in range(NumFils):
+			ZMQAS.send_zipped_pickle(sender, [Parts_included[i], Speeds_included[i], bins])	# Analytical method
+			if i == NumFils-1:
+				print("all data sent")
+		# Give time to send data
+		time.sleep(5)
+		Temp_arr = []
+		#print 'Looping through data receiving'
+		for j in range(NumFils):
+			socks = dict(poller.poll())
+			if socks.get(data_receive) == zmq.POLLIN:
+				data = ZMQAS.recv_zipped_pickle(data_receive)
+				Temp_arr.append(data[0])
+			if not socks:
+				print("All data received?")
+				break
+		for i in range(41):
+			control_sender.send_string("FINISHED")
+		Mean_profile, Mean_profile_std = OF.Histogram_average(bins, np.array(Temp_arr))
+		sender.close()
+		data_receive.close()
+		control_sender.close()
+		context.term()
 		return Mean_profile, Mean_profile_std
 
 	def Compute_average_speeds_Propertybinned(self, speeds, prop, bins):
