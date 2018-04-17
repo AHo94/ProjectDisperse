@@ -375,7 +375,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 	if do_fill_between:
 		for j in range(len(ydata)):
 			if j > 0:
-				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
+				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax, sharex=ax)
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
 			if Plot_LCDMDiff:
 				#plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM', linestyle=(0, (3, 10, 1, 10, 1, 10)))
@@ -388,7 +388,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 	else:
 		for j in range(len(ydata)):
 			if j > 0:
-				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax)
+				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax, sharex=ax)
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
 			if Plot_LCDMDiff:
 				plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM')
