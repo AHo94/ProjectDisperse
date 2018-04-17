@@ -1670,6 +1670,9 @@ class Plot_results():
 		RelDiff_SimilarMass_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 														self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
 														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', xlim=Reldiff_speed_xlimits)
+		print '!!Check reldiff for logx!!'
+		print Yplot[0]
+		print ylimits
 		####################
 		#################### SIMILAR LENGTHS
 		####################
@@ -1798,23 +1801,28 @@ class Plot_results():
 		AverageSpeed_RelativeDifference_MassBins = plt.figure(figsize=(12,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
+		print '!!!somecheck here!!!'
+		print len(Common_bin_mass)
+		print len(RelDiffs_AvgSpeed_massbins[0])
 		ax = plt.subplot(1,2,1)
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'b-')
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1]) > 1:
 				set_y_limit = 1
 			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
 							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
-		plt.legend(self.Symm_legends[1:])
+		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'b-')
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
 			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
-							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij])
-		plt.legend(self.fofr_legends[1:])
+							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij+1])
+		plt.legend(self.fofr_legends)
 		plt.xscale('log')
 		if set_y_limit:
 			plt.ylim(-2,2)
