@@ -1791,7 +1791,9 @@ class Plot_results():
 		AverageSpeed_MassBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_MassBins.text(0, 0.5, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
+		####
 		#### Relative difference of the average speeds, using mass bins
+		####
 		RelDiffs_AvgSpeed_massbins = [OF.relative_deviation(Average_speed_massbin, i) for i in range(1, NModels)]
 		PropErr_AvgSpeed_massbins = [OF.Propagate_error_reldiff(Average_speed_massbin[0], Average_speed_massbin[i],
 															Average_speed_massbin_std[0], Average_speed_massbin_std[i]) for i in range(1, NModels)]
@@ -1823,46 +1825,69 @@ class Plot_results():
 		AverageSpeed_RelativeDifference_MassBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_RelativeDifference_MassBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
+		####
 		#### Average speed for different length bins, with LCDM and Symmetron models
+		####
+		Average_speed_lengthbins = []
+		Average_speed_lengthbins_std = []
 		AverageSpeed_LengthBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
-		for k in SymmLCDM:
-			Average_speed = []
-			Error_speed = []
-			for i in range(len(Common_bin_length)-1):
-				Similar_length = (self.FilLengths[k] >= Common_bin_length[i]) & (self.FilLengths[k] <= Common_bin_length[i+1])
-				Speeds_included = All_speeds[k][Similar_length]
-				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
-				Standard_deviation = np.nanstd(Average_per_fil)/np.sqrt(len(Speeds_included))
-				Error_speed.append(Standard_deviation)
-				Average_speed.append(np.average(Average_per_fil))
-			plt.plot(Common_bin_length[1:], Average_speed, '-', color=self.Plot_colors_symm[k], linestyle=self.Linestyles[k])
-			plt.fill_between(Common_bin_length[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed),
-							 alpha=0.3, facecolor=self.Plot_colors_symm[k])
-			plt.xscale('log')
-		plt.legend(self.Symm_legends)
-		ax2 = plt.subplot(1,2,2, sharey=ax)
-		for kj in range(len(FofrLCDM)):
-			k = FofrLCDM[kj]
-			Average_speed = []
-			Error_speed = []
-			for i in range(len(Common_bin_length)-1):
-				Similar_length = (self.FilLengths[k] >= Common_bin_length[i]) & (self.FilLengths[k] <= Common_bin_length[i+1])
-				Speeds_included = All_speeds[k][Similar_length]
-				Average_per_fil = np.array([np.average(Speeds_included[j]) for j in range(len(Speeds_included))])
-				Standard_deviation = np.nanstd(Average_per_fil)/np.sqrt(len(Speeds_included))
-				Error_speed.append(Standard_deviation)
-				Average_speed.append(np.average(Average_per_fil))
-			plt.plot(Common_bin_length[1:], Average_speed, '-', color=self.Plot_colors_fofr[kj], linestyle=self.Linestyles[kj])
-			plt.fill_between(Common_bin_length[1:], np.array(Average_speed) - np.array(Error_speed), np.array(Average_speed) + np.array(Error_speed),
-							 alpha=0.4, facecolor=self.Plot_colors_fofr[kj])
-			plt.xscale('log')
-		plt.legend(self.fofr_legends)
-		AverageSpeed_LengthBins.text(0.5, 0, Length_label, ha='center', fontsize=10)
+		for j in range(len(Compare_both)):
+			ij = 0
+			if j > 0:
+				ax = plt.subplot(1,2,j+1, sharey=ax)
+				plt.setp(ax.get_yticklabels(), visible=False)
+			for k in Compare_both[j]:
+				Average_speed, Error_speed = self.Compute_average_speeds_Propertybinned(All_speeds[k], self.FilLengths[k], Common_bin_length)
+				if not ((j == 1) and (k == 0)):
+					Average_speed_lengthbins.append(Average_speed)
+					Average_speed_lengthbins_std.append(Error_speed)
+				plt.plot(Common_bin_length[1:], Average_speed, color=Compare_both_colors[j][ij], linestyle=self.Linestyles[ij])
+				plt.fill_between(Common_bin_length[1:], Average_speed - Error_speed, Average_speed + Error_speed, alpha=0.3, facecolor=Compare_both_colors[j][ij])
+				plt.xscale('log')
+				ij += 1
+			plt.legend(Compare_both_legends[j])
+		AverageSpeed_LengthBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_LengthBins.text(0, 0.5, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
+		###
+		### Relative difference of different length bins
+		###
+		RelDiffs_AvgSpeed_lengthbins = [OF.relative_deviation(Average_speed_lengthbins, i) for i in range(1, NModels)]
+		PropErr_AvgSpeed_lengthbins = [OF.Propagate_error_reldiff(Average_speed_lengthbins[0], Average_speed_lengthbins[i],
+															Average_speed_lengthbins_std[0], Average_speed_lengthbins_std[i]) for i in range(1, NModels)]
+		AverageSpeed_RelativeDifference_LengthBins = plt.figure(figsize=(12,6))
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		set_y_limit = 0
+		ax = plt.subplot(1,2,1)
+		plt.plot(Common_bin_lengths[1:], np.zeros(len(Common_bin_lengths[1:])), 'b-')
+		for i in Symm_only:
+			if np.nanmax(RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1]) > 1:
+				set_y_limit = 1
+			plt.plot(Common_bin_lengths[1:], RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
+			plt.fill_between(Common_bin_lengths[1:], RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
+							 RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
+		plt.legend(self.Symm_legends)
+		plt.xscale('log')
+		ax2 = plt.subplot(1,2,2, sharey=ax)
+		plt.plot(Common_bin_lengths[1:], np.zeros(len(Common_bin_lengths[1:])), 'b-')
+		plt.setp(ax2.get_yticklabels(), visible=False)
+		for ij in range(len(Fofr_only)):
+			i = Fofr_only[ij]
+			plt.plot(Common_bin_lengths[1:], RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
+			plt.fill_between(Common_bin_lengths[1:], RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
+							 RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij+1])
+		plt.legend(self.fofr_legends)
+		plt.xscale('log')
+		if set_y_limit:
+			plt.ylim(-1,1)
+		AverageSpeed_RelativeDifference_LengthBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
+		AverageSpeed_RelativeDifference_LengthBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
+		plt.tight_layout()		
+		###
 		### Average speeds over different thickness bins
+		###
 		Average_speed_thicknessbin = []
 		Average_speed_thicknessbin_std = []
 		AverageSpeed_ThicknessBins = plt.figure(figsize=(8,6))
@@ -1953,6 +1978,7 @@ class Plot_results():
 		self.savefigure(AverageSpeed_MassBins, 'Average_speed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_MassBins, 'Reldiff_AverageSpeed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_LengthBins, 'Average_speed_lengthbins', velocity_results_dir)
+		self.savefigure(AverageSpeed_RelativeDifference_LengthBins, 'Reldiff_AverageSpeed_lengthbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_ThicknessBins, 'Average_speed_thicknessbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_ThicknessBins, 'Reldiff_AverageSpeed_thicknessbins', velocity_results_dir)
 		plt.close('all')	# Clear all current windows to free memory
