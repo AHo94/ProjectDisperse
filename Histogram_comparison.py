@@ -972,10 +972,10 @@ class CompareModels():
 		Sep_FilLengths_F = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
 												fofr_legends, self.Plot_colors_fofr, style='-')
 
-		Sep_FilLengths_S_logx = pf.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
-													 Symm_legends, self.Plot_colors_symm, logscale='logx', Linestyle=self.Linestyles)
-		Sep_FilLengths_F_logx = pf.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
-													 fofr_legends, self.Plot_colors_fofr, logscale='logx', Linestyle=self.Linestyles)
+		Sep_FilLengths_S_logx = pf.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments', Symm_legends, self.Plot_colors_symm, 
+													xscale='log', Linestyle=self.Linestyles, legend_anchor=False)
+		Sep_FilLengths_F_logx = pf.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments', fofr_legends, self.Plot_colors_fofr, 
+													xscale='log', Linestyle=self.Linestyles, legend_anchor=False)
 		
 		Sep_FilLengths_S_loglog = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
 													 Symm_legends, self.Plot_colors_symm, style='-', logscale='loglog')
