@@ -1563,13 +1563,13 @@ class Plot_results():
 			Average_speed_label =  r'$\langle v_\parallel \rangle - [\mathrm{km}/s]$'
 			Average_speed_label_nounit = r'$\langle v_{\parallel} \rangle$'
 			Reldiff_label_avgspeed = r'$(\langle v_{\parallel,i} \rangle - \langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle$'
-			ylimits = (-1,1)
+			#ylimits = (-1,1)
 		elif speedtype == 'Density':
-			Average_speed_label = r'$\langle \rho \rangle - [\mathrm{kg}h^2/\mathrm{m^3}]$'
+			Average_speed_label = r'$\langle \rho \rangle - [\mathrm{kg}h^2/\mathrm{m^3}] \times 1e14$'
 			Average_speed_label_nounit = r'$\langle \rho \rangle$'
-			Reldiff_label_avgspeed = r'$(\langle \rho_i \rangle - \langle \rho_\{\Lambda \mathrm{CDM}})/(\langle \rho_{\Lambda \mathrm{CDM}} \rangle)$'
-			do_fb = True
-			ylimits = (-1,1)
+			Reldiff_label_avgspeed = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/(\langle \rho_{\Lambda \mathrm{CDM}} \rangle)$'
+			#do_fb = True
+			#ylimits = (-1,1)
 		
 		#SymmLCDM = np.array([0,1,2,3,4])
 		#FofrLCDM = np.array([0,5,6,7])
@@ -2071,6 +2071,7 @@ class Plot_results():
 		plt.xscale('log')
 		plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
+		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(FofrLCDM)):
 			i = FofrLCDM[ij]
 			plt.plot(Mass_values, Mass_distribution[i], color=self.Plot_colors_fofr[ij], linestyle=self.Linestyles[ij])
@@ -2094,7 +2095,7 @@ class Plot_results():
 		plt.xscale('log')
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.setp(ax.get_yticklabels(), visible=False)
+		plt.setp(ax2.get_yticklabels(), visible=False)
 		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'b-')
 		for i in Fofr_only:
 			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyle=self.Linestyles[i-5])
@@ -2210,15 +2211,15 @@ if __name__ == '__main__':
 		Fillens = Instance.Get_filament_length()[OK_fils]
 		Filament_lengths.append(Fillens)
 		Densities = Instance.Compute_density_profile(OK_distances, Fillens)
-		Density_prof.append(Densities*Mpc**3/Solmass)	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
+		Density_prof.append(Densities*Mpc**3/Solmass*1e-14)	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
 		N_filament_connections.append(Instance.Number_filament_connections()[OK_fils])	
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
-	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
-	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
+	#Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
+	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
 	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
-	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
+	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
 
 	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
