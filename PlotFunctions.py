@@ -334,7 +334,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 			Ncols = row_and_col[1]
 		elif kw == 'NoYticks':   # Removes Y-ticks of the latter plots, removes clutted.
 			Remove_y_ticks = kwargs[kw]
-		if kw == 'fb_alpha':   # Alpha used for fill_between
+		elif kw == 'fb_alpha':   # Alpha used for fill_between
 			fb_alpha = kwargs[kw]
 			if type(fb_alpha) != float:
 				raise ValueError("Keyword argument fb_alpha must be a float number!")
