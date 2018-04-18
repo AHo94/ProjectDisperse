@@ -159,6 +159,8 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, colors, **kwargs):
 			Plot_LCDMDiff = kwargs[kw] 
 		elif kw == 'error':
 			error = kwargs[kw]
+		else:
+			raise ValueError("Keyword argument " + kwargs[kw] + " not recognized!")
 	if type(error) == list:
 		if do_fill_between and not error:
 			do_fill_between = False
@@ -351,7 +353,9 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 		elif kw == 'linestyles': 	# Choose linestyle of plotting
 			linestyles = kwargs[kw]
 		elif kw == 'reldiff':	# Plots a line that distinguishes the LCDM model as a zero line
-			Plot_LCDMDiff = kwargs[kw] 
+			Plot_LCDMDiff = kwargs[kw]
+		else:
+			raise ValueError("Keyword argument " + kwargs[kw] + " not recognized!")
 
 	# Quick checks of error data vs ydata and titles
 	if not error and do_fill_between:
