@@ -1186,16 +1186,16 @@ class Plot_results():
 		NumMass_all = pf.Call_plot_sameX_OLD(Common_bin_mass, Number_mass, Mass_label, Number_label, self.All_legends, logscale='loglog')
 		### Mass histogram of lcdm + symmetron filaments
 		NumMass_Symm = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends, 
-										 self.Plot_colors_symm, xscale='log', yscale='log', linestyles=self.Linestyles)
+										 self.Plot_colors_symm, xscale='log', yscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		### Mass histogram of lcdm + f(R) filaments
 		NumMass_fofr = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends,
-										 self.Plot_colors_fofr, xscale='log', yscale='log', linestyles=self.Linestyles)
+										 self.Plot_colors_fofr, xscale='log', yscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		### Mass histogram of lcdm + symmetron filaments - Semilog x scale
 		NumMass_Symm_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[SymmLCDM], Mass_label, Number_label, self.Symm_legends,
-										 self.Plot_colors_symm, xscale='log', linestyles=self.Linestyles)
+										 self.Plot_colors_symm, xscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		### Mass histogram of lcdm + f(R) filaments - Semilog x scale
 		NumMass_fofr_logx = pf.Call_plot_sameX(Common_bin_mass, Number_mass[FofrLCDM], Mass_label, Number_label, self.fofr_legends,
-										 self.Plot_colors_fofr, xscale='log', linestyles=self.Linestyles)
+										 self.Plot_colors_fofr, xscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		### Mass histograms with errors, lcdm + symmetron
 		NumMass_error_symm = plt.figure()
 		for i in SymmLCDM:
@@ -1269,14 +1269,14 @@ class Plot_results():
 		NumThickness_all = pf.Call_plot_sameX_OLD(Common_bin_thickness, Number_thickness, Thickness_label, Number_label, self.All_legends, logscale='loglog')
 		### Thickness hisotgram of lcdm + symmetron filaments, including logX scale
 		NumThickness_Symm = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[SymmLCDM], Thickness_label, Number_label, self.Symm_legends,
-												self.Plot_colors_symm, xscale='log', yscale='log', linestyles=self.Linestyles)
+												self.Plot_colors_symm, xscale='log', yscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		NumThickness_Symm_logX = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[SymmLCDM], Thickness_label, Number_label, self.Symm_legends,
-												self.Plot_colors_symm, xscale='log', linestyles=self.Linestyles)
+												self.Plot_colors_symm, xscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		### Thickness histogram of lcdm + f(R) filaments, including LogX scale
 		NumThickness_fofr = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[FofrLCDM], Thickness_label, Number_label, self.fofr_legends,
-												self.Plot_colors_fofr, xscale='log', yscale='log', linestyles=self.Linestyles)
+												self.Plot_colors_fofr, xscale='log', yscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		NumThickness_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, Number_thickness[FofrLCDM], Thickness_label, Number_label, self.fofr_legends,
-												self.Plot_colors_fofr, xscale='log', linestyles=self.Linestyles)
+												self.Plot_colors_fofr, xscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		
 		### Relative differences of thickness
 		Reldiff_num_thick_Symm = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label_reldiff,
@@ -1300,26 +1300,28 @@ class Plot_results():
 		######## Density histograms
 		### Density histograms with number of filaments at a given density bin
 		NumDensity_Symm = pf.Call_plot_sameX(Common_bin_density, Number_density[SymmLCDM], Density_label, Number_label, self.Symm_legends,
-											self.Plot_colors_symm, xscale='log', yscale='log', linestyles=self.Linestyles)
+											self.Plot_colors_symm, xscale='log', yscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		NumDensity_Symm_logX = pf.Call_plot_sameX(Common_bin_density, Number_density[SymmLCDM], Density_label, Number_label, self.Symm_legends,
-											self.Plot_colors_symm, xscale='log', linestyles=self.Linestyles)
+											self.Plot_colors_symm, xscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		NumDensity_fofr = pf.Call_plot_sameX(Common_bin_density, Number_density[FofrLCDM], Density_label, Number_label, self.fofr_legends,
-											self.Plot_colors_fofr, xscale='log', yscale='log', linestyles=self.Linestyles)
+											self.Plot_colors_fofr, xscale='log', yscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		NumDensity_fofr_logX = pf.Call_plot_sameX(Common_bin_density, Number_density[FofrLCDM], Density_label, Number_label, self.fofr_legends,
-											self.Plot_colors_fofr, xscale='log', linestyles=self.Linestyles)
+											self.Plot_colors_fofr, xscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		### Relative difference of the above
 		RelDiff_num_density_Symm = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
 											self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Prop_error_density[Symm_only-1], xscale='log', yscale='log',
-											linestyles=self.Linestyles, reldiff=True)
+											linestyles=self.Linestyles, reldiff=True, legend_anchor=False)
 		RelDiff_num_density_Symm_logX = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Symm_only-1], Density_label, Number_label_reldiff,
 											self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Prop_error_density[Symm_only-1], xscale='log',
-											linestyles=self.Linestyles, reldiff=True, ylim=(-1,1), xlim=(Common_bin_density[1], Common_bin_density[-1]))
+											linestyles=self.Linestyles, reldiff=True, ylim=(-1,1), xlim=(Common_bin_density[1], Common_bin_density[-1]), 
+											legend_anchor=False)
 		RelDiff_num_density_fofr = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Fofr_only-1], Density_label, Number_label_reldiff,
 											self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Prop_error_density[Fofr_only-1], xscale='log', yscale='log',
-											linestyles=self.Linestyles, reldiff=True)
+											linestyles=self.Linestyles, reldiff=True, legend_anchor=False)
 		RelDiff_num_density_fofr_logX = pf.Call_plot_sameX(Common_bin_density, RelativeDiff_density[Fofr_only-1], Density_label, Number_label_reldiff,
 											self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Prop_error_density[Fofr_only-1], xscale='log',
-											linestyles=self.Linestyles, reldiff=True, ylim=(-1,1), xlim=(Common_bin_density[1], Common_bin_density[-1]))
+											linestyles=self.Linestyles, reldiff=True, ylim=(-1,1), xlim=(Common_bin_density[1], Common_bin_density[-1]), 
+											legend_anchor=False)
 
 
 		######## Compare different properties
