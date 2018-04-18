@@ -973,9 +973,9 @@ class CompareModels():
 												fofr_legends, self.Plot_colors_fofr, style='-')
 
 		Sep_FilLengths_S_logx = pf.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments', Symm_legends, self.Plot_colors_symm, 
-													xscale='log', Linestyle=self.Linestyles, legend_anchor=False)
+													xscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		Sep_FilLengths_F_logx = pf.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments', fofr_legends, self.Plot_colors_fofr, 
-													xscale='log', Linestyle=self.Linestyles, legend_anchor=False)
+													xscale='log', linestyles=self.Linestyles, legend_anchor=False)
 		
 		Sep_FilLengths_S_loglog = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
 													 Symm_legends, self.Plot_colors_symm, style='-', logscale='loglog')
@@ -984,10 +984,10 @@ class CompareModels():
 		# Relative difference of N filaments, with propagated errors
 		Set_FilLengths_properr_S_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[0:4], xlabel_len, '$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$', 
 															 Symm_legends_only, Symm_colors_only, error=Prop_err_numLength[0:4],
-															 fillbetween=True, logscale='logx', Linestyle=self.Linestyles, reldiff=True)
+															 fillbetween=True, logscale='logx', linestyles=self.Linestyles, reldiff=True)
 		Set_FilLengths_properr_F_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[4:], xlabel_len, '$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$',
 															 fofr_legends_only, fofr_colors_only, error=Prop_err_numLength[4:],
-															 fillbetween=True, logscale='logx', linestyle=self.Linestyles, reldiff=True)
+															 fillbetween=True, logscale='logx', linestyles=self.Linestyles, reldiff=True)
 		
 		# 'massfunction' of lengths
 		Distribution_symm = distribution[0:5]
