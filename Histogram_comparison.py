@@ -967,15 +967,16 @@ class CompareModels():
 		Symm_colors_only = self.Plot_colors_symm[1:]
 		fofr_colors_only = self.Plot_colors_fofr[1:]
 		# Length binned histogram, nodot
+		xlim_len = (length_bins_logX[1], length_bins_logX[-1])
 		Sep_FilLengths_S = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
 												Symm_legends, self.Plot_colors_symm, style='-')
 		Sep_FilLengths_F = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
 												fofr_legends, self.Plot_colors_fofr, style='-')
 
 		Sep_FilLengths_S_logx = pf.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments', Symm_legends, self.Plot_colors_symm, 
-													xscale='log', linestyles=self.Linestyles, legend_anchor=False)
+													xscale='log', linestyles=self.Linestyles, legend_anchor=False, xlim=xlim_len)
 		Sep_FilLengths_F_logx = pf.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments', fofr_legends, self.Plot_colors_fofr, 
-													xscale='log', linestyles=self.Linestyles, legend_anchor=False)
+													xscale='log', linestyles=self.Linestyles, legend_anchor=False, xlim=xlim_len)
 		
 		Sep_FilLengths_S_loglog = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
 													 Symm_legends, self.Plot_colors_symm, style='-', logscale='loglog')
@@ -1017,12 +1018,12 @@ class CompareModels():
 		#					 							Symm_legends_only, Symm_colors_only, fill_between=True, diff=True, logscale='logx')
 		#Sep_RelDiff_length_error_F = self.Plot_errobar_sameX(lengths, RelDiff_distribution_fofr, Propagated_errors[4:], xlabel_len, 'Relative difference of $N(>L)$',
 		#												 fofr_legends_only, fofr_colors_only, fill_between=True, diff=True, logscale='logx')
-		Sep_RelDiff_length_error_S = pf.Call_plot_sameX(lengths, RelDiff_distribution_symm, xlabel_len, 'Relative difference of $N(>L)$', Symm_legends_only, 
+		Sep_RelDiff_length_error_S = pf.Call_plot_sameX(lengths, RelDiff_distribution_symm, xlabel_len, 'Relative difference of $N(>L)$', Symm_legends, 
 														Symm_colors_only, error=Propagated_errors[:4], fillbetween=True, reldiff=True, xscale='log',
-							 							linestyles=self.Linestyles, legend_anchor=False)
-		Sep_RelDiff_length_error_F = pf.Call_plot_sameX(lengths, RelDiff_distribution_fofr, xlabel_len, 'Relative difference of $N(>L)$', fofr_legends_only, 
+							 							linestyles=self.Linestyles, legend_anchor=False, ylim=(-1,1), xlim=xlim_len)
+		Sep_RelDiff_length_error_F = pf.Call_plot_sameX(lengths, RelDiff_distribution_fofr, xlabel_len, 'Relative difference of $N(>L)$', fofr_legends, 
 														fofr_colors_only, error=Propagated_errors[4:], fillbetween=True, reldiff=True, xscale='log',
-														linestyles=self.Linestyles, legend_anchor=False)
+														linestyles=self.Linestyles, legend_anchor=False, ylim=(-1,1), xlim=xlim_len)
 		# Absolute Differences in Number of filaments and not N(>L)
 		Sep_AbsDiff_Number_S = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, '$\Delta N$ filaments', Symm_legends_only,
 															Symm_colors_only, diff='abs')
@@ -1050,12 +1051,12 @@ class CompareModels():
 		# Relative differences in Number of filaments and not N(>L). Logscale x, including errorbars
 		Sep_RelDiff_Number_error_S_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[:4], xlabel_len, 
 															'$(N_i - N_{\Lambda\mathrm{CDM}})/N_{\Lambda\mathrm{CDM}}$',
-															Symm_legends_only, Symm_colors_only, xscale='log', error=Prop_err_numLength[:4], 
-															fillbetween=True, xlim=(1, np.max(length_bins_logX)), legend_anchor=False, relldiff=True,
+															Symm_legends, Symm_colors_only, xscale='log', error=Prop_err_numLength[:4], 
+															fillbetween=True, xlim=(1, np.max(length_bins_logX)), legend_anchor=False, reldiff=True,
 															ylim=(-1,1), linestyles=self.Linestyles)
 		Sep_RelDiff_Number_error_F_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[4:], xlabel_len, 
 															'$(N_i - N_{\Lambda\mathrm{CDM}})/N_{\Lambda\mathrm{CDM}}$',
-															fofr_legends_only, fofr_colors_only, xscale='log', error=Prop_err_numLength[4:],
+															fofr_legends, fofr_colors_only, xscale='log', error=Prop_err_numLength[4:],
 															fillbetween=True, xlim=(1, np.max(length_bins_logX)), legend_anchor=False, reldiff=True,
 															ylim=(-1,1), linestyles=self.Linestyles)
 
