@@ -1773,6 +1773,7 @@ class Plot_results():
 		#################### OVER DIFFERENT MASS BINS
 		####################
 		#### Average speed for different mass bins
+		xlim_mass = (Common_bin_mass[1], Common_bin_mass[-1])
 		Compare_both = [SymmLCDM, FofrLCDM]
 		Compare_both_legends = [self.Symm_legends, self.fofr_legends]
 		Compare_both_colors = [self.Plot_colors_symm, self.Plot_colors_fofr]
@@ -2094,8 +2095,8 @@ class Plot_results():
 		### Relative differences of the data above
 		Number_filaments_larger_mass_reldiff = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'b-')
 		ax = plt.subplot(1,2,1)
+		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'b-')
 		for i in Symm_only:
 			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
