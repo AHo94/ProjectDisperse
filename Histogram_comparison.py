@@ -984,10 +984,10 @@ class CompareModels():
 		# Relative difference of N filaments, with propagated errors
 		Set_FilLengths_properr_S_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[0:4], xlabel_len, '$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$', 
 															 Symm_legends_only, Symm_colors_only, error=Prop_err_numLength[0:4],
-															 fillbetween=True, logscale='logx', linestyles=self.Linestyles, reldiff=True)
+															 fillbetween=True, xscale='log', linestyles=self.Linestyles, reldiff=True)
 		Set_FilLengths_properr_F_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[4:], xlabel_len, '$(N_i - N_{\Lambda CDM})/N_{\Lambda CDM}$',
 															 fofr_legends_only, fofr_colors_only, error=Prop_err_numLength[4:],
-															 fillbetween=True, logscale='logx', linestyles=self.Linestyles, reldiff=True)
+															 fillbetween=True, xscale='log', linestyles=self.Linestyles, reldiff=True)
 		
 		# 'massfunction' of lengths
 		Distribution_symm = distribution[0:5]
@@ -1047,12 +1047,12 @@ class CompareModels():
 															'$(N_i - N_{\Lambda\mathrm{CDM}})/N_{\Lambda\mathrm{CDM}}$',
 															Symm_legends_only, Symm_colors_only, xscale='log', error=Prop_err_numLength[:4], 
 															fillbetween=True, xlim=(1, np.max(length_bins_logX)), legend_anchor=False, relldiff=True,
-															ylim=(-1,1))
+															ylim=(-1,1), linestyles=self.Linestyles)
 		Sep_RelDiff_Number_error_F_logx = pf.Call_plot_sameX(length_bins_logX, RelDiff_num[4:], xlabel_len, 
 															'$(N_i - N_{\Lambda\mathrm{CDM}})/N_{\Lambda\mathrm{CDM}}$',
 															fofr_legends_only, fofr_colors_only, xscale='log', error=Prop_err_numLength[4:],
 															fillbetween=True, xlim=(1, np.max(length_bins_logX)), legend_anchor=False, reldiff=True,
-															ylim=(-1,1))
+															ylim=(-1,1), linestyles=self.Linestyles)
 
 		# Relative differences in Number of filaments and not N(>L). LogLog scale
 		Sep_RelDiff_Number_S_loglog = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Relative difference of $N$ (filaments)',
