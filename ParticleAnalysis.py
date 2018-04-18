@@ -1281,18 +1281,20 @@ class Plot_results():
 		### Relative differences of thickness
 		Reldiff_num_thick_Symm = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label_reldiff,
 											self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Prop_error_thickness[Symm_only-1], xscale='log', yscale='log',
-											linestyles=self.Linestyles, reldiff=True, xlim=(Common_bin_thickness[1], Common_bin_thickness[-1]))
+											linestyles=self.Linestyles, reldiff=True, xlim=(Common_bin_thickness[1], Common_bin_thickness[-1]),
+											legend_anchor=False)
 		Reldiff_num_thick_Symm_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Symm_only-1], Thickness_label, Number_label_reldiff,
 											self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Prop_error_thickness[Symm_only-1], xscale='log',
-											linestyles=self.Linestyles, fillbetween=do_fb, reldiff=True, 
+											linestyles=self.Linestyles, fillbetween=do_fb, reldiff=True, legend_anchor=False,
 											xlim=(Common_bin_thickness[1], Common_bin_thickness[-1]), ylim=(-1,1))
 		
 		Reldiff_num_thick_fofr = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label_reldiff,
 											self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Prop_error_thickness[Fofr_only-1], xscale='log', yscale='log',
-											linestyles=self.Linestyles, reldiff=True, xlim=(Common_bin_thickness[1], Common_bin_thickness[-1]))
+											linestyles=self.Linestyles, reldiff=True, xlim=(Common_bin_thickness[1], Common_bin_thickness[-1]),
+											legend_anchor=False)
 		Reldiff_num_thick_fofr_logX = pf.Call_plot_sameX(Common_bin_thickness, RelativeDiff_thickness[Fofr_only-1], Thickness_label, Number_label_reldiff,
 											self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Prop_error_thickness[Fofr_only-1],  xscale='log',
-											linestyles=self.Linestyles, fillbetween=do_fb, reldiff=True, 
+											linestyles=self.Linestyles, fillbetween=do_fb, reldiff=True, legend_anchor=False,
 											xlim=(Common_bin_thickness[1], Common_bin_thickness[-1]), ylim=(-1,1))
 		
 		######## Density histograms
@@ -1566,8 +1568,8 @@ class Plot_results():
 			Average_speed_label = r'$\langle \rho \rangle - [\mathrm{kg}h^2/\mathrm{m^3}]$'
 			Average_speed_label_nounit = r'$\langle \rho \rangle$'
 			Reldiff_label_avgspeed = r'$(\langle \rho_i \rangle - \langle \rho_\{\Lambda \mathrm{CDM}})/(\langle \rho_{\Lambda \mathrm{CDM}} \rangle)$'
-			do_fb = False
-			#ylimits = (-1,1)
+			do_fb = True
+			ylimits = (-1,1)
 		
 		#SymmLCDM = np.array([0,1,2,3,4])
 		#FofrLCDM = np.array([0,5,6,7])
@@ -1861,22 +1863,22 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_lengths[1:], np.zeros(len(Common_bin_lengths[1:])), 'b-')
+		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'b-')
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1]) > 1:
 				set_y_limit = 1
-			plt.plot(Common_bin_lengths[1:], RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
-			plt.fill_between(Common_bin_lengths[1:], RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
+			plt.plot(Common_bin_length[1:], RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
+			plt.fill_between(Common_bin_length[1:], RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
 							 RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_lengths[1:], np.zeros(len(Common_bin_lengths[1:])), 'b-')
+		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'b-')
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
-			plt.plot(Common_bin_lengths[1:], RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
-			plt.fill_between(Common_bin_lengths[1:], RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
+			plt.plot(Common_bin_length[1:], RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
+			plt.fill_between(Common_bin_length[1:], RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
 							 RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij+1])
 		plt.legend(self.fofr_legends)
 		plt.xscale('log')
@@ -2092,6 +2094,7 @@ class Plot_results():
 		plt.xscale('log')
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
+		plt.setp(ax.get_yticklabels(), visible=False)
 		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'b-')
 		for i in Fofr_only:
 			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyle=self.Linestyles[i-5])
