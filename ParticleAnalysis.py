@@ -2225,8 +2225,8 @@ if __name__ == '__main__':
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
-	#Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
-	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
+	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
+	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
 	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
 	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
