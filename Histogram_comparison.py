@@ -967,7 +967,7 @@ class CompareModels():
 		Symm_colors_only = self.Plot_colors_symm[1:]
 		fofr_colors_only = self.Plot_colors_fofr[1:]
 		# Length binned histogram, nodot
-		xlim_len = (length_bins_logX[1], length_bins_logX[-1])
+		xlim_len = (length_bins_logX[0], length_bins_logX[-1])
 		Sep_FilLengths_S = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
 												Symm_legends, self.Plot_colors_symm, style='-')
 		Sep_FilLengths_F = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
