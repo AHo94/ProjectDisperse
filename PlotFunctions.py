@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import gridspec
 
 s_variable = 0.7
 
@@ -400,6 +401,145 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 			if titles:
 				plt.title(titles[j], fontsize=10)
+	if set_xlimits:
+		plt.xlim(xlims)
+	if set_ylimits:
+		plt.ylim(ylims)
+
+	if anchor_legend:
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+	figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
+	figure.text(0, 0.5, ylabel, ha='center', va='center', rotation='vertical', fontsize=10)
+	if Change_xscales:
+		plt.xscale(logXscale_name)
+	if Change_yscales:
+		plt.yscale(logYscale_name)
+	plt.tight_layout()
+	return figure
+
+def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel, legend, colors, Primerror=[], Secerror=[], **kwargs):
+	do_fill_between = False
+	set_ylimits = False
+	set_xlimits = False
+	New_figure_size = False
+	Remove_y_ticks = True
+	Nrows = 3
+	Ncols = 3
+	fb_alpha = 0.3
+	anchor_legend = True
+	titles = []
+	Change_xscales = False
+	Change_yscales = False
+	Plot_LCDMDiff = False
+	linestyles = ['-']*len(ydata[0])
+	# Iterate through keyword arguments to check if anything special will happen. Changes some default arguments
+	for kw in kwargs:
+		if kw == 'fillbetween':
+			do_fill_between = kwargs[kw]
+		elif kw == 'xlim':		# Sets xlimit if called
+			set_xlimits = True
+			xlims = kwargs[kw]
+			if type(xlims) != tuple:
+				raise ValueError("Keyword argument xlims must be a tuple!")
+			if not xlims[0] and not xlims[1]:
+				set_xlimits = False
+		elif kw == 'ylim':		# Sets ylimit if called
+			set_ylimits = True
+			ylims = kwargs[kw]
+			if type(ylims) != tuple:
+				raise ValueError("Keyword argument ylims must be a tuple!")
+			if not ylims[0] and not ylims[1]:
+				set_ylimits = False
+		elif kw == 'figsize':   	# Figure size of plot
+			figure_size = kwargs[kw]
+			New_figure_size = True
+		elif kw == 'rowcol':   	# Number of rows and columns for subplots.
+			row_and_col = kwargs[kw]
+			if type(row_and_col) != list:
+				raise ValueError("Keyword argument rowcol must be a list!")
+			Nrows = row_and_col[0]
+			Ncols = row_and_col[1]
+		elif kw == 'NoYticks':   # Removes Y-ticks of the latter plots, removes clutted.
+			Remove_y_ticks = kwargs[kw]
+		elif kw == 'fb_alpha':   # Alpha used for fill_between
+			fb_alpha = kwargs[kw]
+			if type(fb_alpha) != float:
+				raise ValueError("Keyword argument fb_alpha must be a float number!")
+		elif kw == 'legend_anchor':   # Anchors the legend outside the figure if True
+			anchor_legend = kwargs[kw]
+		elif kw == 'title':    	# Titles above subplots
+			titles = kwargs[kw]
+			if type(titles) != list:
+				raise ValueError("Keyword argument titles must be a list!")
+		elif kw == 'xscale':	# Changes x plot scales based on input
+			logXscale_name = kwargs[kw]
+			Change_xscales = True
+		elif kw == 'yscale':	# Changes y plot scales based on input
+			logYscale_name = kwargs[kw]
+			Change_yscales = True
+		elif kw == 'linestyles': 	# Choose linestyle of plotting
+			linestyles = kwargs[kw]
+		elif kw == 'reldiff':	# Plots a line that distinguishes the LCDM model as a zero line
+			Plot_LCDMDiff = kwargs[kw]
+		else:
+			raise ValueError("Keyword argument " + kw + " not recognized!")
+
+	# Quick checks of error data vs ydata and titles
+	if len(primaryY) != secondaryY:
+		raise ValueError("Primary and secondary Ydata not of same size!")
+	if not error and do_fill_between:
+		print 'Warning: fillbetween is True but no error data found'
+		do_fill_between = False
+	if error and do_fill_between:
+		if len(Primerror) != len(primaryY):
+			raise ValueError("Primary error data not the same size as primary ydata!")
+	if error and do_fill_between:
+		if len(Secerror) != len(secondaryY):
+			raise ValueError("Secondary error data not the same size as secondary ydata!")
+	if titles:
+		if len(titles) != len(primaryY):
+			raise ValueError("title list not the same length as ydata!")
+	if len(legend) != len(ydata[0]):
+		raise ValueError("Number of legends not the same as number of ydata!")
+
+	if New_figure_size:
+		figure = plt.figure(figsize=figure_size)
+	else:
+		figure = plt.figure()
+	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+	gs = gridspec.GridSpec(Nrows, Ncols) 
+	if do_fill_between:
+		for j in range(len(primaryY)):
+			ax0 = plt.subplot(gs[0:Nrows-1, j])
+			plt.setp(ax0.get_xticklabels(), visible=False)
+			plt.setp(ax0.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax0.get_yticklabels(), visible=True)
+			for i in range(len(primaryY[j])):
+				plt.plot(xdata, primaryY[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
+				plt.fill_between(xdata, primaryY[j][i]-Primerror[j][i], primaryY[j][i]+Primerror[j][i], alpha=fb_alpha, facecolor=colors[i])
+			if titles:
+				plt.title(titles[j], fontsize=10)
+			ax1 = plt.subplot(gs[Nrows, j], sharex=ax0)
+			plt.setp(ax1.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
+			if Plot_LCDMDiff:
+				plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM', linestyle='-')
+			for i in range(len(secondaryY[j])):
+				plt.plot(xdata, secondaryY[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
+				plt.fill_between(xdata, secondaryY[j][i]-Secerror[j][i], secondaryY[j][i]+Secerror[j][i], alpha=fb_alpha, facecolor=colors[i])
+	else:
+		for j in range(len(ydata)):
+			ax0 = plt.subplot(gs[0:Nrows-1, j])
+			plt.setp(ax0.get_xticklabels(), visible=False)
+			plt.setp(ax0.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax0.get_yticklabels(), visible=True)
+			for i in range(len(primaryY[j])):
+				plt.plot(xdata, primaryY[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
+			if titles:
+				plt.title(titles[j], fontsize=10)
+			ax1 = plt.subplot(gs[Nrows, j], sharex=ax0)
+			plt.setp(ax1.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
+			if Plot_LCDMDiff:
+				plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM', linestyle='-')
+			for i in range(len(secondaryY[j])):
+				plt.plot(xdata, secondaryY[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 	if set_xlimits:
 		plt.xlim(xlims)
 	if set_ylimits:
