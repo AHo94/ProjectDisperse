@@ -967,7 +967,7 @@ class CompareModels():
 		Symm_colors_only = self.Plot_colors_symm[1:]
 		fofr_colors_only = self.Plot_colors_fofr[1:]
 		# Length binned histogram, nodot
-		xlim_len = (length_bins_logX[0], length_bins_logX[-1])
+		xlim_len = (1, length_bins_logX[-1])
 		Sep_FilLengths_S = self.Call_plot_sameX(length_bins_logX, Symm_length_values, xlabel_len, 'Number of filaments',
 												Symm_legends, self.Plot_colors_symm, style='-')
 		Sep_FilLengths_F = self.Call_plot_sameX(length_bins_logX, fofr_length_values, xlabel_len, 'Number of filaments',
@@ -1148,6 +1148,16 @@ class CompareModels():
 		ConnectedHistComparison_subplot_reldiff.text(0, 0.5, 'Relative difference of number connections', ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()	
 
+		#### Using gridspec plotting
+		NumLen_symm_logx_GRIDSPEC = pf.Do_gridspec_sameX(length_bins_logX, [Symm_length_values/1000.0], [RelDiff_num[:4]],
+													Thickness_label, r'$N \times 1000$', 'Relative difference', Symm_legends, self.Plot_colors_symm,
+													Secerror=[Prop_error_thickness[Symm_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True,
+													fillbetween=True, xlim=xlim_len, ylim_diff=(-0.75, 0.75), rowcol=[2,1], legend_anchor=False)
+		NumLen_fofr_logx_GRIDSPEC = pf.Do_gridspec_sameX(length_bins_logX, [fofr_length_values/1000.0], [RelDiff_num[4:]],
+													Thickness_label, r'$N \times 1000$', 'Relative difference', fofr_legends, self.Plot_colors_fofr,
+													Secerror=[Prop_error_thickness[Fofr_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True,
+													fillbetween=True, xlim=xlim_len, ylim_diff=(-0.3, 0.3), rowcol=[2,1], legend_anchor=False)
+
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
 			self.savefigure(Bin_comparison, 'Binning_comparison')
@@ -1204,6 +1214,9 @@ class CompareModels():
 			self.savefigure(Sep_AbsDiff_Number_error_F_logx, 'Filament_lengths_absolute_difference_PropErr_logX_cFofr')
 			self.savefigure(ConnectedHistComparison_subplot, 'Number_Connected_Filaments_subplot')
 			self.savefigure(ConnectedHistComparison_subplot_reldiff, 'Number_Connected_Filaments_subplot_RelDiff')
+			## Gridspec stuff
+			self.savefigure(NumLen_symm_logx_GRIDSPEC, 'NumberLength_logX_cSymmetron_gridspec')
+			self.savefigure(NumLen_fofr_logx_GRIDSPEC, 'NumberLength_logX_cFofr_gridspec')
 		else:
 			print 'Done! No figures saved.'
 
