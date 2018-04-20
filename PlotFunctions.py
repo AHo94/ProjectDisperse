@@ -431,7 +431,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 	Change_xscales = False
 	Change_yscales = False
 	Plot_LCDMDiff = False
-	linestyles = ['-']*7
+	linestyles = ['-']*10
 	# Iterate through keyword arguments to check if anything special will happen. Changes some default arguments
 	for kw in kwargs:
 		if kw == 'fillbetween':
@@ -527,7 +527,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			if titles:
 				plt.title(titles[j], fontsize=10)
 			plt.ylabel(ylabel1) if j == 0 else plt.ylabel('')
-			ax1 = plt.subplot(gs[Nrows, j], sharex=ax0) if i == 0 else plt.subplot(gs[Nrows, j], sharex=ax0, sharey=ax1)
+			ax1 = plt.subplot(gs[Nrows-1, j], sharex=ax0) if i == 0 else plt.subplot(gs[Nrows-1, j], sharex=ax0, sharey=ax1)
 			plt.setp(ax1.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
 			if Plot_LCDMDiff:
 				plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM', linestyle='-')
