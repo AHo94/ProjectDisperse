@@ -1150,12 +1150,12 @@ class CompareModels():
 
 		#### Using gridspec plotting
 		NumLen_symm_logx_GRIDSPEC = pf.Do_gridspec_sameX(length_bins_logX, [np.array(Symm_length_values)/1000.0], [RelDiff_num[:4]],
-													Thickness_label, r'$N \times 1000$', 'Relative difference', Symm_legends, self.Plot_colors_symm,
-													Secerror=[Prop_error_thickness[Symm_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True,
+													xlabel_len, r'$N \times 1000$', 'Relative difference', Symm_legends, self.Plot_colors_symm,
+													Secerror=[Prop_err_numLength[:4]], xscale='log', linestyles=self.Linestyles, reldiff=True,
 													fillbetween=True, xlim=xlim_len, ylim_diff=(-0.75, 0.75), rowcol=[2,1], legend_anchor=False)
 		NumLen_fofr_logx_GRIDSPEC = pf.Do_gridspec_sameX(length_bins_logX, [np.array(fofr_length_values)/1000.0], [RelDiff_num[4:]],
-													Thickness_label, r'$N \times 1000$', 'Relative difference', fofr_legends, self.Plot_colors_fofr,
-													Secerror=[Prop_error_thickness[Fofr_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True,
+													xlabel_len, r'$N \times 1000$', 'Relative difference', fofr_legends, self.Plot_colors_fofr,
+													Secerror=[Prop_err_numLength[4:]], xscale='log', linestyles=self.Linestyles, reldiff=True,
 													fillbetween=True, xlim=xlim_len, ylim_diff=(-0.3, 0.3), rowcol=[2,1], legend_anchor=False)
 
 		if self.savefile == 1:
