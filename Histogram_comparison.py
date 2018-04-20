@@ -318,9 +318,9 @@ class CompareModels():
 
 		self.s = 0.7 	# For figure rescaling etc. Change as you wish.
 
-		self.Plot_colors_symm = ['b', 'orange', 'g', 'r', 'olive']
-		self.Plot_colors_fofr = ['b', 'purple', 'y', 'k']
-		self.Plot_colors_all = ['b', 'orange', 'g', 'r', 'olive', 'purple', 'y', 'k']
+		self.Plot_colors_symm = ['k', 'orange', 'g', 'r', 'olive']
+		self.Plot_colors_fofr = ['k', 'purple', 'y', 'b']
+		self.Plot_colors_all = ['k', 'orange', 'g', 'r', 'olive', 'purple', 'y', 'b']
 		self.Linestyles = ['-', '--', '-.', ':', (0, (5, 10))]
 
 	def relative_deviation(self, data, index):
