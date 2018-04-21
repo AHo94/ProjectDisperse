@@ -52,6 +52,10 @@ class AnalyseCritPts():
 		for j in range(len(self.CritPointXpos)):
 			CP_3DPos.append(np.column_stack((self.CritPointXpos[j], self.CritPointYpos[j], self.CritPointZpos[j])))
 		self.CP_3DPos = np.array(CP_3DPos)
+		Maxima_cp = self.CP_type == 3
+		Saddle_cp = self.CP_type == 2
+		self.CP_3DPos_max = self.CP_3DPos[Maxima_cp]
+		self.CP_3DPos_saddle = self.CP_3DPos[Saddle_cp]
 
 	def Unpack_filament_data(self, CP_coord):
 		""" Unpacks critial point data from the read filament data module. """
@@ -78,14 +82,22 @@ class AnalyseCritPts():
 
 		cachedir_NumCP = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/NumCPInHalo/'
 		cachedir_CPIDs = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/CPIDsInHalo/'
+		cachedir_MaximaCP = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/MaximaCPInHalo/'
+		cachedir_SaddleCP = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/SaddleCPInHalo/'
 		if not os.path.isdir(cachedir_NumCP):
 			os.makedirs(cachedir_NumCP)
 		if not os.path.isdir(cachedir_CPIDs):
 			os.makedirs(cachedir_CPIDs)
+		if not os.path.isdir(cachedir_MaximaCP):
+			os.makedirs(cachedir_MaximaCP)
+		if not os.path.isdir(cachedir_SaddleCP):
+			os.makedirs(cachedir_SaddleCP)
 
 		Common_filename =  self.model + '_' + str(self.npart) + 'part_nsig' + str(self.sigma)+ '_BoxExpand' + str(6) + '.npy'
 		cachefile_NumCP = cachedir_NumCP + Common_filename
 		cachefile_CPIDs = cachedir_CPIDs + Common_filename
+		cachefile_MaximaCP = cachedir_MaximaCP + Common_filename
+		cachefile_SaddleCP = cachedir_SaddleCP + Common_filename
 		if os.path.isfile(cachefile_NumCP):
 			print "Reading CPs in halos of model " + self.model + "  ..."
 			NumCP_in_halo = np.load(cachefile_NumCP)
@@ -105,7 +117,29 @@ class AnalyseCritPts():
 			print "time took: ", time.time() - timer, "s"
 			np.save(cachefile_NumCP, NumCP_in_halo)
 			np.save(cachefile_CPIDs, CP_ids_in_halo)
-		return NumCP_in_halo, CP_ids_in_halo
+
+		if: os.path.isfile(cachefile_MaximaCP):
+			print "Reading maxima and saddle cps in halos ..."
+			MaximaCP_in_halo = np.load(cachefile_MaximaCP)
+			SaddleCP_in_halo = np.load(cachefile_SaddleCP)
+		else:
+			print "Calculating CPs (maxima and saddle seperate) in halos"
+			timer = time.time()
+			MaximaCP_in_halo = []
+			SaddleCP_in_halo = []
+			for i in range(len(self.HaloPos)):
+				InHalo_max = self.CP_in_halo(self.HaloPos[i], self.CP_3DPos_max, self.VirRadius[i])
+				InHalo_saddle = self.CP_in_halo(self.HaloPos[i], self.CP_3DPos_saddle, self.VirRadius[i])
+				OK_cps_m = np.where(InHalo_max)[0]
+				OK_cps_s = np.where(InHalo_saddle)[0]
+				MaximaCP_in_halo.append(len(OK_cps_m))
+				SaddleCP_in_halo.append(len(OK_cps_s))
+			MaximaCP_in_halo = np.asarray(MaximaCP_in_halo)
+			SaddleCP_in_halo = np.asarray(SaddleCP_in_halo)
+			print "time took: ", time.time() - timer, "s"
+			np.save(cachefile_MaximaCP, MaximaCP_in_halo)
+			np.save(cachefile_SaddleCP, SaddleCP_in_halo)
+		return NumCP_in_halo, CP_ids_in_halo, MaximaCP_in_halo, SaddleCPInHalo
 
 class Plot_results():
 	def __init__(self, models, Nsigma, foldername, filetype='png'):
@@ -332,7 +366,7 @@ if __name__ == '__main__':
 
 	for p_model in Models_to_be_run:
 		Instance = AnalyseCritPts(p_model, N_parts, N_sigma)
-		NumCP_in_halo, CP_ids_in_halo = Instance.Check_cps()
+		NumCP_in_halo, CP_ids_in_halo, CP3_halo, CP2_halo = Instance.Check_cps()
 		HaloMasses = Instance.HaloMass
 		yesfils = NumCP_in_halo > 0
 		nofils = NumCP_in_halo == 0
