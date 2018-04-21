@@ -32,7 +32,7 @@ class AnalyseCritPts():
 		else:
 			Dispersemodel = model
 
-		self.read_filament_data(Dispersemodel, npart, sigma)
+		#self.read_filament_data(Dispersemodel, npart, sigma)
 		self.HaloID, self.HaloPos, self.HaloMass, self.VirRadius = RHD.Read_halo_data(model)
 
 	def read_filament_data(self, model, npart, sigma):
@@ -87,7 +87,7 @@ class AnalyseCritPts():
 		cachefile_NumCP = cachedir_NumCP + Common_filename
 		cachefile_CPIDs = cachedir_CPIDs + Common_filename
 		if os.path.isfile(cachefile_NumCP):
-			print "Reading CPs in halos ..."
+			print "Reading CPs in halos of model " + self.model + "  ..."
 			NumCP_in_halo = np.load(cachefile_NumCP)
 			CP_ids_in_halo = np.load(cachefile_CPIDs)
 		else:
@@ -125,7 +125,7 @@ class Plot_results():
 		self.All_legends = []
 		self.Symm_legends = []
 		self.fofr_legends = []
-		self.Plot_colors_symm = ['k', 'orange', 'g', 'r', 'olive']
+		self.Plot_colors_symm = ['k', 'orange', 'g', 'r', 'c']
 		self.Plot_colors_fofr = ['k', 'purple', 'y', 'b']
 		self.ID_counter = 0
 		self.Linestyles = ['-', '--', '-.', ':', (0, (5, 10))]
@@ -191,7 +191,7 @@ class Plot_results():
 			raise ValueError('filename not a string!')
 		figure.savefig(savedir_ + name + self.filetype, bbox_inches='tight', dpi=100)
 
-	def Do_plot(self, EmptyHaloMass, NonEmptyHaloMass, AllHaloMass):
+	def Do_plot(self, EmptyHaloMass, NonEmptyHaloMass, AllHaloMass, NumCPs_list):
 		NModels = len(AllHaloMass)
 		SymmLCDM = self.SymmLCDM_ids
 		FofrLCDM = self.FofrLCDM_ids
@@ -200,6 +200,7 @@ class Plot_results():
 		#####
 		##### Computing some data
 		#####
+		### Number of empty vs non empty halos as a function of mass
 		EmptyHaloMass = np.asarray(EmptyHaloMass)
 		NonEmptyHaloMass = np.asarray(NonEmptyHaloMass)
 		AllHaloMass = np.asarray(AllHaloMass)
@@ -211,34 +212,68 @@ class Plot_results():
 			Number_EmptyHalo.append(bin_value)
 			bin_value, bin_std = OF.Bin_numbers_common(NonEmptyHaloMass[i], NonEmptyHaloMass[i], Common_bin_halo_mass, std='poisson')
 			Number_NonEmpty.append(bin_value)
-
+		### Number of critical points per halo
+		Numer_CP_Halo_mass = []
+		for i in range(NModels):
+			index_bin = np.digitize(NonEmptyHaloMass[i], Common_bin_halo_mass)
+			binval = np.array([np.sum(np.unique(NumCPs_list[i][j == index_bin])) for j in range(len(Common_bin_halo_mass))])
+			print binval
 		#####
 		##### Plotting data
 		#####
+		#### Number of empty vs nonempty halos, as a function of mass
 		Halo_mass_distribution_symm = plt.figure()
+		ax = plt.axes()
 		for ij in range(len(SymmLCDM)):
 			i = SymmLCDM[ij]
-			plt.plot(Common_bin_halo_mass, Number_EmptyHalo[i], linestyle='--', color=self.Plot_colors_symm[ij])
-			plt.plot(Common_bin_halo_mass, Number_NonEmpty[i], linestyle='-', color=self.Plot_colors_symm[ij], label=self.Symm_legends[ij])
+			plt.plot(Common_bin_halo_mass, Number_EmptyHalo[i], linestyle='--', color=self.Plot_colors_symm[ij], alpha=0.5)
+			ax.plot(Common_bin_halo_mass, Number_NonEmpty[i], linestyle='-', color=self.Plot_colors_symm[ij], label=self.Symm_legends[ij])
 		plt.xlabel('Halo mass - $[M_\odot/h]$')
 		plt.ylabel('$N$')
 		plt.xscale('log')
-		plt.legend()
+		#plt.yscale('log')
+		h,l=ax.get_legend_handles_labels()
+		ax.legend(h,l)
 
 		Halo_mass_distribution_fofr = plt.figure()
-		for ij in range(len(SymmLCDM)):
-			i = SymmLCDM[ij]
-			plt.plot(Common_bin_halo_mass, Number_EmptyHalo[i], linestyle='--', color=self.Plot_colors_fofr[ij])
-			plt.plot(Common_bin_halo_mass, Number_NonEmpty[i], linestyle='-', color=self.Plot_colors_fofr[ij], label=self.fofr_legends[ij])
+		ax = plt.axes()
+		for ij in range(len(FofrLCDM)):
+			i = FofrLCDM[ij]
+			plt.plot(Common_bin_halo_mass, Number_EmptyHalo[i], linestyle='--', color=self.Plot_colors_fofr[ij], alpha=0.5)
+			ax.plot(Common_bin_halo_mass, Number_NonEmpty[i], linestyle='-', color=self.Plot_colors_fofr[ij], label=self.fofr_legends[ij])
 		plt.xlabel('Halo mass - $[M_\odot/h]$')
 		plt.ylabel('$N$')
 		plt.xscale('log')
-		plt.legend()
-		
+		#plt.yscale('log')
+		h,l=ax.get_legend_handles_labels()
+		ax.legend(h,l)
+
+		#### Number of critical points per halo
+		CPs_per_halo_symm = plt.figure()
+		for ij in range(len(SymmLCDM)):
+			i = SymmLCDM[ij]
+			plt.plot(NonEmptyHaloMass[i], NumCPs_list[i], 'o', color=self.Plot_colors_symm[ij])
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('$N$')
+		plt.xscale('log')
+		#plt.yscale('log')
+		plt.legend(self.Symm_legends)
+
+		CPs_per_halo_fofr = plt.figure()
+		for ij in range(len(FofrLCDM)):
+			i = SymmLCDM[ij]
+			plt.plot(NonEmptyHaloMass[i], NumCPs_list[i], 'o', color=self.Plot_colors_fofr[ij])
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('$N$')
+		plt.xscale('log')
+		#plt.yscale('log')
+		plt.legend(self.fofr_legends)
 
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		self.savefigure(Halo_mass_distribution_symm, 'Halo_mass_distribution_cSymmetron')
 		self.savefigure(Halo_mass_distribution_fofr, 'Halo_mass_distribution_cFofr')
+		self.savefigure(CPs_per_halo_symm, 'CP_per_halo_cSymmetron')
+		self.savefigure(CPs_per_halo_fofr, 'CP_per_halo_cFofr')
 
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
@@ -287,11 +322,13 @@ if __name__ == '__main__':
 	NonEmpty_masses = []
 	All_masses = []
 	Models_included = []
-	def append_data(mass, emass, nemass, modelname):
+	NumCPs = []
+	def append_data(mass, emass, nemass, NumCP, modelname):
 		Empty_masses.append(emass)
 		NonEmpty_masses.append(nemass)
 		All_masses.append(mass)
 		Models_included.append(modelname)
+		NumCPs.append(NumCP)
 
 	for p_model in Models_to_be_run:
 		Instance = AnalyseCritPts(p_model, N_parts, N_sigma)
@@ -301,10 +338,10 @@ if __name__ == '__main__':
 		nofils = NumCP_in_halo == 0
 		print "Nonempty haloes: ", len(np.where(yesfils)[0])
 		print "Total haloes: ", len(NumCP_in_halo)
-		append_data(HaloMasses, HaloMasses[nofils], HaloMasses[yesfils], p_model)
+		append_data(HaloMasses, HaloMasses[nofils], HaloMasses[yesfils], NumCP_in_halo[yesfils], p_model)
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/HaloAnalysis/', filetype=Filetype)
-	Plot_instance.Do_plot(Empty_masses, NonEmpty_masses, All_masses)
+	Plot_instance.Do_plot(Empty_masses, NonEmpty_masses, All_masses, NumCPs)
 	"""
 	ok_ids = np.array([])
 	timer = time.time()
