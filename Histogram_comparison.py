@@ -1141,7 +1141,7 @@ class CompareModels():
 		for i in range(5,8):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
 			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
-			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i], linestyle=self.Linestyles[i])
+			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i], linestyle=self.Linestyles[i-4])
 			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(fofr_legends)
 		plt.xscale('log')
