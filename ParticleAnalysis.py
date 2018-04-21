@@ -841,7 +841,7 @@ class Plot_results():
 		self.All_legends = []
 		self.Symm_legends = []
 		self.fofr_legends = []
-		self.Plot_colors_symm = ['k', 'orange', 'g', 'r', 'olive']
+		self.Plot_colors_symm = ['k', 'orange', 'g', 'r', 'c']
 		self.Plot_colors_fofr = ['k', 'purple', 'y', 'b']
 		self.ID_counter = 0
 		self.Linestyles = ['-', '--', '-.', ':', (0, (5, 10))]
