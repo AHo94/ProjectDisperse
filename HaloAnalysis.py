@@ -32,7 +32,7 @@ class AnalyseCritPts():
 		else:
 			Dispersemodel = model
 
-		#self.read_filament_data(Dispersemodel, npart, sigma)
+		self.read_filament_data(Dispersemodel, npart, sigma)
 		self.HaloID, self.HaloPos, self.HaloMass, self.VirRadius = RHD.Read_halo_data(model)
 
 	def read_filament_data(self, model, npart, sigma):
@@ -52,8 +52,9 @@ class AnalyseCritPts():
 		for j in range(len(self.CritPointXpos)):
 			CP_3DPos.append(np.column_stack((self.CritPointXpos[j], self.CritPointYpos[j], self.CritPointZpos[j])))
 		self.CP_3DPos = np.array(CP_3DPos)
-		Maxima_cp = self.CP_type == 3
-		Saddle_cp = self.CP_type == 2
+		Relevant_cps = self.CP_type >= 2
+		Maxima_cp = self.CP_type[Relevant_cps] == 3
+		Saddle_cp = self.CP_type[Relevant_cps] == 2
 		self.CP_3DPos_max = self.CP_3DPos[Maxima_cp]
 		self.CP_3DPos_saddle = self.CP_3DPos[Saddle_cp]
 
@@ -118,7 +119,7 @@ class AnalyseCritPts():
 			np.save(cachefile_NumCP, NumCP_in_halo)
 			np.save(cachefile_CPIDs, CP_ids_in_halo)
 
-		if: os.path.isfile(cachefile_MaximaCP):
+		if os.path.isfile(cachefile_MaximaCP):
 			print "Reading maxima and saddle cps in halos ..."
 			MaximaCP_in_halo = np.load(cachefile_MaximaCP)
 			SaddleCP_in_halo = np.load(cachefile_SaddleCP)
@@ -139,7 +140,7 @@ class AnalyseCritPts():
 			print "time took: ", time.time() - timer, "s"
 			np.save(cachefile_MaximaCP, MaximaCP_in_halo)
 			np.save(cachefile_SaddleCP, SaddleCP_in_halo)
-		return NumCP_in_halo, CP_ids_in_halo, MaximaCP_in_halo, SaddleCPInHalo
+		return NumCP_in_halo, CP_ids_in_halo, MaximaCP_in_halo, SaddleCP_in_halo
 
 class Plot_results():
 	def __init__(self, models, Nsigma, foldername, filetype='png'):
@@ -308,7 +309,92 @@ class Plot_results():
 		self.savefigure(Halo_mass_distribution_fofr, 'Halo_mass_distribution_cFofr')
 		self.savefigure(CPs_per_halo_symm, 'CP_per_halo_cSymmetron')
 		self.savefigure(CPs_per_halo_fofr, 'CP_per_halo_cFofr')
+        
+	def Order2_3_plots(self, AllHaloMass, O2_Cps, O3_Cps, O2_masses, O3_masses):
+		NModels = len(AllHaloMass)
+		SymmLCDM = self.SymmLCDM_ids
+		FofrLCDM = self.FofrLCDM_ids
+		Symm_only = self.SymmLCDM_ids[1:]
+		Fofr_only = self.FofrLCDM_ids[1:]
+		#####
+		##### Computing some data
+		#####
+		### Number of empty vs non empty halos as a function of mass
+		AllHaloMass = np.asarray(AllHaloMass)
+		Common_bin_halo_mass = OF.Get_common_bin_logX(AllHaloMass, binnum=30)
+		#####
+		##### Plotting data
+		#####
+		### Plotting order 2 critical points as a function of mass 
+		O2CPs_per_halo_symm = plt.figure()
+		for ij in range(len(SymmLCDM)):
+			i = SymmLCDM[ij]
+			plt.plot(O2_masses[i], O2_Cps[i], 'o', color=self.Plot_colors_symm[ij])
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('$N$')
+		plt.xscale('log')
+		#plt.yscale('log')
+		plt.legend(self.Symm_legends)
 
+		O2CPs_per_halo_fofr = plt.figure()
+		for ij in range(len(FofrLCDM)):
+			i = SymmLCDM[ij]
+			plt.plot(O2_masses[i], O2_Cps[i], 'o', color=self.Plot_colors_fofr[ij])
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('$N$')
+		plt.xscale('log')
+		#plt.yscale('log')
+		plt.legend(self.fofr_legends)
+
+		### Plotting order 3 critical points as a function of mass 
+		O3CPs_per_halo_symm = plt.figure()
+		for ij in range(len(SymmLCDM)):
+			i = SymmLCDM[ij]
+			plt.plot(O3_masses[i], O3_Cps[i], 'o', color=self.Plot_colors_symm[ij])
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('$N$')
+		plt.xscale('log')
+		#plt.yscale('log')
+		plt.legend(self.Symm_legends)
+
+		O3CPs_per_halo_fofr = plt.figure()
+		for ij in range(len(FofrLCDM)):
+			i = SymmLCDM[ij]
+			plt.plot(O3_masses[i], O3_Cps[i], 'o', color=self.Plot_colors_fofr[ij])
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('$N$')
+		plt.xscale('log')
+		#plt.yscale('log')
+		plt.legend(self.fofr_legends)
+		print '--- SAVING IN: ', self.results_dir, ' ---'
+		self.savefigure(O2CPs_per_halo_symm, 'O2CP_per_halo_cSymmetron')
+		self.savefigure(O2CPs_per_halo_fofr, 'O2CP_per_halo_cFofr')
+		self.savefigure(O3CPs_per_halo_symm, 'O3CP_per_halo_cSymmetron')
+		self.savefigure(O3CPs_per_halo_fofr, 'O3CP_per_halo_cFofr')
+
+	def Other_plots(self, OK_PC, Out_PC):
+		NModels = len(OK_PC)
+		width=0.35
+		Percentage_CP_in_halo, ax = plt.subplots()
+		ind = np.arange(NModels)
+		rects1 = ax.bar(ind, OK_PC, width, color='b')
+		rects2 = ax.bar(ind+width, Out_PC, width, color='r')
+		ax.set_ylabel('% of critical points')
+		ax.set_xticks(ind + width/2)
+		ax.set_xticklabels((r'$\Lambda$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6'))
+		ax.legend((rects1[0], rects2[0]), ('In halo', 'Outside halo'))
+		
+		def autolabel(rects):
+			"""
+			Attach a text label above each bar displaying its height
+			"""
+			for rect in rects:
+				height = rect.get_height()
+				ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,'%d' % int(height), ha='center', va='bottom')
+		autolabel(rects1)
+		autolabel(rects2)
+		self.savefigure(Percentage_CP_in_halo, 'Percentage_CP_in_halo')
+    
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
 	#print 'Run python code with -h argument to see extra optional arguments'
@@ -357,12 +443,22 @@ if __name__ == '__main__':
 	All_masses = []
 	Models_included = []
 	NumCPs = []
-	def append_data(mass, emass, nemass, NumCP, modelname):
+	Order2_cps = []
+	Order3_cps = []
+	Order2_mass = []
+	Order3_mass = []
+	InHaloPC = []
+	OutHaloPC = []
+	def append_data(mass, emass, nemass, NumCP, O2CP, O3CP, O2Mass, O3Mass, modelname):
 		Empty_masses.append(emass)
 		NonEmpty_masses.append(nemass)
 		All_masses.append(mass)
 		Models_included.append(modelname)
 		NumCPs.append(NumCP)
+		Order2_cps.append(O2CP)
+		Order3_cps.append(O3CP)
+		Order2_mass.append(O2Mass)
+		Order3_mass.append(O3Mass)
 
 	for p_model in Models_to_be_run:
 		Instance = AnalyseCritPts(p_model, N_parts, N_sigma)
@@ -372,10 +468,24 @@ if __name__ == '__main__':
 		nofils = NumCP_in_halo == 0
 		print "Nonempty haloes: ", len(np.where(yesfils)[0])
 		print "Total haloes: ", len(NumCP_in_halo)
-		append_data(HaloMasses, HaloMasses[nofils], HaloMasses[yesfils], NumCP_in_halo[yesfils], p_model)
+		yesfils_o3 = CP3_halo > 0
+		yesfils_o2 = CP2_halo > 0
+		append_data(HaloMasses, HaloMasses[nofils], HaloMasses[yesfils], NumCP_in_halo[yesfils], CP2_halo[yesfils_o2], CP3_halo[yesfils_o3], HaloMasses[yesfils_o2], HaloMasses[yesfils_o3], p_model)
+		ok_ids = np.array([])
+		timer = time.time()
+		nonempty_ids = CP_ids_in_halo[yesfils]
+		for i in range(len(nonempty_ids)):
+			ok_ids = np.unique(np.concatenate((ok_ids, nonempty_ids[i])))
+		Percentage = 100.0*float(len(ok_ids))/len(Instance.CP_3DPos)
+		Out_percentage = 100.0 - Percentage
+		InHaloPC.append(Percentage)
+		OutHaloPC.append(Out_percentage)
+		print "percentage time: ", time.time() - timer, 's'
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/HaloAnalysis/', filetype=Filetype)
 	Plot_instance.Do_plot(Empty_masses, NonEmpty_masses, All_masses, NumCPs)
+	Plot_instance.Order2_3_plots(All_masses, Order2_cps, Order3_cps, Order2_mass, Order3_mass)
+	Plot_instance.Other_plots(InHaloPC, OutHaloPC)
 	"""
 	ok_ids = np.array([])
 	timer = time.time()
