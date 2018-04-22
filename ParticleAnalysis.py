@@ -25,7 +25,7 @@ import Histogram_comparison as HComp
 Omega_m0 = 0.267
 Mpc = 3.08568025e22 		# m
 G_grav = 6.67258e-11
-h_param = 0.72
+h_param = 1   # 0.72
 H_0 = h_param*100*1e3/Mpc   # 1/s, h = some constant usually h = 0.7
 Solmass = 1.98191*1e30 		# kg
 rho_crit = 3.0*H_0**2/(8*np.pi*G_grav)  # kg*h^2/m^3
