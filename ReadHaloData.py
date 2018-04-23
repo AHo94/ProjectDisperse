@@ -49,6 +49,6 @@ def Read_halo_data(model):
 	print "Time took reading halo file:", time.time() - timer, "s"
 	HaloID = np.asarray(HaloID).astype(np.int32)
 	HaloMass = np.asarray(HaloMass).astype(np.float32)
-	Position = np.asarray(Position).astype(np.float32)/100.0 	# Convert Kpc/h to Mpc/h
-	Radius_vir = np.asarray(Radius_vir).astype(np.float32)/100.0 	#Conver to Kpc/h to Mpc/h
+	Position = np.asarray(Position).astype(np.float32)/1000.0 	# Convert Kpc/h to Mpc/h
+	Radius_vir = np.asarray(Radius_vir).astype(np.float32)/1000.0 	#Conver to Kpc/h to Mpc/h
 	return HaloID, Position, HaloMass, Radius_vir
