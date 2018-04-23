@@ -27,11 +27,12 @@ Mpc = 3.08568025e22 		# m
 G_grav = 6.67258e-11
 h_param = 1   # 0.72
 H_0 = h_param*100*1e3/Mpc   # 1/s, h = some constant usually h = 0.7
+H_tilde = 100.0*1e3/Mpc 	# Units of h/s
 Solmass = 1.98191*1e30 		# kg
-rho_crit = 3.0*H_0**2/(8*np.pi*G_grav)  # kg*h^2/m^3
+rho_crit = 3.0*H_tilde**2/(8*np.pi*G_grav)  # kg*h^2/m^3
 Npart_box_total = 512.0**3
-Box_volume = (256.0*Mpc)**3.0/Npart_box_total   # m^3/h^3
-DM_mass = Omega_m0*rho_crit*Box_volume/Solmass  # Units of M_sun/h
+Box_volume = (256.0*Mpc)**3 		# Units of m^3/h^3
+DM_mass = (3.0*H_tilde**2*Omega_m0*Box_volume/(8*np.pi*G*Npart_box_total))/Solmass 	# Units of M_sun/h
 pre_rho = DM_mass*Solmass/(Mpc**3) 		# kg h^2/m^3
 
 class FilterParticlesAndFilaments():
