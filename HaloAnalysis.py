@@ -5,6 +5,7 @@ import argparse
 import os
 import time
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 
 # Own modules
 import ReadHaloData as RHD
@@ -77,7 +78,7 @@ class AnalyseCritPts():
 		self.CritPointZpos = CP_coord[2]
 		self.CP_type = np.array(CP_coord[3])
 		self.CP_persistent_pair = CP_coord[4] 
-		self.Critpts_filamentID = CP_coord[5] 
+		self.Critpts_filamentID = np.array(CP_coord[5]) 
 		self.CP_id_of_connecting_filament = CP_coord[6]
 		self.Number_filaments_connecting_to_CP = np.array(CP_coord[7])
 
@@ -103,6 +104,8 @@ class AnalyseCritPts():
 		cachedir_CPIDs = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/CPIDsInHalo/'
 		cachedir_MaximaCP = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/MaximaCPInHalo/'
 		cachedir_SaddleCP = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/SaddleCPInHalo/'
+		cachedir_MaximaCP_CPIDS = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/MaximaCPInHalo/CPIDsInHalo/'
+		cachedir_SaddleCP_CPIDS = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/SaddleCPInHalo/CPIDsInHalo/'
 		cachedir_NumFil = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/NumFilInHalo/'
 		if not os.path.isdir(cachedir_NumCP):
 			os.makedirs(cachedir_NumCP)
@@ -112,6 +115,10 @@ class AnalyseCritPts():
 			os.makedirs(cachedir_MaximaCP)
 		if not os.path.isdir(cachedir_SaddleCP):
 			os.makedirs(cachedir_SaddleCP)
+		if not os.path.isdir(cachedir_MaximaCP_CPIDS):
+			os.makedirs(cachedir_MaximaCP_CPIDS)
+		if not os.path.isdir(cachedir_SaddleCP_CPIDS):
+			os.makedirs(cachedir_SaddleCP_CPIDS)
 		if not os.path.isdir(cachedir_NumFil):
 			os.makedirs(cachedir_NumFil)
 
@@ -120,6 +127,8 @@ class AnalyseCritPts():
 		cachefile_CPIDs = cachedir_CPIDs + Common_filename
 		cachefile_MaximaCP = cachedir_MaximaCP + Common_filename
 		cachefile_SaddleCP = cachedir_SaddleCP + Common_filename
+		cachefile_MaximaCP_CPIDs = cachedir_MaximaCP_CPIDS + Common_filename
+		cachefile_SaddleCP_CPIDs = cachedir_SaddleCP_CPIDS + Common_filename
 		cachefile_NumFil = cachedir_NumFil + Common_filename
 
 		if os.path.isfile(cachefile_NumCP):
@@ -151,11 +160,15 @@ class AnalyseCritPts():
 			print "Reading maxima and saddle cps in halos ..."
 			MaximaCP_in_halo = np.load(cachefile_MaximaCP)
 			SaddleCP_in_halo = np.load(cachefile_SaddleCP)
+			CP_ids_in_halo_m = np.load(cachefile_MaximaCP_CPIDs)
+			CP_ids_in_halo_s = np.load(cachefile_SaddleCP_CPIDs)
 		else:
 			print "Calculating CPs (maxima and saddle seperate) in halos"
 			timer = time.time()
 			MaximaCP_in_halo = []
 			SaddleCP_in_halo = []
+			CP_ids_in_halo_m = []
+			CP_ids_in_halo_s = []
 			for i in range(len(self.HaloPos)):
 				InHalo_max = self.CP_in_halo(self.HaloPos[i], self.CP_3DPos_max, self.VirRadius[i])
 				InHalo_saddle = self.CP_in_halo(self.HaloPos[i], self.CP_3DPos_saddle, self.VirRadius[i])
@@ -163,12 +176,18 @@ class AnalyseCritPts():
 				OK_cps_s = np.where(InHalo_saddle)[0]
 				MaximaCP_in_halo.append(len(OK_cps_m))
 				SaddleCP_in_halo.append(len(OK_cps_s))
+				CP_ids_in_halo_m.append(OK_cps_m.astype(np.int32))
+				CP_ids_in_halo_s.append(OK_cps_s.astype(np.int32))
 			MaximaCP_in_halo = np.asarray(MaximaCP_in_halo)
 			SaddleCP_in_halo = np.asarray(SaddleCP_in_halo)
+			CP_ids_in_halo_m = np.asarray(CP_ids_in_halo_m)
+			CP_ids_in_halo_s = np.asarray(CP_ids_in_halo_s)
 			print "time took: ", time.time() - timer, "s"
 			np.save(cachefile_MaximaCP, MaximaCP_in_halo)
 			np.save(cachefile_SaddleCP, SaddleCP_in_halo)
-		return NumCP_in_halo, CP_ids_in_halo, MaximaCP_in_halo, SaddleCP_in_halo, NumFils_in_halo
+			np.save(cachefile_MaximaCP_CPIDs, CP_ids_in_halo_m)
+			np.save(cachefile_SaddleCP_CPIDs, CP_ids_in_halo_s)
+		return NumCP_in_halo, CP_ids_in_halo, MaximaCP_in_halo, SaddleCP_in_halo, NumFils_in_halo, CP_ids_in_halo_m, CP_ids_in_halo_s
 
 	def Check_cps_filtered(self):
 		""" 
@@ -212,18 +231,19 @@ class AnalyseCritPts():
 			FilamentLength.append(fillen)
 		FilamentLength = np.asarray(FilamentLength)
 		Small_filaments = FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
-
+		self.NFils_filter = len(FilamentLength[Small_filaments][Included_fils])
 		# Filter pair ids (CP end points of filaments) based on filament length
 		PairIDS_lenfilt = self.PairIDS[Small_filaments]
 		# Filter pair ids based on density computed from ParticleAnalysis.py
 		PairIDS_denfilt = PairIDS_lenfilt[Included_fils]
 		Accepted_CP_ids = np.concatenate((np.unique(PairIDS_denfilt[:,0]),np.unique(PairIDS_denfilt[:,1])))
+		self.Critpts_filamentID_filter = self.Critpts_filamentID[Accepted_CP_ids]
 		Accepted_CP_ids_o2 = np.unique(PairIDS_denfilt[:,0])
 		Accepted_CP_ids_o3 = np.unique(PairIDS_denfilt[:,1])
 		self.CP_3DPos_filter = self.CP_3DPos[Accepted_CP_ids]
 		CP_3DPos_filter_02 = self.CP_3DPos[Accepted_CP_ids_o2]
 		CP_3DPos_filter_03 = self.CP_3DPos[Accepted_CP_ids_o3]
-		Number_filaments_connecting_to_CP = self.Number_filaments_connecting_to_CP[Accepted_CP_ids]
+		self.Number_filaments_connecting_to_CP_filter = self.Number_filaments_connecting_to_CP[Accepted_CP_ids]
 
 		if os.path.isfile(cachefile_NumCP):
 			print "Reading CPs in halos of model " + self.model + "  ..."
@@ -240,7 +260,7 @@ class AnalyseCritPts():
 				InHalo = self.CP_in_halo(self.HaloPos[i], self.CP_3DPos_filter, self.VirRadius[i])
 				OK_cps = np.where(InHalo)[0]
 				NumCP_in_halo.append(len(OK_cps))
-				NumFils_in_halo.append(np.sum(Number_filaments_connecting_to_CP[OK_cps]))
+				NumFils_in_halo.append(np.sum(self.Number_filaments_connecting_to_CP_filter[OK_cps]))
 				CP_ids_in_halo.append(OK_cps.astype(np.int32))
 			NumCP_in_halo = np.asarray(NumCP_in_halo)
 			CP_ids_in_halo = np.asarray(CP_ids_in_halo)
@@ -394,7 +414,7 @@ class Plot_results():
 			figure.savefig(savedir_ + name + self.filetype, bbox_inches='tight', dpi=100)
 
 	def Do_plot(self, EmptyHaloMass, NonEmptyHaloMass, AllHaloMass, NumCPs_list, Number_filaments):
-		NModels = len(AllHaloMass)
+		NModels = len(NumCPs_list)
 		SymmLCDM = self.SymmLCDM_ids
 		FofrLCDM = self.FofrLCDM_ids
 		Symm_only = self.SymmLCDM_ids[1:]
@@ -498,7 +518,7 @@ class Plot_results():
 		self.savefigure(Filaments_per_halo_fofr, 'Filaments_per_halo_cFofr')
         
 	def Order2_3_plots(self, AllHaloMass, O2_Cps, O3_Cps, O2_masses, O3_masses):
-		NModels = len(AllHaloMass)
+		NModels = len(O2_Cps)
 		SymmLCDM = self.SymmLCDM_ids
 		FofrLCDM = self.FofrLCDM_ids
 		Symm_only = self.SymmLCDM_ids[1:]
@@ -559,7 +579,7 @@ class Plot_results():
 		self.savefigure(O3CPs_per_halo_symm, 'O3CP_per_halo_cSymmetron')
 		self.savefigure(O3CPs_per_halo_fofr, 'O3CP_per_halo_cFofr')
 
-	def Other_plots(self, OK_PC, Out_PC, OK_PC_alt, Out_PC_alt, EmptyH, NonEmptyH):
+	def Other_plots(self, OK_PC, Out_PC, OK_PC_alt, Out_PC_alt, EmptyH, NonEmptyH, Nfilaments, Nfilaments_filter, NumUniqueFils):
 		def autolabel(rects, do_int=False):
 			"""
 			Attach a text label above each bar displaying its height
@@ -583,16 +603,16 @@ class Plot_results():
 		autolabel(rects1)
 		autolabel(rects2)
 
-		NumberHalos_per_CP, ax = plt.subplots()
-		ind = np.arange(NModels)
-		rects1 = ax.bar(ind, OK_PC_alt, width, color='b')
-		rects2 = ax.bar(ind+width, Out_PC_alt, width, color='r')
-		ax.set_ylabel('% of critical points')
-		ax.set_xticks(ind + width/2)
-		ax.set_xticklabels((r'$\Lambda$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6'))
-		ax.legend((rects1[0], rects2[0]), ('In halo', 'Outside halo'), loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
-		autolabel(rects1)
-		autolabel(rects2)
+		#NumberHalos_per_CP, ax = plt.subplots()
+		#ind = np.arange(NModels)
+		#rects1 = ax.bar(ind, OK_PC_alt, width, color='b')
+		#rects2 = ax.bar(ind+width, Out_PC_alt, width, color='r')
+		#ax.set_ylabel('% of critical points')
+		#ax.set_xticks(ind + width/2)
+		#ax.set_xticklabels((r'$\Lambda$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6'))
+		#ax.legend((rects1[0], rects2[0]), ('In halo', 'Outside halo'), loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+		#autolabel(rects1)
+		#autolabel(rects2)
 
 		HalosWithCPs, ax = plt.subplots()
 		ind = np.arange(NModels)
@@ -605,9 +625,37 @@ class Plot_results():
 		autolabel(rects1, do_int=True)
 		autolabel(rects2, do_int=True)
 
+		NumberFilaments, ax = plt.subplots()
+		ind = np.arange(NModels)
+		rects1 = ax.bar(ind, Nfilaments, width, color='b')
+		rects2 = ax.bar(ind+width, Nfilaments_filter, width, color='r')
+		ax.set_ylabel('$N$ filaments')
+		ax.set_xticks(ind + width/2)
+		#ax.set_xticklabels((r'$\Lambda$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6'))
+		ax.set_xticklabels(self.All_legends)
+		ax.legend((rects1[0], rects2[0]), ('Total filaments', 'Filaments after \n filtering CPs'), loc = 'lower left',
+				 bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+		autolabel(rects1, do_int=True)
+		autolabel(rects2, do_int=True)
+
+		NumberFilaments_unique, ax = plt.subplots()
+		ind = np.arange(NModels)
+		rects1 = ax.bar(ind, Nfilaments, width, color='b')
+		rects2 = ax.bar(ind+width, NumUniqueFils, width, color='r')
+		ax.set_ylabel('$N$ filaments')
+		ax.set_xticks(ind + width/2)
+		#ax.set_xticklabels((r'$\Lambda$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6'))
+		ax.set_xticklabels(self.All_legends)
+		ax.legend((rects1[0], rects2[0]), ('Total filaments', 'Filaments after \n filtering CPs'), loc = 'lower left',
+				 bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+		autolabel(rects1, do_int=True)
+		autolabel(rects2, do_int=True)
+
 		self.savefigure(Percentage_CP_in_halo, 'Percentage_CP_in_halo')
-		self.savefigure(NumberHalos_per_CP, 'NumberHalos_per_CP')
+		#self.savefigure(NumberHalos_per_CP, 'NumberHalos_per_CP')
 		self.savefigure(HalosWithCPs, 'HalosWithCps')
+		self.savefigure(NumberFilaments, 'Number_filaments_after_cp_filter')
+		self.savefigure(NumberFilaments_unique, 'Number_filaments_after_cp_filter_UNIQUE')
     
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
@@ -670,7 +718,11 @@ if __name__ == '__main__':
 	OutHalo_alternative = []
 	Empty_halos = []
 	NonEmpty_halos = []
+	Numfils_all = []
+	Numfils_filter = []
+	Num_unique_fils = []
 	# Filtered data
+	Models_included_filter = []
 	Empty_masses_f = []
 	NonEmpty_masses_f = []
 	NumCPs_f = []
@@ -681,7 +733,12 @@ if __name__ == '__main__':
 	NumFilaments_f = []
 	InHaloPC_f = []
 	OutHaloPC_f = []
-	# Percentage of CPS in halo
+	Empty_halos_f = []
+	NonEmpty_halos_f = []
+	Numfils_all_f = []
+	Numfils_filter_f = []
+	Num_unique_fils_f = []
+
 	def append_data(mass, emass, nemass, NumCP, O2CP, O3CP, O2Mass, O3Mass, Nfils, modelname):
 		Empty_masses.append(emass)
 		NonEmpty_masses.append(nemass)
@@ -704,31 +761,43 @@ if __name__ == '__main__':
 		Order3_mass_f.append(O3Mass)
 		NumFilaments_f.append(Nfil)
         
-	def Percentage_computing(nonempty_ids_, CPPos, model, npart, sigma):
-		cachedir_PCT = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/CPInHaloPercentage/'
+	def Percentage_computing(nonempty_ids_, CPPos, model, npart, sigma, do_filter=False, savefile=True):
+		if do_filter:
+			cachedir_PCT = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/FilteredFils/CPInHaloPercentage/'
+			cachedir_okID = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/FilteredFils/CPInHaloPercentage/ok_ids/'
+		else:
+			cachedir_PCT = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/CPInHaloPercentage/'
+			cachedir_okID = '/mn/stornext/d13/euclid/aleh/PythonCaches/Disperse_analysis/HaloAnalysis/CPInHaloPercentage/ok_ids/'
 		if not os.path.isdir(cachedir_PCT):
 			os.makedirs(cachedir_PCT)
+		if not os.path.isdir(cachedir_okID):
+			os.makedirs(cachedir_okID)
 		Common_filename =  model + '_' + str(npart) + 'part_nsig' + str(sigma)+ '_BoxExpand' + str(6) + '.npy'
 		cachefile_PCT = cachedir_PCT + Common_filename
-		if os.path.isfile(cachefile_PCT):
+		cachefile_okID = cachedir_okID + Common_filename
+		if os.path.isfile(cachefile_PCT) and savefile:
 			savedPCT = np.load(cachefile_PCT)
+			savedokIDs = np.load(cachefile_okID)
 			Percentage = savedPCT[0]
 			Out_percentage = savedPCT[1]
+			ok_ids_pc = savedokIDs
 		else:
-			ok_ids = np.array([])
+			ok_ids_pc = np.array([])
 			timer = time.time()
 			for i in range(len(nonempty_ids_)):
-				ok_ids = np.unique(np.concatenate((ok_ids, nonempty_ids_[i])))
-			Percentage = 100.0*float(len(ok_ids))/len(CPPos)
+				ok_ids_pc = np.unique(np.concatenate((ok_ids_pc, nonempty_ids_[i])))
+			Percentage = 100.0*float(len(ok_ids_pc))/len(CPPos)
+			ok_ids_pc = ok_ids_pc.astype(np.int32)
 			Out_percentage = 100.0 - Percentage
 			np.save(cachefile_PCT, np.array([Percentage, Out_percentage]))
+			np.save(cachefile_okID, ok_ids_pc)
 			print "percentage time: ", time.time() - timer, 's'
-		return Percentage, Out_percentage
+		return Percentage, Out_percentage, ok_ids_pc
 
 	for p_model in Models_to_be_run:
 		Instance = AnalyseCritPts(p_model, N_parts, N_sigma)
 		# For non filtered filaments
-		NumCP_in_halo, CP_ids_in_halo, CP3_halo, CP2_halo, NumberFils = Instance.Check_cps()
+		NumCP_in_halo, CP_ids_in_halo, CP3_halo, CP2_halo, NumberFils, CP_ids_in_halo_O3, CP_ids_in_halo_O2 = Instance.Check_cps()
 		HaloMasses = Instance.HaloMass
 		yesfils = NumCP_in_halo > 0
 		nofils = NumCP_in_halo == 0
@@ -738,37 +807,68 @@ if __name__ == '__main__':
 		yesfils_o2 = CP2_halo > 0
 		append_data(HaloMasses, HaloMasses[nofils], HaloMasses[yesfils], NumCP_in_halo[yesfils], CP2_halo[yesfils_o2],
 					CP3_halo[yesfils_o3], HaloMasses[yesfils_o2], HaloMasses[yesfils_o3], NumberFils[yesfils], p_model)
-		PCT, OutPCT = Percentage_computing(CP_ids_in_halo[yesfils], Instance.CP_3DPos, p_model, N_parts, N_sigma)
+		PCT, OutPCT, ok_ids = Percentage_computing(CP_ids_in_halo[yesfils], Instance.CP_3DPos, p_model, N_parts, N_sigma)
 		InHaloPC.append(PCT)
 		OutHaloPC.append(OutPCT)
+		Numfils_all.append(np.sum(Instance.NFils))
+		Numfils_filter.append(np.sum(Instance.Number_filaments_connecting_to_CP[ok_ids]))
+		Unique_fil_ids = np.array([])
+		for i in range(len(Instance.Critpts_filamentID[ok_ids])):
+			Unique_fil_ids = np.unique(np.concatenate((Unique_fil_ids, Instance.Critpts_filamentID[ok_ids][i])))
+		Num_unique_fils.append(len(Unique_fil_ids))
 		# For filtered filaments
-		#NumCP_in_halo_f, CP_ids_in_halo_f, CP3_halo_f, CP2_halo_f, NumberFils_f = Instance.Check_cps_filtered()
-		#yesfils_f = NumCP_in_halo_f > 0
-		#nofils_f = NumCP_in_halo_f == 0
-		#yesfils_o3_f = CP3_halo_f > 0
-		#yesfils_o2_f = CP2_halo_f > 0
-		#append_data_filter(HaloMasses[nofils_f], HaloMasses[yesfils_f], NumCP_in_halo_f[yesfils_f], CP2_halo_f[yesfils_o2_f],
-		#			CP3_halo_f[yesfils_o3_f], HaloMasses[yesfils_o2_f], HaloMasses[yesfils_o3_f], NumberFils_f[yesfils_f])
+		if (p_model != 'symmC' and N_parts == 64) or N_parts == 188:
+			Models_included_filter.append(p_model)
+			NumCP_in_halo_f, CP_ids_in_halo_f, CP3_halo_f, CP2_halo_f, NumberFils_f = Instance.Check_cps_filtered()
+			yesfils_f = NumCP_in_halo_f > 0
+			nofils_f = NumCP_in_halo_f == 0
+			Empty_halos_f.append(len(NumCP_in_halo_f[nofils_f]))
+			NonEmpty_halos_f.append(len(NumCP_in_halo_f[yesfils_f]))
+			yesfils_o3_f = CP3_halo_f > 0
+			yesfils_o2_f = CP2_halo_f > 0
+			append_data_filter(HaloMasses[nofils_f], HaloMasses[yesfils_f], NumCP_in_halo_f[yesfils_f], CP2_halo_f[yesfils_o2_f],
+						CP3_halo_f[yesfils_o3_f], HaloMasses[yesfils_o2_f], HaloMasses[yesfils_o3_f], NumberFils_f[yesfils_f])
 
-		#PCT, OutPCT = Percentage_computing(CP_ids_in_halo_f[yesfils_f], Instance.CP_3DPos_filter, p_model, N_parts, N_sigma)
-		#InHaloPC_f.append(PCT)
-		#OutHaloPC_f.append(OutPCT)
+			PCT_f, OutPCT_f, ok_ids_f = Percentage_computing(CP_ids_in_halo_f[yesfils_f], Instance.CP_3DPos_filter, p_model, N_parts, N_sigma, do_filter=True)
+			InHaloPC_f.append(PCT_f)
+			OutHaloPC_f.append(OutPCT_f)
+			Numfils_all_f.append(np.sum(Instance.NFils_filter))
+			Numfils_filter_f.append(np.sum(Instance.Number_filaments_connecting_to_CP_filter[ok_ids_f]))
+			Unique_fil_ids_f = np.array([])
+			###
+			### CHECK WHY THERE ARE MORE FILAMENTS COMPARED TO FILTERED ONES
+			### DO A DENSITY PLOTS VS FILAMENTS IN A SLICED BOX, COPY FROM DISPERSE_ANALYSIS
+			### 
+			for i in range(len(Instance.Critpts_filamentID_filter[ok_ids_f])):
+				Unique_fil_ids_f = np.unique(np.concatenate((Unique_fil_ids_f, Instance.Critpts_filamentID_filter[ok_ids_f][i])))
+			Num_unique_fils_f.append(len(Unique_fil_ids_f))
+		elif p_model == 'symmC' and N_parts == 64:
+			Dummy = np.array([0,0,0,0,0])
+			append_data_filter(Dummy,Dummy,Dummy,Dummy,Dummy,Dummy,Dummy,Dummy)
+			InHaloPC_f.append(0)
+			OutHaloPC_f.append(0)
+			Empty_halos_f.append(0)
+			NonEmpty_halos_f.append(0)
+			Numfils_all_f.append(0)
+			Numfils_filter_f.append(0)
+			Num_unique_fils_f.append(0)
 		print "Nonempty haloes: ", len(np.where(yesfils)[0])
 		#print "Nonempty haloes after filter: ", len(np.where(yesfils_f)[0])
 		print "Total haloes: ", len(NumCP_in_halo)
-
-		CPinhalo, HaloIds_inhalo = Instance.Check_halo_in_cp()
-		Percentage_inhalo = 100.0*(len(CPinhalo[CPinhalo > 0]))/len(CPinhalo)
-		Percentage_outhalo = 100.0 - Percentage_inhalo
-		InHalo_alternative.append(Percentage_inhalo)
-		OutHalo_alternative.append(Percentage_outhalo)
+		#print stop
+		#CPinhalo, HaloIds_inhalo = Instance.Check_halo_in_cp()
+		#Percentage_inhalo = 100.0*(len(CPinhalo[CPinhalo > 0]))/len(CPinhalo)
+		#Percentage_outhalo = 100.0 - Percentage_inhalo
+		#InHalo_alternative.append(Percentage_inhalo)
+		#OutHalo_alternative.append(Percentage_outhalo)
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/HaloAnalysis/', filetype=Filetype)
 	Plot_instance.Do_plot(Empty_masses, NonEmpty_masses, All_masses, NumCPs, NumFilaments)
 	Plot_instance.Order2_3_plots(All_masses, Order2_cps, Order3_cps, Order2_mass, Order3_mass)
-	Plot_instance.Other_plots(InHaloPC, OutHaloPC, InHalo_alternative, OutHalo_alternative, Empty_halos, NonEmpty_halos)
+	Plot_instance.Other_plots(InHaloPC, OutHaloPC, InHalo_alternative, OutHalo_alternative, Empty_halos, NonEmpty_halos, Numfils_all,
+							 Numfils_filter, Num_unique_fils)
 	print "Plotting for filtered filaments"
-	#Plot_instance2 = Plot_results(Models_included, N_sigma, 'ModelComparisons/HaloAnalysis/', filetype=Filetype, filter_fils=True)
-	#Plot_instance2.Do_plot(Empty_masses_f, NonEmpty_masses_f, All_masses, NumCPs_f, NumFilaments_f)
-	#Plot_instance2.Order2_3_plots(All_masses, Order2_cps_f, Order3_cps_f, Order2_mass_f, Order3_mass_f)
-	#Plot_instance2.Other_plots(InHaloPC_f, OutHaloPC_f) 
+	Plot_instance2 = Plot_results(Models_included, N_sigma, 'ModelComparisons/HaloAnalysis/', filetype=Filetype, filter_fils=True)
+	Plot_instance2.Do_plot(Empty_masses_f, NonEmpty_masses_f, All_masses, NumCPs_f, NumFilaments_f)
+	Plot_instance2.Order2_3_plots(All_masses, Order2_cps_f, Order3_cps_f, Order2_mass_f, Order3_mass_f)
+	Plot_instance2.Other_plots(InHaloPC_f, OutHaloPC_f, 1, 2, Empty_halos_f, NonEmpty_halos_f, Numfils_all_f, Numfils_filter_f, Num_unique_fils_f)
