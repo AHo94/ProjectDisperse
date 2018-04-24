@@ -11,7 +11,7 @@ def Read_halo_data(model):
 			toggle = True
 	if not toggle:
 		raise ValueError('Model input name %s not correctly set into the halo file reader.' %modelfile)
-
+	Nfiles = 1
 	print "Reading halo catalogue file..."
 	if model == 'lcdm':
 		filedir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/lcdm/z0.000/ahf_halocatalog/output.z0.005.AHF_halos'
@@ -20,7 +20,9 @@ def Read_halo_data(model):
 	elif model == 'symm_B':
 		filedir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/symm_B/z0.000/ahf_halocatalog/output.z0.005.AHF_halos'	
 	elif model == 'symm_C':
-		filedir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/symm_C/z0.000/ahf_halocatalog/output.0009.z0.003.AHF_halos'	
+		Nfiles = 10
+		redshift_decim = 3
+		filedir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/symm_C/z0.000/ahf_halocatalog/'#output.0009.z0.003.AHF_halos'	
 	elif model == 'symm_D':
 		filedir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/symm_D/z0.000/ahf_halocatalog/output.z0.003.AHF_halos'	
 	elif model == 'fofr4':
@@ -28,24 +30,42 @@ def Read_halo_data(model):
 	elif model == 'fofr5':
 		filedir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/fofr5/z0.000/ahf_halocatalog/output.z0.001.AHF_halos'
 	elif model == 'fofr6':
-		filedir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/fofr6/z0.000/ahf_halocatalog/output.0007.z0.004.AHF_halos'
+		Nfiles = 8
+		redshift_decim = 4
+		filedir = '/mn/stornext/d5/astcosim/N512_B256_ISISCodePaper/fofr6/z0.000/ahf_halocatalog/'#output.0007.z0.004.AHF_halos'
 	HaloID = []
 	Position = []
 	Radius_vir = []
 	HaloMass = []
 	timer = time.time()
-	datafiles = open(filedir, 'r')
-	skipfirst = 0
-	for line in datafiles:
-		data_sets = line.split()
-		if skipfirst:
+	if Nfiles == 1:
+		skipfirst = 0
+		datafiles = open(filedir, 'r')
+		for line in datafiles:
 			data_sets = line.split()
-			HaloID.append(data_sets[0])
-			HaloMass.append(data_sets[3])
-			Position.append(data_sets[5:8])
-			Radius_vir.append(data_sets[11])
-		else:
-			skipfirst = 1
+			if skipfirst:
+				data_sets = line.split()
+				HaloID.append(data_sets[0])
+				HaloMass.append(data_sets[3])
+				Position.append(data_sets[5:8])
+				Radius_vir.append(data_sets[11])
+			else:
+				skipfirst = 1
+	else:
+		for i in range(Nfiles):
+			skipfirst = 0
+			datafiles = open(filedir + 'output.000' + str(i) + '.z0.00' + str(redshift_decim) + '.AHF_halos') 
+			for line in datafiles:
+				data_sets = line.split()
+				if skipfirst:
+					data_sets = line.split()
+					HaloID.append(data_sets[0])
+					HaloMass.append(data_sets[3])
+					Position.append(data_sets[5:8])
+					Radius_vir.append(data_sets[11])
+				else:
+					skipfirst = 1
+				
 	print "Time took reading halo file:", time.time() - timer, "s"
 	HaloID = np.asarray(HaloID).astype(np.int32)
 	HaloMass = np.asarray(HaloMass).astype(np.float32)
