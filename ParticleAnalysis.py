@@ -32,7 +32,7 @@ Solmass = 1.98191*1e30 		# kg
 rho_crit = 3.0*H_tilde**2/(8*np.pi*G_grav)  # kg*h^2/m^3
 Npart_box_total = 512.0**3
 Box_volume = (256.0*Mpc)**3 		# Units of m^3/h^3
-DM_mass = (3.0*H_tilde**2*Omega_m0*Box_volume/(8*np.pi*G*Npart_box_total))/Solmass 	# Units of M_sun/h
+DM_mass = (3.0*H_tilde**2*Omega_m0*Box_volume/(8*np.pi*G_grav*Npart_box_total))/Solmass 	# Units of M_sun/h
 pre_rho = DM_mass*Solmass/(Mpc**3) 		# kg h^2/m^3
 
 class FilterParticlesAndFilaments():
