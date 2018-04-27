@@ -543,7 +543,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			if Primerror:
 				plt.fill_between(xdata, primaryY[j][i]-Primerror[j][i], primaryY[j][i]+Primerror[j][i], alpha=fb_alpha, facecolor=colors[i])
 			if titles:
-				plt.title(titles[j], fontsize=10)
+				plt.title(titles[j], fontsize=7)
 			plt.ylabel(ylabel1) if j == 0 else plt.ylabel('')
 			ax1 = plt.subplot(gs[Nrows-1, j], sharex=ax0) if j == 0 else plt.subplot(gs[Nrows-1, j], sharex=ax0, sharey=ax1)
 			plt.setp(ax1.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
@@ -576,7 +576,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			for i in range(len(primaryY[j])):
 				plt.plot(xdata, primaryY[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 			if titles:
-				plt.title(titles[j], fontsize=10)
+				plt.title(titles[j], fontsize=7)
 			plt.ylabel(ylabel1) if j == 0 else plt.ylabel('')
 			ax1 = plt.subplot(gs[Nrows-1, j], sharex=ax0) if j == 0 else plt.subplot(gs[Nrows-1, j], sharex=ax0, sharey=ax1)
 			plt.setp(ax1.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
