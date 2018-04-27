@@ -1657,7 +1657,7 @@ class Plot_results():
 
 		######## Plotting data ########
 		#### Average particle speed for all filaments
-		Mass_titles = ['$M \in [10^{12}, 10^{13}]M_\odot$', '$M \in [10^{13}, 10^{14}]M_\odot$', '$M \in [10^{14}, 10^{15}]M_\odot$']
+		Mass_titles = ['$M \in [10^{12}, 10^{13}]M_\odot/h$', '$M \in [10^{13}, 10^{14}]M_\odot/h$', '$M \in [10^{14}, 10^{15}]M_\odot/h$']
 		AverageSpeed_AllFils = plt.figure(figsize=(12,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax1 = plt.subplot(1,2,1)
