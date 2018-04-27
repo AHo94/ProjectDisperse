@@ -813,7 +813,7 @@ class CompareModels():
 		The function assumes that LCDM data is the first in the data list.
 		"""
 		# COMMONLY USED LABELS
-		xlabel_len = 'Filament length - [Mpc/h]'
+		xlabel_len = 'L - [Mpc/h]'
 
 		N = len(Nconnections)
 		# Histogram for number of filament connections per filament
