@@ -1020,10 +1020,10 @@ class CompareModels():
 		#												 fofr_legends_only, fofr_colors_only, fill_between=True, diff=True, logscale='logx')
 		Sep_RelDiff_length_error_S = pf.Call_plot_sameX(lengths, RelDiff_distribution_symm, xlabel_len, 'Relative difference of $N(>L)$', Symm_legends, 
 														Symm_colors_only, error=Propagated_errors[:4], fillbetween=True, reldiff=True, xscale='log',
-							 							linestyles=self.Linestyles, legend_anchor=False, ylim=(-1,1), xlim=xlim_len)
+							 							linestyles=self.Linestyles, legend_anchor=False, ylim=(-0.6,0.6), xlim=xlim_len)
 		Sep_RelDiff_length_error_F = pf.Call_plot_sameX(lengths, RelDiff_distribution_fofr, xlabel_len, 'Relative difference of $N(>L)$', fofr_legends, 
 														fofr_colors_only, error=Propagated_errors[4:], fillbetween=True, reldiff=True, xscale='log',
-														linestyles=self.Linestyles, legend_anchor=False, ylim=(-1,1), xlim=xlim_len)
+														linestyles=self.Linestyles, legend_anchor=False, ylim=(-0.6,0.6), xlim=xlim_len)
 		# Absolute Differences in Number of filaments and not N(>L)
 		Sep_AbsDiff_Number_S = self.Plot_differences_sameX(length_bins_logX, Symm_length_values, xlabel_len, '$\Delta N$ filaments', Symm_legends_only,
 															Symm_colors_only, diff='abs')
