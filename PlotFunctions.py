@@ -551,7 +551,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 				subfactor = 1
 			for i in range(len(secondaryY[j])):
-				plt.plot(xdata, secondaryY[j][i], label=legend[i+subfactor], color=colors[i+subfactor], linestyle=linestyles[i])
+				plt.plot(xdata, secondaryY[j][i], label=legend[i+subfactor], color=colors[i+subfactor], linestyle=linestyles[i+subfactor])
 				plt.fill_between(xdata, secondaryY[j][i]-Secerror[j][i], secondaryY[j][i]+Secerror[j][i], alpha=fb_alpha, facecolor=colors[i+subfactor])
 			#plt.xlabel(xlabel)
 			plt.ylabel(ylabel2) if j == 0 else plt.ylabel('')
@@ -584,7 +584,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 				subfactor = 1
 			for i in range(len(secondaryY[j])):
-				plt.plot(xdata, secondaryY[j][i], label=legend[i+subfactor], color=colors[i+subfactor], linestyle=linestyles[i])
+				plt.plot(xdata, secondaryY[j][i], label=legend[i+subfactor], color=colors[i+subfactor], linestyle=linestyles[i+subfactor])
 			plt.ylabel(ylabel2) if j == 0 else plt.ylabel('')
 			if set_xlimits:
 				plt.xlim(xlims)
