@@ -188,7 +188,7 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, colors, **kwargs):
 		for i in range(len(ydata)):
 			plt.plot(xdata, ydata[i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 	if titles:
-		plt.title(titles, fontsize=10)
+		plt.title(titles, fontsize=7)
 	if set_xlimits:
 		plt.xlim(xlims)
 	if set_ylimits:
@@ -389,7 +389,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 				plt.fill_between(xdata, ydata[j][i]-error[j][i], ydata[j][i]+error[j][i], alpha=fb_alpha, facecolor=colors[i])
 			if titles:
-				plt.title(titles[j], fontsize=10)
+				plt.title(titles[j], fontsize=7)
 	else:
 		for j in range(len(ydata)):
 			if j > 0:
@@ -400,7 +400,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 			for i in range(len(ydata[j])):
 				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 			if titles:
-				plt.title(titles[j], fontsize=10)
+				plt.title(titles[j], fontsize=7)
 	if set_xlimits:
 		plt.xlim(xlims)
 	if set_ylimits:
