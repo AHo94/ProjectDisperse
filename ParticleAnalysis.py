@@ -1596,17 +1596,17 @@ class Plot_results():
 			Average_speed_label =  r'$\langle v \rangle - [\mathrm{km}/\mathrm{s}]$'
 			Average_speed_label_nounit = r'$\langle v \rangle$'
 			#Reldiff_label_avgspeed = r'$(\langle v_i \rangle - \langle v_{\Lambda \mathrm{CDM}} \rangle)/\langle v_{\Lambda \mathrm{CDM}} \rangle$'
-			Reldiff_label_avgspeed = r'$\langle v_i \rangle/\langle v_{\Lambda \mathrm{CDM}} - 1$'
+			Reldiff_label_avgspeed = r'$\langle v_i \rangle/\langle v_{\Lambda \mathrm{CDM}} \rangle - 1$'
 		elif speedtype == 'Orthogonal':
 			Average_speed_label =  r'$\langle v_\perp \rangle - [\mathrm{km}/\mathrm{s}]$'
 			Average_speed_label_nounit = r'$\langle v_\perp \rangle$'
 			#Reldiff_label_avgspeed = r'$(\langle v_{\perp,i} \rangle - \langle v_{\perp,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\perp, \Lambda \mathrm{CDM}} \rangle$'
-			Reldiff_label_avgspeed = r'$\langle v_{\perp,i}  \rangle/\langle v_{\perp, \Lambda \mathrm{CDM}} - 1$'
+			Reldiff_label_avgspeed = r'$\langle v_{\perp,i}  \rangle/\langle v_{\perp, \Lambda \mathrm{CDM}} \rangle - 1$'
 		elif speedtype == 'Parallel':
 			Average_speed_label =  r'$\langle v_\parallel \rangle - [\mathrm{km}/s]$'
 			Average_speed_label_nounit = r'$\langle v_{\parallel} \rangle$'
 			#Reldiff_label_avgspeed = r'$(\langle v_{\parallel,i} \rangle - \langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle$'
-			Reldiff_label_avgspeed = r'$\langle v_{\parallel,i}  \rangle/\langle v_{\parallel, \Lambda \mathrm{CDM}} - 1$'
+			Reldiff_label_avgspeed = r'$\langle v_{\parallel,i}  \rangle/\langle v_{\parallel, \Lambda \mathrm{CDM}} \rangle - 1$'
 			#ylimits = (-1,1)
 		elif speedtype == 'Density':
 			Average_speed_label = r'$\langle \rho \rangle - [\mathrm{kg}h^2/\mathrm{m^3}] \times 1e14$'
