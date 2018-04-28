@@ -321,7 +321,7 @@ class CompareModels():
 		self.Plot_colors_symm = ['k', 'orange', 'g', 'r', 'c']
 		self.Plot_colors_fofr = ['k', 'purple', 'y', 'b']
 		self.Plot_colors_all = ['k', 'orange', 'g', 'r', 'c', 'purple', 'y', 'b']
-		self.Linestyles = ['-', '--', '-.', ':', (0, (5, 10))]
+		self.Linestyles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1, 1, 1))]
 
 	def relative_deviation(self, data, index):
 		""" 

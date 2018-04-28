@@ -845,7 +845,7 @@ class Plot_results():
 		self.Plot_colors_symm = ['k', 'orange', 'g', 'r', 'c']
 		self.Plot_colors_fofr = ['k', 'purple', 'y', 'b']
 		self.ID_counter = 0
-		self.Linestyles = ['-', '--', '-.', ':', (0, (5, 10))]
+		self.Linestyles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1, 1, 1))]
 		self.SymmLCDM_ids = np.array([])
 		self.FofrLCDM_ids = np.array([])
 		self.Get_legends(models)
