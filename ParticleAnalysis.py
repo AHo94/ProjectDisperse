@@ -1246,9 +1246,9 @@ class Plot_results():
 
 		### Relative difference of lcdm + symmetron, with error
 		RelDiff_mass_Symm_err = plt.figure()
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), color='b', linestyle='-')
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), color='b', linestyle=(0, (5, 10)))
 		for i in (Symm_only-1):
-			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_symm[i+1], linestyle=self.Linestyles[i+1])
+			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_symm[i+1], linestyle=self.Linestyles[i])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i],
 							 alpha=0.3, facecolor=self.Plot_colors_symm[i+1])
 		plt.legend(self.Symm_legends)
@@ -1259,9 +1259,9 @@ class Plot_results():
 		plt.xlim(xlim_mass)
 		### Relative difference of lcdm + symmetron, with error
 		RelDiff_mass_fofr_err = plt.figure()
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), color='b', linestyle='-')
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), color='b', linestyle=(0, (5, 10)))
 		for i in (Fofr_only-1):
-			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-3], linestyle=self.Linestyles[i-3])
+			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-3], linestyle=self.Linestyles[i-4])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i],
 							 alpha=0.3, facecolor=self.Plot_colors_fofr[i-3])
 		plt.legend(self.fofr_legends)
@@ -1700,18 +1700,18 @@ class Plot_results():
 		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
 		RelDiff_SimilarMass_plot_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 														self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
-														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xlim=(0,1))
+														title=Mass_titles, linestyles=self.Linestyles, reldiff=True, xlim=(0,1))
 		RelDiff_SimilarMass_plot_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 														self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
-														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log')
+														title=Mass_titles, linestyles=self.Linestyles, reldiff=True, xscale='log')
 		### f(R) difference to LCDM
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
 		RelDiff_SimilarMass_plot_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 														self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
-														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xlim=(0,1))
+														title=Mass_titles, linestyles=self.Linestyles, reldiff=True, xlim=(0,1))
 		RelDiff_SimilarMass_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 														self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
-														title=Mass_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log')
+														title=Mass_titles, linestyles=self.Linestyles, reldiff=True, xscale='log')
 		####################
 		#################### SIMILAR LENGTHS
 		####################
@@ -1743,18 +1743,18 @@ class Plot_results():
 		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Length_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
 		RelDiff_SimilarLen_plot_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, 
-													ylim=ylimits, title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xlim=(0,1))
+													ylim=ylimits, title=Length_titles, linestyles=self.Linestyles, reldiff=True, xlim=(0,1))
 		RelDiff_SimilarLen_plot_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb,  ylim=ylimits, 
-													title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log')
+													title=Length_titles, linestyles=self.Linestyles, reldiff=True, xscale='log')
 		### f(R) difference to LCDM
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
 		RelDiff_SimilarLen_plot_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, 
-													ylim=ylimits, title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xlim=(0,1))
+													ylim=ylimits, title=Length_titles, linestyles=self.Linestyles, reldiff=True, xlim=(0,1))
 		RelDiff_SimilarLen_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, ylim=ylimits, 
-													title=Length_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log')
+													title=Length_titles, linestyles=self.Linestyles, reldiff=True, xscale='log')
 		####################
 		#################### SIMILAR THICKNESS
 		####################
@@ -1785,20 +1785,20 @@ class Plot_results():
 		Yplot, Yerror = get_data_reldiffs(Symm_only-1, Thickness_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
 		RelDiff_SimilarThickness_plot_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb, title=Thickness_titles,
-													linestyles=self.Linestyles[1:], reldiff=True, xlim=(0,1))
+													linestyles=self.Linestyles, reldiff=True, xlim=(0,1))
 		RelDiff_SimilarThickness_plot_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, 
 													Reldiff_label_avgspeed, self.Symm_legends[1:], self.Plot_colors_symm[1:], error=Yerror, fillbetween=do_fb,
-													title=Thickness_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log', 
+													title=Thickness_titles, linestyles=self.Linestyles, reldiff=True, xscale='log', 
 													xlim=(0,1))
 		### f(R) difference to LCDM
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
 		RelDiff_SimilarThickness_plot_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, Reldiff_label_avgspeed,
 													self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, title=Thickness_titles,
-													linestyles=self.Linestyles[1:], reldiff=True, xlim=(0,1))
+													linestyles=self.Linestyles, reldiff=True, xlim=(0,1))
 
 		RelDiff_SimilarThickness_plot_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Yplot, Distance_normalized_label, 
 													Reldiff_label_avgspeed, self.fofr_legends[1:], self.Plot_colors_fofr[1:], error=Yerror, fillbetween=do_fb, 
-													title=Thickness_titles, linestyles=self.Linestyles[1:], reldiff=True, xscale='log',
+													title=Thickness_titles, linestyles=self.Linestyles, reldiff=True, xscale='log',
 													xlim=(0,1))
 
 		####################
@@ -1844,7 +1844,7 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'b-')
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (5, 10)))
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1]) > 1:
 				set_y_limit = 1
@@ -1854,7 +1854,7 @@ class Plot_results():
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'b-')
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (5, 10)))
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
@@ -1905,7 +1905,7 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'b-')
+		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'k', linestyle=(0, (5, 10)))
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1]) > 1:
 				set_y_limit = 1
@@ -1915,7 +1915,7 @@ class Plot_results():
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'b-')
+		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'b', linestyle=(0, (5, 10)))
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
@@ -1963,23 +1963,23 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'b-')
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k-', linestyle=(0, (5, 10)))
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1]) > 1:
 				set_y_limit = 1
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i])
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
 							 RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'b-')
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (5, 10)))
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij+1])
+			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
 			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
-							 RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij])
+							 RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij+1])
 		plt.legend(self.fofr_legends)
 		plt.xscale('log')
 		if set_y_limit:
@@ -2184,9 +2184,9 @@ class Plot_results():
 		Number_filaments_larger_mass_reldiff = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
-		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'b-')
+		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k-', linestyle=(0, (5, 10)))
 		for i in Symm_only:
-			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i])
+			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
 							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
@@ -2194,9 +2194,9 @@ class Plot_results():
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
 		plt.setp(ax2.get_yticklabels(), visible=False)
-		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'b-')
+		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k-', linestyle=(0, (5, 10)))
 		for i in Fofr_only:
-			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyle=self.Linestyles[i-4])
+			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyle=self.Linestyles[i-5])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
 							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[i-4])
 		plt.legend(self.fofr_legends)
