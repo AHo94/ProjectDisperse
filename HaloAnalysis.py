@@ -747,6 +747,18 @@ class Plot_results():
 		Max_mass_f = np.max(np.array([np.max(Accepted_filmass[i]) for i in range(NModels)]))
 		Max_mass_h = np.max(np.array([np.max(Accepted_halomass[i]) for i in range(NModels)]))
 
+		Common_bin_halo_mass = OF.Get_common_bin(Accepted_halomass, binnum=20)
+		#Common_bin_halo_mass = self.Common_bin_halo_mass
+		Mean_filmasses = []
+		Stds_filmasses = []
+		for i in range(NModels):
+			binval, binstd = OF.Bin_mean_common(Accepted_halomass[i], Accepted_filmass[i], Common_bin_halo_mass)
+			Mean_filmasses.append(binval)
+			Stds_filmasses.append(binstd)
+		Relative_diff_filmass = [OF.relative_deviation_singular(Mean_filmasses[0], Mean_filmasses[i]) for i in range(1,NModels)]
+		PropError_filmass = [OF.Propagate_error_reldiff(Mean_filmasses[0], Mean_filmasses[i], Stds_filmasses[0], Stds_filmasses[i]) for i in range(1,NModels)]
+
+		### Scatter plot
 		FilMass_vs_HaloMass_symm = plt.figure()
 		for ij in range(len(SymmLCDM)):
 			i = SymmLCDM[ij]
@@ -771,8 +783,66 @@ class Plot_results():
 		plt.xlim(Min_mass_h, Max_mass_h)
 		plt.ylim(Min_mass_f, Max_mass_f)
 
+		### Binned plot
+		FilMass_vs_HaloMass_binned_symm = plt.figure()
+		for ij in range(len(SymmLCDM)):
+			i = SymmLCDM[ij]
+			plt.plot(Common_bin_halo_mass, Mean_filmasses[i], color=self.Plot_colors_symm[ij])
+			plt.fill_between(Common_bin_halo_mass, Mean_filmasses[i]-Stds_filmasses[i], Mean_filmasses[i]+Stds_filmasses[i], alpha=0.3,
+							facecolor=self.Plot_colors_symm[ij])
+		plt.xscale('log')
+		plt.yscale('log')
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('Mean filament mass - $[M_\odot/h]$')
+		plt.legend(self.Symm_legends)
+		#plt.xlim(Min_mass_h, Max_mass_h)
+		#plt.ylim(Min_mass_f, Max_mass_f)
+
+		FilMass_vs_HaloMass_binned_fofr = plt.figure()
+		for ij in range(len(FofrLCDM)):
+			i = FofrLCDM[ij]
+			plt.plot(Common_bin_halo_mass, Mean_filmasses[i], color=self.Plot_colors_fofr[ij])
+			plt.fill_between(Common_bin_halo_mass, Mean_filmasses[i]-Stds_filmasses[i], Mean_filmasses[i]+Stds_filmasses[i], alpha=0.3, 
+							facecolor=self.Plot_colors_fofr[ij])
+		plt.xscale('log')
+		plt.yscale('log')
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('Mean filament mass - $[M_\odot/h]$')
+		plt.legend(self.fofr_legends)
+
+		### Relative difference of the above
+		FilMass_vs_HaloMass_binned_Reldiff_symm = plt.figure()
+		plt.plot(Common_bin_halo_mass, np.zeros(len(Common_bin_halo_mass)), 'b')
+		for ij in range(len(Symm_only)):
+			i = Symm_only[ij]-1
+			plt.plot(Common_bin_halo_mass, Relative_diff_filmass[i-1], color=self.Plot_colors_symm[ij])
+			plt.fill_between(Common_bin_halo_mass, Relative_diff_filmass[i-1]-PropError_filmass[i-1], Relative_diff_filmass[i-1]+PropError_filmass[i-1],
+							alpha=0.3, facecolor=self.Plot_colors_symm[ij])
+		plt.xscale('log')
+		plt.yscale('log')
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('Relative difference of mean filament mass')
+		plt.legend(self.Symm_legends)
+
+		FilMass_vs_HaloMass_binned_Reldiff_fofr = plt.figure()
+		plt.plot(Common_bin_halo_mass, np.zeros(len(Common_bin_halo_mass)), 'b')
+		for ij in range(len(Fofr_only)):
+			i = Fofr_only[ij]
+			plt.plot(Common_bin_halo_mass, Relative_diff_filmass[i-1], color=self.Plot_colors_fofr[ij])
+			plt.fill_between(Common_bin_halo_mass, Relative_diff_filmass[i-1]-PropError_filmass[i-1], Relative_diff_filmass[i-1]+PropError_filmass[i-1],
+							alpha=0.3, facecolor=self.Plot_colors_fofr[ij])
+		plt.xscale('log')
+		plt.yscale('log')
+		plt.xlabel('Halo mass - $[M_\odot/h]$')
+		plt.ylabel('Relative difference of mean filament mass')
+		plt.legend(self.fofr_legends)
+		#print dobughere
 		self.savefigure(FilMass_vs_HaloMass_symm, 'Filament_vs_halo_mass_cSymmetron')
 		self.savefigure(FilMass_vs_HaloMass_fofr, 'Filament_vs_halo_mass_cFofr')
+		self.savefigure(FilMass_vs_HaloMass_binned_symm, 'Binned_filament_vs_halo_mass_cSymmetron')
+		self.savefigure(FilMass_vs_HaloMass_binned_fofr, 'Binned_filament_vs_halo_mass_cFofr')
+		self.savefigure(FilMass_vs_HaloMass_binned_Reldiff_symm, 'Binned_reldiff_filvshalo_mass_cSymmetron')
+		self.savefigure(FilMass_vs_HaloMass_binned_Reldiff_fofr, 'Binned_reldiff_filvshalo_mass_cFofr')
 
 def Argument_parser():
 	""" Parses optional argument when program is run from the command line """
@@ -1029,8 +1099,8 @@ if __name__ == '__main__':
 		print "Nonempty haloes: ", len(np.where(yesfils)[0])
 		#print "Nonempty haloes after filter: ", len(np.where(yesfils_f)[0])
 		print "Total haloes: ", len(NumCP_in_halo)
-		#sys.exit(1)
 		#CPinhalo, HaloIds_inhalo = Instance.Check_halo_in_cp()
+		#sys.exit(1)
 		#Percentage_inhalo = 100.0*(len(CPinhalo[CPinhalo > 0]))/len(CPinhalo)
 		#Percentage_outhalo = 100.0 - Percentage_inhalo
 		#InHalo_alternative.append(Percentage_inhalo)
