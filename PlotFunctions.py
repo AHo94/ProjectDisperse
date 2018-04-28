@@ -178,13 +178,13 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, colors, **kwargs):
 	plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 	if do_fill_between:
 		if Plot_LCDMDiff:
-			plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM')
+			plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (5, 10)))
 		for i in range(len(ydata)):
 			plt.plot(xdata, ydata[i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 			plt.fill_between(xdata, ydata[i]-error[i], ydata[i]+error[i], alpha=fb_alpha, facecolor=colors[i])
 	else:
 		if Plot_LCDMDiff:
-			plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM')
+			plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (5, 10)))
 		for i in range(len(ydata)):
 			plt.plot(xdata, ydata[i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 	if titles:
@@ -384,7 +384,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
 			if Plot_LCDMDiff:
 				#plt.plot(xdata, np.zeros(len(xdata)), color='b', label='$\Lambda$CDM', linestyle=(0, (3, 10, 1, 10, 1, 10)))
-				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle='-')
+				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (5, 10)))
 			for i in range(len(ydata[j])):
 				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 				plt.fill_between(xdata, ydata[j][i]-error[j][i], ydata[j][i]+error[j][i], alpha=fb_alpha, facecolor=colors[i])
@@ -396,7 +396,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 				ax = plt.subplot(Nrows,Ncols, j+1, sharey=ax, sharex=ax)
 				plt.setp(ax.get_yticklabels(), visible=False) if Remove_y_ticks else plt.setp(ax.get_yticklabels(), visible=True)
 			if Plot_LCDMDiff:
-				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM')
+				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (5, 10)))
 			for i in range(len(ydata[j])):
 				plt.plot(xdata, ydata[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
 			if titles:
@@ -548,8 +548,8 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			ax1 = plt.subplot(gs[Nrows-1, j], sharex=ax0) if j == 0 else plt.subplot(gs[Nrows-1, j], sharex=ax0, sharey=ax1)
 			plt.setp(ax1.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
 			if Plot_LCDMDiff:
-				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle='-')
-				subfactor = 1
+				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (5, 10)))
+				subfactor = 0
 			for i in range(len(secondaryY[j])):
 				plt.plot(xdata, secondaryY[j][i], label=legend[i+subfactor], color=colors[i+subfactor], linestyle=linestyles[i+subfactor])
 				plt.fill_between(xdata, secondaryY[j][i]-Secerror[j][i], secondaryY[j][i]+Secerror[j][i], alpha=fb_alpha, facecolor=colors[i+subfactor])
@@ -581,8 +581,8 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			ax1 = plt.subplot(gs[Nrows-1, j], sharex=ax0) if j == 0 else plt.subplot(gs[Nrows-1, j], sharex=ax0, sharey=ax1)
 			plt.setp(ax1.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
 			if Plot_LCDMDiff:
-				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle='-')
-				subfactor = 1
+				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (5, 10)))
+				subfactor = 0
 			for i in range(len(secondaryY[j])):
 				plt.plot(xdata, secondaryY[j][i], label=legend[i+subfactor], color=colors[i+subfactor], linestyle=linestyles[i+subfactor])
 			plt.ylabel(ylabel2) if j == 0 else plt.ylabel('')
