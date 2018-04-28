@@ -1060,14 +1060,15 @@ class Plot_results():
 		#Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
 		Mass_label = '$M$ - [$M_\odot / h$]'
 		Number_label = '$N$'
-		Number_label_reldiff = '$(N_i - N_{\Lambda \mathrm{CDM}})/N_{\Lambda \mathrm{CDM}}$'
+		Number_label_reldiff = '$N_i/N_{\Lambda \mathrm{CDM}} - 1$'#'$(N_i - N_{\Lambda \mathrm{CDM}})/N_{\Lambda \mathrm{CDM}}$'
 		Thickness_label = '$T$ - [Mpc/h]'
-		Thickness_label_reldiff = '$(T_i - T_{\Lambda\mathrm{CDM}})/T_{\Lambda \mathrm{CDM}}$'
+		Thickness_label_reldiff = '$T_i/T_{\Lambda \mathrm{CDM}} - 1$'#'$(T_i - T_{\Lambda\mathrm{CDM}})/T_{\Lambda \mathrm{CDM}}$'
 		Length_label = '$L$ - [Mpc/h]'
 		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
 		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
 		Density_label = r'$\langle \rho \rangle - [M_\odot h^2/\mathrm{Mpc}^3]$'
-		Density_label_reldiff = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/\langle \rho_{\Lambda \mathrm{CDM}} \rangle$'
+		#Density_label_reldiff = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/\langle \rho_{\Lambda \mathrm{CDM}} \rangle$'
+		Density_label_reldiff = r'$\langle \rho_i \rangle/\langle \rho_{\Lambda \mathrm{CDM}} - 1$'
 		#SymmLCDM = np.array([0,1,2,3,4])
 		#FofrLCDM = np.array([0,5,6,7])
 		#Symm_only = np.array([1,2,3,4])
@@ -1246,7 +1247,7 @@ class Plot_results():
 
 		### Relative difference of lcdm + symmetron, with error
 		RelDiff_mass_Symm_err = plt.figure()
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), color='b', linestyle=(0, (5, 10)))
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), color='k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in (Symm_only-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_symm[i+1], linestyle=self.Linestyles[i])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i],
@@ -1259,7 +1260,7 @@ class Plot_results():
 		plt.xlim(xlim_mass)
 		### Relative difference of lcdm + symmetron, with error
 		RelDiff_mass_fofr_err = plt.figure()
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), color='b', linestyle=(0, (5, 10)))
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), color='k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in (Fofr_only-1):
 			plt.semilogx(Common_bin_mass, RelativeDiff_mass[i], color=self.Plot_colors_fofr[i-3], linestyle=self.Linestyles[i-4])
 			plt.fill_between(Common_bin_mass, RelativeDiff_mass[i]-Prop_error_mass[i], RelativeDiff_mass[i]+Prop_error_mass[i],
@@ -1594,20 +1595,24 @@ class Plot_results():
 		if speedtype == 'Speed':
 			Average_speed_label =  r'$\langle v \rangle - [\mathrm{km}/\mathrm{s}]$'
 			Average_speed_label_nounit = r'$\langle v \rangle$'
-			Reldiff_label_avgspeed = r'$(\langle v_i \rangle - \langle v_{\Lambda \mathrm{CDM}} \rangle)/\langle v_{\Lambda \mathrm{CDM}} \rangle$'
+			#Reldiff_label_avgspeed = r'$(\langle v_i \rangle - \langle v_{\Lambda \mathrm{CDM}} \rangle)/\langle v_{\Lambda \mathrm{CDM}} \rangle$'
+			Reldiff_label_avgspeed = r'$\langle v_i \rangle/\langle v_{\Lambda \mathrm{CDM}} - 1$'
 		elif speedtype == 'Orthogonal':
-			Average_speed_label =  r'$\langle v_\perp \rangle$ - [\mathrm{km}/\mathrm{s}]'
+			Average_speed_label =  r'$\langle v_\perp \rangle - [\mathrm{km}/\mathrm{s}]$'
 			Average_speed_label_nounit = r'$\langle v_\perp \rangle$'
-			Reldiff_label_avgspeed = r'$(\langle v_{\perp,i} \rangle - \langle v_{\perp,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\perp, \Lambda \mathrm{CDM}} \rangle$'
+			#Reldiff_label_avgspeed = r'$(\langle v_{\perp,i} \rangle - \langle v_{\perp,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\perp, \Lambda \mathrm{CDM}} \rangle$'
+			Reldiff_label_avgspeed = r'$\langle v_{\perp,i}  \rangle/\langle v_{\perp, \Lambda \mathrm{CDM}} - 1$'
 		elif speedtype == 'Parallel':
 			Average_speed_label =  r'$\langle v_\parallel \rangle - [\mathrm{km}/s]$'
 			Average_speed_label_nounit = r'$\langle v_{\parallel} \rangle$'
-			Reldiff_label_avgspeed = r'$(\langle v_{\parallel,i} \rangle - \langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle$'
+			#Reldiff_label_avgspeed = r'$(\langle v_{\parallel,i} \rangle - \langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle)/\langle v_{\parallel,\Lambda \mathrm{CDM}} \rangle$'
+			Reldiff_label_avgspeed = r'$\langle v_{\parallel,i}  \rangle/\langle v_{\parallel, \Lambda \mathrm{CDM}} - 1$'
 			#ylimits = (-1,1)
 		elif speedtype == 'Density':
 			Average_speed_label = r'$\langle \rho \rangle - [\mathrm{kg}h^2/\mathrm{m^3}] \times 1e14$'
 			Average_speed_label_nounit = r'$\langle \rho \rangle$'
-			Reldiff_label_avgspeed = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/(\langle \rho_{\Lambda \mathrm{CDM}} \rangle)$'
+			#Reldiff_label_avgspeed = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/(\langle \rho_{\Lambda \mathrm{CDM}} \rangle)$'
+			Reldiff_label_avgspeed = r'$\langle \rho_i \rangle/\langle \rho_{\Lambda \mathrm{CDM}} \rangle - 1$'
 			#do_fb = True
 			#ylimits = (-1,1)
 		
@@ -1844,7 +1849,7 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (5, 10)))
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1]) > 1:
 				set_y_limit = 1
@@ -1854,7 +1859,7 @@ class Plot_results():
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (5, 10)))
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
@@ -1905,7 +1910,7 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'k', linestyle=(0, (5, 10)))
+		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1]) > 1:
 				set_y_limit = 1
@@ -1915,7 +1920,7 @@ class Plot_results():
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'b', linestyle=(0, (5, 10)))
+		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
@@ -1963,7 +1968,7 @@ class Plot_results():
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k-', linestyle=(0, (5, 10)))
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k-', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1]) > 1:
 				set_y_limit = 1
@@ -1973,7 +1978,7 @@ class Plot_results():
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (5, 10)))
+		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
@@ -2075,12 +2080,12 @@ class Plot_results():
 		self.savefigure(AverageSpeed_ThicknessBins, 'Average_speed_thicknessbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_ThicknessBins, 'Reldiff_AverageSpeed_thicknessbins', velocity_results_dir)
 		### Gridspec plots
-		self.savefigure(AverageSpeed_SimilarMass_Symm_GRIDSPEC, 'Average_speed_similar_mass_logx_cSymmetron_gridspec', velocity_results_dir, dpi_mult=2)
-		self.savefigure(AverageSpeed_SimilarMass_fofr_GRIDSPEC, 'Average_speed_similar_mass_logx_cFofr_gridspec', velocity_results_dir, dpi_mult=2)
-		self.savefigure(AverageSpeed_SimilarLength_Symm_GRIDSPEC, 'Average_speed_similar_length_logx_cSymmetron_gridspec', velocity_results_dir, dpi_mult=2)
-		self.savefigure(AverageSpeed_SimilarLength_fofr_GRIDSPEC, 'Average_speed_similar_length_logx_cFofr_gridspec', velocity_results_dir, dpi_mult=2)
-		self.savefigure(AverageSpeed_SimilarThickness_Symm_GRIDSPEC, 'Average_speed_similar_thickness_logx_cSymmetron_gridspec', velocity_results_dir, dpi_mult=2)
-		self.savefigure(AverageSpeed_SimilarThickness_fofr_GRIDSPEC, 'Average_speed_similar_thickness_logx_cFofr_gridspec', velocity_results_dir, dpi_mult=2)
+		self.savefigure(AverageSpeed_SimilarMass_Symm_GRIDSPEC, 'Average_speed_similar_mass_cSymmetron_gridspec', velocity_results_dir, dpi_mult=2)
+		self.savefigure(AverageSpeed_SimilarMass_fofr_GRIDSPEC, 'Average_speed_similar_mass_cFofr_gridspec', velocity_results_dir, dpi_mult=2)
+		self.savefigure(AverageSpeed_SimilarLength_Symm_GRIDSPEC, 'Average_speed_similar_length_cSymmetron_gridspec', velocity_results_dir, dpi_mult=2)
+		self.savefigure(AverageSpeed_SimilarLength_fofr_GRIDSPEC, 'Average_speed_similar_length_cFofr_gridspec', velocity_results_dir, dpi_mult=2)
+		self.savefigure(AverageSpeed_SimilarThickness_Symm_GRIDSPEC, 'Average_speed_similar_thickness_cSymmetron_gridspec', velocity_results_dir, dpi_mult=2)
+		self.savefigure(AverageSpeed_SimilarThickness_fofr_GRIDSPEC, 'Average_speed_similar_thickness_cFofr_gridspec', velocity_results_dir, dpi_mult=2)
 		plt.close('all')	# Clear all current windows to free memory
 
 	def Other_profiles(self):
@@ -2184,7 +2189,7 @@ class Plot_results():
 		Number_filaments_larger_mass_reldiff = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
-		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k-', linestyle=(0, (5, 10)))
+		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Symm_only:
 			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
@@ -2194,7 +2199,7 @@ class Plot_results():
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
 		plt.setp(ax2.get_yticklabels(), visible=False)
-		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k-', linestyle=(0, (5, 10)))
+		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Fofr_only:
 			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyle=self.Linestyles[i-5])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],

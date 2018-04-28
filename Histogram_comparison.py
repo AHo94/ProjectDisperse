@@ -1125,11 +1125,11 @@ class CompareModels():
 
 		ConnectedHistComparison_subplot_reldiff = plt.figure(figsize=(5,4))
 		ax = plt.subplot(1,2,1)
-		plt.plot(connection_bins, np.zeros(len(connection_bins)), 'k-')
+		plt.plot(connection_bins, np.zeros(len(connection_bins)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in range(1,5):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
 			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
-			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i], linestyle=self.Linestyles[i])
+			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i], linestyle=self.Linestyles[i-1])
 			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(Symm_legends)
 		plt.xscale('log')
@@ -1137,11 +1137,11 @@ class CompareModels():
 		#plt.yscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
 		plt.setp(ax2.get_yticklabels(), visible=False)
-		plt.plot(connection_bins, np.zeros(len(connection_bins)), 'k-')
+		plt.plot(connection_bins, np.zeros(len(connection_bins)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in range(5,8):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
 			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
-			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i], linestyle=self.Linestyles[i-4])
+			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i], linestyle=self.Linestyles[i-5])
 			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(fofr_legends)
 		plt.xscale('log')
