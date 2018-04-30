@@ -1869,8 +1869,8 @@ class Plot_results():
 		plt.legend(self.fofr_legends)
 		plt.xscale('log')
 		plt.xlim(xlim_mass)
-		if set_y_limit:
-			plt.ylim(-1,1)
+		#if set_y_limit:
+		plt.ylim(-0.1,0.3)
 		AverageSpeed_RelativeDifference_MassBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_RelativeDifference_MassBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
@@ -2210,7 +2210,7 @@ class Plot_results():
 		Number_filaments_larger_mass_reldiff.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
 		Number_filaments_larger_mass_reldiff.text(0.02, 0.7, r'$(N(>M)_i - N(>M)_{\Lambda \mathrm{CDM}})/N(>M)_{\Lambda \mathrm{CDM}}$', 
 									ha='center', rotation='vertical', fontsize=10)
-		plt.ylim((-1,1))
+		plt.ylim((-0.3,0.6))
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		###### Mass distribution plots
 		self.savefigure(Number_filaments_larger_mass, 'Mass_distribution_number')
@@ -2335,8 +2335,8 @@ if __name__ == '__main__':
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
 	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
 	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
-	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
-	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
+	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
 
 	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
