@@ -151,9 +151,13 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, colors, **kwargs):
 		elif kw == 'xscale':	# Changes x plot scales based on input
 			logXscale_name = kwargs[kw]
 			Change_xscales = True
+			if logXscale_name == 'no':
+				Change_xscales = False
 		elif kw == 'yscale':	# Changes y plot scales based on input
 			logYscale_name = kwargs[kw]
 			Change_yscales = True
+			if logYscale_name == 'no':
+				Change_yscales = False
 		elif kw == 'linestyles': 	# Choose linestyle of plotting
 			linestyles = kwargs[kw]
 		elif kw == 'reldiff':	# Plots a line that distinguishes the LCDM model as a zero line
@@ -348,9 +352,13 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 		elif kw == 'xscale':	# Changes x plot scales based on input
 			logXscale_name = kwargs[kw]
 			Change_xscales = True
+			if logXscale_name == 'no':
+				Change_xscales = False
 		elif kw == 'yscale':	# Changes y plot scales based on input
 			logYscale_name = kwargs[kw]
 			Change_yscales = True
+			if logYscale_name == 'no':
+				Change_yscales = False
 		elif kw == 'linestyles': 	# Choose linestyle of plotting
 			linestyles = kwargs[kw]
 		elif kw == 'reldiff':	# Plots a line that distinguishes the LCDM model as a zero line
@@ -490,9 +498,13 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 		elif kw == 'xscale':	# Changes x plot scales based on input
 			logXscale_name = kwargs[kw]
 			Change_xscales = True
+			if logXscale_name == 'no':
+				Change_xscales = False
 		elif kw == 'yscale':	# Changes y plot scales based on input
 			logYscale_name = kwargs[kw]
 			Change_yscales = True
+			if logYscale_name == 'no':
+				Change_yscales = False
 		elif kw == 'linestyles': 	# Choose linestyle of plotting
 			linestyles = kwargs[kw]
 		elif kw == 'reldiff':	# Plots a line that distinguishes the LCDM model as a zero line
