@@ -510,12 +510,12 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 		elif kw == 'xscale_diff':	# Changes x plot scales based on input
 			logXscale_name_diff = kwargs[kw]
 			Change_xscales_diff = True
-			if logXscale_name == 'no':
+			if logXscale_name_diff == 'no':
 				Change_xscales_diff = False
 		elif kw == 'yscale_diff':	# Changes y plot scales based on input
 			logYscale_name_diff = kwargs[kw]
 			Change_yscales_diff = True
-			if logYscale_name == 'no':
+			if logYscale_name_diff == 'no':
 				Change_yscales_diff = False
 		elif kw == 'linestyles': 	# Choose linestyle of plotting
 			linestyles = kwargs[kw]
