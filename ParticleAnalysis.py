@@ -1644,7 +1644,7 @@ class Plot_results():
 			All_speeds[i] = All_speeds[i][Mass_filter]
 			if self.Dist_mass_filter == 0:
 				Part_distances[i] = Part_distances[i][Mass_filter]
-				self.Dist_mass_filter = 1
+		self.Dist_mass_filter = 1
 		#SymmLCDM = np.array([0,1,2,3,4])
 		#FofrLCDM = np.array([0,5,6,7])
 		#Symm_only = np.array([1,2,3,4])
