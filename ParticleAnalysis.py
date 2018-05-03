@@ -2251,9 +2251,11 @@ def Argument_parser():
 	parser.add_argument("-Nparts", "--NumberParticles", help="Run with a set number of particles. Default 64.", type=int, default=64)
 	parser.add_argument("-Nsigma", "--Nsigma_disperse", help="Sigma value used for DisPerSE. Default at 3.", type=int, default=3)
 	parser.add_argument("-filetype", "--Filetype", help="Filetype the figures are saved in. Can be pdf or png (default)", type=str, default='png')
-	parsed.add_argument("-DoFilter", "--DoFilter", help="If True, further filters filament based on mass, thickness and length. Default = False", default=False)
+	parser.add_argument("-DoFilter", "--DoFilter", help="If True, further filters filament based on mass, thickness and length. Default = False", default=False)
 	# Parse arguments
 	args = parser.parse_args()
+	print args.DoFilter
+	print type(args.DoFilter)
 	# Some checks
 	Model_ok = False
 	Model_disperse = False
