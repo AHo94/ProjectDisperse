@@ -1074,7 +1074,7 @@ class Plot_results():
 		Length_label = '$L$ - [Mpc/h]'
 		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
 		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
-		Density_label = r'$\langle \rho \rangle - [M_\odot h^2/\mathrm{Mpc}^3]$'
+		Density_label = r'$\langle \rho \rangle - [10^{12} M_\odot h^2/\mathrm{Mpc}^3]$'
 		#Density_label_reldiff = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/\langle \rho_{\Lambda \mathrm{CDM}} \rangle$'
 		Density_label_reldiff = r'$\langle \rho_i \rangle/\langle \rho_{\Lambda \mathrm{CDM}} - 1$'
 		#SymmLCDM = np.array([0,1,2,3,4])
@@ -1138,7 +1138,7 @@ class Plot_results():
 		for i in range(NModels):
 			Volumes = np.pi*FilLengths[i]*Thresholds[i]**2
 			rho = self.Filament_masses[i]/Volumes
-			self.Filament_density.append(rho)
+			self.Filament_density.append(rho/1.0e12)   # Divide by 10^12 to scale better logarithmically
 		self.Filament_density = np.asarray(self.Filament_density)
 		Common_bin_density = OF.Get_common_bin_logX(self.Filament_density, binnum=binnum)
 		# Compute number of filament within a density bins
