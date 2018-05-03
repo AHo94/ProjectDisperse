@@ -440,6 +440,8 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 	titles = []
 	Change_xscales = False
 	Change_yscales = False
+	Change_xscales_diff = False
+	Change_yscales_diff = False
 	Plot_LCDMDiff = False
 	linestyles = ['-']*10
 	# Iterate through keyword arguments to check if anything special will happen. Changes some default arguments
@@ -505,6 +507,16 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			Change_yscales = True
 			if logYscale_name == 'no':
 				Change_yscales = False
+		elif kw == 'xscale_diff':	# Changes x plot scales based on input
+			logXscale_name_diff = kwargs[kw]
+			Change_xscales_diff = True
+			if logXscale_name == 'no':
+				Change_xscales_diff = False
+		elif kw == 'yscale_diff':	# Changes y plot scales based on input
+			logYscale_name_diff = kwargs[kw]
+			Change_yscales_diff = True
+			if logYscale_name == 'no':
+				Change_yscales_diff = False
 		elif kw == 'linestyles': 	# Choose linestyle of plotting
 			linestyles = kwargs[kw]
 		elif kw == 'reldiff':	# Plots a line that distinguishes the LCDM model as a zero line
@@ -576,9 +588,14 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			if set_ylimits_diff:
 				ax1.set_ylim(ylims_d)
 			if Change_xscales:
-				plt.xscale(logXscale_name)
+				ax0.set_xscale(logXscale_name)
 			if Change_yscales:
-				plt.yscale(logYscale_name)
+				ax0.set_yscale(logYscale_name)
+			if Change_xscales_diff:
+				ax1.set_xscale(logXscale_name_diff)
+			if Change_yscales_diff:
+				ax1.set_yscale(logYscale_name_diff)
+
 	else:
 		subfactor = 0
 		for j in range(len(primaryY)):
@@ -603,9 +620,14 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			if set_ylimits:
 				plt.ylim(ylims)
 			if Change_xscales:
-				plt.xscale(logXscale_name)
+				ax0.set_xscale(logXscale_name)
 			if Change_yscales:
-				plt.yscale(logYscale_name)
+				ax0.set_yscale(logYscale_name)
+			if Change_xscales_diff:
+				ax1.set_xscale(logXscale_name_diff)
+			if Change_yscales_diff:
+				ax1.set_yscale(logYscale_name_diff)
+
 
 	if anchor_legend:
 		ax0.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5*(Nrows-1)/Nrows), ncol=1, fancybox=True)
