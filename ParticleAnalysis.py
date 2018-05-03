@@ -145,6 +145,7 @@ class FilterParticlesAndFilaments():
 			fillen = OF.Get_filament_length(Filament_3DPos[i])
 			FilamentLength.append(fillen)
 		FilamentLength = np.asarray(FilamentLength)
+		self.FilamentLength = FilamentLength
 		if RemoveNanFils.any():
 			FilamentLength = np.delete(FilamentLength, RemoveNanFils)
 		Small_filaments = FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
@@ -821,7 +822,9 @@ class FilterParticlesAndFilaments():
 		Can be used to, for instance, filter out long filaments.
 		"""		
 		#self.Small_filaments = self.FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
-		Accepted_lengths = self.FilamentLength[self.Small_filaments][Accepted_ids]
+		FilamentLength = self.Get_filament_length()
+		#Accepted_lengths = self.FilamentLength[self.Small_filaments][Accepted_ids]
+		Accepted_lengths = FilamentLength[Accepted_ids]
 		Large_filaments = Accepted_lengths <= 20 	# Units of Mpc/h. Change accordingly here
 		return Large_filaments
 
@@ -1089,9 +1092,11 @@ class Plot_results():
 			Mass_array_temp = np.array([len(Accepted_parts[i][j]) for j in range(len(Accepted_parts[i]))]).astype(np.float32)
 			self.Filament_masses.append(Mass_array_temp*DM_mass)
 		# Further filter out based on masses
+		self.Mass_filters = []
 		if DoFilter:
 			for i in range(NModels):
 				Mass_filter = self.Filament_masses[i] < 1e15
+				self.Mass_filters.append(Mass_filter)
 				self.Filament_masses[i] = self.Filament_masses[i][Mass_filter]
 				Thresholds[i] = Thresholds[i][Mass_filter]
 				FilLengths[i] = FilLengths[i][Mass_filter]
@@ -1585,6 +1590,7 @@ class Plot_results():
 		if not os.path.isdir(velocity_results_dir):
 			os.makedirs(velocity_results_dir)
 
+
 		print 'Computing for ', speedtype 
 		######## Compute relevant stuff ########
 		do_fb = True
@@ -1631,6 +1637,11 @@ class Plot_results():
 			ylimits = (-0.1,0.4)
 			Special_y_scale_density = 'log'
 		
+		### Further filtering based on masses
+		for i in range(NModels):
+			Mass_filter = self.Mass_filters[i]
+			All_speeds[i] = All_speeds[i][Mass_filter]
+			Part_distances[i] = Part_distances[i][Mass_filter]
 		#SymmLCDM = np.array([0,1,2,3,4])
 		#FofrLCDM = np.array([0,5,6,7])
 		#Symm_only = np.array([1,2,3,4])
@@ -2255,8 +2266,6 @@ def Argument_parser():
 						 type=bool, default=False)
 	# Parse arguments
 	args = parser.parse_args()
-	print args.DoFilter
-	print type(args.DoFilter)
 	# Some checks
 	Model_ok = False
 	Model_disperse = False
@@ -2340,24 +2349,31 @@ if __name__ == '__main__':
 			#if p_model == 'lcdm' or p_model == 'symmA' or p_model == 'fofr4':
 			Instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
 			OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
+			Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
+			Fillens = Instance.Get_filament_length()[OK_fils]
+			Densities = Instance.Compute_density_profile(OK_distances, Fillens)
+			print "Number of filaments after density and length filtering 1:", len(Fillens)
 			if DoFilter:
 				# Do a secondary filter	of the length
-				Large_filament_filt = Instance.Secondary_filter(OK_fils)
+				#Large_filament_filt = Instance.Secondary_filter(OK_fils)
+				Large_filament_filt = Fillens <= 20
 				# Filter out thickness larger than 10
 				Large_thickness_filt = thresholds < 10
 				Total_filt = Large_filament_filt*Large_thickness_filt
 				OK_fils = OK_fils[Total_filt]
 				thresholds = thresholds[Total_filt]
-				OK_particles = thresholds[Total_filt]
+				OK_particles = OK_particles[Total_filt]
 				OK_distances = OK_distances[Total_filt]
 				SegIDs = SegIDs[Total_filt]
+				Fillens = Fillens[Total_filt]
 
+				Speeds = Speeds[Total_filt]
+				Ospeed = Ospeed[Total_filt]
+				Pspeed = Pspeed[Total_filt]
+				Densities = Densities[Total_filt]
 			Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
-			Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
 			Append_data_speeds(Speeds, Ospeed, Pspeed)
-			Fillens = Instance.Get_filament_length()[OK_fils]
 			Filament_lengths.append(Fillens)
-			Densities = Instance.Compute_density_profile(OK_distances, Fillens)
 			Density_prof.append(Densities*Mpc**3/Solmass*1e-14)	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
 			N_filament_connections.append(Instance.Number_filament_connections()[OK_fils])
 			print "Number of filaments after filter for " + p_model + ":", len(Fillens)
