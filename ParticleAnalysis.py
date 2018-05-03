@@ -139,6 +139,7 @@ class FilterParticlesAndFilaments():
 		for j in range(len(self.xdimPos)):
 			Filament_3DPos.append(np.column_stack((self.xdimPos[j], self.ydimPos[j], self.zdimPos[j])))
 		Filament_3DPos = np.array(Filament_3DPos)
+		print "Number of filaments for " + self.Dispersemodel + ":", len(Filament_3DPos)
 		FilamentLength = []
 		for i in range(len(Filament_3DPos)):
 			fillen = OF.Get_filament_length(Filament_3DPos[i])
@@ -821,7 +822,7 @@ class FilterParticlesAndFilaments():
 		"""		
 		#self.Small_filaments = self.FilamentLength > 1.0   # Filter for filaments smaller than 1 Mpc/h
 		Accepted_lengths = self.FilamentLength[self.Small_filaments][Accepted_ids]
-		Large_filaments = Accepted_lengths > 20 	# Units of Mpc/h. Change accordingly here
+		Large_filaments = Accepted_lengths <= 20 	# Units of Mpc/h. Change accordingly here
 		return Large_filaments
 
 class Plot_results():
@@ -939,7 +940,11 @@ class Plot_results():
 		return Mean_speed_normalized, Mean_speed_normalized_std
 
 	def Compute_similar_profiles(self, prop, speeds, distances, thickness, bins, botrange, uprange, prop_name, models, newbinning=40):
-		Folder = '/mn/stornext/u3/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/SimilarProperties/'
+		if DoFilter:
+			Folder = '/mn/stornext/u3/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/SimilarProperties/FurtherFilter/'
+		else:
+			Folder = '/mn/stornext/u3/aleh/PythonCaches/Disperse_analysis/ParticlesPerFilament/ProcessedData/SpeedComponents/SimilarProperties/'
+		# Further filter folder used when filtering masses, thickness and long filaments
 		if newbinning == 40:
 			Filename = self.Speed_filename + 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + '_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + models + '.npy'
 			Filename_std = self.Speed_filename + 'Similar' + prop_name + 'Range' + str(botrange) + '-' + str(uprange) + 'STD_Npart' + str(N_parts) + '_Nsigma' + str(self.Nsigma) + models + '.npy'
@@ -1077,13 +1082,21 @@ class Plot_results():
 		FofrLCDM = self.FofrLCDM_ids
 		Symm_only = self.SymmLCDM_ids[1:]
 		Fofr_only = self.FofrLCDM_ids[1:]
-		self.Thresholds = np.array(Thresholds)
-		self.FilLengths = np.array(FilLengths)
+		
 		#### Computes masses of the filament. Done for all models
 		self.Filament_masses = []
 		for i in range(NModels):
 			Mass_array_temp = np.array([len(Accepted_parts[i][j]) for j in range(len(Accepted_parts[i]))]).astype(np.float32)
 			self.Filament_masses.append(Mass_array_temp*DM_mass)
+		# Further filter out based on masses
+		if DoFilter:
+			for i in range(NModels):
+				Mass_filter = self.Filament_masses[i] < 1e15
+				self.Filament_masses[i] = self.Filament_masses[i][Mass_filter]
+				Thresholds[i] = Thresholds[i][Mass_filter]
+				FilLengths[i] = FilLengths[i][Mass_filter]
+		self.Thresholds = np.array(Thresholds)
+		self.FilLengths = np.array(FilLengths)
 		Common_bin_mass = OF.Get_common_bin_logX(self.Filament_masses, binnum=binnum)
 		Number_mass = []
 		Error_mass = []
@@ -1592,6 +1605,7 @@ class Plot_results():
 		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
 		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
 		Distance_normalized_label = '$r/T$'
+		Special_y_scale_density = 'no'
 		if speedtype == 'Speed':
 			Average_speed_label =  r'$\langle v \rangle - [\mathrm{km}/\mathrm{s}]$'
 			Average_speed_label_nounit = r'$\langle v \rangle$'
@@ -1615,6 +1629,7 @@ class Plot_results():
 			Reldiff_label_avgspeed = r'$\langle \rho_i \rangle/\langle \rho_{\Lambda \mathrm{CDM}} \rangle - 1$'
 			#do_fb = True
 			ylimits = (-0.1,0.4)
+			Special_y_scale_density = 'log'
 		
 		#SymmLCDM = np.array([0,1,2,3,4])
 		#FofrLCDM = np.array([0,5,6,7])
@@ -1685,18 +1700,18 @@ class Plot_results():
 		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Mass_ranges, self.Filament_masses, 'Mass', binnum)
 		AverageSpeed_SimilarMass_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, title=Mass_titles,
-														linestyles=self.Linestyles, xlim=(0,1))
+														linestyles=self.Linestyles, xlim=(0,1), yscale=Special_y_scale_density)
 		AverageSpeed_SimilarMass_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label,
 														Average_speed_label, self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, 
-														title=Mass_titles, linestyles=self.Linestyles, xscale='log')
+														title=Mass_titles, linestyles=self.Linestyles, xscale='log', yscale=Special_y_scale_density)
 		### Average speed of filaments with similar masses, comparing LCDM + f(R)
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Mass_ranges, self.Filament_masses, 'Mass', binnum)
 		AverageSpeed_SimilarMass_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Mass_titles,
-														linestyles=self.Linestyles, xlim=(0,1))
+														linestyles=self.Linestyles, xlim=(0,1), yscale=Special_y_scale_density)
 		AverageSpeed_SimilarMass_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, 
 														Average_speed_label, self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb,
-														title=Mass_titles, linestyles=self.Linestyles, xscale='log')
+														title=Mass_titles, linestyles=self.Linestyles, xscale='log', yscale=Special_y_scale_density)
 		### Relative difference of the average speed, for similar masses.
 		RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass = store_reldiff_data(self.Filament_masses, 'Mass', Mass_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -1727,18 +1742,18 @@ class Plot_results():
 		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Length_ranges, self.FilLengths, 'Length', binnum)
 		AverageSpeed_SimilarLength_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, title=Length_titles,
-														linestyles=self.Linestyles)
+														linestyles=self.Linestyles, yscale=Special_y_scale_density)
 		AverageSpeed_SimilarLength_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, 
 														Average_speed_label, self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, 
-														title=Length_titles, linestyles=self.Linestyles, xscale='log')
+														title=Length_titles, linestyles=self.Linestyles, xscale='log', yscale=Special_y_scale_density)
 		#### Average speed of filament of similar length. f(R) + LCDM comparison
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Length_ranges, self.FilLengths, 'Length', binnum)
 		AverageSpeed_SimilarLength_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Length_titles,
-														linestyles=self.Linestyles)
+														linestyles=self.Linestyles, yscale=Special_y_scale_density)
 		AverageSpeed_SimilarLength_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, 
 														Average_speed_label, self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, 
-														title=Length_titles, linestyles=self.Linestyles, xscale='log')
+														title=Length_titles, linestyles=self.Linestyles, xscale='log', yscale=Special_y_scale_density)
 		### Relative differences of filaments of similar length
 		RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength = store_reldiff_data(self.FilLengths, 'Length', Length_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -1769,19 +1784,19 @@ class Plot_results():
 		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Thickness_ranges, self.Thresholds, 'Thickness', binnum)
 		AverageSpeed_SimilarThickness_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, title=Thickness_titles,
-														linestyles=self.Linestyles)
+														linestyles=self.Linestyles, yscale=Special_y_scale_density)
 		AverageSpeed_SimilarThickness_Symm_logx = pf.Do_subplots_sameX(Common_bin_distances, Mean_profiles, Distance_normalized_label, 
 														Average_speed_label, self.Symm_legends, self.Plot_colors_symm, error=Mean_stds, fillbetween=do_fb, 
-														title=Thickness_titles, linestyles=self.Linestyles, xscale='log')
+														title=Thickness_titles, linestyles=self.Linestyles, xscale='log', yscale=Special_y_scale_density)
 
 		#### Average speed of filament of similar length. f(R) + LCDM comparison
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Thickness_ranges, self.Thresholds, 'Thickness', binnum)
 		AverageSpeed_SimilarThickness_fofr = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
 														self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, title=Thickness_titles,
-														linestyles=self.Linestyles)
+														linestyles=self.Linestyles, yscale=Special_y_scale_density)
 		AverageSpeed_SimilarThickness_fofr_logx = pf.Do_subplots_sameX(Common_bin_distances, Mean_profiles, Distance_normalized_label, 
 														Average_speed_label, self.fofr_legends, self.Plot_colors_fofr, error=Mean_stds, fillbetween=do_fb, 
-														title=Thickness_titles, linestyles=self.Linestyles, xscale='log')
+														title=Thickness_titles, linestyles=self.Linestyles, xscale='log', yscale=Special_y_scale_density)
 		### Relative differences of filaments of similar thickness
 		RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness = store_reldiff_data(self.Thresholds, 'Thickness', Thickness_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -1996,6 +2011,8 @@ class Plot_results():
 		#######
 		####### Gridspec plots
 		#######
+		GS_xscale = 'log'
+		GS_yscale = 'log'
 		## Average speed of filaments with similar mass
 		RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass = store_reldiff_data(self.Filament_masses, 'Mass', Mass_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -2004,13 +2021,15 @@ class Plot_results():
 		AverageSpeed_SimilarMass_Symm_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot, Distance_normalized_label, 
 																Average_speed_label, Reldiff_label_avgspeed, self.Symm_legends, self.Plot_colors_symm,
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
-																fillbetween=True, rowcol=[2,3], title=Mass_titles, ylim_diff=ylimits)
+																fillbetween=True, rowcol=[2,3], title=Mass_titles, ylim_diff=ylimits,
+																xscale=GS_xscale, yscale=GS_yscale, xlim_diff=GS_xscale)
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Mass_ranges, self.Filament_masses, 'Mass', binnum)
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
 		AverageSpeed_SimilarMass_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot, Distance_normalized_label,
 																Average_speed_label, Reldiff_label_avgspeed, self.fofr_legends, self.Plot_colors_fofr,
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
-																fillbetween=True, rowcol=[2,3], title=Mass_titles, ylim_diff=ylimits)
+																fillbetween=True, rowcol=[2,3], title=Mass_titles, ylim_diff=ylimits,
+																xscale=GS_xscale, yscale=GS_yscale, xlim_diff=GS_xscale)
 		## Average speed of filaments with similar length
 		RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength = store_reldiff_data(self.FilLengths, 'Length', Length_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -2019,13 +2038,15 @@ class Plot_results():
 		AverageSpeed_SimilarLength_Symm_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot, Distance_normalized_label, 
 																Average_speed_label, Reldiff_label_avgspeed, self.Symm_legends, self.Plot_colors_symm,
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
-																fillbetween=True, rowcol=[2,3], title=Length_titles, ylim_diff=ylimits)
+																fillbetween=True, rowcol=[2,3], title=Length_titles, ylim_diff=ylimits,
+																xscale=GS_xscale, yscale=GS_yscale, xlim_diff=GS_xscale)
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Length_ranges, self.FilLengths, 'Length', binnum)
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Length_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
 		AverageSpeed_SimilarLength_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot, Distance_normalized_label, 
 																Average_speed_label,Reldiff_label_avgspeed, self.fofr_legends, self.Plot_colors_fofr,
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
-																fillbetween=True, rowcol=[2,3], title=Length_titles, ylim_diff=ylimits)
+																fillbetween=True, rowcol=[2,3], title=Length_titles, ylim_diff=ylimits,
+																xscale=GS_xscale, yscale=GS_yscale, xlim_diff=GS_xscale)
 		## Average speed of filaments with similar thickness
 		RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness = store_reldiff_data(self.Thresholds, 'Thickness', Thickness_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -2034,13 +2055,15 @@ class Plot_results():
 		AverageSpeed_SimilarThickness_Symm_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot, Distance_normalized_label, 
 																Average_speed_label, Reldiff_label_avgspeed, self.Symm_legends, self.Plot_colors_symm,
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
-																fillbetween=True, rowcol=[2,3], title=Thickness_titles, ylim_diff=ylimits)
+																fillbetween=True, rowcol=[2,3], title=Thickness_titles, ylim_diff=ylimits,
+																xscale=GS_xscale, yscale=GS_yscale, xlim_diff=GS_xscale)
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Thickness_ranges, self.Thresholds, 'Thickness', binnum)
 		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Thickness_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
 		AverageSpeed_SimilarThickness_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot, Distance_normalized_label, 
 																Average_speed_label,Reldiff_label_avgspeed, self.fofr_legends, self.Plot_colors_fofr,
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
-																fillbetween=True, rowcol=[2,3], title=Thickness_titles, ylim_diff=ylimits)
+																fillbetween=True, rowcol=[2,3], title=Thickness_titles, ylim_diff=ylimits,
+																xscale=GS_xscale, yscale=GS_yscale, xlim_diff=GS_xscale)
 
 		####### Save figures #######
 		print '--- SAVING IN: ', velocity_results_dir, ' ---'
@@ -2188,7 +2211,7 @@ class Plot_results():
 		### Relative differences of the data above
 		Number_filaments_larger_mass_reldiff = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-		ax = plt.subplot(1,2,1)
+		ax = plt.subplot(2,1,1)
 		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Symm_only:
 			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
@@ -2197,7 +2220,7 @@ class Plot_results():
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		#plt.yscale('log')
-		ax2 = plt.subplot(1,2,2, sharey=ax)
+		ax2 = plt.subplot(2,1,2, sharey=ax)
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Fofr_only:
@@ -2228,6 +2251,7 @@ def Argument_parser():
 	parser.add_argument("-Nparts", "--NumberParticles", help="Run with a set number of particles. Default 64.", type=int, default=64)
 	parser.add_argument("-Nsigma", "--Nsigma_disperse", help="Sigma value used for DisPerSE. Default at 3.", type=int, default=3)
 	parser.add_argument("-filetype", "--Filetype", help="Filetype the figures are saved in. Can be pdf or png (default)", type=str, default='png')
+	parsed.add_argument("-DoFilter", "--DoFilter", help="If True, further filters filament based on mass, thickness and length. Default = False", default=False)
 	# Parse arguments
 	args = parser.parse_args()
 	# Some checks
@@ -2257,6 +2281,7 @@ if __name__ == '__main__':
 	N_parts = parsed_arguments.NumberParticles
 	N_sigma = parsed_arguments.Nsigma_disperse
 	Filetype = parsed_arguments.Filetype
+	DoFilter = parsed_arguments.DoFilter
 	print '====== Information ======'
 	print 'Running for model:', p_model
 	print 'Number of particles: ', N_parts
@@ -2312,16 +2337,18 @@ if __name__ == '__main__':
 			#if p_model == 'lcdm' or p_model == 'symmA' or p_model == 'fofr4':
 			Instance = FilterParticlesAndFilaments(p_model, N_parts, N_sigma)
 			OK_fils, thresholds, OK_particles, OK_distances, SegIDs = Instance.Get_threshold_and_noise()
-			
-			# Do a secondary filter
-			"""
-			Large_filament_filt = Instance.Secondary_filter(OK_fils)
-			OK_fils = OK_fils[Large_filament_filt]
-			thresholds = thresholds[Large_filament_filt]
-			OK_particles = thresholds[Large_filament_filt]
-			OK_distances = OK_distances[Large_filament_filt]
-			SegIDs = SegIDs[Large_filament_filt]
-			"""
+			if DoFilter:
+				# Do a secondary filter	of the length
+				Large_filament_filt = Instance.Secondary_filter(OK_fils)
+				# Filter out thickness larger than 10
+				Large_thickness_filt = thresholds < 10
+				Total_filt = Large_filament_filt*Large_thickness_filt
+				OK_fils = OK_fils[Total_filt]
+				thresholds = thresholds[Total_filt]
+				OK_particles = thresholds[Total_filt]
+				OK_distances = OK_distances[Total_filt]
+				SegIDs = SegIDs[Total_filt]
+
 			Append_data(OK_fils, thresholds, OK_particles, OK_distances, p_model)
 			Speeds, Ospeed, Pspeed = Instance.Get_speed_components(OK_particles, SegIDs, OK_fils)
 			Append_data_speeds(Speeds, Ospeed, Pspeed)
@@ -2329,14 +2356,15 @@ if __name__ == '__main__':
 			Filament_lengths.append(Fillens)
 			Densities = Instance.Compute_density_profile(OK_distances, Fillens)
 			Density_prof.append(Densities*Mpc**3/Solmass*1e-14)	# Convert from kg h^2/m^3 to M_sun h^2/Mpc^3
-			N_filament_connections.append(Instance.Number_filament_connections()[OK_fils])	
+			N_filament_connections.append(Instance.Number_filament_connections()[OK_fils])
+			print "Number of filaments after filter for " + p_model + ":", len(Fillens)
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
 	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
 	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
 	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
-	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
+	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
 
 	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
