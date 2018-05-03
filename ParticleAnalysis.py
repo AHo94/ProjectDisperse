@@ -855,6 +855,7 @@ class Plot_results():
 		self.Get_legends(models)
 		self.SymmLCDM_ids = self.SymmLCDM_ids.astype(np.int32)
 		self.FofrLCDM_ids = self.FofrLCDM_ids.astype(np.int32)
+		self.Dist_mass_filter = 0
         
 	def Get_legends(self, models):
 		def append_legends(name, mod=0):
@@ -1641,7 +1642,9 @@ class Plot_results():
 		for i in range(NModels):
 			Mass_filter = self.Mass_filters[i]
 			All_speeds[i] = All_speeds[i][Mass_filter]
-			Part_distances[i] = Part_distances[i][Mass_filter]
+			if self.Dist_mass_filter == 0:
+				Part_distances[i] = Part_distances[i][Mass_filter]
+				self.Dist_mass_filter = 1
 		#SymmLCDM = np.array([0,1,2,3,4])
 		#FofrLCDM = np.array([0,5,6,7])
 		#Symm_only = np.array([1,2,3,4])
