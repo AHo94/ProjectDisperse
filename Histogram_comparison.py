@@ -1125,10 +1125,14 @@ class CompareModels():
 
 		ConnectedHistComparison_subplot_reldiff = plt.figure(figsize=(5,4))
 		ax = plt.subplot(1,2,1)
+		N_connections_reldiffs = []
+		N_connections_rediffs_err = []
 		plt.plot(connection_bins, np.zeros(len(connection_bins)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in range(1,5):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
 			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
+			N_connections_reldiffs.append(reldiff_chist)
+			N_connections_rediffs_err.append(reldiff_err_chist)
 			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i], linestyle=self.Linestyles[i-1])
 			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(Symm_legends)
@@ -1141,6 +1145,8 @@ class CompareModels():
 		for i in range(5,8):
 			reldiff_chist = OF.relative_deviation_singular(bin_val_connhist[0], bin_val_connhist[i])
 			reldiff_err_chist = OF.Propagate_error_reldiff(bin_val_connhist[0], bin_val_connhist[i], bin_std_connhist[0], bin_std_connhist[i])
+			N_connections_reldiffs.append(reldiff_chist)
+			N_connections_rediffs_err.append(reldiff_err_chist)
 			plt.plot(connection_bins, reldiff_chist, color=self.Plot_colors_all[i], linestyle=self.Linestyles[i-5])
 			plt.fill_between(connection_bins, reldiff_chist-reldiff_err_chist, reldiff_chist+reldiff_err_chist, alpha=0.4, facecolor=self.Plot_colors_all[i])
 		plt.legend(fofr_legends)
@@ -1150,6 +1156,16 @@ class CompareModels():
 		ConnectedHistComparison_subplot_reldiff.text(0, 0.5, 'Relative difference of number connections', ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()	
 
+		Num_connected_hist_gridspec_symm = pf.Do_gridspec_sameX(connection_bins, bin_val_connhist[:4], [N_connections_reldiffs[:4]], 'Number connections',
+															'$N$ filaments', 'Relative difference', Symm_legends, self.Plot_colors_symm, 
+															Secerror=[N_connections_rediffs_err[:4]], xscale='log', yscale='log', xscale_diff='log',
+															fillbetween=True, linestyles=self.Linestyles, reldiff=True, rowcol=[3,2], legend_anchor=False,
+															ylim_diff=(-0.8,1.1))
+		Num_connected_hist_gridspec_fofr = pf.Do_gridspec_sameX(connection_bins, np.array(bin_val_connhist[[0,5,6,7]]), [N_connections_reldiffs[4:]], 
+															'Number connections', '$N$ filaments', 'Relative difference', Symm_legends, self.Plot_colors_symm, 
+															Secerror=[N_connections_rediffs_err[:4]], xscale='log', yscale='log', xscale_diff='log',
+															fillbetween=True, linestyles=self.Linestyles, reldiff=True, rowcol=[3,2], legend_anchor=False,
+															ylim_diff=(-0.8,1.1))
 		#### Using gridspec plotting
 		NumLen_symm_logx_GRIDSPEC = pf.Do_gridspec_sameX(length_bins_logX, [np.array(Symm_length_values)/1000.0], [RelDiff_num[:4]],
 													xlabel_len, r'$N \times 1000$', 'Relative difference', Symm_legends, self.Plot_colors_symm,
@@ -1219,6 +1235,8 @@ class CompareModels():
 			## Gridspec stuff
 			self.savefigure(NumLen_symm_logx_GRIDSPEC, 'NumberLength_logX_cSymmetron_gridspec')
 			self.savefigure(NumLen_fofr_logx_GRIDSPEC, 'NumberLength_logX_cFofr_gridspec')
+			self.savefigure(Num_connected_hist_gridspec_symm, 'Number_Connected_filaments_gridspec_cSymmetron')
+			self.savefigure(Num_connected_hist_gridspec_fofr, 'Number_Connected_filaments_gridspec_cFofr')
 		else:
 			print 'Done! No figures saved.'
 
