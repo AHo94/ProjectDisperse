@@ -2073,8 +2073,8 @@ class Plot_results():
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
 		if speedtype == 'Density':
 			Density_reldiff_mass = Do_density_reldiff_gridspec(Common_bin_distances_normalized, RelDiff_AvgSpeed_SimilarMass[:4], RelDiff_AvgSpeed_SimilarMass[4:],
-																self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:], Symm_legends[1:], fofr_legends[1:],
-																self.Linestyles, ylim1=(-0.05, 0.4), ylim2=(-0.05, 0.4), Mass_titles)
+																self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:], self.Symm_legends[1:], self.fofr_legends[1:],
+																self.Linestyles, (-0.05, 0.4), (-0.05, 0.4), Mass_titles)
 			self.savefigure(Density_reldiff_mass, 'Reldiff_speed_similar_mass_ALL_gridspec', velocity_results_dir, dpi_mult=2)
 
 		## Average speed of filaments with similar length
@@ -2097,8 +2097,8 @@ class Plot_results():
 		if speedtype == 'Density':
 			Density_reldiff_length = Do_density_reldiff_gridspec(Common_bin_distances_normalized, RelDiff_AvgSpeed_SimilarLength[:4],
 																RelDiff_AvgSpeed_SimilarLength[4:], self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:],
-																Symm_legends[1:], fofr_legends[1:], self.Linestyles, ylim1=(-0.05, 0.4), ylim2=(-0.05, 0.3),
-																 Mass_titles)
+																self.Symm_legends[1:], self.fofr_legends[1:], self.Linestyles, (-0.05, 0.4), (-0.05, 0.3),
+																Mass_titles)
 			self.savefigure(Density_reldiff_length, 'Reldiff_speed_similar_length_ALL_gridspec', velocity_results_dir, dpi_mult=2)
 		## Average speed of filaments with similar thickness
 		RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness = store_reldiff_data(self.Thresholds, 'Thickness', Thickness_ranges, 
@@ -2120,8 +2120,8 @@ class Plot_results():
 		if speedtype == 'Density':
 			Density_reldiff_thickness = Do_density_reldiff_gridspec(Common_bin_distances_normalized, RelDiff_AvgSpeed_SimilarThickness[:4],
 																RelDiff_AvgSpeed_SimilarThickness[4:], self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:],
-																Symm_legends[1:], fofr_legends[1:], self.Linestyles, ylim1=(-0.1, 0.4), ylim2=(-0.1, 0.4),
-																 Mass_titles)
+																self.Symm_legends[1:], self.fofr_legends[1:], self.Linestyles, (-0.1, 0.4), (-0.1, 0.4),
+																Mass_titles)
 			self.savefigure(Density_reldiff_thickness, 'Reldiff_speed_similar_thickness_ALL_gridspec', velocity_results_dir, dpi_mult=2)
 
 		####### Save figures #######
@@ -2271,24 +2271,26 @@ class Plot_results():
 		Number_filaments_larger_mass_reldiff = plt.figure(figsize=(20,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(2,1,1)
+		plt.setp(ax.get_xticklabels(), visible=False)
 		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Symm_only:
-			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
+			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1], label=self.Symm_legends[i])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
 							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
-		plt.legend(self.Symm_legends)
+		#plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		#plt.yscale('log')
 		ax2 = plt.subplot(2,1,2, sharey=ax)
-		plt.setp(ax2.get_yticklabels(), visible=False)
 		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Fofr_only:
-			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyle=self.Linestyles[i-5])
+			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyle=self.Linestyles[i-5], label=self.fofr_legends[i-4])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
 							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[i-4])
-		plt.legend(self.fofr_legends)
+		#plt.legend(self.fofr_legends)
 		plt.xscale('log')
 		#plt.yscale('log')
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
+		ax1.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
 		Number_filaments_larger_mass_reldiff.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
 		Number_filaments_larger_mass_reldiff.text(0.02, 0.7, r'$(N(>M)_i - N(>M)_{\Lambda \mathrm{CDM}})/N(>M)_{\Lambda \mathrm{CDM}}$', 
 									ha='center', rotation='vertical', fontsize=10)
