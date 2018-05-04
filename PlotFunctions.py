@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import gridspec
+from matplotlib.ticker import NullFormatter
 
 s_variable = 0.7
 
@@ -627,6 +628,9 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 				ax1.set_xscale(logXscale_name_diff)
 			if Change_yscales_diff:
 				ax1.set_yscale(logYscale_name_diff)
+			if i > 1:
+				#ax1.yaxis.set_major_formatter(NullFormatter())
+				ax0.yaxis.set_minor_formatter(NullFormatter())
 
 
 	if anchor_legend:

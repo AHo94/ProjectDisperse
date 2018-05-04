@@ -1699,12 +1699,14 @@ class Plot_results():
 			plt.plot(Common_bin_distances_normalized, Mean_speed_allFils[i], color=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
 		ax2 = plt.subplot(1,2,2, sharey=ax1)
+		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(FofrLCDM)):
 			i = FofrLCDM[ij]
 			plt.plot(Common_bin_distances_normalized, Mean_speed_allFils[i], color=self.Plot_colors_fofr[ij])
 		plt.legend(self.fofr_legends)
-		AverageSpeed_AllFils.text(0.5, 0.01, Distance_normalized_label, ha='center', fontsize=10)
-		AverageSpeed_AllFils.text(0.04, 0.55, Average_speed_label, ha='center', rotation='vertical', fontsize=10)
+		AverageSpeed_AllFils.text(0.5, 0, Distance_normalized_label, ha='center', fontsize=10)
+		AverageSpeed_AllFils.text(0, 0.5, Average_speed_label, va='center', ha='center', rotation='vertical', fontsize=10)
+		plt.tight_layout()
 		####################
 		#################### SIMILAR MASSES
 		####################
