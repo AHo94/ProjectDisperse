@@ -3,11 +3,13 @@ import numpy as np
 import cPickle as pickle
 import os
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 plt.switch_backend('agg')
 import argparse
 import time
 import sys
 import subprocess
+
 
 # ZeroMQ
 import zmq
@@ -1637,6 +1639,7 @@ class Plot_results():
 			#do_fb = True
 			ylimits = (-0.1,0.4)
 			Special_y_scale_density = 'log'
+			self.Dist_mass_filter = 0
 		
 		### Further filtering based on masses
 		for i in range(NModels):
@@ -1706,6 +1709,8 @@ class Plot_results():
 		plt.legend(self.fofr_legends)
 		AverageSpeed_AllFils.text(0.5, 0, Distance_normalized_label, ha='center', fontsize=10)
 		AverageSpeed_AllFils.text(0, 0.5, Average_speed_label, va='center', ha='center', rotation='vertical', fontsize=10)
+		plt.xscale('log')
+		plt.yscale('log')
 		plt.tight_layout()
 		####################
 		#################### SIMILAR MASSES
@@ -2023,10 +2028,30 @@ class Plot_results():
 		AverageSpeed_RelativeDifference_ThicknessBins.text(0.5, 0, Thickness_label, ha='center', fontsize=10)
 		AverageSpeed_RelativeDifference_ThicknessBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
-
 		#######
 		####### Gridspec plots
 		#######
+		def Do_density_reldiff_gridspec(xdata, ydata1, ydata2, color1, color2, legend1, legend2, linestyle1, ylim1, ylim2, titlestop):
+			figure = plt.figure(figsize=(8,6))
+			gs = Gridspec.Gridspec(2,3)
+			for i in range(len(titlestop)):
+				ax0 = plt.subplot(gs[0,i]) if i == 0 else plt.subplot(gs[0,i], sharey=ax0)
+				ax0.semilogx(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+				for i in range(len(ydata1)):
+					ax0.semilogx(xdata, ydata1[i], color=color1[i], label=legend1[i], linestyle=linestyle1[i])
+				plt.title(titlestop[i])
+				ax1 = plt.subplot(gs[1,i], sharex=ax0) if i == 0 else plt.subplot(gs[1,i], sharex=ax0, sharey=ax1)
+				plt.setp(ax1.get_yticklabels(), visible=False) if i > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
+				for i in range(len(ydata2)):
+					ax0.semilogx(xdata, ydata2[i], color=color2[i], label=legend2[i], linestyle=linestyle1[i])
+				
+			figure.text(0.5, 0, Distance_normalized_label, ha='center', fontsize=10)
+			figure.text(0, 0.5, Density_label_reldiff, ha='center', va='center', rotation='vertical', fontsize=10)
+			ax0.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
+			ax1.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
+			plt.tight_layout()
+			return figure
+
 		GS_xscale = 'log'
 		GS_yscale = 'log'
 		## Average speed of filaments with similar mass
@@ -2046,6 +2071,12 @@ class Plot_results():
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
 																fillbetween=True, rowcol=[2,3], title=Mass_titles, ylim_diff=ylimits,
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
+		if speedtype == 'Density':
+			Density_reldiff_mass = Do_density_reldiff_gridspec(Common_bin_distances_normalized, RelDiff_AvgSpeed_SimilarMass[:4], RelDiff_AvgSpeed_SimilarMass[4:],
+																self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:], Symm_legends[1:], fofr_legends[1:],
+																self.Linestyles, ylim1=(-0.05, 0.4), ylim2=(-0.05, 0.4), Mass_titles)
+			self.savefigure(Density_reldiff_mass, 'Reldiff_speed_similar_mass_ALL_gridspec', velocity_results_dir, dpi_mult=2)
+
 		## Average speed of filaments with similar length
 		RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength = store_reldiff_data(self.FilLengths, 'Length', Length_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -2063,6 +2094,12 @@ class Plot_results():
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
 																fillbetween=True, rowcol=[2,3], title=Length_titles, ylim_diff=ylimits,
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
+		if speedtype == 'Density':
+			Density_reldiff_length = Do_density_reldiff_gridspec(Common_bin_distances_normalized, RelDiff_AvgSpeed_SimilarLength[:4],
+																RelDiff_AvgSpeed_SimilarLength[4:], self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:],
+																Symm_legends[1:], fofr_legends[1:], self.Linestyles, ylim1=(-0.05, 0.4), ylim2=(-0.05, 0.3),
+																 Mass_titles)
+			self.savefigure(Density_reldiff_length, 'Reldiff_speed_similar_length_ALL_gridspec', velocity_results_dir, dpi_mult=2)
 		## Average speed of filaments with similar thickness
 		RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness = store_reldiff_data(self.Thresholds, 'Thickness', Thickness_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -2080,6 +2117,12 @@ class Plot_results():
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
 																fillbetween=True, rowcol=[2,3], title=Thickness_titles, ylim_diff=ylimits,
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
+		if speedtype == 'Density':
+			Density_reldiff_thickness = Do_density_reldiff_gridspec(Common_bin_distances_normalized, RelDiff_AvgSpeed_SimilarThickness[:4],
+																RelDiff_AvgSpeed_SimilarThickness[4:], self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:],
+																Symm_legends[1:], fofr_legends[1:], self.Linestyles, ylim1=(-0.1, 0.4), ylim2=(-0.1, 0.4),
+																 Mass_titles)
+			self.savefigure(Density_reldiff_thickness, 'Reldiff_speed_similar_thickness_ALL_gridspec', velocity_results_dir, dpi_mult=2)
 
 		####### Save figures #######
 		print '--- SAVING IN: ', velocity_results_dir, ' ---'
@@ -2319,7 +2362,7 @@ if __name__ == '__main__':
 
 	N_filament_connections = []
 
-	def Append_data(Fid, D_thres,  OK_part, OK_dist, modelname):
+	def Append_data(Fid, D_thres, OK_part, OK_dist, modelname):
 		""" Appends common data to a common list """
 		Filament_ids.append(Fid)
 		Dist_thresholds.append(D_thres)
