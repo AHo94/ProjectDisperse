@@ -445,6 +445,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 	Change_yscales_diff = False
 	Plot_LCDMDiff = False
 	linestyles = ['-']*10
+	do_nullformat = True
 	# Iterate through keyword arguments to check if anything special will happen. Changes some default arguments
 	for kw in kwargs:
 		if kw == 'fillbetween':
@@ -522,6 +523,10 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			linestyles = kwargs[kw]
 		elif kw == 'reldiff':	# Plots a line that distinguishes the LCDM model as a zero line
 			Plot_LCDMDiff = kwargs[kw]
+		elif kw == 'nullform':
+			do_nullformat == kwargs[kw]
+			if type(do_nullformat) != bool:
+				raise ValueError("Argument nullform must be a boolean.")
 		else:
 			raise ValueError("Keyword argument " + kw + " not recognized!")
 
@@ -538,13 +543,20 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 		if (not Primerror.any() and do_fill_between) and (not Secerror.any() and do_fill_between):
 			print 'Warning: fillbetween is True but no error data found'
 			do_fill_between = False
-
-	if Primerror and do_fill_between:
-		if len(Primerror) != len(primaryY):
-			raise ValueError("Primary error data not the same size as primary ydata!")
-	if Secerror and do_fill_between:
-		if len(Secerror) != len(secondaryY):
-			raise ValueError("Secondary error data not the same size as secondary ydata!")
+	if type(Primerror) == list and type(Secerror) == list:
+		if Primerror and do_fill_between:
+			if len(Primerror) != len(primaryY):
+				raise ValueError("Primary error data not the same size as primary ydata!")
+		if Secerror and do_fill_between:
+			if len(Secerror) != len(secondaryY):
+				raise ValueError("Secondary error data not the same size as secondary ydata!")
+	else:
+		if Primerror.any() and do_fill_between:
+			if len(Primerror) != len(primaryY):
+				raise ValueError("Primary error data not the same size as primary ydata!")
+		if Secerror.any() and do_fill_between:
+			if len(Secerror) != len(secondaryY):
+				raise ValueError("Secondary error data not the same size as secondary ydata!")
 	if titles:
 		if len(titles) != len(primaryY):
 			raise ValueError("title list not the same length as ydata!")
@@ -565,8 +577,8 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			plt.setp(ax0.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax0.get_yticklabels(), visible=True)
 			for i in range(len(primaryY[j])):
 				plt.plot(xdata, primaryY[j][i], label=legend[i], color=colors[i], linestyle=linestyles[i])
-			if Primerror:
-				plt.fill_between(xdata, primaryY[j][i]-Primerror[j][i], primaryY[j][i]+Primerror[j][i], alpha=fb_alpha, facecolor=colors[i])
+				if Primerror:
+					plt.fill_between(xdata, primaryY[j][i]-Primerror[j][i], primaryY[j][i]+Primerror[j][i], alpha=fb_alpha, facecolor=colors[i])
 			if titles:
 				plt.title(titles[j], fontsize=7)
 			plt.ylabel(ylabel1) if j == 0 else plt.ylabel('')
@@ -596,7 +608,9 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 				ax1.set_xscale(logXscale_name_diff)
 			if Change_yscales_diff:
 				ax1.set_yscale(logYscale_name_diff)
-
+			if j > 1 and do_nullformat:
+				#ax1.yaxis.set_major_formatter(NullFormatter())
+				ax0.yaxis.set_minor_formatter(NullFormatter())
 	else:
 		subfactor = 0
 		for j in range(len(primaryY)):
@@ -628,7 +642,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 				ax1.set_xscale(logXscale_name_diff)
 			if Change_yscales_diff:
 				ax1.set_yscale(logYscale_name_diff)
-			if i > 1:
+			if j > 1 and do_nullformat:
 				#ax1.yaxis.set_major_formatter(NullFormatter())
 				ax0.yaxis.set_minor_formatter(NullFormatter())
 
