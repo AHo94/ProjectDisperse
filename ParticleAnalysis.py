@@ -1075,8 +1075,10 @@ class Plot_results():
 		Thickness_label = '$T$ - [Mpc/h]'
 		Thickness_label_reldiff = '$T_i/T_{\Lambda \mathrm{CDM}} - 1$'#'$(T_i - T_{\Lambda\mathrm{CDM}})/T_{\Lambda \mathrm{CDM}}$'
 		Length_label = '$L$ - [Mpc/h]'
-		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
-		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
+		Mean_Mass_label = r'$\langle M \rangle - [M_\odot/h]$'
+		Mean_Mass_label_reldiff = r'$\langle M_i \rangle / \langle M_{\Lambda\mathrm{CDM}} \rangle - 1$'
+		Mean_Thickness_label = r'$\langle T \rangle - [\mathrm{Mpc}/h]$'
+		Mean_Thickness_label_reldiff = r'$\langle T_i \rangle/\langle T_{\Lambda\mathrm{CDM}} \rangle - 1$'
 		Density_label = r'$\langle \rho \rangle - [10^{12} M_\odot h^2/\mathrm{Mpc}^3]$'
 		#Density_label_reldiff = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/\langle \rho_{\Lambda \mathrm{CDM}} \rangle$'
 		Density_label_reldiff = r'$\langle \rho_i \rangle/\langle \rho_{\Lambda \mathrm{CDM}} - 1$'
@@ -1169,6 +1171,7 @@ class Plot_results():
 			Mean_thickness_std.append(bin_std)
 		RelDiff_mean_thickness = np.array([OF.relative_deviation(Mean_thickness, i) for i in range(1, NModels)])
 		Mean_thickness = np.asarray(Mean_thickness)
+		Mean_thickness_std = np.asarray(Mean_thickness_std)
 		# Mean mass as a function of length
 		Mean_mass = []
 		Mean_mass_std = []
@@ -1178,6 +1181,7 @@ class Plot_results():
 			Mean_mass_std.append(bin_std)
 		RelDiff_mean_mass = np.array([OF.relative_deviation(Mean_mass, i) for i in range(1, NModels)])
 		Mean_mass = np.asarray(Mean_mass)
+		Mean_mass_std = np.asarray(Mean_mass_std)
 		# Mean mass as a function of thickness
 		Mean_mass_vT = []
 		Mean_mass_vT_std = []
@@ -1187,6 +1191,9 @@ class Plot_results():
 			Mean_mass_vT_std.append(bin_std)
 		RelDiff_mean_mass_vT = np.array([OF.relative_deviation(Mean_mass_vT, i) for i in range(1, NModels)])
 		Mean_mass_vT = np.asarray(Mean_mass_vT)
+		Mean_mass_vT_std = np.asarray(Mean_mass_vT_std)
+
+		# Computing propagated errors of the relative differences for the three properties above
 		Prop_err_mean_thickness = np.array([OF.Propagate_error_reldiff(Mean_thickness[0], Mean_thickness[i], Mean_thickness_std[0], Mean_thickness_std[i])
 									for i in range(1,NModels)])
 		Prop_err_mean_mass = np.array([OF.Propagate_error_reldiff(Mean_mass[0], Mean_mass[i], Mean_mass_std[0], Mean_mass_std[i]) for i in range(1,NModels)])
@@ -1384,6 +1391,20 @@ class Plot_results():
 		plt.ylabel('$(T_i - T_{\Lambda CDM})/T_{\Lambda CDM}$')
 		plt.xscale('log')
 
+		### Thickness vs length, using gridspec call
+		ThickVsLen_Symm_gridspec = pf.Do_gridspec_sameX(Common_bin_length, [Mean_thickness[SymmLCDM]], [RelDiff_mean_thickness[Symm_only-1]], 
+														Length_label, Mean_Thickness_label, Mean_Thickness_label_reldiff, self.Symm_legends, 
+														self.Plot_colors_symm, Primerror=[Mean_thickness_std[SymmLCDM]], 
+														Secerror=[Prop_err_mean_thickness[Symm_only-1]], linestyles=self.Linestyles, reldiff=True, 
+														fillbetween=True, rowcol=[2,1], xscale='log', xscale_diff='log', yscale='log', 
+														legend_anchor=False, nullform=False)
+		ThickVsLen_fofr_gridspec = pf.Do_gridspec_sameX(Common_bin_length, [Mean_thickness[FofrLCDM]], [RelDiff_mean_thickness[Fofr_only-1]], 
+														Length_label, Mean_Thickness_label, Mean_Thickness_label_reldiff, self.fofr_legends,
+														self.Plot_colors_fofr, Primerror=[Mean_thickness_std[FofrLCDM]], 
+														Secerror=[Prop_err_mean_thickness[Fofr_only-1]], linestyles=self.Linestyles, reldiff=True, 
+														fillbetween=True, rowcol=[2,1], xscale='log', xscale_diff='log', yscale='log', 
+														legend_anchor=False, nullform=False)
+
 		### Mass as a function of length, LCDM + Symmetron and LCDM + f(R)
 		MassVsLen_Symm = pf.Call_plot_sameX_OLD(Common_bin_length, Mean_mass[SymmLCDM], Length_label, Mean_Mass_label, self.Symm_legends,
 											color=self.Plot_colors_symm, logscale='loglog')
@@ -1410,6 +1431,17 @@ class Plot_results():
 		plt.xlabel(Length_label)
 		plt.ylabel('$(M_i - M_{\Lambda CDM})/M_{\Lambda CDM}$')
 		plt.xscale('log')
+		### Mass vs length, using gridspec call
+		MassVsLen_Symm_gridspec = pf.Do_gridspec_sameX(Common_bin_length, [Mean_mass[SymmLCDM]], [RelDiff_mean_mass[Symm_only-1]], 
+														Length_label, Mean_Mass_label, Mean_Mass_label_reldiff, self.Symm_legends, self.Plot_colors_symm,
+														Primerror=[Mean_mass_std[SymmLCDM]], Secerror=[Prop_err_mean_mass[Symm_only-1]],
+														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
+														xscale_diff='log', yscale='log', legend_anchor=False, nullform=False)
+		MassVsLen_fofr_gridspec = pf.Do_gridspec_sameX(Common_bin_length, [Mean_mass[FofrLCDM]], [RelDiff_mean_mass[Fofr_only-1]], 
+														Length_label, Mean_Mass_label, Mean_Mass_label_reldiff, self.fofr_legends, self.Plot_colors_fofr,
+														Primerror=[Mean_mass_std[FofrLCDM]], Secerror=[Prop_err_mean_mass[Fofr_only-1]],
+														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
+														xscale_diff='log', yscale='log', legend_anchor=False, nullform=False, ylim_diff=(-0.4, 0.5))
 
 		### Mass as a function of thickness, LCDM + Symmetron and LCDM + f(R)
 		MassVsThick = plt.figure(figsize=(8,4))
@@ -1423,9 +1455,20 @@ class Plot_results():
 			j = FofrLCDM[i]
 			plt.loglog(Common_bin_thickness, Mean_mass_vT[j], color=self.Plot_colors_fofr[i])
 		plt.legend(self.fofr_legends)
-		MassVsThick.text(0.5, 0.01, Thickness_label, ha='center', fontsize=10)
-		MassVsThick.text(0.04, 0.6, r'$\bar{M}$', ha='center', rotation='vertical', fontsize=10)
+		MassVsThick.text(0.5, 0, Thickness_label, ha='center', fontsize=10)
+		MassVsThick.text(0, 0.5, Mean_Mass_label, va='center', ha='center', rotation='vertical', fontsize=10)
 		#plt.tight_layout()
+		### Mass vs thickness, using gridspec call
+		MassVsThick_Symm_gridspec = pf.Do_gridspec_sameX(Common_bin_thickness, [Mean_mass_vT[SymmLCDM]], [RelDiff_mean_mass_vT[Symm_only-1]], 
+														Thickness_label, Mean_Mass_label, Mean_Mass_label_reldiff, self.Symm_legends, self.Plot_colors_symm,
+														Primerror=[Mean_mass_vT_std[SymmLCDM]], Secerror=[Prop_err_mean_mass_vT[Symm_only-1]],
+														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
+														xscale_diff='log', yscale='log', legend_anchor=False)
+		MassVsThick_fofr_gridspec = pf.Do_gridspec_sameX(Common_bin_thickness, [Mean_mass_vT[FofrLCDM]], [RelDiff_mean_mass_vT[Fofr_only-1]], 
+														Thickness_label, Mean_Mass_label, Mean_Mass_label_reldiff, self.fofr_legends, self.Plot_colors_fofr,
+														Primerror=[Mean_mass_vT_std[FofrLCDM]], Secerror=[Prop_err_mean_mass_vT[Fofr_only-1]],
+														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
+														xscale_diff='log', yscale='log', legend_anchor=False)
 
 		### Mass vs length, different binning method. Length as x-label
 		MassVsLength_Symm_V2 = plt.figure(figsize=(8,4))
@@ -1440,6 +1483,7 @@ class Plot_results():
 		plt.xlabel('$L$ - [Mpc/h]')
 		plt.ylabel(r'$\langle M \rangle$ - $[M_\odot /h]$')
 		plt.legend(self.Symm_legends)
+
 
 		############
 		############ DO GRIDSPEC PLOTS
@@ -1502,12 +1546,18 @@ class Plot_results():
 		self.savefigure(ThickVsLen_fofr, 'ThicknessVsLength_cFofr')
 		self.savefigure(ThickVsLen_RelErr_Symm, 'ThicknessVsLength_Reldiff_cSymmetron')
 		self.savefigure(ThickVsLen_RelErr_fofr, 'ThicknessVsLength_Reldiff_cFofr')
+		self.savefigure(ThickVsLen_Symm_gridspec, 'ThicknessVsLength_cSymmetron_gridspec')
+		self.savefigure(ThickVsLen_fofr_gridspec, 'ThicknessVsLength_cFofr_gridspec')
 		self.savefigure(MassVsLen_Symm, 'MassVsLength_cSymmetron')
 		self.savefigure(MassVsLen_fofr, 'MassVsLength_cFofr')
 		self.savefigure(MassVsLen_RelErr_Symm, 'MassVsLength_Reldiff_cSymmetron')
 		self.savefigure(MassVsLen_RelErr_fofr, 'MassVsLength_Reldiff_cFofr')
+		self.savefigure(MassVsLen_Symm_gridspec, 'MassVsLength_cSymmetron_gridspec')
+		self.savefigure(MassVsLen_fofr_gridspec, 'MassVsLength_cFofr_gridspec')
 		self.savefigure(MassVsThick, 'MassVsThickness')
-		self.savefigure(MassVsLength_Symm_V2, 'MassVsLength_Symm_V2'),
+		self.savefigure(MassVsThick_Symm_gridspec, 'MassVsThickness_cSymmetron_gridspec')
+		self.savefigure(MassVsThick_fofr_gridspec, 'MassVsThickness_cFofr_gridspec')
+		self.savefigure(MassVsLength_Symm_V2, 'MassVsLength_Symm_V2')
 		### Gridspec plots
 		self.savefigure(NumMass_symm_logx_GRIDSPEC, 'NumberMass_logX_cSymmetron_gridspec', dpi_mult=2)
 		self.savefigure(NumMass_fofr_logx_GRIDSPEC, 'NumberMass_logX_cFofr_gridspec', dpi_mult=2)
@@ -1694,7 +1744,6 @@ class Plot_results():
 
 		######## Plotting data ########
 		#### Average particle speed for all filaments
-		Mass_titles = ['$M \in [10^{12}, 10^{13}]M_\odot/h$', '$M \in [10^{13}, 10^{14}]M_\odot/h$', '$M \in [10^{14}, 10^{15}]M_\odot/h$']
 		AverageSpeed_AllFils = plt.figure(figsize=(12,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax1 = plt.subplot(1,2,1)
@@ -1716,6 +1765,7 @@ class Plot_results():
 		#################### SIMILAR MASSES
 		####################
 		### Average speed of filaments with similar masses, comparing LCDM + Symmetron
+		Mass_titles = ['$M \in [10^{12}, 10^{13}]M_\odot/h$', '$M \in [10^{13}, 10^{14}]M_\odot/h$', '$M \in [10^{14}, 10^{15}]M_\odot/h$']
 		Reldiff_speed_xlimits = (Common_bin_distances_normalized[1], Common_bin_distances_normalized[-1])
 		Mass_ranges = [1e12, 1e13, 1e14, 1e15]   # Units of M_sun/h, maybe use min and max of mass bin?
 		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Mass_ranges, self.Filament_masses, 'Mass', binnum)
@@ -1845,6 +1895,38 @@ class Plot_results():
 		####################
 		#################### OVER DIFFERENT MASS BINS
 		####################
+		def Do_bin_speed_gridspec(xdata, ydata1, ydata2, err1, err2, colors, legend1, linestyle1, ylim1, ylim2, xlabel, ylabel1, ylabel2, rowcol=[2,2]):
+			figure = plt.figure(figsize=(8,6))
+			gs = gridspec.GridSpec(rowcol[0],rowcol[1])
+			for i in range(len(ydata1)):
+				ax0 = plt.subplot(gs[0,i]) if i == 0 else plt.subplot(gs[0,i], sharey=ax0)
+				plt.setp(ax0.get_yticklabels(), visible=False) if i > 0 else plt.setp(ax0.get_yticklabels(), visible=True)
+				plt.setp(ax0.get_xticklabels(), visible=False) 
+				#plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+				plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0.3, facecolor='k')
+				for j in range(len(ydata1[i])):
+					plt.plot(xdata, ydata1[i][j], color=colors[i][j], label=legend1[i][j], linestyle=linestyle1[j])
+					plt.fill_between(xdata, ydata1[i][j]-err1[i][j], ydata1[i][j]+err1[i][j], alpha=0.3, facecolor=colors[i][j])
+				plt.ylabel(ylabel1) if i == 0 else plt.ylabel('')
+				ax1 = plt.subplot(gs[1,i], sharex=ax0) if i == 0 else plt.subplot(gs[1,i], sharex=ax0, sharey=ax1)
+				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+				plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0.3, facecolor='k')
+				plt.setp(ax1.get_yticklabels(), visible=False) if i > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
+				for j in range(len(ydata2[i])):
+					plt.plot(xdata, ydata2[i][j], color=colors[i][j+1], label=legend1[i][j+1], linestyle=linestyle1[j+1])
+					plt.fill_between(xdata, ydata2[i][j]-err2[i][j], ydata2[i][j]+err2[i][j], alpha=0.3, facecolor=colors[i][j+1])
+				plt.ylabel(ylabel2) if i == 0 else plt.ylabel('')
+				h,l=ax0.get_legend_handles_labels()
+				ax0.legend(h,l)
+				plt.xscale('log')
+			ax0.set_ylim(ylim1)
+			ax1.set_ylim(ylim2)
+			figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
+			#figure.text(0, 0.5, ylabel, ha='center', va='center', rotation='vertical', fontsize=10)
+			#ax0.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
+			#ax1.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
+			plt.tight_layout()
+			return figure
 		#### Average speed for different mass bins
 		xlim_mass = (Common_bin_mass[0], Common_bin_mass[-1])
 		Compare_both = [SymmLCDM, FofrLCDM]
@@ -1852,6 +1934,7 @@ class Plot_results():
 		Compare_both_colors = [self.Plot_colors_symm, self.Plot_colors_fofr]
 		Average_speed_massbin = []
 		Average_speed_massbin_std = []
+		Mid_common_bin_mass = np.array([np.linspace(Common_bin_mass[i], Common_bin_mass[i+1],3)[1] for i in range(len(Common_bin_mass)-1)])
 		AverageSpeed_MassBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
@@ -1866,8 +1949,8 @@ class Plot_results():
 					Average_speed_massbin.append(Average_speed)
 					Average_speed_massbin_std.append(Error_speed)
 				#plt.errorbar(Common_bin_mass[1:], Average_speed, Error_speed)
-				plt.plot(Common_bin_mass[1:], Average_speed, color=Compare_both_colors[j][ij], linestyle=self.Linestyles[ij])
-				plt.fill_between(Common_bin_mass[1:], Average_speed - Error_speed, Average_speed + Error_speed, alpha=0.3, facecolor=Compare_both_colors[j][ij])
+				plt.plot(Mid_common_bin_mass, Average_speed, color=Compare_both_colors[j][ij], linestyle=self.Linestyles[ij])
+				plt.fill_between(Mid_common_bin_mass, Average_speed - Error_speed, Average_speed + Error_speed, alpha=0.3, facecolor=Compare_both_colors[j][ij])
 				plt.xscale('log')
 				ij += 1
 			plt.legend(Compare_both_legends[j])
@@ -1875,32 +1958,35 @@ class Plot_results():
 		AverageSpeed_MassBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_MassBins.text(0, 0.5, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
+		Average_speed_massbin = np.array(Average_speed_massbin)
+		Average_speed_massbin_std = np.array(Average_speed_massbin_std)
 		####
 		#### Relative difference of the average speeds, using mass bins
 		####
-		RelDiffs_AvgSpeed_massbins = [OF.relative_deviation(Average_speed_massbin, i) for i in range(1, NModels)]
-		PropErr_AvgSpeed_massbins = [OF.Propagate_error_reldiff(Average_speed_massbin[0], Average_speed_massbin[i],
-															Average_speed_massbin_std[0], Average_speed_massbin_std[i]) for i in range(1, NModels)]
+		#RelDiffs_AvgSpeed_massbins = [OF.relative_deviation(Average_speed_massbin, i) for i in range(1, NModels)]
+		RelDiffs_AvgSpeed_massbins = np.array([OF.relative_deviation_singular(Average_speed_massbin[0], Average_speed_massbin[i]) for i in range(1, NModels)])
+		PropErr_AvgSpeed_massbins = np.array([OF.Propagate_error_reldiff(Average_speed_massbin[0], Average_speed_massbin[i],
+															Average_speed_massbin_std[0], Average_speed_massbin_std[i]) for i in range(1, NModels)])
 		AverageSpeed_RelativeDifference_MassBins = plt.figure(figsize=(12,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+		plt.plot(Mid_common_bin_mass, np.zeros(len(Mid_common_bin_mass)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1]) > 1:
 				set_y_limit = 1
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
-			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
+			plt.plot(Mid_common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
+			plt.fill_between(Mid_common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
 							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+		plt.plot(Mid_common_bin_mass, np.zeros(len(Mid_common_bin_mass)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
-			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
+			plt.plot(Mid_common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
+			plt.fill_between(Mid_common_bin_mass, RelDiffs_AvgSpeed_massbins[i-1]-PropErr_AvgSpeed_massbins[i-1],
 							 RelDiffs_AvgSpeed_massbins[i-1]+PropErr_AvgSpeed_massbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij+1])
 		plt.legend(self.fofr_legends)
 		plt.xscale('log')
@@ -1910,11 +1996,19 @@ class Plot_results():
 		AverageSpeed_RelativeDifference_MassBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_RelativeDifference_MassBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
+		# ==============
+		Average_speed_massbins_both = Do_bin_speed_gridspec(Mid_common_bin_mass, [Average_speed_massbin[SymmLCDM], Average_speed_massbin[FofrLCDM]],
+											[RelDiffs_AvgSpeed_massbins[Symm_only-1], RelDiffs_AvgSpeed_massbins[Fofr_only-1]], 
+											[Average_speed_massbin_std[SymmLCDM], Average_speed_massbin_std[FofrLCDM]],
+											[PropErr_AvgSpeed_massbins[Symm_only-1], PropErr_AvgSpeed_massbins[Fofr_only-1]],
+											[self.Plot_colors_symm, self.Plot_colors_fofr], [self.Symm_legends, self.fofr_legends],
+											self.Linestyles, (400, 1400), (-0.05, 0.25), Mass_label, Average_speed_label, Reldiff_label_avgspeed)
 		####
 		#### Average speed for different length bins, with LCDM and Symmetron models
 		####
 		Average_speed_lengthbins = []
 		Average_speed_lengthbins_std = []
+		Mid_common_bin_length = np.array([np.linspace(Common_bin_length[i], Common_bin_length[i+1],3)[1] for i in range(len(Common_bin_length)-1)])
 		AverageSpeed_LengthBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
@@ -1928,40 +2022,42 @@ class Plot_results():
 				if not ((j == 1) and (k == 0)):
 					Average_speed_lengthbins.append(Average_speed)
 					Average_speed_lengthbins_std.append(Error_speed)
-				plt.plot(Common_bin_length[1:], Average_speed, color=Compare_both_colors[j][ij], linestyle=self.Linestyles[ij])
-				plt.fill_between(Common_bin_length[1:], Average_speed - Error_speed, Average_speed + Error_speed, alpha=0.3, facecolor=Compare_both_colors[j][ij])
+				plt.plot(Mid_common_bin_length, Average_speed, color=Compare_both_colors[j][ij], linestyle=self.Linestyles[ij])
+				plt.fill_between(Mid_common_bin_length, Average_speed - Error_speed, Average_speed + Error_speed, alpha=0.3, facecolor=Compare_both_colors[j][ij])
 				plt.xscale('log')
 				ij += 1
 			plt.legend(Compare_both_legends[j])
 		AverageSpeed_LengthBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_LengthBins.text(0, 0.5, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
+		Average_speed_lengthbins = np.array(Average_speed_lengthbins)
+		Average_speed_lengthbins_std = np.array(Average_speed_lengthbins_std)
 		###
 		### Relative difference of different length bins
 		###
-		RelDiffs_AvgSpeed_lengthbins = [OF.relative_deviation(Average_speed_lengthbins, i) for i in range(1, NModels)]
-		PropErr_AvgSpeed_lengthbins = [OF.Propagate_error_reldiff(Average_speed_lengthbins[0], Average_speed_lengthbins[i],
-															Average_speed_lengthbins_std[0], Average_speed_lengthbins_std[i]) for i in range(1, NModels)]
+		RelDiffs_AvgSpeed_lengthbins = np.array([OF.relative_deviation(Average_speed_lengthbins, i) for i in range(1, NModels)])
+		PropErr_AvgSpeed_lengthbins = np.array([OF.Propagate_error_reldiff(Average_speed_lengthbins[0], Average_speed_lengthbins[i],
+															Average_speed_lengthbins_std[0], Average_speed_lengthbins_std[i]) for i in range(1, NModels)])
 		AverageSpeed_RelativeDifference_LengthBins = plt.figure(figsize=(12,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+		plt.plot(Mid_common_bin_length, np.zeros(len(Mid_common_bin_length)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1]) > 1:
 				set_y_limit = 1
-			plt.plot(Common_bin_length[1:], RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
-			plt.fill_between(Common_bin_length[1:], RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
+			plt.plot(Mid_common_bin_length, RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
+			plt.fill_between(Mid_common_bin_length, RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
 							 RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_length[1:], np.zeros(len(Common_bin_length[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+		plt.plot(Mid_common_bin_length, np.zeros(len(Mid_common_bin_length)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
-			plt.plot(Common_bin_length[1:], RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
-			plt.fill_between(Common_bin_length[1:], RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
+			plt.plot(Mid_common_bin_length, RelDiffs_AvgSpeed_lengthbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
+			plt.fill_between(Mid_common_bin_length, RelDiffs_AvgSpeed_lengthbins[i-1]-PropErr_AvgSpeed_lengthbins[i-1],
 							 RelDiffs_AvgSpeed_lengthbins[i-1]+PropErr_AvgSpeed_lengthbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij+1])
 		plt.legend(self.fofr_legends)
 		plt.xscale('log')
@@ -1969,12 +2065,20 @@ class Plot_results():
 			plt.ylim(-1,1)
 		AverageSpeed_RelativeDifference_LengthBins.text(0.5, 0, Mass_label, ha='center', fontsize=10)
 		AverageSpeed_RelativeDifference_LengthBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
-		plt.tight_layout()		
+		plt.tight_layout()
+		# =====
+		Average_speed_lengthbins_both = Do_bin_speed_gridspec(Mid_common_bin_length, [Average_speed_lengthbins[SymmLCDM], Average_speed_lengthbins[FofrLCDM]],
+											[RelDiffs_AvgSpeed_lengthbins[Symm_only-1], RelDiffs_AvgSpeed_lengthbins[Fofr_only-1]], 
+											[Average_speed_lengthbins_std[SymmLCDM], Average_speed_lengthbins_std[FofrLCDM]],
+											[PropErr_AvgSpeed_lengthbins[Symm_only-1], PropErr_AvgSpeed_lengthbins[Fofr_only-1]],
+											[self.Plot_colors_symm, self.Plot_colors_fofr], [self.Symm_legends, self.fofr_legends],
+											self.Linestyles, (500, 800), (-0.05, 0.3), Length_label, Average_speed_label, Reldiff_label_avgspeed)		
 		###
 		### Average speeds over different thickness bins
 		###
 		Average_speed_thicknessbin = []
 		Average_speed_thicknessbin_std = []
+		Mid_common_bin_thickness = np.array([np.linspace(Common_bin_thickness[i], Common_bin_thickness[i+1],3)[1] for i in range(len(Common_bin_thickness)-1)])
 		AverageSpeed_ThicknessBins = plt.figure(figsize=(8,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
@@ -1988,38 +2092,40 @@ class Plot_results():
 				if not ((j == 1) and (k == 0)):
 					Average_speed_thicknessbin.append(Average_speed)
 					Average_speed_thicknessbin_std.append(Error_speed)
-				plt.plot(Common_bin_thickness[1:], Average_speed, '-', color=Compare_both_colors[j][ij])
-				plt.fill_between(Common_bin_thickness[1:], Average_speed-Error_speed, Average_speed+Error_speed, alpha=0.3, facecolor=Compare_both_colors[j][ij])
+				plt.plot(Mid_common_bin_thickness, Average_speed, '-', color=Compare_both_colors[j][ij], linestyle=self.Linestyles[ij])
+				plt.fill_between(Mid_common_bin_thickness, Average_speed-Error_speed, Average_speed+Error_speed, alpha=0.3, facecolor=Compare_both_colors[j][ij])
 				plt.xscale('log')
 				ij += 1
 			plt.legend(Compare_both_legends[j])
 		AverageSpeed_ThicknessBins.text(0.5, 0, Thickness_label, ha='center', fontsize=10)
 		AverageSpeed_ThicknessBins.text(0, 0.5, Average_speed_label, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
+		Average_speed_thicknessbin = np.array(Average_speed_thicknessbin)
+		Average_speed_thicknessbin_std = np.array(Average_speed_thicknessbin_std)
 		#### Relative difference of the average speeds, using mass bins
-		RelDiffs_AvgSpeed_thicknessbins = [OF.relative_deviation(Average_speed_thicknessbin, i) for i in range(1, NModels)]
-		PropErr_AvgSpeed_thicknessbins = [OF.Propagate_error_reldiff(Average_speed_thicknessbin[0], Average_speed_thicknessbin[i],
-															Average_speed_thicknessbin_std[0], Average_speed_thicknessbin_std[i]) for i in range(1, NModels)]
+		RelDiffs_AvgSpeed_thicknessbins = np.array([OF.relative_deviation(Average_speed_thicknessbin, i) for i in range(1, NModels)])
+		PropErr_AvgSpeed_thicknessbins = np.array([OF.Propagate_error_reldiff(Average_speed_thicknessbin[0], Average_speed_thicknessbin[i],
+															Average_speed_thicknessbin_std[0], Average_speed_thicknessbin_std[i]) for i in range(1, NModels)])
 		AverageSpeed_RelativeDifference_ThicknessBins = plt.figure(figsize=(12,6))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		set_y_limit = 0
 		ax = plt.subplot(1,2,1)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k-', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+		plt.plot(Mid_common_bin_thickness, np.zeros(len(Mid_common_bin_thickness)), 'k-', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Symm_only:
 			if np.nanmax(RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1]) > 1:
 				set_y_limit = 1
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
-			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
+			plt.plot(Mid_common_bin_thickness, RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1])
+			plt.fill_between(Mid_common_bin_thickness, RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
 							 RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
 		plt.xscale('log')
 		ax2 = plt.subplot(1,2,2, sharey=ax)
-		plt.plot(Common_bin_mass[1:], np.zeros(len(Common_bin_mass[1:])), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+		plt.plot(Mid_common_bin_thickness, np.zeros(len(Mid_common_bin_thickness)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		plt.setp(ax2.get_yticklabels(), visible=False)
 		for ij in range(len(Fofr_only)):
 			i = Fofr_only[ij]
-			plt.plot(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
-			plt.fill_between(Common_bin_mass[1:], RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
+			plt.plot(Mid_common_bin_thickness, RelDiffs_AvgSpeed_thicknessbins[i-1], color=self.Plot_colors_fofr[ij+1], linestyle=self.Linestyles[ij])
+			plt.fill_between(Mid_common_bin_thickness, RelDiffs_AvgSpeed_thicknessbins[i-1]-PropErr_AvgSpeed_thicknessbins[i-1],
 							 RelDiffs_AvgSpeed_thicknessbins[i-1]+PropErr_AvgSpeed_thicknessbins[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[ij+1])
 		plt.legend(self.fofr_legends)
 		plt.xscale('log')
@@ -2028,32 +2134,50 @@ class Plot_results():
 		AverageSpeed_RelativeDifference_ThicknessBins.text(0.5, 0, Thickness_label, ha='center', fontsize=10)
 		AverageSpeed_RelativeDifference_ThicknessBins.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
 		plt.tight_layout()
+		# =====
+		Average_speed_thicknessbins_both = Do_bin_speed_gridspec(Mid_common_bin_thickness, 
+											[Average_speed_thicknessbin[SymmLCDM], Average_speed_thicknessbin[FofrLCDM]],
+											[RelDiffs_AvgSpeed_thicknessbins[Symm_only-1], RelDiffs_AvgSpeed_thicknessbins[Fofr_only-1]], 
+											[Average_speed_thicknessbin_std[SymmLCDM], Average_speed_thicknessbin_std[FofrLCDM]],
+											[PropErr_AvgSpeed_thicknessbins[Symm_only-1], PropErr_AvgSpeed_thicknessbins[Fofr_only-1]],
+											[self.Plot_colors_symm, self.Plot_colors_fofr], [self.Symm_legends, self.fofr_legends],
+											self.Linestyles, (400, 1400), (-0.05, 0.3), Thickness_label, Average_speed_label, Reldiff_label_avgspeed)	
 		#######
 		####### Gridspec plots
 		#######
-		def Do_density_reldiff_gridspec(xdata, ydata1, ydata2, color1, color2, legend1, legend2, linestyle1, ylim1, ylim2, titlestop):
+		def Do_density_reldiff_gridspec(xdata, ydata1, ydata2, err1, err2, color1, color2, legend1, legend2, linestyle1, ylim1, ylim2, titlestop, rowcol=[2,3]):
 			figure = plt.figure(figsize=(8,6))
-			gs = Gridspec.Gridspec(2,3)
+			gs = gridspec.GridSpec(rowcol[0],rowcol[1])
 			for i in range(len(titlestop)):
 				ax0 = plt.subplot(gs[0,i]) if i == 0 else plt.subplot(gs[0,i], sharey=ax0)
-				ax0.semilogx(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
-				for i in range(len(ydata1)):
-					ax0.semilogx(xdata, ydata1[i], color=color1[i], label=legend1[i], linestyle=linestyle1[i])
+				plt.setp(ax0.get_yticklabels(), visible=False) if i > 0 else plt.setp(ax0.get_yticklabels(), visible=True)
+				plt.setp(ax0.get_xticklabels(), visible=False) 
+				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+				plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0.3, facecolor='k')
+				for j in range(len(ydata1[i])):
+					plt.plot(xdata, ydata1[i][j], color=color1[j], label=legend1[j], linestyle=linestyle1[j])
+					plt.fill_between(xdata, ydata1[i][j]-err1[i][j], ydata1[i][j]+err1[i][j], alpha=0.3, facecolor=color1[j])
 				plt.title(titlestop[i])
 				ax1 = plt.subplot(gs[1,i], sharex=ax0) if i == 0 else plt.subplot(gs[1,i], sharex=ax0, sharey=ax1)
+				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+				plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0.3, facecolor='k')
 				plt.setp(ax1.get_yticklabels(), visible=False) if i > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
-				for i in range(len(ydata2)):
-					ax0.semilogx(xdata, ydata2[i], color=color2[i], label=legend2[i], linestyle=linestyle1[i])
-				
+				for j in range(len(ydata2[i])):
+					plt.plot(xdata, ydata2[i][j], color=color2[j], label=legend2[j], linestyle=linestyle1[j])
+					plt.fill_between(xdata, ydata2[i][j]-err2[i][j], ydata2[i][j]+err2[i][j], alpha=0.3, facecolor=color2[j])
+			plt.xscale('log')
+			ax0.set_ylim(ylim1)
+			ax1.set_ylim(ylim2)
 			figure.text(0.5, 0, Distance_normalized_label, ha='center', fontsize=10)
-			figure.text(0, 0.5, Density_label_reldiff, ha='center', va='center', rotation='vertical', fontsize=10)
+			figure.text(0, 0.5, Reldiff_label_avgspeed, ha='center', va='center', rotation='vertical', fontsize=10)
 			ax0.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
 			ax1.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
 			plt.tight_layout()
 			return figure
-
 		GS_xscale = 'log'
-		GS_yscale = 'log'
+		GS_yscale = 'linear'
+		if speedtype == 'Orthogonal':
+			GS_yscale = 'linear'
 		## Average speed of filaments with similar mass
 		RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass = store_reldiff_data(self.Filament_masses, 'Mass', Mass_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -2065,15 +2189,15 @@ class Plot_results():
 																fillbetween=True, rowcol=[2,3], title=Mass_titles, ylim_diff=ylimits,
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Mass_ranges, self.Filament_masses, 'Mass', binnum)
-		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
-		AverageSpeed_SimilarMass_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot, Distance_normalized_label,
+		Yplot2, Yerror2 = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
+		AverageSpeed_SimilarMass_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot2, Distance_normalized_label,
 																Average_speed_label, Reldiff_label_avgspeed, self.fofr_legends, self.Plot_colors_fofr,
-																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
+																Primerror=Mean_stds, Secerror=Yerror2, linestyles=self.Linestyles, reldiff=True,
 																fillbetween=True, rowcol=[2,3], title=Mass_titles, ylim_diff=ylimits,
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
 		if speedtype == 'Density':
-			Density_reldiff_mass = Do_density_reldiff_gridspec(Common_bin_distances_normalized, RelDiff_AvgSpeed_SimilarMass[:4], RelDiff_AvgSpeed_SimilarMass[4:],
-																self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:], self.Symm_legends[1:], self.fofr_legends[1:],
+			Density_reldiff_mass = Do_density_reldiff_gridspec(Common_bin_distances_normalized, Yplot, Yplot2, Yerror, Yerror2, self.Plot_colors_symm[1:], 
+																self.Plot_colors_fofr[1:], self.Symm_legends[1:], self.fofr_legends[1:],
 																self.Linestyles, (-0.05, 0.4), (-0.05, 0.4), Mass_titles)
 			self.savefigure(Density_reldiff_mass, 'Reldiff_speed_similar_mass_ALL_gridspec', velocity_results_dir, dpi_mult=2)
 
@@ -2088,17 +2212,16 @@ class Plot_results():
 																fillbetween=True, rowcol=[2,3], title=Length_titles, ylim_diff=ylimits,
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Length_ranges, self.FilLengths, 'Length', binnum)
-		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Length_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
-		AverageSpeed_SimilarLength_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot, Distance_normalized_label, 
+		Yplot2, Yerror2 = get_data_reldiffs(Fofr_only-1, Length_ranges, RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength)
+		AverageSpeed_SimilarLength_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot2, Distance_normalized_label, 
 																Average_speed_label,Reldiff_label_avgspeed, self.fofr_legends, self.Plot_colors_fofr,
-																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
+																Primerror=Mean_stds, Secerror=Yerror2, linestyles=self.Linestyles, reldiff=True,
 																fillbetween=True, rowcol=[2,3], title=Length_titles, ylim_diff=ylimits,
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
 		if speedtype == 'Density':
-			Density_reldiff_length = Do_density_reldiff_gridspec(Common_bin_distances_normalized, RelDiff_AvgSpeed_SimilarLength[:4],
-																RelDiff_AvgSpeed_SimilarLength[4:], self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:],
-																self.Symm_legends[1:], self.fofr_legends[1:], self.Linestyles, (-0.05, 0.4), (-0.05, 0.3),
-																Mass_titles)
+			Density_reldiff_length = Do_density_reldiff_gridspec(Common_bin_distances_normalized, Yplot, Yplot2, Yerror, Yerror2, self.Plot_colors_symm[1:], 
+																self.Plot_colors_fofr[1:], self.Symm_legends[1:], self.fofr_legends[1:], 
+																self.Linestyles, (-0.05, 0.4), (-0.05, 0.3), Length_titles)
 			self.savefigure(Density_reldiff_length, 'Reldiff_speed_similar_length_ALL_gridspec', velocity_results_dir, dpi_mult=2)
 		## Average speed of filaments with similar thickness
 		RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness = store_reldiff_data(self.Thresholds, 'Thickness', Thickness_ranges, 
@@ -2111,17 +2234,16 @@ class Plot_results():
 																fillbetween=True, rowcol=[2,3], title=Thickness_titles, ylim_diff=ylimits,
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Thickness_ranges, self.Thresholds, 'Thickness', binnum)
-		Yplot, Yerror = get_data_reldiffs(Fofr_only-1, Thickness_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
-		AverageSpeed_SimilarThickness_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot, Distance_normalized_label, 
+		Yplot2, Yerror2 = get_data_reldiffs(Fofr_only-1, Thickness_ranges, RelDiff_AvgSpeed_SimilarThickness, PropErr_AvgSpeed_SimilarThickness)
+		AverageSpeed_SimilarThickness_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot2, Distance_normalized_label, 
 																Average_speed_label,Reldiff_label_avgspeed, self.fofr_legends, self.Plot_colors_fofr,
-																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
+																Primerror=Mean_stds, Secerror=Yerror2, linestyles=self.Linestyles, reldiff=True,
 																fillbetween=True, rowcol=[2,3], title=Thickness_titles, ylim_diff=ylimits,
 																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale)
 		if speedtype == 'Density':
-			Density_reldiff_thickness = Do_density_reldiff_gridspec(Common_bin_distances_normalized, RelDiff_AvgSpeed_SimilarThickness[:4],
-																RelDiff_AvgSpeed_SimilarThickness[4:], self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:],
-																self.Symm_legends[1:], self.fofr_legends[1:], self.Linestyles, (-0.1, 0.4), (-0.1, 0.4),
-																Mass_titles)
+			Density_reldiff_thickness = Do_density_reldiff_gridspec(Common_bin_distances_normalized, Yplot, Yplot2, Yerror, Yerror2, 
+																self.Plot_colors_symm[1:], self.Plot_colors_fofr[1:], self.Symm_legends[1:], 
+																self.fofr_legends[1:], self.Linestyles, (-0.1, 0.4), (-0.1, 0.4), Thickness_titles)
 			self.savefigure(Density_reldiff_thickness, 'Reldiff_speed_similar_thickness_ALL_gridspec', velocity_results_dir, dpi_mult=2)
 
 		####### Save figures #######
@@ -2157,10 +2279,13 @@ class Plot_results():
 		### DIFFERENT MASS BINS
 		self.savefigure(AverageSpeed_MassBins, 'Average_speed_massbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_MassBins, 'Reldiff_AverageSpeed_massbins', velocity_results_dir)
+		self.savefigure(Average_speed_massbins_both, 'Average_speed_massbins_gridspec', velocity_results_dir)
 		self.savefigure(AverageSpeed_LengthBins, 'Average_speed_lengthbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_LengthBins, 'Reldiff_AverageSpeed_lengthbins', velocity_results_dir)
+		self.savefigure(Average_speed_thicknessbins_both, 'Average_speed_thicknessbins_gridspec', velocity_results_dir)
 		self.savefigure(AverageSpeed_ThicknessBins, 'Average_speed_thicknessbins', velocity_results_dir)
 		self.savefigure(AverageSpeed_RelativeDifference_ThicknessBins, 'Reldiff_AverageSpeed_thicknessbins', velocity_results_dir)
+		self.savefigure(Average_speed_lengthbins_both, 'Average_speed_lengthbins_gridspec', velocity_results_dir)
 		### Gridspec plots
 		self.savefigure(AverageSpeed_SimilarMass_Symm_GRIDSPEC, 'Average_speed_similar_mass_cSymmetron_gridspec', velocity_results_dir, dpi_mult=2)
 		self.savefigure(AverageSpeed_SimilarMass_fofr_GRIDSPEC, 'Average_speed_similar_mass_cFofr_gridspec', velocity_results_dir, dpi_mult=2)
@@ -2290,7 +2415,7 @@ class Plot_results():
 		plt.xscale('log')
 		#plt.yscale('log')
 		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
-		ax1.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
+		ax2.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
 		Number_filaments_larger_mass_reldiff.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
 		Number_filaments_larger_mass_reldiff.text(0.02, 0.7, r'$(N(>M)_i - N(>M)_{\Lambda \mathrm{CDM}})/N(>M)_{\Lambda \mathrm{CDM}}$', 
 									ha='center', rotation='vertical', fontsize=10)
@@ -2432,7 +2557,7 @@ if __name__ == '__main__':
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
 	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
 	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
-	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
 	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
 
