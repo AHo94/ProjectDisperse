@@ -653,7 +653,7 @@ class Plot_results():
 		self.savefigure(O3CPs_per_halo_symm, 'O3CP_per_halo_cSymmetron')
 		self.savefigure(O3CPs_per_halo_fofr, 'O3CP_per_halo_cFofr')
 
-	def Other_plots(self, OK_PC, Out_PC, OK_PC_alt, Out_PC_alt, EmptyH, NonEmptyH, Nfilaments, Nfilaments_filter, NumUniqueFils, O3_CPS_info):
+	def Other_plots(self, OK_PC, Out_PC, OK_PC_alt, Out_PC_alt, EmptyH, NonEmptyH, Nfilaments, Nfilaments_filter, NumUniqueFils, O3_CPS_info, O2_CPS_info):
 		def autolabel(rects, do_int=False):
 			"""
 			Attach a text label above each bar displaying its height
@@ -728,22 +728,38 @@ class Plot_results():
 		O3_cps_in_halo_plot,ax = plt.subplots()
 		ind = np.arange(NModels)
 		rects1 = ax.bar(ind, O3_CPS_info[0], width, color='b')
-		rects2 = ax.bar(ind+width, O3_CPS_info[0], width, color='r')
+		rects2 = ax.bar(ind+width, O3_CPS_info[1], width, color='r')
 		ax.set_ylabel('$N$ critical points (CPs)')
 		ax.set_xticks(ind + width/2)
 		ax.set_xticklabels((r'$\Lambda$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6'))
 		#ax.set_xticklabels(self.All_legends)
-		ax.legend((rects1[0], rects2[0]), ('Total CPs', 'Order 3 CPs \n in halo'), loc = 'lower left',
+		ax.legend((rects1[0], rects2[0]), ('Total order 3 \n CPs', 'Order 3 CPs \n in halo'), loc = 'lower left',
 				 bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
 		autolabel(rects1, do_int=True)
 		autolabel(rects2, do_int=True)
+
+
+		O2_cps_in_halo_plot,ax = plt.subplots()
+		ind = np.arange(NModels)
+		rects1 = ax.bar(ind, O2_CPS_info[0], width, color='b')
+		rects2 = ax.bar(ind+width, O2_CPS_info[1], width, color='r')
+		ax.set_ylabel('$N$ critical points (CPs)')
+		ax.set_xticks(ind + width/2)
+		ax.set_xticklabels((r'$\Lambda$CDM', 'SymmA', 'SymmB', 'SymmC', 'SymmD', 'fofr4', 'fofr5', 'fofr6'))
+		#ax.set_xticklabels(self.All_legends)
+		ax.legend((rects1[0], rects2[0]), ('Total order 2 \n CPs', 'Order 2 CPs \n in halo'), loc = 'lower left',
+				 bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+		autolabel(rects1, do_int=True)
+		autolabel(rects2, do_int=True)
+
 		self.savefigure(Percentage_CP_in_halo, 'Percentage_CP_in_halo')
 		#self.savefigure(NumberHalos_per_CP, 'NumberHalos_per_CP')
 		self.savefigure(HalosWithCPs, 'HalosWithCps')
 		self.savefigure(NumberFilaments, 'Number_filaments_after_cp_filter')
 		self.savefigure(NumberFilaments_unique, 'Number_filaments_after_cp_filter_UNIQUE')
 		self.savefigure(O3_cps_in_halo_plot, 'Number_o3_cps_in_halos_plot')
-
+		self.savefigure(O2_cps_in_halo_plot, 'Number_o2_cps_in_halos_plot')
+		
 	def Fil_vs_halo_plots(self, Accepted_filmass, Accepted_halomass):
 		def find_nth_smallest_old_way(a, n):
 			return np.max(np.partition(a, n)[:n])
@@ -923,6 +939,8 @@ if __name__ == '__main__':
 	Num_unique_fils = []
 	Number_o3_cps = []
 	Number_o3_cps_in_halo = []
+	Number_o2_cps = []
+	Number_o2_cps_in_halo = []
 	# Filtered data
 	Models_included_filter = []
 	Empty_masses_f = []
@@ -1024,10 +1042,16 @@ if __name__ == '__main__':
 			Unique_fil_ids = np.unique(np.concatenate((Unique_fil_ids, Instance.Critpts_filamentID[ok_ids][i]))).astype(np.int32)
 		Num_unique_fils.append(len(Unique_fil_ids))
 		CP3_in_halo_unique = np.array([])
+		CP2_in_halo_unique = np.array([])
 		for i in range(len(CP_ids_in_halo_O3)):
-			CP3_in_halo_unique = np.concatenate((CP3_in_halo_unique, CP_ids_in_halo_O3[i]))
+			CP3_in_halo_unique = np.unique(np.concatenate((CP3_in_halo_unique, CP_ids_in_halo_O3[i])))
+		for i in range(len(CP_ids_in_halo_O2)):
+			CP2_in_halo_unique = np.unique(np.concatenate((CP2_in_halo_unique, CP_ids_in_halo_O2[i])))
 		Number_o3_cps.append(len(Instance.CP_3DPos_max))
 		Number_o3_cps_in_halo.append(len(CP3_in_halo_unique))
+		Number_o2_cps.append(len(Instance.CP_3DPos_saddle))
+		Number_o2_cps_in_halo.append(len(CP2_in_halo_unique))
+		
 		# For filtered filaments
 		if (p_model != 'symmC' and N_parts == 64) or N_parts == 188:
 			Models_included_filter.append(p_model)
@@ -1130,11 +1154,11 @@ if __name__ == '__main__':
 	Plot_instance.Do_plot(Empty_masses, NonEmpty_masses, All_masses, NumCPs, NumFilaments)
 	Plot_instance.Order2_3_plots(All_masses, Order2_cps, Order3_cps, Order2_mass, Order3_mass)
 	Plot_instance.Other_plots(InHaloPC, OutHaloPC, InHalo_alternative, OutHalo_alternative, Empty_halos, NonEmpty_halos, Numfils_all,
-							 Numfils_filter, Num_unique_fils)
+							 Numfils_filter, Num_unique_fils, [Number_o3_cps, Number_o3_cps_in_halo], [Number_o2_cps, Number_o2_cps_in_halo])
 	print "Plotting for filtered filaments"
-	Plot_instance2 = Plot_results(Models_included, N_sigma, 'ModelComparisons/HaloAnalysis/', filetype=Filetype, filter_fils=True)
-	Plot_instance2.Do_plot(Empty_masses_f, NonEmpty_masses_f, All_masses, NumCPs_f, NumFilaments_f)
-	Plot_instance2.Order2_3_plots(All_masses, Order2_cps_f, Order3_cps_f, Order2_mass_f, Order3_mass_f)
-	Plot_instance2.Other_plots(InHaloPC_f, OutHaloPC_f, 1, 2, Empty_halos_f, NonEmpty_halos_f, Numfils_all_f, Numfils_filter_f, Num_unique_fils_f,
-							 [Number_o3_cps, Number_o3_cps_in_halo])
-	Plot_instance2.Fil_vs_halo_plots(Fil_masses, Fil_halo_masses)
+	#Plot_instance2 = Plot_results(Models_included, N_sigma, 'ModelComparisons/HaloAnalysis/', filetype=Filetype, filter_fils=True)
+	#Plot_instance2.Do_plot(Empty_masses_f, NonEmpty_masses_f, All_masses, NumCPs_f, NumFilaments_f)
+	#Plot_instance2.Order2_3_plots(All_masses, Order2_cps_f, Order3_cps_f, Order2_mass_f, Order3_mass_f)
+	#Plot_instance2.Other_plots(InHaloPC_f, OutHaloPC_f, 1, 2, Empty_halos_f, NonEmpty_halos_f, Numfils_all_f, Numfils_filter_f, Num_unique_fils_f,
+	#						 [Number_o3_cps, Number_o3_cps_in_halo])
+	#Plot_instance2.Fil_vs_halo_plots(Fil_masses, Fil_halo_masses)
