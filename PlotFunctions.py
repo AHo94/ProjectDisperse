@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import gridspec
 from matplotlib.ticker import NullFormatter
 
-s_variable = 0.7
+s_variable = 0.6
 
 def Call_plot(xdata, ydata, xlabel, ylabel, legend, style='-', **kwargs):
 	""" 
@@ -205,9 +205,9 @@ def Call_plot_sameX(xdata, ydata, xlabel, ylabel, legend, colors, **kwargs):
 		xfmt.set_powerlimits((0,0))
 		plt.gca().xaxis.set_major_formatter(xfmt)
 	if anchor_legend:
-		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True, fontsize=9)
 	else:
-		plt.legend(legend)
+		plt.legend(legend, fontsize=9)
 	if Change_xscales:
 		plt.xscale(logXscale_name)
 	if Change_yscales:
@@ -416,7 +416,7 @@ def Do_subplots_sameX(xdata, ydata, xlabel, ylabel, legend, colors, error=[], **
 		plt.ylim(ylims)
 
 	if anchor_legend:
-		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True)
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5), ncol=1, fancybox=True, fontsize=9)
 	figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
 	figure.text(0, 0.5, ylabel, ha='center', va='center', rotation='vertical', fontsize=10)
 	if Change_xscales:
@@ -648,10 +648,11 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 
 
 	if anchor_legend:
-		ax0.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5*(Nrows-1)/Nrows), ncol=1, fancybox=True)
+		#ax0.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5*(Nrows-1)/Nrows), ncol=1, fancybox=True)
+		plt.figlegend(legend, loc = 'lower left', bbox_to_anchor=(0.96,0.5), ncol=1, fancybox=True)
 	else:
 		h,l=ax0.get_legend_handles_labels()
-		ax0.legend(h,l)
+		ax0.legend(h,l, fontsize=9)
 	figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
 	#figure.text(0, 0.5, ylabel, ha='center', va='center', rotation='vertical', fontsize=10)
 	plt.tight_layout()
