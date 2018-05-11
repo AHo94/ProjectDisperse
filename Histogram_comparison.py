@@ -5,6 +5,7 @@ import os
 import OtherFunctions as OF
 import PlotFunctions as pf
 plt.rcParams.update({'font.size': 11})	# Change fontsize of figures. Default = 10
+s_variable = 0.6
 
 class Histogram_Comparison():
 	def __init__(self, savefile, foldername, savefile_directory, filetype, redshift, LCDM=False, SymmA=False, SymmB=False, nsigComparison=False):
@@ -1160,21 +1161,49 @@ class CompareModels():
 															'$N$ filaments', 'Relative difference', Symm_legends, self.Plot_colors_symm, 
 															Secerror=[N_connections_rediffs_err[:4]], xscale='log', yscale='log', xscale_diff='log',
 															fillbetween=True, linestyles=self.Linestyles, reldiff=True, rowcol=[3,1], legend_anchor=False,
-															ylim_diff=(-0.8,1.1))
+															ylim_diff=(-0.8,1.1), figsize=(6,4))
 		Num_connected_hist_gridspec_fofr = pf.Do_gridspec_sameX(connection_bins, [np.array(bin_val_connhist)[[0,5,6,7]]], [N_connections_reldiffs[4:]], 
 															'Number connections', '$N$ filaments', 'Relative difference', fofr_legends, self.Plot_colors_fofr, 
 															Secerror=[N_connections_rediffs_err[:4]], xscale='log', yscale='log', xscale_diff='log',
 															fillbetween=True, linestyles=self.Linestyles, reldiff=True, rowcol=[3,1], legend_anchor=False,
-															ylim_diff=(-0.8,1.1))
+															ylim_diff=(-0.8,1.1), figsize=(6,4))
 		#### Using gridspec plotting
 		NumLen_symm_logx_GRIDSPEC = pf.Do_gridspec_sameX(length_bins_logX, [np.array(Symm_length_values)/1000.0], [RelDiff_num[:4]],
 													xlabel_len, r'$N \times 1000$', 'Relative difference', Symm_legends, self.Plot_colors_symm,
 													Secerror=[Prop_err_numLength[:4]], xscale='log', linestyles=self.Linestyles, reldiff=True,
-													fillbetween=True, xlim=xlim_len, ylim_diff=(-0.75, 0.75), rowcol=[2,1], legend_anchor=False)
+													fillbetween=True, xlim=xlim_len, ylim_diff=(-0.75, 0.75), rowcol=[2,1], legend_anchor=False, figsize=(6,4))
 		NumLen_fofr_logx_GRIDSPEC = pf.Do_gridspec_sameX(length_bins_logX, [np.array(fofr_length_values)/1000.0], [RelDiff_num[4:]],
 													xlabel_len, r'$N \times 1000$', 'Relative difference', fofr_legends, self.Plot_colors_fofr,
 													Secerror=[Prop_err_numLength[4:]], xscale='log', linestyles=self.Linestyles, reldiff=True,
-													fillbetween=True, xlim=xlim_len, ylim_diff=(-0.3, 0.3), rowcol=[2,1], legend_anchor=False)
+													fillbetween=True, xlim=xlim_len, ylim_diff=(-0.3, 0.3), rowcol=[2,1], legend_anchor=False, figsize=(6,4))
+
+
+		Reldiff_cumulative_gridspec_plot = plt.figure()
+		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
+		ax0 = plt.subplot(2,1,1)
+		plt.setp(ax0.get_xticklabels(), visible=False) 
+		plt.plot(lengths, np.zeros(len(lengths)), color='k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+		plt.fill_between(lengths, np.zeros(len(lengths)), np.zeros(len(lengths)), alpha=0.3, facecolor='k')
+		for j in range(len(RelDiff_distribution_symm)):
+			plt.plot(lengths, RelDiff_distribution_symm[j], color=Symm_colors_only[j], label=Symm_legends[j+1], linestyle=self.Linestyles[j+1])
+			plt.fill_between(lengths, RelDiff_distribution_symm[j]-Propagated_errors[:4][j], RelDiff_distribution_symm[j]+Propagated_errors[:4][j],
+							 alpha=0.3, facecolor=Symm_colors_only[j])
+		plt.xscale('log')
+		ax1 = plt.subplot(2,1,2, sharex=ax0)
+		plt.plot(lengths, np.zeros(len(lengths)), color='k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+		plt.fill_between(lengths, np.zeros(len(lengths)), np.zeros(len(lengths)), alpha=0.3, facecolor='k')
+		for j in range(len(RelDiff_distribution_fofr)):
+			plt.plot(lengths, RelDiff_distribution_fofr[j], color=fofr_colors_only[j], label=fofr_legends[j+1], linestyle=self.Linestyles[j+1])
+			plt.fill_between(lengths, RelDiff_distribution_fofr[j]-Propagated_errors[4:][j], RelDiff_distribution_fofr[j]+Propagated_errors[4:][j],
+							 alpha=0.3, facecolor=fofr_colors_only[j])
+		plt.xscale('log')
+		ax0.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.2), ncol=1, fancybox=True, fontsize=9)
+		ax1.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.2), ncol=1, fancybox=True, fontsize=9)
+		ax0.set_ylim(-0.5, 0.4)
+		ax1.set_ylim(-0.4, 0.2)
+		Reldiff_cumulative_gridspec_plot.text(0.5, 0, xlabel_len, ha='center', fontsize=10)
+		Reldiff_cumulative_gridspec_plot.text(0, 0.5, r'$N_i(>L)/N_{\Lambda \mathrm{CDM}}(>L) - 1$', ha='center', va='center',  rotation='vertical', fontsize=10)
+		plt.tight_layout()
 
 		if self.savefile == 1:
 			print '--- SAVING IN: ', self.results_dir, ' ---'
@@ -1237,6 +1266,7 @@ class CompareModels():
 			self.savefigure(NumLen_fofr_logx_GRIDSPEC, 'NumberLength_logX_cFofr_gridspec')
 			self.savefigure(Num_connected_hist_gridspec_symm, 'Number_Connected_filaments_gridspec_cSymmetron')
 			self.savefigure(Num_connected_hist_gridspec_fofr, 'Number_Connected_filaments_gridspec_cFofr')
+			self.savefigure(Reldiff_cumulative_gridspec_plot, 'Cumulative_distribution_reldiff_gridspec')
 		else:
 			print 'Done! No figures saved.'
 
