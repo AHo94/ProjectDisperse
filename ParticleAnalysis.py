@@ -10,7 +10,6 @@ import time
 import sys
 import subprocess
 
-
 # ZeroMQ
 import zmq
 import ZMQArraySending as ZMQAS
@@ -24,6 +23,7 @@ import PlotFunctions as pf
 import Histogram_comparison as HComp
 
 # Global variables as constants
+s_variable = 0.7  # FOR PLOTTING
 Omega_m0 = 0.267
 Mpc = 3.08568025e22 		# m
 G_grav = 6.67258e-11
@@ -1059,7 +1059,6 @@ class Plot_results():
 		if len(Thresholds) != len(Accepted_parts):
 			raise ValueError("Threshold data not same length as Accepted particles!")
 		######## Computing relevant data ########
-		s_variable = 0.7
 		binnum = 20
 		NModels = len(Thresholds)
 		do_fb = True
@@ -1397,13 +1396,13 @@ class Plot_results():
 														self.Plot_colors_symm, Primerror=[Mean_thickness_std[SymmLCDM]], 
 														Secerror=[Prop_err_mean_thickness[Symm_only-1]], linestyles=self.Linestyles, reldiff=True, 
 														fillbetween=True, rowcol=[2,1], xscale='log', xscale_diff='log', yscale='log', 
-														legend_anchor=False, nullform=False)
+														legend_anchor=False, nullform=False, figsize=(6,4))
 		ThickVsLen_fofr_gridspec = pf.Do_gridspec_sameX(Common_bin_length, [Mean_thickness[FofrLCDM]], [RelDiff_mean_thickness[Fofr_only-1]], 
 														Length_label, Mean_Thickness_label, Mean_Thickness_label_reldiff, self.fofr_legends,
 														self.Plot_colors_fofr, Primerror=[Mean_thickness_std[FofrLCDM]], 
 														Secerror=[Prop_err_mean_thickness[Fofr_only-1]], linestyles=self.Linestyles, reldiff=True, 
 														fillbetween=True, rowcol=[2,1], xscale='log', xscale_diff='log', yscale='log', 
-														legend_anchor=False, nullform=False)
+														legend_anchor=False, nullform=False, figsize=(6,4))
 
 		### Mass as a function of length, LCDM + Symmetron and LCDM + f(R)
 		MassVsLen_Symm = pf.Call_plot_sameX_OLD(Common_bin_length, Mean_mass[SymmLCDM], Length_label, Mean_Mass_label, self.Symm_legends,
@@ -1436,12 +1435,13 @@ class Plot_results():
 														Length_label, Mean_Mass_label, Mean_Mass_label_reldiff, self.Symm_legends, self.Plot_colors_symm,
 														Primerror=[Mean_mass_std[SymmLCDM]], Secerror=[Prop_err_mean_mass[Symm_only-1]],
 														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
-														xscale_diff='log', yscale='log', legend_anchor=False, nullform=False)
+														xscale_diff='log', yscale='log', legend_anchor=False, nullform=False, figsize=(6,4))
 		MassVsLen_fofr_gridspec = pf.Do_gridspec_sameX(Common_bin_length, [Mean_mass[FofrLCDM]], [RelDiff_mean_mass[Fofr_only-1]], 
 														Length_label, Mean_Mass_label, Mean_Mass_label_reldiff, self.fofr_legends, self.Plot_colors_fofr,
 														Primerror=[Mean_mass_std[FofrLCDM]], Secerror=[Prop_err_mean_mass[Fofr_only-1]],
 														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
-														xscale_diff='log', yscale='log', legend_anchor=False, nullform=False, ylim_diff=(-0.4, 0.5))
+														xscale_diff='log', yscale='log', legend_anchor=False, nullform=False, ylim_diff=(-0.4, 0.5),
+														figsize=(6,4))
 
 		### Mass as a function of thickness, LCDM + Symmetron and LCDM + f(R)
 		MassVsThick = plt.figure(figsize=(8,4))
@@ -1463,12 +1463,12 @@ class Plot_results():
 														Thickness_label, Mean_Mass_label, Mean_Mass_label_reldiff, self.Symm_legends, self.Plot_colors_symm,
 														Primerror=[Mean_mass_vT_std[SymmLCDM]], Secerror=[Prop_err_mean_mass_vT[Symm_only-1]],
 														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
-														xscale_diff='log', yscale='log', legend_anchor=False)
+														xscale_diff='log', yscale='log', legend_anchor=False, figsize=(6,4))
 		MassVsThick_fofr_gridspec = pf.Do_gridspec_sameX(Common_bin_thickness, [Mean_mass_vT[FofrLCDM]], [RelDiff_mean_mass_vT[Fofr_only-1]], 
 														Thickness_label, Mean_Mass_label, Mean_Mass_label_reldiff, self.fofr_legends, self.Plot_colors_fofr,
 														Primerror=[Mean_mass_vT_std[FofrLCDM]], Secerror=[Prop_err_mean_mass_vT[Fofr_only-1]],
 														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
-														xscale_diff='log', yscale='log', legend_anchor=False)
+														xscale_diff='log', yscale='log', legend_anchor=False, figsize=(6,4))
 
 		### Mass vs length, different binning method. Length as x-label
 		MassVsLength_Symm_V2 = plt.figure(figsize=(8,4))
@@ -1492,21 +1492,23 @@ class Plot_results():
 		NumMass_symm_logx_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_mass, [Number_mass[SymmLCDM]/1000.0], [RelativeDiff_mass[Symm_only-1]], Mass_label, 
 													r'$N \times 1000$', 'Relative difference', self.Symm_legends, self.Plot_colors_symm, 
 													Secerror=[Prop_error_mass[Symm_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True, 
-													fillbetween=True, xlim=xlim_mass, ylim_diff=(-0.25, 0.6), rowcol=[2,1], legend_anchor=False)
+													fillbetween=True, xlim=xlim_mass, ylim_diff=(-0.25, 0.6), rowcol=[2,1], legend_anchor=False, figsize=(6,4))
 
 		NumMass_fofr_logx_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_mass, [Number_mass[FofrLCDM]/1000.0], [RelativeDiff_mass[Fofr_only-1]], Mass_label, 
 													r'$N \times 1000$', 'Relative difference', self.fofr_legends, self.Plot_colors_fofr, 
 													Secerror=[Prop_error_mass[Fofr_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True, 
-													fillbetween=True, xlim=xlim_mass, ylim_diff=(-0.25, 0.6), rowcol=[2,1], legend_anchor=False)
+													fillbetween=True, xlim=xlim_mass, ylim_diff=(-0.25, 0.6), rowcol=[2,1], legend_anchor=False, figsize=(6,4))
 		### Number filament thickness of the models along with relative differences
 		NumThickness_symm_logx_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_thickness, [Number_thickness[SymmLCDM]/1000.0], [RelativeDiff_thickness[Symm_only-1]],
 													Thickness_label, r'$N \times 1000$', 'Relative difference', self.Symm_legends, self.Plot_colors_symm,
 													Secerror=[Prop_error_thickness[Symm_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True,
-													fillbetween=True, xlim=xlim_thickness, ylim_diff=(-0.6, 0.9), rowcol=[2,1], legend_anchor=False)
+													fillbetween=True, xlim=xlim_thickness, ylim_diff=(-0.6, 0.9), rowcol=[2,1], legend_anchor=False,
+													 figsize=(6,4))
 		NumThickness_fofr_logx_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_thickness, [Number_thickness[FofrLCDM]/1000.0], [RelativeDiff_thickness[Fofr_only-1]],
 													Thickness_label, r'$N \times 1000$', 'Relative difference', self.fofr_legends, self.Plot_colors_fofr,
 													Secerror=[Prop_error_thickness[Fofr_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True,
-													fillbetween=True, xlim=xlim_thickness, ylim_diff=(-0.6, 0.9), rowcol=[2,1], legend_anchor=False)
+													fillbetween=True, xlim=xlim_thickness, ylim_diff=(-0.6, 0.9), rowcol=[2,1], legend_anchor=False,
+													figsize=(6,4))
 
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		######## Mass histograms 
@@ -1649,7 +1651,6 @@ class Plot_results():
 		do_fb = True
 		binnum = 20
 		NModels = len(All_speeds)
-		s_variable = 0.7
 		ylimits = (0,0)
 		#Mass_label = 'Filament mass - [$M_\odot / h$]'
 		#Number_label = '$N$ filaments'
@@ -1682,7 +1683,7 @@ class Plot_results():
 			Reldiff_label_avgspeed = r'$\langle v_{\parallel,i}  \rangle/\langle v_{\parallel, \Lambda \mathrm{CDM}} \rangle - 1$'
 			ylimits = (-1,1)
 		elif speedtype == 'Density':
-			Average_speed_label = r'$\langle \rho \rangle - [\mathrm{kg}h^2/\mathrm{m^3}] \times 1e14$'
+			Average_speed_label = r'$\langle \rho \rangle - [M_\odot h^2/\mathrm{Mpc}^3] \times 1e14$'
 			Average_speed_label_nounit = r'$\langle \rho \rangle$'
 			#Reldiff_label_avgspeed = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/(\langle \rho_{\Lambda \mathrm{CDM}} \rangle)$'
 			Reldiff_label_avgspeed = r'$\langle \rho_i \rangle/\langle \rho_{\Lambda \mathrm{CDM}} \rangle - 1$'
@@ -1746,12 +1747,15 @@ class Plot_results():
 		#### Average particle speed for all filaments
 		AverageSpeed_AllFils = plt.figure(figsize=(12,5))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
-		ax1 = plt.subplot(1,2,1)
+		ax1 = plt.subplot(2,1,1)
 		for i in SymmLCDM:
 			plt.plot(Common_bin_distances_normalized, Mean_speed_allFils[i], color=self.Plot_colors_symm[i])
 		plt.legend(self.Symm_legends)
-		ax2 = plt.subplot(1,2,2, sharey=ax1)
-		plt.setp(ax2.get_yticklabels(), visible=False)
+		plt.xscale('log')
+		if speedtype == 'Density':
+			plt.yscale('log')
+		plt.setp(ax1.get_xticklabels(), visible=False)
+		ax2 = plt.subplot(2,1,2, sharex=ax1)
 		for ij in range(len(FofrLCDM)):
 			i = FofrLCDM[ij]
 			plt.plot(Common_bin_distances_normalized, Mean_speed_allFils[i], color=self.Plot_colors_fofr[ij])
@@ -1759,7 +1763,8 @@ class Plot_results():
 		AverageSpeed_AllFils.text(0.5, 0, Distance_normalized_label, ha='center', fontsize=10)
 		AverageSpeed_AllFils.text(0, 0.5, Average_speed_label, va='center', ha='center', rotation='vertical', fontsize=10)
 		plt.xscale('log')
-		plt.yscale('log')
+		if speedtype == 'Density':
+			plt.yscale('log')
 		plt.tight_layout()
 		####################
 		#################### SIMILAR MASSES
@@ -1896,7 +1901,7 @@ class Plot_results():
 		#################### OVER DIFFERENT MASS BINS
 		####################
 		def Do_bin_speed_gridspec(xdata, ydata1, ydata2, err1, err2, colors, legend1, linestyle1, ylim1, ylim2, xlabel, ylabel1, ylabel2, rowcol=[2,2]):
-			figure = plt.figure(figsize=(8,6))
+			figure = plt.figure()
 			gs = gridspec.GridSpec(rowcol[0],rowcol[1])
 			for i in range(len(ydata1)):
 				ax0 = plt.subplot(gs[0,i]) if i == 0 else plt.subplot(gs[0,i], sharey=ax0)
@@ -1917,7 +1922,7 @@ class Plot_results():
 					plt.fill_between(xdata, ydata2[i][j]-err2[i][j], ydata2[i][j]+err2[i][j], alpha=0.3, facecolor=colors[i][j+1])
 				plt.ylabel(ylabel2) if i == 0 else plt.ylabel('')
 				h,l=ax0.get_legend_handles_labels()
-				ax0.legend(h,l)
+				ax0.legend(h,l, fontsize=9)
 				plt.xscale('log')
 			ax0.set_ylim(ylim1)
 			ax1.set_ylim(ylim2)
@@ -2300,7 +2305,6 @@ class Plot_results():
 		#### Computing relevant stuff
 		NModels = len(self.Filament_masses)
 		Number_distribution_points = 100
-		s_variable = 0.7
 		#Mass_label = 'Filament mass - [$M_\odot / h$]'
 		#Number_label = '$N$ filaments'
 		#Thickness_label = 'Filament thickness - [Mpc/h]'
@@ -2370,7 +2374,7 @@ class Plot_results():
 		######## MASS DISTRIBUTION
 		########
 		### Number of filaments larger than a given mass N(>M)
-		Number_filaments_larger_mass = plt.figure(figsize=(20,5))
+		Number_filaments_larger_mass = plt.figure()
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(1,2,1)
 		for i in SymmLCDM:
@@ -2393,7 +2397,7 @@ class Plot_results():
 		Number_filaments_larger_mass.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
 		Number_filaments_larger_mass.text(0.02, 0.55, Mass_N_label, ha='center', rotation='vertical', fontsize=10)
 		### Relative differences of the data above
-		Number_filaments_larger_mass_reldiff = plt.figure(figsize=(20,5))
+		Number_filaments_larger_mass_reldiff = plt.figure()
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
 		ax = plt.subplot(2,1,1)
 		plt.setp(ax.get_xticklabels(), visible=False)
@@ -2402,24 +2406,23 @@ class Plot_results():
 			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_symm[i], linestyle=self.Linestyles[i-1], label=self.Symm_legends[i])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
 							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_symm[i])
-		#plt.legend(self.Symm_legends)
 		plt.xscale('log')
-		#plt.yscale('log')
 		ax2 = plt.subplot(2,1,2, sharey=ax)
 		plt.plot(Mass_values, np.zeros(len(Mass_values)), 'k', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
 		for i in Fofr_only:
 			plt.plot(Mass_values, RelDiff_mass_distribution[i-1], color=self.Plot_colors_fofr[i-4], linestyle=self.Linestyles[i-5], label=self.fofr_legends[i-4])
 			plt.fill_between(Mass_values, RelDiff_mass_distribution[i-1]-PropErr_mass_distribution[i-1],
 							 RelDiff_mass_distribution[i-1]+PropErr_mass_distribution[i-1], alpha=0.4, facecolor=self.Plot_colors_fofr[i-4])
-		#plt.legend(self.fofr_legends)
 		plt.xscale('log')
-		#plt.yscale('log')
-		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
-		ax2.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True)
-		Number_filaments_larger_mass_reldiff.text(0.5, 0.01, Mass_label, ha='center', fontsize=10)
-		Number_filaments_larger_mass_reldiff.text(0.02, 0.7, r'$(N(>M)_i - N(>M)_{\Lambda \mathrm{CDM}})/N(>M)_{\Lambda \mathrm{CDM}}$', 
+		ax.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True, fontsize=9)
+		ax2.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.3), ncol=1, fancybox=True, fontsize=9)
+		Number_filaments_larger_mass_reldiff.text(0.5, 0, Mass_label, ha='center', fontsize=10)
+		Number_filaments_larger_mass_reldiff.text(0, 0.5, r'$N_i(>M)/N_{\Lambda \mathrm{CDM}}(>M) - 1$', 
 									ha='center', rotation='vertical', fontsize=10)
-		plt.ylim((-0.3,0.6))
+		ax.set_ylim(-0.1,0.5)
+		ax2.set_ylim(-0.1,0.5)
+		plt.tight_layout()
+
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		###### Mass distribution plots
 		self.savefigure(Number_filaments_larger_mass, 'Mass_distribution_number')
