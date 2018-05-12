@@ -1362,6 +1362,42 @@ class Plot_results():
 
 
 		######## Compare different properties
+		def Do_bin_speed_gridspec(xdata, ydata1, ydata2, err1, err2, colors, legend1, linestyle1, xlabel, ylabel1, ylabel2, ylim1=(0,0), ylim2=(0,0), rowcol=[2,2]):
+			figure = plt.figure()
+			gs = gridspec.GridSpec(rowcol[0],rowcol[1])
+			for i in range(len(ydata1)):
+				ax0 = plt.subplot(gs[0,i]) if i == 0 else plt.subplot(gs[0,i], sharey=ax0)
+				plt.setp(ax0.get_yticklabels(), visible=False) if i > 0 else plt.setp(ax0.get_yticklabels(), visible=True)
+				plt.setp(ax0.get_xticklabels(), visible=False) 
+				#plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+				plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0.3, facecolor='k')
+				for j in range(len(ydata1[i])):
+					plt.plot(xdata, ydata1[i][j], color=colors[i][j], label=legend1[i][j], linestyle=linestyle1[j])
+					plt.fill_between(xdata, ydata1[i][j]-err1[i][j], ydata1[i][j]+err1[i][j], alpha=0.3, facecolor=colors[i][j])
+				plt.ylabel(ylabel1) if i == 0 else plt.ylabel('')
+				plt.yscale('log')
+				ax1 = plt.subplot(gs[1,i], sharex=ax0) if i == 0 else plt.subplot(gs[1,i], sharex=ax0, sharey=ax1)
+				plt.plot(xdata, np.zeros(len(xdata)), color='k', label='$\Lambda$CDM', linestyle=(0, (3, 1, 1, 1, 1, 1)), alpha=0.6)
+				plt.fill_between(xdata, np.zeros(len(xdata)), np.zeros(len(xdata)), alpha=0.3, facecolor='k')
+				plt.setp(ax1.get_yticklabels(), visible=False) if i > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
+				for j in range(len(ydata2[i])):
+					plt.plot(xdata, ydata2[i][j], color=colors[i][j+1], label=legend1[i][j+1], linestyle=linestyle1[j+1])
+					plt.fill_between(xdata, ydata2[i][j]-err2[i][j], ydata2[i][j]+err2[i][j], alpha=0.3, facecolor=colors[i][j+1])
+				plt.ylabel(ylabel2) if i == 0 else plt.ylabel('')
+				h,l=ax0.get_legend_handles_labels()
+				ax0.legend(h,l, fontsize=9)
+				plt.xscale('log')
+				if i == 0:
+					ax0.yaxis.set_tick_params(which='minor', label1On=True, label2On=False)
+				else:
+					ax0.yaxis.set_tick_params(which='minor', label1On=False, label2On=False)
+			if not (ylim1[0] == 0 and ylim1[1] == 0):
+				ax0.set_ylim(ylim1)
+			if not (ylim2[0] == 0 and ylim2[1] == 0):
+				ax1.set_ylim(ylim2)
+			figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
+			plt.tight_layout()
+			return figure
 		### Thickness as a function of length, LCDM + Symmetron and LCDM + f(R)
 		ThickVsLen_Symm = pf.Call_plot_sameX_OLD(Common_bin_length, Mean_thickness[SymmLCDM], Length_label, Mean_Thickness_label, self.Symm_legends,
 											color=self.Plot_colors_symm, logscale='loglog', linestyles=self.Linestyles)
@@ -1403,6 +1439,12 @@ class Plot_results():
 														Secerror=[Prop_err_mean_thickness[Fofr_only-1]], linestyles=self.Linestyles, reldiff=True, 
 														fillbetween=True, rowcol=[2,1], xscale='log', xscale_diff='log', yscale='log', 
 														legend_anchor=False, nullform=False, figsize=(6,4))
+		ThickVsLen_both_gridspec = Do_bin_speed_gridspec(Common_bin_length, [Mean_thickness[SymmLCDM], Mean_thickness[FofrLCDM]],
+														[RelDiff_mean_thickness[Symm_only-1], RelDiff_mean_thickness[Fofr_only-1]],
+														[Mean_thickness_std[SymmLCDM], Mean_thickness_std[FofrLCDM]],
+														[Prop_err_mean_thickness[Symm_only-1], Prop_err_mean_thickness[Fofr_only-1]],
+														[self.Plot_colors_symm, self.Plot_colors_fofr], [self.Symm_legends, self.fofr_legends],
+														 self.Linestyles, Length_label, Mean_Thickness_label, Mean_Thickness_label_reldiff, ylim2=(-0.25, 0.05))
 
 		### Mass as a function of length, LCDM + Symmetron and LCDM + f(R)
 		MassVsLen_Symm = pf.Call_plot_sameX_OLD(Common_bin_length, Mean_mass[SymmLCDM], Length_label, Mean_Mass_label, self.Symm_legends,
@@ -1442,7 +1484,12 @@ class Plot_results():
 														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
 														xscale_diff='log', yscale='log', legend_anchor=False, nullform=False, ylim_diff=(-0.4, 0.5),
 														figsize=(6,4))
-
+		MassVsLen_both_gridspec = Do_bin_speed_gridspec(Common_bin_length, [Mean_mass[SymmLCDM], Mean_mass[FofrLCDM]],
+														[RelDiff_mean_mass[Symm_only-1], RelDiff_mean_mass[Fofr_only-1]],
+														[Mean_mass_std[SymmLCDM], Mean_mass_std[FofrLCDM]],
+														[Prop_err_mean_mass[Symm_only-1], Prop_err_mean_mass[Fofr_only-1]],
+														[self.Plot_colors_symm, self.Plot_colors_fofr], [self.Symm_legends, self.fofr_legends],
+														 self.Linestyles, Length_label, Mean_Mass_label, Mean_Mass_label_reldiff, ylim2=(-0.5,0.5))
 		### Mass as a function of thickness, LCDM + Symmetron and LCDM + f(R)
 		MassVsThick = plt.figure(figsize=(8,4))
 		plt.gcf().set_size_inches((8*s_variable, 6*s_variable))
@@ -1469,6 +1516,12 @@ class Plot_results():
 														Primerror=[Mean_mass_vT_std[FofrLCDM]], Secerror=[Prop_err_mean_mass_vT[Fofr_only-1]],
 														linestyles=self.Linestyles, reldiff=True, fillbetween=True, rowcol=[2,1], xscale='log',
 														xscale_diff='log', yscale='log', legend_anchor=False, figsize=(6,4))
+		MassVsThick_both_gridspec = Do_bin_speed_gridspec(Common_bin_thickness, [Mean_mass_vT[SymmLCDM], Mean_mass_vT[FofrLCDM]],
+														[RelDiff_mean_mass_vT[Symm_only-1], RelDiff_mean_mass_vT[Fofr_only-1]],
+														[Mean_mass_vT_std[SymmLCDM], Mean_mass_vT_std[FofrLCDM]],
+														[Prop_err_mean_mass_vT[Symm_only-1], Prop_err_mean_mass_vT[Fofr_only-1]],
+														[self.Plot_colors_symm, self.Plot_colors_fofr], [self.Symm_legends, self.fofr_legends],
+														 self.Linestyles, Thickness_label, Mean_Mass_label, Mean_Mass_label_reldiff, ylim2=(-0.1,0.25))
 
 		### Mass vs length, different binning method. Length as x-label
 		MassVsLength_Symm_V2 = plt.figure(figsize=(8,4))
@@ -1550,15 +1603,18 @@ class Plot_results():
 		self.savefigure(ThickVsLen_RelErr_fofr, 'ThicknessVsLength_Reldiff_cFofr')
 		self.savefigure(ThickVsLen_Symm_gridspec, 'ThicknessVsLength_cSymmetron_gridspec')
 		self.savefigure(ThickVsLen_fofr_gridspec, 'ThicknessVsLength_cFofr_gridspec')
+		self.savefigure(ThickVsLen_both_gridspec, 'ThicknessVsLength_both_gridspec')
 		self.savefigure(MassVsLen_Symm, 'MassVsLength_cSymmetron')
 		self.savefigure(MassVsLen_fofr, 'MassVsLength_cFofr')
 		self.savefigure(MassVsLen_RelErr_Symm, 'MassVsLength_Reldiff_cSymmetron')
 		self.savefigure(MassVsLen_RelErr_fofr, 'MassVsLength_Reldiff_cFofr')
 		self.savefigure(MassVsLen_Symm_gridspec, 'MassVsLength_cSymmetron_gridspec')
 		self.savefigure(MassVsLen_fofr_gridspec, 'MassVsLength_cFofr_gridspec')
+		self.savefigure(MassVsLen_both_gridspec, 'MassVsLength_both_gridspec')
 		self.savefigure(MassVsThick, 'MassVsThickness')
 		self.savefigure(MassVsThick_Symm_gridspec, 'MassVsThickness_cSymmetron_gridspec')
 		self.savefigure(MassVsThick_fofr_gridspec, 'MassVsThickness_cFofr_gridspec')
+		self.savefigure(MassVsThick_both_gridspec, 'MassVsThickness_both_gridspec')
 		self.savefigure(MassVsLength_Symm_V2, 'MassVsLength_Symm_V2')
 		### Gridspec plots
 		self.savefigure(NumMass_symm_logx_GRIDSPEC, 'NumberMass_logX_cSymmetron_gridspec', dpi_mult=2)
@@ -2558,13 +2614,13 @@ if __name__ == '__main__':
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
-	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
-	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
-	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
-	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
-	Plot_instance.Other_profiles()
+	#Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
+	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
+	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
+	#Plot_instance.Other_profiles()
 
-	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-	CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
-								 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
-	CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
+	#savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
+	#CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
+	#							 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
+	#CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
