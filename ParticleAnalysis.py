@@ -1071,13 +1071,13 @@ class Plot_results():
 		Mass_label = '$M$ - [$M_\odot / h$]'
 		Number_label = '$N$'
 		Number_label_reldiff = '$N_i/N_{\Lambda \mathrm{CDM}} - 1$'#'$(N_i - N_{\Lambda \mathrm{CDM}})/N_{\Lambda \mathrm{CDM}}$'
-		Thickness_label = '$T$ - [Mpc/h]'
-		Thickness_label_reldiff = '$T_i/T_{\Lambda \mathrm{CDM}} - 1$'#'$(T_i - T_{\Lambda\mathrm{CDM}})/T_{\Lambda \mathrm{CDM}}$'
+		Thickness_label = '$R_T$ - [Mpc/h]'
+		Thickness_label_reldiff = '$R_{T,i}/R_{T,{\Lambda \mathrm{CDM}}} - 1$'#'$(T_i - T_{\Lambda\mathrm{CDM}})/T_{\Lambda \mathrm{CDM}}$'
 		Length_label = '$L$ - [Mpc/h]'
 		Mean_Mass_label = r'$\langle M \rangle - [M_\odot/h]$'
 		Mean_Mass_label_reldiff = r'$\langle M_i \rangle / \langle M_{\Lambda\mathrm{CDM}} \rangle - 1$'
-		Mean_Thickness_label = r'$\langle T \rangle - [\mathrm{Mpc}/h]$'
-		Mean_Thickness_label_reldiff = r'$\langle T_i \rangle/\langle T_{\Lambda\mathrm{CDM}} \rangle - 1$'
+		Mean_Thickness_label = r'$\langle R_T \rangle - [\mathrm{Mpc}/h]$'
+		Mean_Thickness_label_reldiff = r'$\langle R_{T,i} \rangle/\langle R_{T,{\Lambda\mathrm{CDM}}} \rangle - 1$'
 		Density_label = r'$\langle \rho \rangle - [10^{12} M_\odot h^2/\mathrm{Mpc}^3]$'
 		#Density_label_reldiff = r'$(\langle \rho_i \rangle - \langle \rho_{\Lambda \mathrm{CDM}} \rangle)/\langle \rho_{\Lambda \mathrm{CDM}} \rangle$'
 		Density_label_reldiff = r'$\langle \rho_i \rangle/\langle \rho_{\Lambda \mathrm{CDM}} - 1$'
@@ -1412,7 +1412,7 @@ class Plot_results():
 							 alpha=0.4, facecolor=self.Plot_colors_symm[i+1])
 		plt.legend(self.Symm_legends[1:])
 		plt.xlabel(Length_label)
-		plt.ylabel('$(T_i - T_{\Lambda CDM})/T_{\Lambda CDM}$')
+		plt.ylabel('$(R_{T,i} - R_{T,{\Lambda CDM}})/R_{T,{\Lambda CDM}}$')
 		plt.xscale('log')
 
 		ThickVsLen_RelErr_fofr = plt.figure()
@@ -1423,7 +1423,7 @@ class Plot_results():
 							 alpha=0.4, facecolor=self.Plot_colors_fofr[i-3])
 		plt.legend(self.fofr_legends[1:])
 		plt.xlabel(Length_label)
-		plt.ylabel('$(T_i - T_{\Lambda CDM})/T_{\Lambda CDM}$')
+		plt.ylabel('$(R_{T,i} - R_{T,{\Lambda CDM}})/R_{T,{\Lambda CDM}}$')
 		plt.xscale('log')
 
 		### Thickness vs length, using gridspec call
@@ -1716,11 +1716,11 @@ class Plot_results():
 		#Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
 		Mass_label = '$M$ - [$M_\odot / h$]'
 		Number_label = '$N$'
-		Thickness_label = '$T$ - [Mpc/h]'
+		Thickness_label = '$R_T$ - [Mpc/h]'
 		Length_label = '$L$ - [Mpc/h]'
 		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
-		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
-		Distance_normalized_label = '$r/T$'
+		Mean_Thickness_label = r'$\bar{R_T} - [\mathrm{Mpc}/h]$'
+		Distance_normalized_label = '$r/R_T$'
 		Special_y_scale_density = 'no'
 		if speedtype == 'Speed':
 			Average_speed_label =  r'$\langle v \rangle - [\mathrm{km}/\mathrm{s}]$'
@@ -1941,7 +1941,7 @@ class Plot_results():
 		#################### SIMILAR THICKNESS
 		####################
 		### Average speed of filament of similar length. Symmetron + LCDM comparison
-		Thickness_titles = ['$T \in [0.1,1]$ Mpc/h', '$T \in [1,5]$ Mpc/h', '$T \in [5,10]$ Mpc/h']
+		Thickness_titles = ['$R_T \in [0.1,1]$ Mpc/h', '$R_T \in [1,5]$ Mpc/h', '$R_T \in [5,10]$ Mpc/h']
 		Thickness_ranges = [0.1, 1, 5, 10]   # Units of Mpc/h, maybe use min and max of mass bin?
 		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Thickness_ranges, self.Thresholds, 'Thickness', binnum)
 		AverageSpeed_SimilarThickness_Symm = pf.Do_subplots_sameX(Common_bin_distances_normalized, Mean_profiles, Distance_normalized_label, Average_speed_label,
@@ -2406,14 +2406,14 @@ class Plot_results():
 		
 		Mass_label = '$M$ - [$M_\odot / h$]'
 		Number_label = '$N$'
-		Thickness_label = '$T$ - [Mpc/h]'
+		Thickness_label = '$R_T$ - [Mpc/h]'
 		Length_label = '$L$ - [Mpc/h]'
 		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
-		Mean_Thickness_label = r'$\bar{T} - [\mathrm{Mpc}/h]$'
-		Distance_normalized_label = '$r/T$'
+		Mean_Thickness_label = r'$\bar{R_T} - [\mathrm{Mpc}/h]$'
+		Distance_normalized_label = '$r/R_T$'
 
 		Mass_N_label = '$N(>M)$'
-		Thickness_N_label = '$N(>T)$'
+		Thickness_N_label = '$N(>R_T)$'
 		#SymmLCDM = np.array([0,1,2,3,4])
 		#FofrLCDM = np.array([0,5,6,7])
 		#Symm_only = np.array([1,2,3,4])
@@ -2572,10 +2572,10 @@ class Plot_results():
 		h2,l2=ax2.get_legend_handles_labels()
 		ax2.legend(h2,l2, fontsize=9)
 		Number_filaments_larger_thickness_reldiff.text(0.5, 0, Thickness_label, ha='center', fontsize=10)
-		Number_filaments_larger_thickness_reldiff.text(0, 0.5, r'$N_i(>M)/N_{\Lambda \mathrm{CDM}}(>M) - 1$', va='center', 
+		Number_filaments_larger_thickness_reldiff.text(0, 0.5, r'$N_i(>R_T)/N_{\Lambda \mathrm{CDM}}(>R_T) - 1$', va='center', 
 												ha='center', rotation='vertical', fontsize=10)
-		#ax.set_ylim(-0.1,0.5)
-		#ax2.set_ylim(-0.1,0.5)
+		ax.set_ylim(-0.1,0.5)
+		ax2.set_ylim(-0.1,0.8)
 		plt.tight_layout()
 
 
@@ -2717,13 +2717,13 @@ if __name__ == '__main__':
 
 	Plot_instance = Plot_results(Models_included, N_sigma, 'ModelComparisons/ParticleAnalysis/', filetype=Filetype)
 	Plot_instance.Particle_profiles(Dist_thresholds, Part_accepted, Filament_lengths)
-	Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
-	Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
-	Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
-	Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
+	#Plot_instance.Velocity_profiles(All_speed_list, Dist_accepted, speedtype='Speed')
+	#Plot_instance.Velocity_profiles(Orth_speed_list, Dist_accepted, speedtype='Orthogonal')
+	#Plot_instance.Velocity_profiles(Par_speed_list, Dist_accepted, speedtype='Parallel')
+	#Plot_instance.Velocity_profiles(Density_prof, Dist_accepted_sorted, speedtype='Density')
 	Plot_instance.Other_profiles()
 
-	savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
-	CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
-								 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
-	CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
+	#savefile_directory = '/mn/stornext/u3/aleh/Masters_project/disperse_results'
+	#CompI = HComp.CompareModels(savefile=1, foldername='ModelComparisons/FilteredGlobalProperties/',
+	#							 savefile_directory=savefile_directory, filetype='.pdf', nPart=N_parts, Nsigma=N_sigma)
+	#CompI.Compare_disperse_data_clean(N_filament_connections, Filament_lengths, [])
