@@ -652,7 +652,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 		plt.figlegend(legend, loc = 'lower left', bbox_to_anchor=(0.96,0.5), ncol=1, fancybox=True)
 	else:
 		h,l=ax0.get_legend_handles_labels()
-		ax0.legend(h,l, fontsize=9)
+		ax0.legend(h,l, fontsize=7)
 	figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
 	#figure.text(0, 0.5, ylabel, ha='center', va='center', rotation='vertical', fontsize=10)
 	plt.tight_layout()
