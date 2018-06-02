@@ -446,6 +446,10 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 	Plot_LCDMDiff = False
 	linestyles = ['-']*10
 	do_nullformat = True
+	do_tight_layout = False
+	ylabel2_font = 7
+	Specific_legend_ax = False
+	legend_axis_number = -1
 	# Iterate through keyword arguments to check if anything special will happen. Changes some default arguments
 	for kw in kwargs:
 		if kw == 'fillbetween':
@@ -527,6 +531,13 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			do_nullformat == kwargs[kw]
 			if type(do_nullformat) != bool:
 				raise ValueError("Argument nullform must be a boolean.")
+		elif kw == 'tightlayout':
+			do_tight_layout = kwargs[kw]
+		elif kw == 'ylabel2_font':
+			ylabel2_font = kwargs[kw]
+		elif kw == 'LegendAxis':
+			legend_axis_number = kwargs[kw]
+			Specific_legend_ax = True
 		else:
 			raise ValueError("Keyword argument " + kw + " not recognized!")
 
@@ -563,6 +574,8 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 	if len(legend) != len(primaryY[0]):
 		raise ValueError("Number of legends not the same as number of ydata!")
 
+	All_ax0 = []
+	All_ax1 = []
 	if New_figure_size:
 		figure = plt.figure(figsize=figure_size)
 	else:
@@ -581,7 +594,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 					plt.fill_between(xdata, primaryY[j][i]-Primerror[j][i], primaryY[j][i]+Primerror[j][i], alpha=fb_alpha, facecolor=colors[i])
 			if titles:
 				plt.title(titles[j], fontsize=7)
-			plt.ylabel(ylabel1) if j == 0 else plt.ylabel('')
+			plt.ylabel(ylabel1, fontsize=8) if j == 0 else plt.ylabel('')
 			ax1 = plt.subplot(gs[Nrows-1, j], sharex=ax0) if j == 0 else plt.subplot(gs[Nrows-1, j], sharex=ax0, sharey=ax1)
 			plt.setp(ax1.get_yticklabels(), visible=False) if j > 0 else plt.setp(ax1.get_xticklabels(), visible=True)
 			if Plot_LCDMDiff:
@@ -591,7 +604,7 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 				plt.plot(xdata, secondaryY[j][i], label=legend[i+subfactor], color=colors[i+subfactor], linestyle=linestyles[i+subfactor])
 				plt.fill_between(xdata, secondaryY[j][i]-Secerror[j][i], secondaryY[j][i]+Secerror[j][i], alpha=fb_alpha, facecolor=colors[i+subfactor])
 			#plt.xlabel(xlabel)
-			plt.ylabel(ylabel2) if j == 0 else plt.ylabel('')
+			plt.ylabel(ylabel2, fontsize=ylabel2_font) if j == 0 else plt.ylabel('')
 			if set_xlimits:
 				ax0.set_xlim(xlims)
 			if set_ylimits:
@@ -611,6 +624,8 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 			if j > 1 and do_nullformat:
 				#ax1.yaxis.set_major_formatter(NullFormatter())
 				ax0.yaxis.set_minor_formatter(NullFormatter())
+			All_ax0.append(ax0)
+			All_ax1.append(ax1)
 	else:
 		subfactor = 0
 		for j in range(len(primaryY)):
@@ -651,9 +666,17 @@ def Do_gridspec_sameX(xdata, primaryY, secondaryY, xlabel, ylabel1, ylabel2, leg
 		#ax0.legend(loc = 'lower left', bbox_to_anchor=(1.0,0.5*(Nrows-1)/Nrows), ncol=1, fancybox=True)
 		plt.figlegend(legend, loc = 'lower left', bbox_to_anchor=(0.96,0.5), ncol=1, fancybox=True)
 	else:
-		h,l=ax0.get_legend_handles_labels()
-		ax0.legend(h,l, fontsize=7)
+		if Specific_legend_ax:
+			superax = All_ax0[legend_axis_number]
+			h,l=superax.get_legend_handles_labels()
+			superax.legend(h,l, fontsize=7)
+		else:
+			h,l=ax0.get_legend_handles_labels()
+			ax0.legend(h,l, fontsize=7)
 	figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
 	#figure.text(0, 0.5, ylabel, ha='center', va='center', rotation='vertical', fontsize=10)
-	plt.tight_layout()
+	if do_tight_layout:
+		plt.tight_layout()
+	else:
+		plt.subplots_adjust(wspace=0.01, hspace=0.04)
 	return figure

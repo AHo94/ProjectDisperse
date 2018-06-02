@@ -1071,9 +1071,9 @@ class Plot_results():
 		Mass_label = '$M$ - [$M_\odot / h$]'
 		Number_label = '$N$'
 		Number_label_reldiff = '$N_i/N_{\Lambda \mathrm{CDM}} - 1$'#'$(N_i - N_{\Lambda \mathrm{CDM}})/N_{\Lambda \mathrm{CDM}}$'
-		Thickness_label = '$R_T$ - [Mpc/h]'
+		Thickness_label = '$R_T$ - [Mpc/$h$]'
 		Thickness_label_reldiff = '$R_{T,i}/R_{T,{\Lambda \mathrm{CDM}}} - 1$'#'$(T_i - T_{\Lambda\mathrm{CDM}})/T_{\Lambda \mathrm{CDM}}$'
-		Length_label = '$L$ - [Mpc/h]'
+		Length_label = '$L$ - [Mpc/$h$]'
 		Mean_Mass_label = r'$\langle M \rangle - [M_\odot/h]$'
 		Mean_Mass_label_reldiff = r'$\langle M_i \rangle / \langle M_{\Lambda\mathrm{CDM}} \rangle - 1$'
 		Mean_Thickness_label = r'$\langle R_T \rangle - [\mathrm{Mpc}/h]$'
@@ -1396,7 +1396,8 @@ class Plot_results():
 			if not (ylim2[0] == 0 and ylim2[1] == 0):
 				ax1.set_ylim(ylim2)
 			figure.text(0.5, 0, xlabel, ha='center', fontsize=10)
-			plt.tight_layout()
+			#plt.tight_layout()
+			plt.subplots_adjust(wspace=0.01, hspace=0.01)
 			return figure
 		### Thickness as a function of length, LCDM + Symmetron and LCDM + f(R)
 		ThickVsLen_Symm = pf.Call_plot_sameX_OLD(Common_bin_length, Mean_thickness[SymmLCDM], Length_label, Mean_Thickness_label, self.Symm_legends,
@@ -1545,23 +1546,25 @@ class Plot_results():
 		NumMass_symm_logx_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_mass, [Number_mass[SymmLCDM]/1000.0], [RelativeDiff_mass[Symm_only-1]], Mass_label, 
 													r'$N \times 1000$', 'Relative difference', self.Symm_legends, self.Plot_colors_symm, 
 													Secerror=[Prop_error_mass[Symm_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True, 
-													fillbetween=True, xlim=xlim_mass, ylim_diff=(-0.25, 0.6), rowcol=[2,1], legend_anchor=False, figsize=(6,4))
+													fillbetween=True, xlim=xlim_mass, ylim_diff=(-0.25, 0.6), rowcol=[2,1], legend_anchor=False, figsize=(6,4),
+													ylabel2_font=8)
 
 		NumMass_fofr_logx_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_mass, [Number_mass[FofrLCDM]/1000.0], [RelativeDiff_mass[Fofr_only-1]], Mass_label, 
 													r'$N \times 1000$', 'Relative difference', self.fofr_legends, self.Plot_colors_fofr, 
 													Secerror=[Prop_error_mass[Fofr_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True, 
-													fillbetween=True, xlim=xlim_mass, ylim_diff=(-0.25, 0.6), rowcol=[2,1], legend_anchor=False, figsize=(6,4))
+													fillbetween=True, xlim=xlim_mass, ylim_diff=(-0.25, 0.6), rowcol=[2,1], legend_anchor=False, figsize=(6,4),
+													ylabel2_font=8)
 		### Number filament thickness of the models along with relative differences
 		NumThickness_symm_logx_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_thickness, [Number_thickness[SymmLCDM]/1000.0], [RelativeDiff_thickness[Symm_only-1]],
 													Thickness_label, r'$N \times 1000$', 'Relative difference', self.Symm_legends, self.Plot_colors_symm,
 													Secerror=[Prop_error_thickness[Symm_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True,
 													fillbetween=True, xlim=xlim_thickness, ylim_diff=(-0.6, 0.9), rowcol=[2,1], legend_anchor=False,
-													 figsize=(6,4))
+													 figsize=(6,4), ylabel2_font=8)
 		NumThickness_fofr_logx_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_thickness, [Number_thickness[FofrLCDM]/1000.0], [RelativeDiff_thickness[Fofr_only-1]],
 													Thickness_label, r'$N \times 1000$', 'Relative difference', self.fofr_legends, self.Plot_colors_fofr,
 													Secerror=[Prop_error_thickness[Fofr_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True,
 													fillbetween=True, xlim=xlim_thickness, ylim_diff=(-0.6, 0.9), rowcol=[2,1], legend_anchor=False,
-													figsize=(6,4))
+													figsize=(6,4), ylabel2_font=2)
 
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		######## Mass histograms 
@@ -1716,8 +1719,8 @@ class Plot_results():
 		#Mean_Thickness_label = 'Mean filament thickness - [Mpc/h]'
 		Mass_label = '$M$ - [$M_\odot / h$]'
 		Number_label = '$N$'
-		Thickness_label = '$R_T$ - [Mpc/h]'
-		Length_label = '$L$ - [Mpc/h]'
+		Thickness_label = '$R_T$ - [Mpc/$h$]'
+		Length_label = '$L$ - [Mpc/$h$]'
 		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
 		Mean_Thickness_label = r'$\bar{R_T} - [\mathrm{Mpc}/h]$'
 		Distance_normalized_label = '$r/R_T$'
@@ -1851,7 +1854,8 @@ class Plot_results():
 		plt.xscale('log')
 		if speedtype == 'Density':
 			plt.yscale('log')
-		plt.tight_layout()
+		plt.subplots_adjust(wspace=0.01, hspace=0.04)
+		#plt.tight_layout()
 		####################
 		#################### SIMILAR MASSES
 		####################
@@ -2275,6 +2279,10 @@ class Plot_results():
 		GS_yscale = 'linear'
 		if speedtype == 'Orthogonal':
 			GS_yscale = 'linear'
+		if speedtype == 'Parallel':
+			special_limit = (-90, 50)
+		else:
+			special_limit = (0,0)
 		## Average speed of filaments with similar mass
 		RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass = store_reldiff_data(self.Filament_masses, 'Mass', Mass_ranges, 
 																						Common_bin_distances_normalized, binnum)
@@ -2284,14 +2292,16 @@ class Plot_results():
 																Average_speed_label, Reldiff_label_avgspeed, self.Symm_legends, self.Plot_colors_symm,
 																Primerror=Mean_stds, Secerror=Yerror, linestyles=self.Linestyles, reldiff=True,
 																fillbetween=True, rowcol=[2,3], title=Mass_titles, ylim_diff=ylimits,
-																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale, legend_anchor=False)
+																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale, legend_anchor=False, 
+																ylim=special_limit)
 		Mean_profiles, Mean_stds = get_data(FofrLCDM, Fofr_filenames, Common_bin_distances_normalized, Mass_ranges, self.Filament_masses, 'Mass', binnum)
 		Yplot2, Yerror2 = get_data_reldiffs(Fofr_only-1, Mass_ranges, RelDiff_AvgSpeed_SimilarMass, PropErr_AvgSpeed_SimilarMass)
 		AverageSpeed_SimilarMass_fofr_GRIDSPEC = pf.Do_gridspec_sameX(Common_bin_distances_normalized, Mean_profiles, Yplot2, Distance_normalized_label,
 																Average_speed_label, Reldiff_label_avgspeed, self.fofr_legends, self.Plot_colors_fofr,
 																Primerror=Mean_stds, Secerror=Yerror2, linestyles=self.Linestyles, reldiff=True,
 																fillbetween=True, rowcol=[2,3], title=Mass_titles, ylim_diff=ylimits,
-																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale, legend_anchor=False)
+																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale, legend_anchor=False,
+																ylim=special_limit)
 		if speedtype == 'Density':
 			Density_reldiff_mass = Do_density_reldiff_gridspec(Common_bin_distances_normalized, Yplot, Yplot2, Yerror, Yerror2, self.Plot_colors_symm[1:], 
 																self.Plot_colors_fofr[1:], self.Symm_legends[1:], self.fofr_legends[1:],
@@ -2299,6 +2309,10 @@ class Plot_results():
 			self.savefigure(Density_reldiff_mass, 'Reldiff_speed_similar_mass_ALL_gridspec', velocity_results_dir, dpi_mult=2)
 
 		## Average speed of filaments with similar length
+		if speedtype == 'Speed':
+			specific_legend_axis = 0
+		else:
+			specific_legend_axis = -1
 		RelDiff_AvgSpeed_SimilarLength, PropErr_AvgSpeed_SimilarLength = store_reldiff_data(self.FilLengths, 'Length', Length_ranges, 
 																						Common_bin_distances_normalized, binnum)
 		Mean_profiles, Mean_stds = get_data(SymmLCDM, Symm_filenames, Common_bin_distances_normalized, Length_ranges, self.FilLengths, 'Length', binnum)
@@ -2314,7 +2328,8 @@ class Plot_results():
 																Average_speed_label,Reldiff_label_avgspeed, self.fofr_legends, self.Plot_colors_fofr,
 																Primerror=Mean_stds, Secerror=Yerror2, linestyles=self.Linestyles, reldiff=True,
 																fillbetween=True, rowcol=[2,3], title=Length_titles, ylim_diff=ylimits,
-																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale, legend_anchor=False)
+																xscale=GS_xscale, yscale=GS_yscale, xscale_diff=GS_xscale, legend_anchor=False,
+																LegendAxis=specific_legend_axis)
 		if speedtype == 'Density':
 			Density_reldiff_length = Do_density_reldiff_gridspec(Common_bin_distances_normalized, Yplot, Yplot2, Yerror, Yerror2, self.Plot_colors_symm[1:], 
 																self.Plot_colors_fofr[1:], self.Symm_legends[1:], self.fofr_legends[1:], 
@@ -2406,8 +2421,8 @@ class Plot_results():
 		
 		Mass_label = '$M$ - [$M_\odot / h$]'
 		Number_label = '$N$'
-		Thickness_label = '$R_T$ - [Mpc/h]'
-		Length_label = '$L$ - [Mpc/h]'
+		Thickness_label = '$R_T$ - [Mpc/$h$]'
+		Length_label = '$L$ - [Mpc/$h$]'
 		Mean_Mass_label = r'$\bar{M} - [\mathrm{Mpc}/h]$'
 		Mean_Thickness_label = r'$\bar{R_T} - [\mathrm{Mpc}/h]$'
 		Distance_normalized_label = '$r/R_T$'
