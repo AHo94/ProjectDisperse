@@ -1564,7 +1564,7 @@ class Plot_results():
 													Thickness_label, r'$N \times 1000$', 'Relative difference', self.fofr_legends, self.Plot_colors_fofr,
 													Secerror=[Prop_error_thickness[Fofr_only-1]], xscale='log', linestyles=self.Linestyles, reldiff=True,
 													fillbetween=True, xlim=xlim_thickness, ylim_diff=(-0.6, 0.9), rowcol=[2,1], legend_anchor=False,
-													figsize=(6,4), ylabel2_font=2)
+													figsize=(6,4), ylabel2_font=8)
 
 		print '--- SAVING IN: ', self.results_dir, ' ---'
 		######## Mass histograms 
